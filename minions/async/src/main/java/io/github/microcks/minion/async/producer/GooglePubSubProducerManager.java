@@ -16,233 +16,175 @@
 package io.github.microcks.minion.async.producer;
 
 import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.util.el.TemplateEngine;
+import io.github.microcks.minion.async.AsyncMockRepository;
+import io.github.microcks.minion.async.SchemaRegistry;
+import io.github.microcks.minion.async.client.MicrocksAPIConnector;
 
-import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutureCallback;
-import com.google.api.core.ApiFutures;
-import com.google.api.gax.core.CredentialsProvider;
-import com.google.api.gax.core.ExecutorProvider;
-import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
-import com.google.api.gax.rpc.NotFoundException;
 import com.google.api.gax.rpc.TransportChannelProvider;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.pubsub.v1.Publisher;
-import com.google.cloud.pubsub.v1.TopicAdminClient;
-import com.google.cloud.pubsub.v1.TopicAdminSettings;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.PubsubMessage;
+import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloud.pubsub.v1.Subscriber;
+import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
+import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.SubscriptionName;
 import com.google.pubsub.v1.TopicName;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PubSubEmulatorContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 /**
- * Google Cloud PubSub implementation of producer for async event messages.
+ * This is an integration test using <a href="https://testcontainers.com/">Testcontainers</a> to test
+ * {@link GooglePubSubProducerManager} and {@link ProducerManager} classes.
  * @author laurent
  */
-@ApplicationScoped
-public class GooglePubSubProducerManager {
+@Testcontainers
+class GooglePubSubProducerManagerIT {
 
-   /** Get a JBoss logging logger. */
-   private final Logger logger = Logger.getLogger(getClass());
+   private static final Network NETWORK = Network.newNetwork();
 
-   private static final String CLOUD_OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+   private ManagedChannel channel;
+   private TransportChannelProvider channelProvider;
+   private NoCredentialsProvider credentialsProvider;
+   private SubscriptionAdminClient subscriptionAdminClient;
+   private List<String> messages;
 
-   /**
-    * As {@link Publisher} is bound to topic, default would be to create it at each invocation. We'll use this cache,
-    * that enforces only one {@link Publisher} per PubSub topic exists.
-    */
-   private final ConcurrentHashMap<String, Publisher> publishers = new ConcurrentHashMap<>();
+   @Container
+   private static final PubSubEmulatorContainer emulatorContainer = new PubSubEmulatorContainer(
+         DockerImageName.parse("gcr.io/google.com/cloudsdktool/google-cloud-cli:549.0.0-emulators"))
+               .withNetwork(NETWORK).withNetworkAliases("pubsub-emulator");
 
-   /**
-    * As {@link Publisher} is by default associated to its own executor, we have to override this to avoid wasting
-    * resources. As the push of mock messages is sequential, 1 thread is enough.
-    */
-   private final ExecutorProvider executorProvider = InstantiatingExecutorProvider.newBuilder()
-         .setExecutorThreadCount(1).build();
+   @BeforeEach
+   void beforeEach() throws Exception {
+      channel = ManagedChannelBuilder.forTarget(emulatorContainer.getEmulatorEndpoint()).usePlaintext().build();
+      channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+      credentialsProvider = NoCredentialsProvider.create();
+      SubscriptionAdminSettings subscriptionAdminSettings = SubscriptionAdminSettings.newBuilder()
+            .setTransportChannelProvider(channelProvider).setCredentialsProvider(credentialsProvider).build();
+      subscriptionAdminClient = SubscriptionAdminClient.create(subscriptionAdminSettings);
+      messages = new ArrayList<>();
+   }
 
-   CredentialsProvider credentialsProvider;
-   TransportChannelProvider channelProvider;
-
-   @ConfigProperty(name = "googlepubsub.project")
-   String project;
-
-   @ConfigProperty(name = "googlepubsub.service-account-location")
-   String serviceAccountLocation;
-
-   String emulatorHostPort;
-
-   /**
-    * Initialize the PubSub connection post construction.
-    * @throws Exception If connection to PubSub cannot be done.
-    */
-   @PostConstruct
-   public void create() throws Exception {
-      try {
-         String hostPort = emulatorHostPort != null ? emulatorHostPort : System.getenv("PUBSUB_EMULATOR_HOST");
-         if (hostPort != null && !hostPort.isEmpty()) {
-            logger.infof("Using Google PubSub emulator at %s", hostPort);
-
-            ManagedChannel channel = ManagedChannelBuilder.forTarget(hostPort).usePlaintext().build();
-            channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-            credentialsProvider = NoCredentialsProvider.create();
-
-         } else if (serviceAccountLocation != null && !serviceAccountLocation.isEmpty()) {
-
-            FileInputStream is = new FileInputStream(serviceAccountLocation);
-            credentialsProvider = FixedCredentialsProvider
-                  .create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
-         } else {
-            credentialsProvider = NoCredentialsProvider.create();
-         }
-      } catch (Exception e) {
-         logger.errorf("Cannot read Google Cloud credentials %s", serviceAccountLocation);
-         throw e;
+   @AfterEach
+   void afterEach() {
+      if (channel != null) {
+         channel.shutdown();
       }
    }
 
-   /**
-    * Publish a message on specified PubSub topic.
-    * @param topic   The short name of topic within the configured project
-    * @param value   The message payload
-    * @param headers The headers if any (as rendered by renderEventMessageHeaders() method)
-    */
-   public void publishMessage(String topic, String value, Map<String, String> headers) {
-      logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
+   @Test
+   void testProduceMockMessages() throws Exception {
+      // Arrange.
+      String asyncAPIContent = Files.readString(
+            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0.yaml"));
 
-      try {
-         if (publishers.get(topic) == null) {
-            // Ensure topic exists on PubSub.
-            TopicName topicName = TopicName.of(project, topic);
+      // Prepare some event messages.
+      EventMessage aliceEvent = new EventMessage();
+      aliceEvent.setName("Alice");
+      aliceEvent.setMediaType("application/json");
+      aliceEvent.setContent("{\"fullName\": \"Alice\", \"email\": \"alice@acme.com\", \"age\": 30}");
+      EventMessage bobEvent = new EventMessage();
+      bobEvent.setName("Bob");
+      bobEvent.setMediaType("application/json");
+      bobEvent.setContent("{\"fullName\": \"Bod\", \"email\": \"bod@acme.com\", \"age\": 35}");
 
-            TopicAdminSettings.Builder tasBuilder = TopicAdminSettings.newBuilder()
-                  .setCredentialsProvider(credentialsProvider);
-            if (channelProvider != null) {
-               tasBuilder.setTransportChannelProvider(channelProvider);
-            }
+      // Prepare associated service and operation.
+      Service service = new Service();
+      service.setId("d3d5a3ed-13bf-493f-a06d-bf93392f420b");
+      service.setName("User signed-up API");
+      service.setVersion("0.3.0");
+      service.setType(ServiceType.EVENT);
 
-            TopicAdminClient topicAdminClient = TopicAdminClient.create(tasBuilder.build());
+      Operation signedupOperation = new Operation();
+      signedupOperation.setName("SUBSCRIBE user/signedup");
+      service.setOperations(List.of(signedupOperation));
 
-            ensureTopicExists(topicAdminClient, topicName);
-         }
+      // Assemble them into a repository.
+      AsyncMockRepository mockRepository = new AsyncMockRepository();
+      AsyncMockDefinition mockDefinition = new AsyncMockDefinition(service, signedupOperation,
+            List.of(aliceEvent, bobEvent));
+      mockRepository.storeMockDefinition(mockDefinition);
 
-         // Build a message for corresponding publisher.
-         Publisher publisher = getPublisher(topic);
-         ByteString data = ByteString.copyFromUtf8(value);
-         PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).putAllAttributes(headers).build();
+      MicrocksAPIConnector microcksAPIConnector = new FakeMicrocksAPIConnector("d3d5a3ed-13bf-493f-a06d-bf93392f420b",
+            asyncAPIContent);
+      SchemaRegistry schemaRegistry = new SchemaRegistry(microcksAPIConnector);
+      schemaRegistry.updateRegistryForService("d3d5a3ed-13bf-493f-a06d-bf93392f420b");
 
-         // Publish the message.
-         ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-         ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<>() {
-            // Wait for message submission and log the result
-            public void onSuccess(String messageId) {
-               logger.debugv("Published with message id {0}", messageId);
-            }
+      // Finally, arrange the objects under test.
+      GooglePubSubProducerManager pubSubProducerManager = new GooglePubSubProducerManager();
+      pubSubProducerManager.project = "test-project";
+      pubSubProducerManager.emulatorHostPort = emulatorContainer.getEmulatorEndpoint();
+      pubSubProducerManager.create();
 
-            public void onFailure(Throwable t) {
-               logger.debugv("Failed to publish: {0}", t);
-            }
-         }, MoreExecutors.directExecutor());
-      } catch (IOException ioe) {
-         logger.warnf("Message sending has thrown an exception", ioe);
+      ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry, null, null, null, null,
+            pubSubProducerManager, null, null);
+
+      // Act a 1st time to ensure topic creation before starting subscriber.
+      producerManager.produceGooglePubSubMockMessages(mockDefinition);
+
+      // Start subscriber to consume messages.
+      Subscriber subscriber = startConsumingMessagesFromTopic("test-project", "UsersignedupAPI-0.3.0-user-signedup");
+      subscriber.startAsync().awaitRunning();
+
+      // Act a 2nd time to produce messages while subscriber is active.
+      producerManager.produceGooglePubSubMockMessages(mockDefinition);
+
+      // Wait for messages to be consumed with a timeout.
+      await().atMost(3, TimeUnit.SECONDS).pollDelay(100, TimeUnit.MILLISECONDS)
+            .until(() -> messages.size() == 2);
+      subscriber.stopAsync();
+
+      // Assert.
+      assertFalse(messages.isEmpty());
+      assertEquals(2, messages.size());
+
+      for (String message : messages) {
+         assertTrue("{\"fullName\": \"Alice\", \"email\": \"alice@acme.com\", \"age\": 30}".equals(message)
+               || "{\"fullName\": \"Bod\", \"email\": \"bod@acme.com\", \"age\": 35}".equals(message));
       }
    }
 
-   /**
-    * Render Microcks headers using the template engine.
-    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
-    *                GooglePubSubProducerManager level.)
-    * @param headers The Microcks event message headers definition.
-    * @return A map of rendered headers for GCP Publisher.
-    */
-   public Map<String, String> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
-      if (headers != null && !headers.isEmpty()) {
-         return headers.stream().collect(Collectors.toMap(Header::getName, header -> {
-            String firstValue = header.getValues().stream().findFirst().get();
-            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-               try {
-                  return engine.getValue(firstValue);
-               } catch (Exception e) {
-                  logger.error("Failing at evaluating template " + firstValue, e);
-                  return firstValue;
-               }
-            }
-            return firstValue;
-         }));
-      }
-      return Collections.emptyMap();
-   }
+   private Subscriber startConsumingMessagesFromTopic(String projectId, String topicId) {
 
-   /**
-    * Compute a topic name from async mock definition.
-    * @param definition   The mock definition
-    * @param eventMessage The event message to get dynamic part from
-    * @return The short name of a PubSub topic
-    */
-   public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      // Produce service name part of topic name.
-      String serviceName = definition.getOwnerService().getName().replace(" ", "");
-      serviceName = serviceName.replace("-", "");
+      String subscriptionId = "test-subscription";
+      SubscriptionName subscriptionName = SubscriptionName.of(projectId, subscriptionId);
 
-      // Produce version name part of topic name.
-      String versionName = definition.getOwnerService().getVersion().replace(" ", "");
+      subscriptionAdminClient.createSubscription(subscriptionName, TopicName.of(projectId, topicId),
+            PushConfig.getDefaultInstance(), 10);
 
-      // Produce operation name part of topic name.
-      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
-      operationName = operationName.replace('/', '-');
+      MessageReceiver receiver = (message, consumer) -> {
+         String messageData = message.getData().toString(StandardCharsets.UTF_8);
+         this.messages.add(messageData);
+         consumer.ack();
+      };
 
-      // Aggregate the 3 parts using '_' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
-   }
-
-   private void ensureTopicExists(TopicAdminClient topicAdminClient, TopicName topicName) {
-      try {
-         topicAdminClient.getTopic(topicName);
-      } catch (NotFoundException nfe) {
-         logger.infof("Topic {%s} does not exist yet, creating it", topicName);
-         topicAdminClient.createTopic(topicName);
-      }
-   }
-
-   private Publisher getPublisher(String topic) throws IOException {
-      try {
-         return publishers.computeIfAbsent(topic, this::createPublisher);
-      } catch (RuntimeException re) {
-         // Just unwrap the underlying IOException...
-         throw (IOException) re.getCause();
-      }
-   }
-
-   private Publisher createPublisher(String topic) {
-      try {
-         Publisher.Builder pubBuilder = Publisher.newBuilder(TopicName.of(project, topic))
-               .setExecutorProvider(executorProvider).setCredentialsProvider(credentialsProvider);
-         if (channelProvider != null) {
-            pubBuilder = pubBuilder.setChannelProvider(channelProvider);
-         }
-         return pubBuilder.build();
-      } catch (IOException ioe) {
-         logger.errorf("IOException while creating a Publisher for topic %s", topic);
-         throw new RuntimeException("IOException while creating a Publisher for topic ", ioe);
-      }
+      return Subscriber
+            .newBuilder(ProjectSubscriptionName.of(subscriptionName.getProject(), subscriptionName.getSubscription()),
+                  receiver)
+            .setChannelProvider(channelProvider).setCredentialsProvider(credentialsProvider).build();
    }
 }
