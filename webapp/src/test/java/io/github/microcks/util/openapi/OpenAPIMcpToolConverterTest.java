@@ -75,7 +75,7 @@ class OpenAPIMcpToolConverterTest {
       File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/openapi/petstore-2.0.0-openapi.yaml");
       // Extract service and resource. + tool converters.
       List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
-            new ArtifactInfo("petstore-1.0.0-openapi.yaml", true));
+            new ArtifactInfo("petstore-1.0.0-openapi.yaml", true), null);
       servicev1 = services.getFirst();
       List<Resource> resources = resourceRepository.findByServiceIdAndType(servicev1.getId(),
             ResourceType.OPEN_API_SPEC);
@@ -83,7 +83,7 @@ class OpenAPIMcpToolConverterTest {
             new ObjectMapper());
       // For v2.
       services = serviceService.importServiceDefinition(artifactFilev2, null,
-            new ArtifactInfo("petstore-2.0.0-openapi.yaml", true));
+            new ArtifactInfo("petstore-2.0.0-openapi.yaml", true), null);
       servicev2 = services.getFirst();
       resources = resourceRepository.findByServiceIdAndType(servicev2.getId(), ResourceType.OPEN_API_SPEC);
       toolConverterv2 = new OpenAPIMcpToolConverter(servicev2, resources.getFirst(), restInvocationProcessor,
