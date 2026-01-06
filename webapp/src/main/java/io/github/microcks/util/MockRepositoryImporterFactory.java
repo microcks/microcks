@@ -22,6 +22,7 @@ import io.github.microcks.util.grpc.ProtobufImporter;
 import io.github.microcks.util.har.HARImporter;
 import io.github.microcks.util.metadata.ExamplesImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
+import io.github.microcks.util.opencollection.OpenCollectionImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
@@ -108,6 +109,9 @@ public class MockRepositoryImporterFactory {
       } else if (line.startsWith("\"collection\":") || line.startsWith("{\"collection\":")) {
          log.info("Found a collection in file so assuming it's a Postman Workspace Collection to import");
          return new PostmanWorkspaceCollectionImporter(mockRepository.getPath());
+      } else if (line.startsWith("\"opencollection\":")) {
+         log.info("Found an opencollection field in file so assuming it's an OpenCollection to import");
+         return new OpenCollectionImporter(mockRepository.getPath());
       }
       return null;
    }
