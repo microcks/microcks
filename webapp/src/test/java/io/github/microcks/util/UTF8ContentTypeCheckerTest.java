@@ -22,7 +22,7 @@ public class UTF8ContentTypeCheckerTest {
                "text/xml", "application/json; charset=utf-8");
 
          for (String type : validTypes) {
-            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to match: " + type);
+            assertTrue(UTF8ContentTypeChecker.isUTF8Encodable(type), "Expected to match: " + type);
          }
       }
    }
@@ -37,7 +37,7 @@ public class UTF8ContentTypeCheckerTest {
                "multipart/form-data");
 
          for (String type : invalidTypes) {
-            assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to reject: " + type);
+            assertFalse(UTF8ContentTypeChecker.isUTF8Encodable(type), "Expected to reject: " + type);
          }
       }
    }
@@ -48,9 +48,9 @@ public class UTF8ContentTypeCheckerTest {
       @Test
       @DisplayName("Should reject null, empty, and blank strings")
       void shouldRejectNullOrEmpty() {
-         assertAll(() -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(null), "Null should return false"),
-               () -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(""), "Empty string should return false"),
-               () -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable("   "), "Blank string should return false"));
+         assertAll(() -> assertFalse(UTF8ContentTypeChecker.isUTF8Encodable(null), "Null should return false"),
+               () -> assertFalse(UTF8ContentTypeChecker.isUTF8Encodable(""), "Empty string should return false"),
+               () -> assertFalse(UTF8ContentTypeChecker.isUTF8Encodable("   "), "Blank string should return false"));
       }
 
       @Test
@@ -60,7 +60,7 @@ public class UTF8ContentTypeCheckerTest {
                "Application/Vnd.Api+Json");
 
          for (String type : mixedCaseTypes) {
-            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type),
+            assertTrue(UTF8ContentTypeChecker.isUTF8Encodable(type),
                   "Expected to match case-insensitive type: " + type);
          }
       }
@@ -69,8 +69,8 @@ public class UTF8ContentTypeCheckerTest {
       @DisplayName("Should ignore leading/trailing whitespace")
       void shouldTrimWhitespace() {
          assertAll(
-               () -> assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(" text/plain "), "Should match with whitespace"),
-               () -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(" image/png "),
+               () -> assertTrue(UTF8ContentTypeChecker.isUTF8Encodable(" text/plain "), "Should match with whitespace"),
+               () -> assertFalse(UTF8ContentTypeChecker.isUTF8Encodable(" image/png "),
                      "Should reject even with whitespace"));
       }
    }
@@ -87,7 +87,7 @@ public class UTF8ContentTypeCheckerTest {
                "application/problem+json" // RFC 7807 problem details
          );
          for (String type : structured) {
-            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected structured suffix to match: " + type);
+            assertTrue(UTF8ContentTypeChecker.isUTF8Encodable(type), "Expected structured suffix to match: " + type);
          }
       }
 
@@ -99,7 +99,7 @@ public class UTF8ContentTypeCheckerTest {
                "application/soap+xml;action=urn:foo;Charset=Utf-8", "text/plain; format=flowed; charset=iso-8859-1" // text/* always accepted even if non-utf charset declared
          );
          for (String type : withParams) {
-            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to match with parameters: " + type);
+            assertTrue(UTF8ContentTypeChecker.isUTF8Encodable(type), "Expected to match with parameters: " + type);
          }
       }
 
@@ -111,7 +111,7 @@ public class UTF8ContentTypeCheckerTest {
                "application/vnd.foo+bin", // unsupported +bin suffix
                "application/pdf; charset=utf-8", "image/png; name=image.png");
          for (String type : invalid) {
-            assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to reject invalid: " + type);
+            assertFalse(UTF8ContentTypeChecker.isUTF8Encodable(type), "Expected to reject invalid: " + type);
          }
       }
 
@@ -122,7 +122,7 @@ public class UTF8ContentTypeCheckerTest {
                "application/soap+xml   ;action=urn:foo" // no space before semicolon is fine
          );
          for (String type : types) {
-            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to match despite whitespace: " + type);
+            assertTrue(UTF8ContentTypeChecker.isUTF8Encodable(type), "Expected to match despite whitespace: " + type);
          }
       }
    }

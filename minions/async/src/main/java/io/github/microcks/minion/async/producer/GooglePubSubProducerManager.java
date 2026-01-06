@@ -89,6 +89,8 @@ public class GooglePubSubProducerManager {
    @ConfigProperty(name = "googlepubsub.service-account-location")
    String serviceAccountLocation;
 
+   String emulatorHostPort;
+
    /**
     * Initialize the PubSub connection post construction.
     * @throws Exception If connection to PubSub cannot be done.
@@ -96,11 +98,11 @@ public class GooglePubSubProducerManager {
    @PostConstruct
    public void create() throws Exception {
       try {
-         String hostport = System.getenv("PUBSUB_EMULATOR_HOST");
-         if (hostport != null && !hostport.isEmpty()) {
-            logger.infof("Using Google PubSub emulator at %s", hostport);
+         String hostPort = emulatorHostPort != null ? emulatorHostPort : System.getenv("PUBSUB_EMULATOR_HOST");
+         if (hostPort != null && !hostPort.isEmpty()) {
+            logger.infof("Using Google PubSub emulator at %s", hostPort);
 
-            ManagedChannel channel = ManagedChannelBuilder.forTarget(hostport).usePlaintext().build();
+            ManagedChannel channel = ManagedChannelBuilder.forTarget(hostPort).usePlaintext().build();
             channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
             credentialsProvider = NoCredentialsProvider.create();
 
@@ -206,6 +208,7 @@ public class GooglePubSubProducerManager {
 
       // Produce operation name part of topic name.
       String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
+      operationName = operationName.replace('/', '-');
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;

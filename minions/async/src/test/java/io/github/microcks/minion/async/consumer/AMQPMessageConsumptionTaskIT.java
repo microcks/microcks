@@ -57,7 +57,7 @@ class AMQPMessageConsumptionTaskIT {
 
    @Test
    void shouldReceiveMessageOnQueueCorrectly() throws Exception {
-      //    arrange
+      // arrange
       AsyncTestSpecification asyncTestSpecification = new AsyncTestSpecification();
       asyncTestSpecification.setTimeoutMS(2000L);
       asyncTestSpecification.setEndpointUrl("amqp://localhost:%s/q/%s".formatted(RABBIT_MQ_PORT, QUEUE_NAME));

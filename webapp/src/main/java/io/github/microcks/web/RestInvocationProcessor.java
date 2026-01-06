@@ -532,7 +532,7 @@ public class RestInvocationProcessor {
 
       // Decide if we should treat content as UTF-8 (text) either because feature is disabled or media type is utf-8 encodable.
       boolean treatAsUtf8 = !enableBinaryResponseDecode
-            || UTF8ContentTypeChecker.isUtf8Encodable(response.getMediaType());
+            || UTF8ContentTypeChecker.isUTF8Encodable(response.getMediaType());
 
       if (treatAsUtf8) {
          String content = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
