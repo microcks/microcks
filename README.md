@@ -61,7 +61,7 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch   | Container images tags |
 | ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.13.3`          | `master` | `1.13.3`, `latest`    |
+| Stable      | `1.13.2`          | `master` | `1.13.2`, `latest`    |
 | Dev         | `1.13.3-SNAPSHOT` | `1.13.x` | `nightly`             |
 | Maintenance | `1.12.2-SNAPSHOT` | `1.12.x` | `maintenance`         |
 
