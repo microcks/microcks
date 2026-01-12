@@ -52,11 +52,13 @@ class UploadArtifactControllerTest {
       // arrange
       String apiPastry = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
 
-      Mockito.when(serviceService.importServiceDefinition(Mockito.any(File.class), Mockito.any(ReferenceResolver.class),
-            Mockito.any(ArtifactInfo.class))).thenThrow(new MockRepositoryImportException("Intentional error"));
+      Mockito
+            .when(serviceService.importServiceDefinition(Mockito.any(File.class), Mockito.any(ReferenceResolver.class),
+                  Mockito.any(ArtifactInfo.class), Mockito.any()))
+            .thenThrow(new MockRepositoryImportException("Intentional error"));
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(apiPastry, false, null);
+      ResponseEntity<String> responseEntity = sut.importArtifact(apiPastry, false, null, null);
 
       // assert
       SoftAssertions.assertSoftly(softly -> {
@@ -72,7 +74,7 @@ class UploadArtifactControllerTest {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/wrong-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
+      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null, null);
 
       // assert
       SoftAssertions.assertSoftly(softly -> {
@@ -85,12 +87,12 @@ class UploadArtifactControllerTest {
    void shouldReturnNoContentWhenTheServiceHasNotBeenCreated() throws MockRepositoryImportException {
       // arrange
       Mockito.when(serviceService.importServiceDefinition(Mockito.any(File.class), Mockito.any(ReferenceResolver.class),
-            Mockito.any(ArtifactInfo.class))).thenReturn(Collections.emptyList());
+            Mockito.any(ArtifactInfo.class), Mockito.any())).thenReturn(Collections.emptyList());
 
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
+      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null, null);
 
       // assert
       Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -100,12 +102,12 @@ class UploadArtifactControllerTest {
    void shouldReturnNoContentWhenTheServiceHasNotBeenCreatedNullValue() throws MockRepositoryImportException {
       // arrange
       Mockito.when(serviceService.importServiceDefinition(Mockito.any(File.class), Mockito.any(ReferenceResolver.class),
-            Mockito.any(ArtifactInfo.class))).thenReturn(null);
+            Mockito.any(ArtifactInfo.class), Mockito.any())).thenReturn(null);
 
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
+      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null, null);
 
       // assert
       Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
