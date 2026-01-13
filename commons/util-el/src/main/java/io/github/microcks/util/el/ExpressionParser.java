@@ -63,37 +63,19 @@ public class ExpressionParser {
          int prefixIndex = template.indexOf(expressionPrefix, startIdx);
          if (prefixIndex >= startIdx) {
             // an inner expression was found - this is a composite
-            if (prefixIndex > startIdx) {
-               log.debug("Found a literal expression starting at {}", startIdx);
-               expressions.add(new LiteralExpression(template.substring(startIdx, prefixIndex)));
-            }
+            addLiteralIfNeeded(expressions, template, startIdx, prefixIndex);
+
             int afterPrefixIndex = prefixIndex + expressionPrefix.length();
             int suffixIndex = skipToCorrectEndSuffix(expressionSuffix, template, afterPrefixIndex);
-            if (suffixIndex == -1) {
-               log.info("No ending suffix '{}' for expression starting at character {}: {}", expressionSuffix,
-                     prefixIndex, template.substring(prefixIndex));
-               throw new ParseException(template, prefixIndex,
-                     "No ending suffix '" + expressionSuffix + "' for expression starting at character " + prefixIndex
-                           + ": " + template.substring(prefixIndex));
-            }
-            if (suffixIndex == afterPrefixIndex) {
-               log.info("No expression defined within delimiter '{}' at character {}", expressionPrefix, prefixIndex);
-               throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
-                     + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
-            }
-            String expr = template.substring(prefixIndex + expressionPrefix.length(), suffixIndex);
-            expr = expr.trim();
-            if (expr.isEmpty()) {
-               log.info("No expression defined within delimiter '{}' at character {}", expressionPrefix, prefixIndex);
-               throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
-                     + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
-            }
-            if (expr.charAt(0) == '{') {
-               expressions.add(new LiteralExpression(expr.substring(0, 1)));
-               expressions.add(doParseExpression(expr.substring(1, expr.length() - 1), context));
-               expressions.add(new LiteralExpression(expr.substring(expr.length() - 1)));
-            } else
-               expressions.add(doParseExpression(expr, context));
+
+            validateSuffixFound(template, expressionPrefix, expressionSuffix, prefixIndex, suffixIndex);
+            validateSuffixNotEmpty(template, expressionPrefix, expressionSuffix, prefixIndex, afterPrefixIndex,
+                  suffixIndex);
+
+            String expr = extractAndValidateExpression(template, expressionPrefix, expressionSuffix, prefixIndex,
+                  suffixIndex);
+
+            addParsedExpression(expressions, expr, context);
             startIdx = suffixIndex + expressionSuffix.length();
             log.debug("Expression accumulated. Pursuing with index {} on {}", startIdx, template.length());
          } else {
@@ -105,7 +87,65 @@ public class ExpressionParser {
       return expressions.toArray(new Expression[0]);
    }
 
-   /** Find for next suitable correct end suffix. Could be extended in future to manager recursivity... */
+   /** Add a literal expression if there's content before the prefix. */
+   private static void addLiteralIfNeeded(List<Expression> expressions, String template, int startIdx,
+         int prefixIndex) {
+      if (prefixIndex > startIdx) {
+         log.debug("Found a literal expression starting at {}", startIdx);
+         expressions.add(new LiteralExpression(template.substring(startIdx, prefixIndex)));
+      }
+   }
+
+   /** Validate that the suffix was found. */
+   private static void validateSuffixFound(String template, String expressionPrefix, String expressionSuffix,
+         int prefixIndex, int suffixIndex) throws ParseException {
+      if (suffixIndex == -1) {
+         log.info("No ending suffix '{}' for expression starting at character {}: {}", expressionSuffix, prefixIndex,
+               template.substring(prefixIndex));
+         throw new ParseException(template, prefixIndex, "No ending suffix '" + expressionSuffix
+               + "' for expression starting at character " + prefixIndex + ": " + template.substring(prefixIndex));
+      }
+   }
+
+   /** Validate that the expression between delimiters is not empty. */
+   private static void validateSuffixNotEmpty(String template, String expressionPrefix, String expressionSuffix,
+         int prefixIndex, int afterPrefixIndex, int suffixIndex) throws ParseException {
+      if (suffixIndex == afterPrefixIndex) {
+         log.info("No expression defined within delimiter '{}' at character {}", expressionPrefix, prefixIndex);
+         throw new ParseException(template, prefixIndex, "No expression defined within delimiter'" + expressionPrefix
+               + expressionSuffix + "' at character " + prefixIndex);
+      }
+   }
+
+   /** Extract and validate the expression string. */
+   private static String extractAndValidateExpression(String template, String expressionPrefix, String expressionSuffix,
+         int prefixIndex, int suffixIndex) throws ParseException {
+      String expr = template.substring(prefixIndex + expressionPrefix.length(), suffixIndex);
+      expr = expr.trim();
+      if (expr.isEmpty()) {
+         log.info("No expression defined within delimiter '{}' at character {}", expressionPrefix, prefixIndex);
+         throw new ParseException(template, prefixIndex, "No expression defined within delimiter'" + expressionPrefix
+               + expressionSuffix + "' at character " + prefixIndex);
+      }
+      return expr;
+   }
+
+   /**
+    * Add the parsed expression to the list, handling special curly brace wrapping.
+    */
+   private static void addParsedExpression(List<Expression> expressions, String expr, EvaluationContext context) {
+      if (expr.charAt(0) == '{') {
+         expressions.add(new LiteralExpression(expr.substring(0, 1)));
+         expressions.add(doParseExpression(expr.substring(1, expr.length() - 1), context));
+         expressions.add(new LiteralExpression(expr.substring(expr.length() - 1)));
+      } else {
+         expressions.add(doParseExpression(expr, context));
+      }
+   }
+
+   /**
+    * Find for next suitable correct end suffix. Could be extended in future to manager recursivity...
+    */
    private static int skipToCorrectEndSuffix(String expressionSuffix, String template, int afterPrefixIndex) {
       int nextSuffix = template.indexOf(expressionSuffix, afterPrefixIndex);
       if (nextSuffix == -1) {
@@ -118,7 +158,8 @@ public class ExpressionParser {
          lastIndexOfSuffix++;
       }
 
-      // If we found extra closing curly braces, return the position of the first two "}}"
+      // If we found extra closing curly braces, return the position of the first two
+      // "}}"
       if (lastIndexOfSuffix > nextSuffix + expressionSuffix.length()) {
          return lastIndexOfSuffix - expressionSuffix.length();
       }
