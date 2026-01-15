@@ -14,7 +14,7 @@ The tests are organized in two main categories:
   * Mocking & Testing AsyncAPI APIs.
 
 The Testsuite is intended to be run on the current development branch of Microcks to validate the latest changes of the installation scripts 
-and the features embedded into the `nighlty` tagged container images. 
+and the features embedded into the `nightly` tagged container images. 
 
 ## Health Checks
 
@@ -60,7 +60,7 @@ for each different combination (unchecked boxes are not yet implemented).
 * [ ] Getting the Keycloak configuration (`GET /api/keycloak/config`) should return 200 when not authenticated,
 * [ ] Getting the list of services (`GET /api/services`) should return 403 when not authenticated,
 * [ ] Authentication (with default _Service Account_) should return an `AccessToken` when successful,
-* [ ] Getting the list of services (`GET /api/services`) should return 200 when authenticated (using `AcessToken` as a `Bearer` token),
+* [ ] Getting the list of services (`GET /api/services`) should return 200 when authenticated (using `AccessToken` as a `Bearer` token),
 * [ ] Getting the list of jobs (`GET /api/jobs`) should return 403 when not authenticated or authenticated as user,
 * [ ] Getting the list of jobs (`GET /api/jobs`) should return 200 when authenticated as manager or admin,
 
