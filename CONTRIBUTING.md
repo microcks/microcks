@@ -2,7 +2,7 @@
 
 We love your input! We want to make contributing to this project as easy and transparent as possible.
 
-## Contribution recognition
+## Contribution recogniton
 
 We plan to use [All Contributors](https://allcontributors.org/docs/en/specification) specification to handle recognitions.
 
