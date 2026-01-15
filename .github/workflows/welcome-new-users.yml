@@ -16,8 +16,6 @@ jobs:
     permissions:
       issues: write  # for wow-actions/welcome to comment on issues
       pull-requests: write  # wow-actions/welcome to comment on PRs
-    # Do not run on bots and maintainers
-    if: ${{ !contains(fromJson('["dependabot[bot]", "dependabot-preview[bot]", "allcontributors[bot]"]'), github.actor) }}
     runs-on: ubuntu-latest
     steps:
       - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
