@@ -32,6 +32,11 @@ public class TestCaseReturnDTO {
    private String operationName;
    private List<TestReturn> testReturns;
 
+   // New fields for phase information
+   private String currentPhase;
+   private Long connectionDurationMS;
+   private Long messageWaitDurationMS;
+
    public TestCaseReturnDTO() {
    }
 
@@ -64,5 +69,29 @@ public class TestCaseReturnDTO {
          testReturns = new ArrayList<>();
       }
       testReturns.add(testReturn);
+   }
+
+   public String getCurrentPhase() {
+      return currentPhase;
+   }
+
+   public void setCurrentPhase(String currentPhase) {
+      this.currentPhase = currentPhase;
+   }
+
+   public Long getConnectionDurationMS() {
+      return connectionDurationMS;
+   }
+
+   public void setConnectionDurationMS(Long connectionDurationMS) {
+      this.connectionDurationMS = connectionDurationMS;
+   }
+
+   public Long getMessageWaitDurationMS() {
+      return messageWaitDurationMS;
+   }
+
+   public void setMessageWaitDurationMS(Long messageWaitDurationMS) {
+      this.messageWaitDurationMS = messageWaitDurationMS;
    }
 }

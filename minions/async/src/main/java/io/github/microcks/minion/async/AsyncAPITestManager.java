@@ -19,7 +19,8 @@ import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
-import io.github.microcks.minion.async.consumer.AMQPMessageConsumptionTask;
+import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
+import io.github.microcks.minion.async.consumer.MessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.AmazonSNSMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.AmazonSQSMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.ConsumedMessage;
@@ -126,24 +127,40 @@ public class AsyncAPITestManager {
                outputs = executorService.invokeAny(Collections.singletonList(messageConsumptionTask),
                      specification.getTimeoutMS() + 1000L, TimeUnit.MILLISECONDS);
                logger.debugf("Consumption ends and we got {%d} messages to validate", outputs.size());
+
+               // Capture phase information if it's a Kafka task
+               if (messageConsumptionTask instanceof KafkaMessageConsumptionTask) {
+                  KafkaMessageConsumptionTask kafkaTask = (KafkaMessageConsumptionTask) messageConsumptionTask;
+                  testCaseReturn.setCurrentPhase(kafkaTask.getCurrentPhase().name());
+                  testCaseReturn.setConnectionDurationMS(kafkaTask.getConnectionDuration());
+                  testCaseReturn.setMessageWaitDurationMS(kafkaTask.getMessageWaitDuration());
+                  logger.infof("Kafka test completed - Phase: %s, Connection: %d ms, Message wait: %d ms",
+                        kafkaTask.getCurrentPhase(), kafkaTask.getConnectionDuration(),
+                        kafkaTask.getMessageWaitDuration());
+               }
+
             } catch (InterruptedException e) {
                logger.infof("AsyncAPITestThread for {%s} was interrupted", specification.getTestResultId());
+               capturePhaseInformation(messageConsumptionTask, testCaseReturn);
             } catch (ExecutionException e) {
                logger.errorf(e, "AsyncAPITestThread for {%s} raise an ExecutionException",
                      specification.getTestResultId());
                testCaseReturn.addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
                      "ExecutionException: no message received in " + specification.getTimeoutMS() + " ms", null, null));
+               capturePhaseInformation(messageConsumptionTask, testCaseReturn);
             } catch (TimeoutException e) {
                // Message consumption has timed-out, add an empty test return with failure and message.
                logger.infof("AsyncAPITestThread for {%s} was timed-out", specification.getTestResultId());
                testCaseReturn.addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
                      "Timeout: no message received in " + specification.getTimeoutMS() + " ms", null, null));
+               capturePhaseInformation(messageConsumptionTask, testCaseReturn);
             } catch (Throwable t) {
                // We faced a low-level issue... add an empty test return with failure and message.
                logger.error("Caught a low-level throwable", t);
                testCaseReturn
                      .addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
                            "Exception: low-level failure: " + t.getMessage(), null, null));
+               capturePhaseInformation(messageConsumptionTask, testCaseReturn);
             } finally {
                try {
                   messageConsumptionTask.close();
@@ -326,6 +343,19 @@ public class AsyncAPITestManager {
             return new AmazonSNSMessageConsumptionTask(testSpecification);
          }
          return null;
+      }
+
+      /** Helper method to capture phase information from Kafka consumption task. */
+      private void capturePhaseInformation(MessageConsumptionTask messageConsumptionTask,
+            TestCaseReturnDTO testCaseReturn) {
+         if (messageConsumptionTask instanceof KafkaMessageConsumptionTask) {
+            KafkaMessageConsumptionTask kafkaTask = (KafkaMessageConsumptionTask) messageConsumptionTask;
+            testCaseReturn.setCurrentPhase(kafkaTask.getCurrentPhase().name());
+            testCaseReturn.setConnectionDurationMS(kafkaTask.getConnectionDuration());
+            testCaseReturn.setMessageWaitDurationMS(kafkaTask.getMessageWaitDuration());
+            logger.infof("Captured phase information - Phase: %s, Connection: %d ms, Message wait: %d ms",
+                  kafkaTask.getCurrentPhase(), kafkaTask.getConnectionDuration(), kafkaTask.getMessageWaitDuration());
+         }
       }
    }
 }
