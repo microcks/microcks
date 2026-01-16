@@ -36,6 +36,10 @@ public class AsyncTestSpecification {
    private Secret secret;
    private Long timeoutMS;
 
+   // New optional fields for enhanced connection management
+   private Long connectionTimeoutMS;
+   private String currentPhase;
+
    public TestRunnerType getRunnerType() {
       return runnerType;
    }
@@ -98,5 +102,21 @@ public class AsyncTestSpecification {
 
    public void setTimeoutMS(Long timeoutMS) {
       this.timeoutMS = timeoutMS;
+   }
+
+   public Long getConnectionTimeoutMS() {
+      return connectionTimeoutMS;
+   }
+
+   public void setConnectionTimeoutMS(Long connectionTimeoutMS) {
+      this.connectionTimeoutMS = connectionTimeoutMS;
+   }
+
+   public String getCurrentPhase() {
+      return currentPhase;
+   }
+
+   public void setCurrentPhase(String currentPhase) {
+      this.currentPhase = currentPhase;
    }
 }

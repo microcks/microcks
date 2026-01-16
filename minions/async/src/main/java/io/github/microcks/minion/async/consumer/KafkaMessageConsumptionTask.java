@@ -20,6 +20,7 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
 import io.github.microcks.domain.Header;
 import io.github.microcks.minion.async.AsyncTestSpecification;
+import io.github.microcks.minion.async.ConsumptionPhase;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -82,6 +83,14 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    protected Long startOffset;
    protected Long endOffset;
 
+   // New fields for phase management
+   private volatile ConsumptionPhase currentPhase = ConsumptionPhase.STARTING;
+   private static final long DEFAULT_CONNECTION_TIMEOUT_MS = 10000L; // 10 seconds
+   private long connectionStartTime;
+   private long connectionDuration;
+   private long messageWaitStartTime;
+   private long messageWaitDuration;
+
 
    /**
     * Create a new consumption task from an Async test specification.
@@ -100,23 +109,85 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       return endpointUrl != null && endpointUrl.matches(ENDPOINT_PATTERN_STRING);
    }
 
+   /**
+    * Get the current consumption phase for monitoring purposes.
+    * @return The current ConsumptionPhase
+    */
+   public ConsumptionPhase getCurrentPhase() {
+      return currentPhase;
+   }
+
+   private void updatePhase(ConsumptionPhase newPhase) {
+      this.currentPhase = newPhase;
+      if (specification != null) {
+         specification.setCurrentPhase(newPhase.name());
+      }
+   }
+
+   /**
+    * Get the connection duration in milliseconds.
+    * @return The duration of the connection phase
+    */
+   public long getConnectionDuration() {
+      return connectionDuration;
+   }
+
+   /**
+    * Get the message wait duration in milliseconds.
+    * @return The duration of the message waiting phase
+    */
+   public long getMessageWaitDuration() {
+      return messageWaitDuration;
+   }
+
    @Override
    public List<ConsumedMessage> call() throws Exception {
-      if (consumer == null && avroConsumer == null) {
-         initializeKafkaConsumer();
-      }
-      List<ConsumedMessage> messages = new ArrayList<>();
+      updatePhase(ConsumptionPhase.CONNECTING);
+      connectionStartTime = System.currentTimeMillis();
 
-      // Start polling with appropriate consumer for records.
-      // Do not forget to close the consumer before returning results.
-      if (consumer != null) {
-         consumeByteArray(messages);
-         consumer.close();
-      } else {
-         consumeAvro(messages);
-         avroConsumer.close();
+      try {
+         if (consumer == null && avroConsumer == null) {
+            initializeKafkaConsumerWithConnectionTimeout();
+         }
+
+         connectionDuration = System.currentTimeMillis() - connectionStartTime;
+
+         List<ConsumedMessage> messages = new ArrayList<>();
+
+         updatePhase(ConsumptionPhase.WAITING_FOR_MESSAGES);
+         messageWaitStartTime = System.currentTimeMillis();
+         logger.infof("Connected to Kafka in %d ms, now waiting for messages with timeout: %d ms", connectionDuration,
+               specification.getTimeoutMS());
+
+         // Start polling with appropriate consumer for records.
+         // Do not forget to close the consumer before returning results.
+         if (consumer != null) {
+            consumeByteArray(messages);
+            consumer.close();
+         } else {
+            consumeAvro(messages);
+            avroConsumer.close();
+         }
+
+         messageWaitDuration = System.currentTimeMillis() - messageWaitStartTime;
+         updatePhase(ConsumptionPhase.COMPLETED);
+
+         logger.infof("Message consumption completed - Connection: %d ms, Message wait: %d ms", connectionDuration,
+               messageWaitDuration);
+
+         return messages;
+      } catch (Exception e) {
+         // Calculate durations even in case of failure
+         if (connectionStartTime > 0 && connectionDuration == 0) {
+            connectionDuration = System.currentTimeMillis() - connectionStartTime;
+         }
+         if (messageWaitStartTime > 0 && messageWaitDuration == 0) {
+            messageWaitDuration = System.currentTimeMillis() - messageWaitStartTime;
+         }
+
+         updatePhase(ConsumptionPhase.FAILED);
+         throw e;
       }
-      return messages;
    }
 
    /**
@@ -195,6 +266,48 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       }
 
       instanciateKafkaConsumer(props, endpointTopic);
+   }
+
+   /** Initialize Kafka consumer with connection timeout management. */
+   private void initializeKafkaConsumerWithConnectionTimeout() throws Exception {
+      // First, initialize the consumer normally
+      initializeKafkaConsumer();
+
+      // Get the configured connection timeout, or use default
+      long connectionTimeout = specification.getConnectionTimeoutMS() != null ? specification.getConnectionTimeoutMS()
+            : DEFAULT_CONNECTION_TIMEOUT_MS;
+
+      // Test the connection with a separate timeout
+      if (!testKafkaConnection(connectionTimeout)) {
+         throw new RuntimeException("Failed to connect to Kafka broker within " + connectionTimeout + "ms");
+      }
+   }
+
+   /** Test Kafka connection with timeout. */
+   private boolean testKafkaConnection(long timeoutMs) {
+      long startTime = System.currentTimeMillis();
+
+      try {
+         KafkaConsumer<?, ?> testConsumer = consumer != null ? consumer : avroConsumer;
+
+         while ((System.currentTimeMillis() - startTime) < timeoutMs) {
+            try {
+               // Try to list topics with a short timeout to test connectivity
+               testConsumer.listTopics(Duration.ofMillis(1000));
+               logger.debugf("Successfully connected to Kafka in %d ms", System.currentTimeMillis() - startTime);
+               return true;
+            } catch (Exception e) {
+               // If we haven't timed out yet, wait a bit and retry
+               if ((System.currentTimeMillis() - startTime) < timeoutMs) {
+                  Thread.sleep(500);
+               }
+            }
+         }
+      } catch (Exception e) {
+         logger.warnf("Exception while testing Kafka connection: %s", e.getMessage());
+      }
+
+      return false;
    }
 
    private void instanciateKafkaConsumer(Properties props, String endpointTopic) {

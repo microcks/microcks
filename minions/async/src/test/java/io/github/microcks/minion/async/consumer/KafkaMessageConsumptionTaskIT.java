@@ -49,6 +49,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is an integration test case using <a href="https://testcontainers.com/">Testcontainers</a> to test
@@ -186,6 +187,51 @@ class KafkaMessageConsumptionTaskIT {
       Assertions.assertNull(message.getPayload());
       Assertions.assertNotNull(message.getPayloadRecord());
       Assertions.assertEquals(TEXT_MESSAGE_TEMPLATE.formatted(0), message.getPayloadRecord().toString());
+   }
+
+   @Test
+   void testConnectionAndMessagePhasesCorrectly() throws Exception {
+      // Arrange.
+      AsyncTestSpecification asyncTestSpecification = new AsyncTestSpecification();
+      asyncTestSpecification.setTimeoutMS(3000L); // 3s for message waiting
+      asyncTestSpecification.setConnectionTimeoutMS(2000L); // 2s for connection
+      asyncTestSpecification.setEndpointUrl(
+            "kafka://%s/%s".formatted(kafkaContainer.getBootstrapServers().replace("PLAINTEXT://", ""), TOPIC_NAME));
+
+      KafkaMessageConsumptionTask kafkaTask = new KafkaMessageConsumptionTask(asyncTestSpecification);
+
+      // Act & Assert phases
+      ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+      // Start consumption in background
+      Future<List<ConsumedMessage>> consumptionFuture = executorService.submit(kafkaTask);
+
+      // Wait a bit and check we're in connection phase initially
+      await().atMost(500, TimeUnit.MILLISECONDS)
+            .until(() -> kafkaTask.getCurrentPhase() != io.github.microcks.minion.async.ConsumptionPhase.STARTING);
+
+      // After a short time, should be in waiting for messages phase  
+      await().atMost(3, TimeUnit.SECONDS).until(
+            () -> kafkaTask.getCurrentPhase() == io.github.microcks.minion.async.ConsumptionPhase.WAITING_FOR_MESSAGES);
+
+      assertEquals(io.github.microcks.minion.async.ConsumptionPhase.WAITING_FOR_MESSAGES, kafkaTask.getCurrentPhase());
+      assertEquals("WAITING_FOR_MESSAGES", asyncTestSpecification.getCurrentPhase());
+
+      // Now send a message
+      await().during(200, TimeUnit.MILLISECONDS).until(() -> true);
+      sendTextMessagesOnTopic(1);
+
+      // Verify consumption completes successfully
+      List<ConsumedMessage> messages = consumptionFuture.get(5, TimeUnit.SECONDS);
+      assertEquals(io.github.microcks.minion.async.ConsumptionPhase.COMPLETED, kafkaTask.getCurrentPhase());
+      assertEquals("COMPLETED", asyncTestSpecification.getCurrentPhase());
+
+      // Assert message received
+      Assertions.assertFalse(messages.isEmpty());
+      Assertions.assertEquals(1, messages.size());
+      ConsumedMessage message = messages.get(0);
+      Assertions.assertEquals(TEXT_MESSAGE_TEMPLATE.formatted(0),
+            new String(message.getPayload(), StandardCharsets.UTF_8));
    }
 
    private static void sendTextMessagesOnTopic(int number) {
