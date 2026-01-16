@@ -1,0 +1,475 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "API Pastries",
+    "summary": "A sample REST API collection for pastry catalog management",
+    "version": "1.0.0",
+    "authors": [
+      {
+        "name": "Microcks Team",
+        "email": "hello@microcks.io"
+      }
+    ]
+  },
+  "bundled": true,
+  "config": {
+    "environments": [
+      {
+        "name": "Development",
+        "variables": [
+          {
+            "name": "baseUrl",
+            "value": "http://localhost:8080",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "name": "Production",
+        "variables": [
+          {
+            "name": "baseUrl",
+            "value": "https://api-pastry.microcks.io",
+            "enabled": true
+          }
+        ]
+      }
+    ]
+  },
+  "request": {
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "name": "Accept",
+        "value": "application/json"
+      }
+    ]
+  },
+  "items": [
+    {
+      "type": "folder",
+      "name": "Pastries",
+      "description": "Pastry catalog endpoints",
+      "sequence": 1,
+      "items": [
+        {
+          "type": "request",
+          "name": "Get All Pastries",
+          "description": "Retrieve a list of all pastries",
+          "sequence": 1,
+          "request": {
+            "type": "http",
+            "method": "GET",
+            "url": "{{baseUrl}}/pastries"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": 200,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "[\n  {\n    \"name\": \"Croissant\",\n    \"description\": \"A buttery, flaky, viennoiserie pastry\",\n    \"size\": \"M\",\n    \"price\": 2.5,\n    \"status\": \"available\",\n    \"country\": \"France\"\n  },\n  {\n    \"name\": \"Pain au Chocolat\",\n    \"description\": \"Chocolatine is also called Pain au Chocolat\",\n    \"size\": \"M\",\n    \"price\": 2.8,\n    \"status\": \"available\",\n    \"country\": \"France\"\n  },\n  {\n    \"name\": \"Baba Rhum\",\n    \"description\": \"Deliciously soft, sweet pastry with distinctive flavor\",\n    \"size\": \"L\",\n    \"price\": 3.2,\n    \"status\": \"available\",\n    \"country\": \"France\"\n  },\n  {\n    \"name\": \"Pretzel\",\n    \"description\": \"A classic German twisted bread\",\n    \"size\": \"M\",\n    \"price\": 2.0,\n    \"status\": \"available\",\n    \"country\": \"Germany\"\n  },\n  {\n    \"name\": \"Berliner\",\n    \"description\": \"German doughnut filled with jam\",\n    \"size\": \"M\",\n    \"price\": 2.3,\n    \"status\": \"available\",\n    \"country\": \"Germany\"\n  }\n]"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Get Pastries by Country - France",
+          "description": "Search for pastries by country of origin",
+          "sequence": 2,
+          "request": {
+            "type": "http",
+            "method": "GET",
+            "url": "{{baseUrl}}/pastries",
+            "params": [
+              {
+                "name": "country",
+                "value": "France",
+                "type": "query",
+                "description": "Filter pastries by country of origin"
+              }
+            ]
+          },
+          "response": [
+            {
+              "name": "French Pastries",
+              "status": 200,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "[\n  {\n    \"name\": \"Croissant\",\n    \"description\": \"A buttery, flaky, viennoiserie pastry\",\n    \"size\": \"M\",\n    \"price\": 2.5,\n    \"status\": \"available\",\n    \"country\": \"France\"\n  },\n  {\n    \"name\": \"Pain au Chocolat\",\n    \"description\": \"Chocolatine is also called Pain au Chocolat\",\n    \"size\": \"M\",\n    \"price\": 2.8,\n    \"status\": \"available\",\n    \"country\": \"France\"\n  },\n  {\n    \"name\": \"Baba Rhum\",\n    \"description\": \"Deliciously soft, sweet pastry with distinctive flavor\",\n    \"size\": \"L\",\n    \"price\": 3.2,\n    \"status\": \"available\",\n    \"country\": \"France\"\n  }\n]"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Get Pastries by Country - Germany",
+          "description": "Search for pastries by country of origin",
+          "sequence": 3,
+          "request": {
+            "type": "http",
+            "method": "GET",
+            "url": "{{baseUrl}}/pastries",
+            "params": [
+              {
+                "name": "country",
+                "value": "Germany",
+                "type": "query",
+                "description": "Filter pastries by country of origin"
+              }
+            ]
+          },
+          "response": [
+            {
+              "name": "German Pastries",
+              "status": 200,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "[\n  {\n    \"name\": \"Pretzel\",\n    \"description\": \"A classic German twisted bread\",\n    \"size\": \"M\",\n    \"price\": 2.0,\n    \"status\": \"available\",\n    \"country\": \"Germany\"\n  },\n  {\n    \"name\": \"Berliner\",\n    \"description\": \"German doughnut filled with jam\",\n    \"size\": \"M\",\n    \"price\": 2.3,\n    \"status\": \"available\",\n    \"country\": \"Germany\"\n  }\n]"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Get Pastries by Country - Mauritius",
+          "description": "Search for pastries by country of origin",
+          "sequence": 4,
+          "request": {
+            "type": "http",
+            "method": "GET",
+            "url": "{{baseUrl}}/pastries",
+            "params": [
+              {
+                "name": "country",
+                "value": "Mauritius",
+                "type": "query",
+                "description": "Filter pastries by country of origin"
+              }
+            ]
+          },
+          "response": [
+            {
+              "name": "Mauritian Cakes",
+              "status": 200,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "[\n  {\n    \"name\": \"Gateau piments\",\n    \"description\": \"Spicy Mauritian chili fritters\",\n    \"size\": \"S\",\n    \"price\": 1.5,\n    \"status\": \"available\",\n    \"country\": \"Mauritius\"\n  },\n  {\n    \"name\": \"Napolitaine\",\n    \"description\": \"Sweet shortbread biscuit filled with jam\",\n    \"size\": \"M\",\n    \"price\": 2.1,\n    \"status\": \"available\",\n    \"country\": \"Mauritius\"\n  }\n]"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Get Pastry by Name",
+          "description": "Retrieve a specific pastry by name",
+          "sequence": 5,
+          "request": {
+            "type": "http",
+            "method": "GET",
+            "url": "{{baseUrl}}/pastries/:name",
+            "params": [
+              {
+                "name": "name",
+                "value": "Croissant",
+                "type": "path",
+                "description": "Pastry name"
+              }
+            ]
+          },
+          "response": [
+            {
+              "name": "Croissant",
+              "status": 200,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"name\": \"Croissant\",\n  \"description\": \"A buttery, flaky, viennoiserie pastry\",\n  \"size\": \"M\",\n  \"price\": 2.5,\n  \"status\": \"available\",\n  \"country\": \"France\"\n}"
+              }
+            },
+            {
+              "name": "Pastry Not Found",
+              "status": 404,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"error\": \"Pastry not found\",\n  \"message\": \"No pastry with the specified name exists\"\n}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Create New Pastry - Belgian Waffle",
+          "description": "Add a new pastry to the catalog",
+          "sequence": 6,
+          "request": {
+            "type": "http",
+            "method": "POST",
+            "url": "{{baseUrl}}/pastries",
+            "body": {
+              "type": "json",
+              "data": "{\n  \"name\": \"Belgian Waffle\",\n  \"description\": \"Light, crispy waffle with deep pockets\",\n  \"size\": \"L\",\n  \"price\": 3.5,\n  \"status\": \"available\",\n  \"country\": \"Belgium\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created Belgian Waffle",
+              "status": 201,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Location",
+                  "value": "/pastries/Belgian%20Waffle"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"name\": \"Belgian Waffle\",\n  \"description\": \"Light, crispy waffle with deep pockets\",\n  \"size\": \"L\",\n  \"price\": 3.5,\n  \"status\": \"available\",\n  \"country\": \"Belgium\"\n}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Create New Pastry - Churro",
+          "description": "Add a new Spanish pastry to the catalog",
+          "sequence": 7,
+          "request": {
+            "type": "http",
+            "method": "POST",
+            "url": "{{baseUrl}}/pastries",
+            "body": {
+              "type": "json",
+              "data": "{\n  \"name\": \"Churro\",\n  \"description\": \"Fried-dough pastry with cinnamon sugar\",\n  \"size\": \"S\",\n  \"price\": 1.8,\n  \"status\": \"available\",\n  \"country\": \"Spain\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created Churro",
+              "status": 201,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Location",
+                  "value": "/pastries/Churro"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"name\": \"Churro\",\n  \"description\": \"Fried-dough pastry with cinnamon sugar\",\n  \"size\": \"S\",\n  \"price\": 1.8,\n  \"status\": \"available\",\n  \"country\": \"Spain\"\n}"
+              }
+            },
+            {
+              "name": "Validation Error",
+              "status": 400,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"error\": \"Validation failed\",\n  \"details\": [\n    {\n      \"field\": \"name\",\n      \"message\": \"Pastry name already exists\"\n    }\n  ]\n}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Create New Pastry - Gateau piments",
+          "description": "Add a new Mauritian cake to the catalog",
+          "sequence": 8,
+          "request": {
+            "type": "http",
+            "method": "POST",
+            "url": "{{baseUrl}}/pastries",
+            "body": {
+              "type": "json",
+              "data": "{\n  \"name\": \"Gateau piments\",\n  \"description\": \"Spicy Mauritian chili fritters\",\n  \"size\": \"S\",\n  \"price\": 1.5,\n  \"status\": \"available\",\n  \"country\": \"Mauritius\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created Gateau piments",
+              "status": 201,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Location",
+                  "value": "/pastries/Gateau%20piments"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"name\": \"Gateau piments\",\n  \"description\": \"Spicy Mauritian chili fritters\",\n  \"size\": \"S\",\n  \"price\": 1.5,\n  \"status\": \"available\",\n  \"country\": \"Mauritius\"\n}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Create New Pastry - Napolitaine",
+          "description": "Add a new Mauritian cake to the catalog",
+          "sequence": 9,
+          "request": {
+            "type": "http",
+            "method": "POST",
+            "url": "{{baseUrl}}/pastries",
+            "body": {
+              "type": "json",
+              "data": "{\n  \"name\": \"Napolitaine\",\n  \"description\": \"Sweet shortbread biscuit filled with jam\",\n  \"size\": \"M\",\n  \"price\": 2.1,\n  \"status\": \"available\",\n  \"country\": \"Mauritius\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Created Napolitaine",
+              "status": 201,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Location",
+                  "value": "/pastries/Napolitaine"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"name\": \"Napolitaine\",\n  \"description\": \"Sweet shortbread biscuit filled with jam\",\n  \"size\": \"M\",\n  \"price\": 2.1,\n  \"status\": \"available\",\n  \"country\": \"Mauritius\"\n}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Update Pastry",
+          "description": "Update an existing pastry",
+          "sequence": 10,
+          "request": {
+            "type": "http",
+            "method": "PATCH",
+            "url": "{{baseUrl}}/pastries/:name",
+            "params": [
+              {
+                "name": "name",
+                "value": "Croissant",
+                "type": "path",
+                "description": "Pastry name"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{\n  \"price\": 2.8,\n  \"status\": \"limited\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Updated",
+              "status": 200,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"name\": \"Croissant\",\n  \"description\": \"A buttery, flaky, viennoiserie pastry\",\n  \"size\": \"M\",\n  \"price\": 2.8,\n  \"status\": \"limited\",\n  \"country\": \"France\"\n}"
+              }
+            }
+          ]
+        },
+        {
+          "type": "request",
+          "name": "Delete Pastry",
+          "description": "Remove a pastry from the catalog",
+          "sequence": 11,
+          "request": {
+            "type": "http",
+            "method": "DELETE",
+            "url": "{{baseUrl}}/pastries/:name",
+            "params": [
+              {
+                "name": "name",
+                "value": "Berliner",
+                "type": "path",
+                "description": "Pastry name to delete"
+              }
+            ]
+          },
+          "response": [
+            {
+              "name": "Deleted",
+              "status": 204,
+              "headers": []
+            },
+            {
+              "name": "Pastry Not Found",
+              "status": 404,
+              "headers": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "type": "json",
+                "data": "{\n  \"error\": \"Pastry not found\",\n  \"message\": \"Cannot delete non-existent pastry\"\n}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
