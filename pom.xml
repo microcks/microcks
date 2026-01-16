@@ -5,7 +5,7 @@
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
   <packaging>pom</packaging>
-  <version>1.13.2-SNAPSHOT</version>
+  <version>1.13.3-SNAPSHOT</version>
   <modules>
     <module>commons/util</module>
     <module>commons/model</module>
