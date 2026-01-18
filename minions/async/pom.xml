@@ -25,7 +25,7 @@
     <quarkus.platform.version>3.20.2.2</quarkus.platform.version>
     <quarkus-plugin.version>3.20.2.2</quarkus-plugin.version>
 
-    <apache-httpclient.version>5.3</apache-httpclient.version>
+    <apache-httpclient.version>5.6</apache-httpclient.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.21.0</nats.version>
     <rabbitmq.version>5.19.0</rabbitmq.version>
