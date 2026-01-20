@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Create a regex for a conventional commit.
+conventional_commit_regex="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z \-]+\))?!?: .+$"
+
+# Create a regex for the
+issue_regex="#[0-9]+"
+
+# Get the commit message (the parameter we're given is just the path to the
+# temporary file which holds the message).
+commit_message=$(cat "$1")
+
+# Check the message, if we match, all good baby.
+if [[ "$commit_message" =~ $conventional_commit_regex ]]; then
+  echo -e "✅  Commit message meets Conventional Commit standards..."
+
+  # Check if the commit message references an issue
+  #if ! [[ "$commit_message" =~ $issue_regex ]]; then
+  #  echo -e "❌  Missing issue reference. Please add one (e.g., #123)."
+  #  exit 1
+  #fi
+  #echo -e "✅  Commit message references an issue..."
+
+  # Check if the commit message contains a Signed-off-by line
+  if ! grep -q '^Signed-off-by: ' "$1"; then
+    echo -e "❌  Missing Signed-off-by line. Please sign off your commit using 'git commit -s'."
+    exit 1
+  fi
+  echo -e "✅  Commit message is signed-off."
+  exit 0
+fi
+
+# Uh-oh, this is not a conventional commit, show an example and link to the spec.
+echo -e "❌  The commit message does not meet the Conventional Commit standard"
+echo "An example of a valid message is: "
+echo "  feat(login): add the 'remember me' button"
+echo "  Signed-off-by: John Doe <john.doe@acme.org>"
+echo "More details at: https://www.conventionalcommits.org/en/v1.0.0/#summary"
+exit 1
