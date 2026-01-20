@@ -35,7 +35,7 @@ jobs:
         run: mvn -B clean install
 
       - name: Cache Maven dependencies
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.m2/repository
           key: maven-repo-${{ github.run_id }}
@@ -60,7 +60,7 @@ jobs:
           cache: maven
 
       - name: Restore Maven Cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.m2/repository
           key: maven-repo-${{ github.run_id }}
@@ -124,7 +124,7 @@ jobs:
           cache: maven
 
       - name: Restore Maven Cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.m2/repository
           key: maven-repo-${{ github.run_id }}
@@ -157,7 +157,7 @@ jobs:
           cache: maven
 
       - name: Restore Maven Cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.m2/repository
           key: maven-repo-${{ github.run_id }}
@@ -188,7 +188,7 @@ jobs:
           cache: maven
 
       - name: Restore Maven Cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.m2/repository
           key: maven-repo-${{ github.run_id }}
