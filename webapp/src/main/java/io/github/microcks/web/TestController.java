@@ -109,7 +109,7 @@ public class TestController {
    }
 
    @PostMapping(value = "/tests")
-   public ResponseEntity<TestResult> createTest(@RequestBody TestRequestDTO test) {
+   public ResponseEntity<Object> createTest(@RequestBody TestRequestDTO test) {
       log.debug("Creating new test for {} on endpoint {}", test.getServiceId(), test.getTestEndpoint());
       // serviceId may have the form of <service_name>:<service_version> or just <service_id>
       Service service = serviceService.getServiceById(test.getServiceId());
