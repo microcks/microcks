@@ -209,6 +209,30 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                      }
                   }
                }
+
+               if (verb.getValue().has("callbacks")) {
+                  System.err.println("===============================================");
+                  System.err.println("Callbacks are not yet supported. Ignoring them.");
+                  System.err.println("===============================================");
+
+                  JsonNode callbacks = verb.getValue().get("callbacks");
+                  for (Entry<String, JsonNode> callbackNode : callbacks.properties()) {
+                     System.err.println("  In callback " + callbackNode.getKey() + ":");
+
+                     for (Entry<String, JsonNode> callbackPath : callbackNode.getValue().properties()) {
+                        System.err.println("    dispatchCriteria is " + callbackPath.getKey());
+
+                        for (Entry<String, JsonNode> callbackVerb : callbackPath.getValue().properties()) {
+                           System.err.println("    callback verb is " + callbackVerb.getKey());
+
+
+                           if (callbackVerb.getValue().has("requestBody")) {
+                              System.err.println("    got callback requestBody");
+                           }
+                        }
+                     }
+                  }
+               }
             }
          }
       }

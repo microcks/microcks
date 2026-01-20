@@ -2189,4 +2189,43 @@ class OpenAPIImporterTest {
       assertNotNull(response.getContent());
       assertTrue(response.getContent().startsWith("data:application/octet-stream;base64,"));
    }
+
+   @Test
+   void testOpenAPIWithCallbacks() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/callback-example-openapi.json", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Callback Example", service.getName());
+      assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations have been found.
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().get(0);
+      assertEquals("POST /streams", operation.getName());
+      assertEquals("POST", operation.getMethod());
+
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(1, exchanges.size());
+   }
 }
