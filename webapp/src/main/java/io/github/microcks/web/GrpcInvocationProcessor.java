@@ -61,7 +61,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.delay.DelayApplierOptions;
 import io.github.microcks.util.tracing.CommonAttributes;
 import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.util.tracing.TraceUtil;
@@ -78,6 +77,8 @@ public class GrpcInvocationProcessor {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(GrpcInvocationProcessor.class);
+
+   private static final String SCRIPT_EVALUATION_ERROR = "Error during Script evaluation";
 
    private final ServiceStateRepository serviceStateRepository;
    private final ResponseRepository responseRepository;
@@ -176,7 +177,8 @@ public class GrpcInvocationProcessor {
          }
 
          // Or, return an error status.
-         return new GrpcResponseResult(getSafeErrorStatus(response.getStatus()), null, "Mocked response status code");
+         return new GrpcResponseResult(getSafeErrorStatus(response.getStatus()), responseContent,
+               "Mocked response status code");
       }
 
       // No response found.
@@ -248,8 +250,8 @@ public class GrpcInvocationProcessor {
                                  .put(CommonAttributes.DISPATCHER, "GROOVY")
                                  .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
                                  .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
-                     Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
-                     log.error("Error during Script evaluation", e);
+                     Span.current().setStatus(StatusCode.ERROR, SCRIPT_EVALUATION_ERROR);
+                     log.error(SCRIPT_EVALUATION_ERROR, e);
                   }
                   break;
                case DispatchStyles.JS:
@@ -261,7 +263,7 @@ public class GrpcInvocationProcessor {
                            new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
                      dispatchCriteria = JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext);
                   } catch (Exception e) {
-                     log.error("Error during Script evaluation", e);
+                     log.error(SCRIPT_EVALUATION_ERROR, e);
                   }
                   break;
                default:
