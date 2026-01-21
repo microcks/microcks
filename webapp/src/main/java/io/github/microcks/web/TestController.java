@@ -125,7 +125,7 @@ public class TestController {
          if (!secrets.isEmpty()) {
             secretRef = new SecretRef(secrets.getFirst().getId(), secrets.getFirst().getName());
          } else {
-            log.warn("Secret '{}' specified in test request but not found", test.getSecretName());
+            log.warn("Secret '" + test.getSecretName() + "' specified in test request but not found");
             return new ResponseEntity<>(
                   String.format("Secret '%s' not found. Please ensure the secret exists before creating the test.",
                         test.getSecretName()),
