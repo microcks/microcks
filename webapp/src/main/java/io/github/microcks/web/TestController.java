@@ -123,7 +123,7 @@ public class TestController {
       if (test.getSecretName() != null) {
          List<Secret> secrets = secretRepository.findByName(test.getSecretName());
          if (!secrets.isEmpty()) {
-            secretRef = new SecretRef(secrets.getFirst().getId(), secrets.getFirst().getName());
+            secretRef = new SecretRef(secrets.get(0).getId(), secrets.get(0).getName());
          } else {
             log.warn("Secret '" + test.getSecretName() + "' specified in test request but not found");
             return new ResponseEntity<>(
