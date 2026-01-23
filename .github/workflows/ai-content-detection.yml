@@ -1,0 +1,108 @@
+name: 'AI Content Detection'
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request number to analyze'
+        required: true
+        type: number
+      confidence_threshold:
+        description: 'Confidence threshold percentage (0-100)'
+        default: '80'
+        type: string
+      pr_label:
+        description: 'Label to add to PR if AI detected (leave empty to skip)'
+        default: 'ai-generated'
+        type: string
+      skip_users:
+        description: 'Comma-separated list of users to skip (e.g., dependabot,renovate)'
+        default: 'dependabot[bot],dependabot'
+        type: string
+      fail_on_detection:
+        description: 'Fail workflow if AI content detected above threshold'
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Test mode: analyze but do not post/label/fail'
+        default: true
+        type: boolean
+      custom_prompt:
+        description: 'Custom analysis prompt (leave empty for default)'
+        default: ''
+        type: string
+      diff_max_chars:
+        description: 'Maximum diff size in characters'
+        default: '20000'
+        type: string
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+# Prevent concurrent runs on the same PR
+concurrency:
+  group: ai-detection-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: 'Analyze PR for AI-Generated Content'
+    runs-on: ubuntu-latest
+    # Only run on PRs from external forks or when manually triggered
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.fork == true
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install GitHub CLI
+        run: |
+          if ! command -v gh &> /dev/null; then
+            echo "Installing GitHub CLI..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh -y
+          fi
+          gh --version
+
+      - name: Install GitHub Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Install script dependencies
+        working-directory: ./.github/scripts/ai-content-detection
+        run: npm install
+
+      - name: Run AI detection analysis
+        working-directory: ./.github/scripts/ai-content-detection
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          CONFIDENCE_THRESHOLD: ${{ github.event.inputs.confidence_threshold || '80' }}
+          PR_LABEL: ${{ github.event.inputs.pr_label || 'ai-generated' }}
+          SKIP_USERS: ${{ github.event.inputs.skip_users || 'dependabot[bot],dependabot' }}
+          FAIL_ON_DETECTION: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.fail_on_detection == 'true') && 'true' || 'false' }}
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true') && 'true' || 'true' }}
+          CUSTOM_PROMPT: ${{ github.event.inputs.custom_prompt || '' }}
+          DIFF_MAX_CHARS: ${{ github.event.inputs.diff_max_chars || '20000' }}
+        run: node analyze.js
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## AI Content Detection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR Number:** ${{ github.event.inputs.pr_number || github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Confidence Threshold:** ${{ github.event.inputs.confidence_threshold || '80' }}%" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry Run:** ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true') && 'Yes' || 'Yes' }}" >> $GITHUB_STEP_SUMMARY
