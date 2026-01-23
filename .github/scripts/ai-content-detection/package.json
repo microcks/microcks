@@ -1,0 +1,11 @@
+{
+    "name": "ai-content-detection",
+    "description": "AI-generated content detection for pull requests",
+    "version": "1.0.0",
+    "type": "module",
+    "private": true,
+    "dependencies": {
+        "@octokit/rest": "^21.0.0",
+        "dotenv": "^16.0.0"
+    }
+}
