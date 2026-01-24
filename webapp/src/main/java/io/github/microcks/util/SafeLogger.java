@@ -167,6 +167,16 @@ public class SafeLogger {
    }
 
    /**
+    * Log a message at the WARN level.
+    * @param message the message string to be logged
+    */
+   public void warn(String message) {
+      if (log.isWarnEnabled()) {
+         log.warn(encode(message));
+      }
+   }
+
+   /**
     * Log an exception (throwable) at the WARN level with an accompanying message.
     * @param message the message string to be logged
     * @param t       the exception (throwable) to log

@@ -109,7 +109,7 @@ public class TestController {
    }
 
    @PostMapping(value = "/tests")
-   public ResponseEntity<TestResult> createTest(@RequestBody TestRequestDTO test) {
+   public ResponseEntity<Object> createTest(@RequestBody TestRequestDTO test) {
       log.debug("Creating new test for {} on endpoint {}", test.getServiceId(), test.getTestEndpoint());
       // serviceId may have the form of <service_name>:<service_version> or just <service_id>
       Service service = serviceService.getServiceById(test.getServiceId());
@@ -123,9 +123,14 @@ public class TestController {
       if (test.getSecretName() != null) {
          List<Secret> secrets = secretRepository.findByName(test.getSecretName());
          if (!secrets.isEmpty()) {
-            secretRef = new SecretRef(secrets.getFirst().getId(), secrets.getFirst().getName());
+            secretRef = new SecretRef(secrets.get(0).getId(), secrets.get(0).getName());
+         } else {
+            log.warn("Secret '" + test.getSecretName() + "' specified in test request but not found");
+            return new ResponseEntity<>(
+                  String.format("Secret '%s' not found. Please ensure the secret exists before creating the test.",
+                        test.getSecretName()),
+                  HttpStatus.BAD_REQUEST);
          }
-         // TODO: should we return an error and refuse creating the test without secret ?
       }
 
       TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(),
