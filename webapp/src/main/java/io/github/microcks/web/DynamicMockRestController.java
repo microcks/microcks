@@ -60,6 +60,7 @@ import io.opentelemetry.api.trace.StatusCode;
 
 /**
  * This is the controller for Dynamic mocks in Microcks.
+ * 
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
@@ -75,11 +76,12 @@ public class DynamicMockRestController {
    private final GenericResourceRepository genericResourceRepository;
    private final ApplicationContext applicationContext;
 
-   @Value("${mocks.enable-invocation-stats:false}")
+   @Value("${mocks.enable-invocation-stats:true}")
    private Boolean enableInvocationStats;
 
    /**
     * Build a new DynamicMockRestController with required dependencies.
+    * 
     * @param serviceRepository         the repository for services
     * @param genericResourceRepository the repository for generic resources
     * @param applicationContext        the Spring application context
@@ -168,7 +170,6 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-
    @GetMapping(value = "/{service}/{version}/{resource}", produces = "application/json")
    public ResponseEntity<String> findResources(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
@@ -251,7 +252,6 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-
    @GetMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
    public ResponseEntity<String> getResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
@@ -333,7 +333,6 @@ public class DynamicMockRestController {
       // Return a 400 code : bad request.
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
-
 
    @PutMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
    public ResponseEntity<String> updateResource(@PathVariable("service") String serviceName,
@@ -447,7 +446,6 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-
    @DeleteMapping(value = "/{service}/{version}/{resource}/{resourceId}")
    public ResponseEntity<String> deleteResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
@@ -507,7 +505,6 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-
    /** Sanitize the service name (check encoding and so on...) */
    private String sanitizeServiceName(String serviceName) {
       // If serviceName was encoded with '+' instead of '%20', replace them.
@@ -517,7 +514,9 @@ public class DynamicMockRestController {
       return serviceName;
    }
 
-   /** Retrieve a MockContext corresponding to operation on service. Null if not found or not valid. */
+   /**
+    * Retrieve a MockContext corresponding to operation on service. Null if not found or not valid.
+    */
    private MockContext getMockContext(String serviceName, String version, String operationName) {
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       if (service != null && ServiceType.GENERIC_REST.equals(service.getType())) {
