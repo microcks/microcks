@@ -1,0 +1,139 @@
+asyncapi: 3.0.0
+info:
+  title: User Account Service
+  version: 1.0.0
+  description: Service managing user account operations with request-reply pattern
+
+channels:
+  userSignup:
+    address: 'user/signup'
+    messages:
+      userSignupRequest:
+        $ref: '#/components/messages/userSignupRequest'
+    bindings:
+      googlepubsub:
+        topic: projects/my-project/topics/user-signup
+
+  userSignupReply:
+    address: 'user/signup/reply'
+    messages:
+      userSignupReply:
+        $ref: '#/components/messages/userSignupReply'
+    bindings:
+      googlepubsub:
+        topic: projects/my-project/topics/user-signup-reply
+
+  emailVerification:
+    address: /email/verification
+    messages:
+      userVerificationRequest:
+        $ref: '#/components/messages/userVerificationRequest'
+    bindings:
+      googlepubsub:
+        topic: projects/my-project/topics/user-verification
+
+  emailVerificationReply:
+    messages:
+      userVerificationReply:
+        $ref: '#/components/messages/userVerificationReply'
+
+operations:
+  onUserSignup:
+    action: receive
+    channel:
+      $ref: '#/channels/userSignup'
+    messages:
+      - $ref: '#/components/messages/userSignupRequest'
+    reply:
+      channel:
+        $ref: '#/channels/userSignupReply'
+      messages:
+        - $ref: '#/components/messages/userSignupReply'
+  onEmailVerification:
+    action: receive
+    channel:
+      $ref: '#/channels/emailVerification'
+    messages:
+      - $ref: '#/components/messages/userVerificationRequest'
+    reply:
+      address:
+        location: "$message.header#/replyTo"
+      channel:
+        $ref: '#/channels/emailVerificationReply'
+      messages:
+        - $ref: '#/components/messages/userVerificationReply'
+
+components:
+  messages:
+    userSignupRequest:
+      name: UserSignupRequest
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          email:
+            type: string
+            format: email
+          username:
+            type: string
+          fullName:
+            type: string
+      examples:
+        - name: john_signup
+          payload:
+            email: john.doe@example.com
+            username: johndoe
+            fullName: John Doe
+
+    userSignupReply:
+      name: UserSignupReply
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          userId:
+            type: string
+          status:
+            type: string
+            enum: [success, error]
+          message:
+            type: string
+      examples:
+        - name: john_signup
+          payload:
+            userId: usr-12345
+            status: success
+            message: User account created successfully
+
+    userVerificationRequest:
+      name: UserVerificationRequest
+      contentType: application/json
+      header:
+        type: object
+        properties:
+          replyTo:
+            type: string
+      payload:
+        type: object
+        properties:
+          email:
+            type: string
+            format: email
+      examples:
+        - name: john_verification
+          payload:
+            email: john.doe@example.com
+
+    userVerificationReply:
+      name: UserVerificationReply
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          status:
+            type: string
+            enum: [verified, unverified]
+        examples:
+          - name: john_verification
+            payload:
+              status: verified

@@ -17,8 +17,8 @@ package io.github.microcks.util.asyncapi;
 
 import io.github.microcks.domain.Binding;
 import io.github.microcks.domain.BindingType;
+import io.github.microcks.domain.BindingsHolder;
 import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,17 +57,19 @@ public class AsyncAPICommons {
    public static final String EXAMPLE_HEADERS_NODE = "headers";
    public static final String QUEUE_VALUE = "queue";
    public static final String TOPIC_VALUE = "topic";
+   public static final String REPLY_NODE = "reply";
 
    private AsyncAPICommons() {
       // Private constructor to hide the implicit one as it's a utility class.
    }
 
    /**
-    * Browse and complete an operation bindings with the bindings information at Channel level.
-    * @param operation The operation whose bindings should be completed
-    * @param bindings  The Channel level bindings node
+    * Browse and complete bindings with protocol-specific information. Handles bindings from Channel, Operation, and
+    * Message levels.
+    * @param holder   The BindingsHolder (Operation or ReplyInfo) whose bindings should be completed
+    * @param bindings The bindings node (can be from Channel, Operation, or Message level)
     */
-   public static void completeChannelLevelBindings(Operation operation, JsonNode bindings) {
+   public static void completeBindings(BindingsHolder holder, JsonNode bindings) {
       Iterator<String> bindingNames = bindings.fieldNames();
       while (bindingNames.hasNext()) {
          String bindingName = bindingNames.next();
@@ -75,11 +77,11 @@ public class AsyncAPICommons {
 
          switch (bindingName) {
             case "ws":
-               Binding b = retrieveOrInitOperationBinding(operation, BindingType.WS);
+               Binding b = retrieveOrInitBinding(holder, BindingType.WS);
                b.setMethod(bindingNode.path("method").asText(null));
                break;
             case "amqp":
-               b = retrieveOrInitOperationBinding(operation, BindingType.AMQP);
+               b = retrieveOrInitBinding(holder, BindingType.AMQP);
                if (bindingNode.has("is")) {
                   String is = bindingNode.path("is").asText();
                   if (QUEUE_VALUE.equals(is)) {
@@ -92,78 +94,40 @@ public class AsyncAPICommons {
                   }
                }
                break;
-            case "googlepubsub":
-               b = retrieveOrInitOperationBinding(operation, BindingType.GOOGLEPUBSUB);
-               b.setDestinationName(bindingNode.path(TOPIC_VALUE).asText(null));
-               b.setPersistent(bindingNode.path("messageRetentionDuration").asBoolean(false));
-               break;
-            default:
-               break;
-         }
-      }
-   }
-
-   /**
-    * Browse and complete an operation bindings with the bindings information at Operation level.
-    * @param operation The operation whose bindings should be completed
-    * @param bindings  The Operation level bindings node
-    */
-   public static void completeOperationLevelBindings(Operation operation, JsonNode bindings) {
-      Iterator<String> bindingNames = bindings.fieldNames();
-      while (bindingNames.hasNext()) {
-         String bindingName = bindingNames.next();
-         JsonNode bindingNode = bindings.path(bindingName);
-
-         switch (bindingName) {
-            case "kafka":
-               break;
-            case "mqtt":
-               Binding b = retrieveOrInitOperationBinding(operation, BindingType.MQTT);
-               b.setQoS(bindingNode.path("qos").asText(null));
-               b.setPersistent(bindingNode.path("retain").asBoolean(false));
-               break;
             case "amqp1":
-               b = retrieveOrInitOperationBinding(operation, BindingType.AMQP1);
+               b = retrieveOrInitBinding(holder, BindingType.AMQP1);
                b.setDestinationName(bindingNode.path("destinationName").asText(null));
                b.setDestinationType(bindingNode.path("destinationType").asText(null));
                break;
+            case "googlepubsub":
+               b = retrieveOrInitBinding(holder, BindingType.GOOGLEPUBSUB);
+               b.setDestinationName(bindingNode.path(TOPIC_VALUE).asText(null));
+               b.setPersistent(bindingNode.path("messageRetentionDuration").asBoolean(false));
+               break;
+            case "mqtt":
+               b = retrieveOrInitBinding(holder, BindingType.MQTT);
+               b.setQoS(bindingNode.path("qos").asText(null));
+               b.setPersistent(bindingNode.path("retain").asBoolean(false));
+               break;
             case "nats":
-               b = retrieveOrInitOperationBinding(operation, BindingType.NATS);
+               b = retrieveOrInitBinding(holder, BindingType.NATS);
                b.setDestinationName(bindingNode.path(QUEUE_VALUE).asText(null));
                break;
             case "sqs":
-               b = retrieveOrInitOperationBinding(operation, BindingType.SQS);
+               b = retrieveOrInitBinding(holder, BindingType.SQS);
                if (bindingNode.has(QUEUE_VALUE)) {
                   b.setDestinationName(bindingNode.get(QUEUE_VALUE).path("name").asText(null));
                   b.setPersistent(bindingNode.path("messageRetentionPeriod").asBoolean(false));
                }
                break;
             case "sns":
-               b = retrieveOrInitOperationBinding(operation, BindingType.SNS);
+               b = retrieveOrInitBinding(holder, BindingType.SNS);
                if (bindingNode.has(TOPIC_VALUE) && bindingNode.get(TOPIC_VALUE).has("name")) {
                   b.setDestinationName(bindingNode.get(TOPIC_VALUE).path("name").asText(null));
                }
                break;
-            default:
-               break;
-         }
-      }
-   }
-
-   /**
-    * Browse and complete an operation bindings with the bindings information at Message level.
-    * @param operation The operation whose bindings should be completed
-    * @param bindings  The Message level bindings node
-    */
-   public static void completeMessageLevelBindings(Operation operation, JsonNode bindings) {
-      Iterator<String> bindingNames = bindings.fieldNames();
-      while (bindingNames.hasNext()) {
-         String bindingName = bindingNames.next();
-         JsonNode bindingNode = bindings.path(bindingName);
-
-         switch (bindingName) {
             case "kafka":
-               Binding b = retrieveOrInitOperationBinding(operation, BindingType.KAFKA);
+               b = retrieveOrInitBinding(holder, BindingType.KAFKA);
                if (bindingNode.has("key")) {
                   b.setKeyType(bindingNode.path("key").path("type").asText());
                }
@@ -217,15 +181,15 @@ public class AsyncAPICommons {
       return results;
    }
 
-   /** Get existing operation binding type or initialize a new one. */
-   private static Binding retrieveOrInitOperationBinding(Operation operation, BindingType type) {
+   /** Get existing binding type or initialize a new one. */
+   private static Binding retrieveOrInitBinding(BindingsHolder holder, BindingType type) {
       Binding binding = null;
-      if (operation.getBindings() != null) {
-         binding = operation.getBindings().get(type.toString());
+      if (holder.getBindings() != null) {
+         binding = holder.getBindings().get(type.toString());
       }
       if (binding == null) {
          binding = new Binding(type);
-         operation.addBinding(type.toString(), binding);
+         holder.addBinding(type.toString(), binding);
       }
       return binding;
    }

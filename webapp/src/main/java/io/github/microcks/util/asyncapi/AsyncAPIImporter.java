@@ -345,19 +345,19 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
 
                // We have to look also for bindings. First at the upper channel level.
                if (channel.getValue().has(BINDINGS)) {
-                  AsyncAPICommons.completeChannelLevelBindings(operation, channel.getValue().get(BINDINGS));
+                  AsyncAPICommons.completeBindings(operation, channel.getValue().get(BINDINGS));
                }
 
                // Then look for bindings at the operation level.
                if (verb.getValue().has(BINDINGS)) {
-                  AsyncAPICommons.completeOperationLevelBindings(operation, verb.getValue().get(BINDINGS));
+                  AsyncAPICommons.completeBindings(operation, verb.getValue().get(BINDINGS));
                }
 
                // Then look for bindings at the message level.
                JsonNode messageBody = verb.getValue().path("message");
                messageBody = followRefIfAny(messageBody);
                if (messageBody.has(BINDINGS)) {
-                  AsyncAPICommons.completeMessageLevelBindings(operation, messageBody.get(BINDINGS));
+                  AsyncAPICommons.completeBindings(operation, messageBody.get(BINDINGS));
                }
 
                results.add(operation);

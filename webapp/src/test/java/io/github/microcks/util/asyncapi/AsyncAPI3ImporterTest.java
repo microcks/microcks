@@ -21,6 +21,7 @@ import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
@@ -32,6 +33,9 @@ import io.github.microcks.util.ReferenceResolver;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.Ports.Binding;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -548,5 +552,56 @@ class AsyncAPI3ImporterTest {
             fail("Unknown operation name: " + operation.getName());
          }
       }
+   }
+
+   @Test
+   void testReplyInfoAsyncAPI3ImportYAML() {
+      AsyncAPI3Importer importer = null;
+      try {
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-reply.yaml", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("User Account Service", service.getName());
+      assertEquals(ServiceType.EVENT, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations have been found with reply info.
+      assertEquals(2, service.getOperations().size());
+
+      Operation op1 = service.getOperations().get(0);
+      assertEquals("RECEIVE onUserSignup", op1.getName());
+      assertEquals("RECEIVE", op1.getMethod());
+      assertNotNull(op1.getBindings().get(BindingType.GOOGLEPUBSUB.name()));
+      assertEquals("projects/my-project/topics/user-signup",
+            op1.getBindings().get(BindingType.GOOGLEPUBSUB.name()).getDestinationName());
+      assertNotNull(op1.getReply());
+      assertEquals("user/signup/reply", op1.getReply().getChannelAddress());
+      assertNull(op1.getReply().getAddressLocation());
+      assertEquals("projects/my-project/topics/user-signup-reply",
+            op1.getReply().getBindings().get(BindingType.GOOGLEPUBSUB.name()).getDestinationName());
+
+
+      Operation op2 = service.getOperations().get(1);
+      assertEquals("RECEIVE onEmailVerification", op2.getName());
+      assertEquals("RECEIVE", op2.getMethod());
+      assertNotNull(op2.getBindings().get(BindingType.GOOGLEPUBSUB.name()));
+      assertEquals("projects/my-project/topics/user-verification",
+            op2.getBindings().get(BindingType.GOOGLEPUBSUB.name()).getDestinationName());
+      assertNotNull(op2.getReply());
+      assertNull(op2.getReply().getChannelAddress());
+      assertEquals("$message.header#/replyTo", op2.getReply().getAddressLocation());
+      assertNull(op2.getReply().getBindings());
    }
 }
