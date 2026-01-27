@@ -206,7 +206,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
 
       // Look for bindings at the operation level.
       if (operationNode.has(BINDINGS)) {
-         AsyncAPICommons.completeBindings(operation, operationNode.get(BINDINGS));
+         AsyncAPICommons.completeOperationLevelBindings(operation, operationNode.get(BINDINGS));
       }
 
       // Then, check the related channels and extract dispatching info and bindings.
@@ -224,7 +224,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
          }
 
          if (channelNode.has(BINDINGS)) {
-            AsyncAPICommons.completeBindings(operation, channelNode.get(BINDINGS));
+            AsyncAPICommons.completeChannelLevelBindings(operation, channelNode.get(BINDINGS));
          }
       }
 
@@ -235,7 +235,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
             JsonNode messageInChannelNode = followRefIfAny(messages.next());
             JsonNode messageNode = followRefIfAny(messageInChannelNode);
             if (messageNode.has(BINDINGS)) {
-               AsyncAPICommons.completeBindings(operation, messageNode.get(BINDINGS));
+               AsyncAPICommons.completeMessageLevelBindings(operation, messageNode.get(BINDINGS));
             }
          }
       }
@@ -276,7 +276,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
 
          // Copy channel bindings to the reply object.
          if (channelNode.has(BINDINGS)) {
-            AsyncAPICommons.completeBindings(replyInfo, channelNode.get(BINDINGS));
+            AsyncAPICommons.completeChannelLevelBindings(replyInfo, channelNode.get(BINDINGS));
             hasData = true;
          }
       }
