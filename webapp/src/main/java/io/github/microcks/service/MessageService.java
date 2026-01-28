@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service bean for common processing around messages (request and responses).
@@ -140,18 +142,37 @@ public class MessageService {
 
    /** */
    private List<RequestResponsePair> associatePairs(List<Request> requests, List<Response> responses) {
+
       List<RequestResponsePair> results = new ArrayList<>();
+      Map<String, List<RequestResponsePair>> callbacks = new HashMap<>();
 
       // Browse them to reassociate them.
       for (Request request : requests) {
          for (Response response : responses) {
             if (request.getResponseId() != null && request.getResponseId().equals(response.getId())) {
-               // If found a matching response, build a pair.
+               // We found a matching response.
+               // If a callback, store in callbacks.
+               if (request.getCallbackName() != null) {
+                  callbacks.computeIfAbsent(request.getName(), k -> new ArrayList<>())
+                        .add(new RequestResponsePair(request, response));
+                  break;
+               }
+               // Build a pair of original request and response.
                results.add(new RequestResponsePair(request, response));
                break;
             }
          }
       }
+
+      if (!callbacks.isEmpty()) {
+         for (RequestResponsePair pair : results) {
+            List<RequestResponsePair> cbs = callbacks.get(pair.getRequest().getName());
+            if (cbs != null) {
+               pair.setCallbacks(cbs);
+            }
+         }
+      }
+
       return results;
    }
 }

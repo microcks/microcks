@@ -16,7 +16,10 @@
 package io.github.microcks.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
 
 /**
  * Simple bean representing a request/response pair.
@@ -27,10 +30,19 @@ public class RequestResponsePair extends Exchange {
    private Request request;
    private Response response;
 
+   @JsonInclude(JsonInclude.Include.NON_NULL)
+   private List<RequestResponsePair> callbacks;
+
    @JsonCreator
    public RequestResponsePair(@JsonProperty("request") Request request, @JsonProperty("response") Response response) {
       this.request = request;
       this.response = response;
+   }
+
+   public RequestResponsePair(@JsonProperty("request") Request request, @JsonProperty("response") Response response,
+         @JsonProperty("callbacks") List<RequestResponsePair> callbacks) {
+      this(request, response);
+      this.callbacks = callbacks;
    }
 
    public Request getRequest() {
@@ -47,5 +59,13 @@ public class RequestResponsePair extends Exchange {
 
    public void setResponse(Response response) {
       this.response = response;
+   }
+
+   public List<RequestResponsePair> getCallbacks() {
+      return callbacks;
+   }
+
+   public void setCallbacks(List<RequestResponsePair> callbacks) {
+      this.callbacks = callbacks;
    }
 }

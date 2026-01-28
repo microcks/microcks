@@ -36,7 +36,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
@@ -2226,6 +2225,36 @@ class OpenAPIImporterTest {
       } catch (Exception e) {
          fail("No exception should be thrown when importing message definitions.");
       }
-      assertEquals(1, exchanges.size());
+      assertEquals(2, exchanges.size());
+
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof RequestResponsePair pair) {
+            assertNotNull(pair.getCallbacks());
+            assertEquals(1, pair.getCallbacks().size());
+
+            Request request = pair.getRequest();
+            Response response = pair.getResponse();
+            RequestResponsePair callback = pair.getCallbacks().getFirst();
+
+            assertNotNull(request);
+            assertNotNull(response);
+
+
+            if ("johns".equals(request.getName())) {
+               assertEquals("johns", callback.getRequest().getName());
+               assertEquals("{\"timestamp\":\"2019-08-24T14:16:22Z\",\"userData\":\"johns\"}",
+                     callback.getRequest().getContent());
+               assertEquals("200", callback.getResponse().getStatus());
+            } else if ("tonys".equals(request.getName())) {
+               assertEquals("tonys", callback.getRequest().getName());
+               assertEquals("204", callback.getResponse().getStatus());
+            }
+
+            assertNull(request.getCallbackName());
+            assertEquals("onData", callback.getRequest().getCallbackName());
+         } else {
+            fail("Not the expected exchange type");
+         }
+      }
    }
 }

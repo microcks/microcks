@@ -29,6 +29,7 @@ public class Request extends Message {
    @Id
    private String id;
    private String responseId;
+   private String callbackName;
 
    private List<Parameter> queryParameters;
 
@@ -61,5 +62,13 @@ public class Request extends Message {
          this.queryParameters = new ArrayList<>();
       }
       queryParameters.add(parameter);
+   }
+
+   public String getCallbackName() {
+      return callbackName;
+   }
+
+   public void setCallbackName(String callbackName) {
+      this.callbackName = callbackName;
    }
 }

@@ -15,6 +15,8 @@
  */
 package io.github.microcks.domain;
 
+import javax.security.auth.callback.Callback;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,7 +27,9 @@ import java.util.Set;
  * bindings) and how dispatch request to them.
  * @author laurent
  */
-public class Operation {
+public class Operation implements Serializable {
+
+   private static final long serialVersionUID = 1905122041950251207L;
 
    private String name;
    private String method;
@@ -33,6 +37,7 @@ public class Operation {
    private String inputName;
    private String outputName;
    private Map<String, Binding> bindings;
+   private Map<String, CallbackInfo> callbackInfos;
 
    private boolean override = false;
    private String dispatcher;
@@ -96,6 +101,21 @@ public class Operation {
          this.bindings = new HashMap<>();
       }
       bindings.put(name, binding);
+   }
+
+   public Map<String, CallbackInfo> getCallbackInfos() {
+      return callbackInfos;
+   }
+
+   public void setCallbackInfso(Map<String, CallbackInfo> callbackInfos) {
+      this.callbackInfos = callbackInfos;
+   }
+
+   public void addCallbackInfo(String key, CallbackInfo value) {
+      if (this.callbackInfos == null) {
+         this.callbackInfos = new HashMap<>();
+      }
+      callbackInfos.put(key, value);
    }
 
    public boolean hasOverride() {

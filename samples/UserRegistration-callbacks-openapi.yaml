@@ -1,0 +1,138 @@
+---
+openapi: 3.1.0
+info:
+  title: UserRegistration
+  version: 2.0.0
+  description: API definition of UserRegistration sample app
+  contact:
+    name: Laurent Broudoux
+    url: http://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+paths:
+  /user:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserWithCallbackUrl'
+            examples:
+              John Doe:
+                value:
+                  user:
+                    firstName: John
+                    lastName: Doe
+                  callbackUrl: http://my-callback-url.com/user/registration/status
+      responses:
+        201:
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreationStatus'
+              examples:
+                John Doe:
+                  value:
+                    firstName: '{{ request.body/user/firstName }}'
+                    lastName: '{{ request.body/user/lastName }}'
+                    status: PENDING
+      callbacks:
+        onVerified:
+          '{$request.body#/callbackUrl}':
+            post:
+              x-microcks-callback:
+                order: 100
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/UserCreationStatus'
+                    examples:
+                      John Doe:
+                        value:
+                          firstName: '{{ request.body/user/firstName }}'
+                          lastName: '{{ request.body/user/lastName }}'
+                          status: VERIFIED
+              responses:
+                200:
+                  description: Callback received
+                  x-microcks-refs:
+                    - John Doe
+        onRegistered:
+          '{$request.body#/callbackUrl}':
+            post:
+              x-microcks-callback:
+                order: 150
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/UserCreationStatus'
+                    examples:
+                      John Doe:
+                        value:
+                          firstName: '{{ request.body/user/firstName }}'
+                          lastName: '{{ request.body/user/lastName }}'
+                          status: REGISTERED
+              responses:
+                200:
+                  description: Callback received
+                  x-microcks-refs:
+                    - John Doe
+        onCompleted:
+          '{$request.body#/callbackUrl}':
+            post:
+              x-microcks-callback:
+                order: 199
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/UserCreationStatus'
+                    examples:
+                      John Doe:
+                        value:
+                          firstName: '{{ request.body/user/firstName }}'
+                          lastName: '{{ request.body/user/lastName }}'
+                          status: COMPLETE
+              responses:
+                200:
+                  description: Callback received
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                      examples:
+                        John Doe:
+                          value:
+                            status: COMPLETE
+components:
+  schemas:
+    UserWithCallbackUrl:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        callbackUrl:
+          type: string
+    User:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+    UserCreationStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        status:
+          type: string

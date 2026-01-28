@@ -32,6 +32,8 @@ public interface RequestRepository extends MongoRepository<Request, String> {
 
    List<Request> findByTestCaseId(String testCaseId);
 
+   List<Request> findByOperationIdAndName(String operationId, String name);
+
    List<Request> findByOperationIdAndSourceArtifact(String operationId, String sourceArtifact);
 
    @Query("{ 'operationId' : {'$in' : ?0}}")

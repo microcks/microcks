@@ -15,13 +15,18 @@
  */
 package io.github.microcks.domain;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Companion object for Operation that may be used to express constraints on request parameters.
  * @author laurent
  */
-public class ParameterConstraint {
+public class ParameterConstraint implements Serializable {
+
+   @Serial
+   private static final long serialVersionUID = 3405172041950251807L;
 
    private String name;
    private ParameterLocation in;
