@@ -21,6 +21,7 @@ import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.ReplyInfo;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
@@ -239,7 +240,48 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
          }
       }
 
+      // Extract reply information if present.
+      if (operationNode.has(REPLY_NODE)) {
+         ReplyInfo replyInfo = extractReplyInfo(operationNode.get(REPLY_NODE));
+         if (replyInfo != null) {
+            operation.setReply(replyInfo);
+         }
+      }
+
       return operation;
+   }
+
+   /** Extract reply information from a reply node. */
+   private ReplyInfo extractReplyInfo(JsonNode replyNode) {
+      ReplyInfo replyInfo = new ReplyInfo();
+      boolean hasData = false;
+
+      // Extract address location (runtime expression).
+      if (replyNode.has(ADDRESS_NODE)) {
+         JsonNode addressNode = replyNode.get(ADDRESS_NODE);
+         if (addressNode.has(LOCATION_NODE)) {
+            replyInfo.setAddressLocation(addressNode.get(LOCATION_NODE).asText());
+            hasData = true;
+         }
+      }
+
+      // Extract channel address from the reply channel reference.
+      if (replyNode.has(CHANNEL_NODE)) {
+         JsonNode channelRef = replyNode.get(CHANNEL_NODE);
+         JsonNode channelNode = followRefIfAny(channelRef);
+         if (channelNode.has(ADDRESS_NODE)) {
+            replyInfo.setChannelAddress(channelNode.get(ADDRESS_NODE).asText());
+            hasData = true;
+         }
+
+         // Copy channel bindings to the reply object.
+         if (channelNode.has(BINDINGS)) {
+            AsyncAPICommons.completeChannelLevelBindings(replyInfo, channelNode.get(BINDINGS));
+            hasData = true;
+         }
+      }
+
+      return hasData ? replyInfo : null;
    }
 
    /** If necessary, complete an operation and its messages dispatch information. */

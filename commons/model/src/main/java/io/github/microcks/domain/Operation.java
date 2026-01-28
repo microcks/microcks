@@ -25,7 +25,7 @@ import java.util.Set;
  * bindings) and how dispatch request to them.
  * @author laurent
  */
-public class Operation {
+public class Operation implements BindingsHolder {
 
    private String name;
    private String method;
@@ -33,6 +33,7 @@ public class Operation {
    private String inputName;
    private String outputName;
    private Map<String, Binding> bindings;
+   private ReplyInfo reply;
 
    private boolean override = false;
    private String dispatcher;
@@ -96,6 +97,14 @@ public class Operation {
          this.bindings = new HashMap<>();
       }
       bindings.put(name, binding);
+   }
+
+   public ReplyInfo getReply() {
+      return reply;
+   }
+
+   public void setReply(ReplyInfo reply) {
+      this.reply = reply;
    }
 
    public boolean hasOverride() {
