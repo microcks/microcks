@@ -64,9 +64,9 @@ public class AsyncAPICommons {
    }
 
    /**
-    * Browse and complete an operation bindings with the bindings information at Channel level.
-    * @param operation The operation whose bindings should be completed
-    * @param bindings  The Channel level bindings node
+    * Browse and complete a bindings holder with the bindings information found at Channel level.
+    * @param holder   The bindings holder whose bindings should be completed
+    * @param bindings The Channel level bindings JSON node containing protocol-specific binding information
     */
    public static void completeChannelLevelBindings(BindingsHolder holder, JsonNode bindings) {
       Iterator<String> bindingNames = bindings.fieldNames();
@@ -105,9 +105,9 @@ public class AsyncAPICommons {
    }
 
    /**
-    * Browse and complete an operation bindings with the bindings information at Operation level.
-    * @param operation The operation whose bindings should be completed
-    * @param bindings  The Operation level bindings node
+    * Browse and complete a bindings holder with the bindings information found at Operation level.
+    * @param holder   The bindings holder whose bindings should be completed
+    * @param bindings The Operation level bindings JSON node containing protocol-specific binding information
     */
    public static void completeOperationLevelBindings(BindingsHolder holder, JsonNode bindings) {
       Iterator<String> bindingNames = bindings.fieldNames();
@@ -152,9 +152,9 @@ public class AsyncAPICommons {
    }
 
    /**
-    * Browse and complete an operation bindings with the bindings information at Message level.
-    * @param operation The operation whose bindings should be completed
-    * @param bindings  The Message level bindings node
+    * Browse and complete a bindings holder with the bindings information found at Message level.
+    * @param holder   The bindings holder whose bindings should be completed
+    * @param bindings The Message level bindings JSON node containing protocol-specific binding information
     */
    public static void completeMessageLevelBindings(BindingsHolder holder, JsonNode bindings) {
       Iterator<String> bindingNames = bindings.fieldNames();
@@ -218,7 +218,13 @@ public class AsyncAPICommons {
       return results;
    }
 
-   /** Get existing operation binding type or initialize a new one. */
+   /**
+    * Retrieve an existing binding of the specified type from the holder, or initialize a new one if not found. This
+    * helper method ensures that a binding instance exists for the given type before it is configured.
+    * @param holder The bindings holder to search for or add the binding to
+    * @param type   The type of binding to retrieve or initialize
+    * @return The existing or newly created Binding instance for the specified type
+    */
    private static Binding retrieveOrInitBinding(BindingsHolder holder, BindingType type) {
       Binding binding = null;
       if (holder.getBindings() != null) {
