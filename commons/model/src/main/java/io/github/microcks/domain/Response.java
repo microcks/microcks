@@ -30,6 +30,7 @@ public class Response extends Message {
    private String status;
    private String mediaType;
    private String dispatchCriteria;
+   private String callbackName;
    private boolean isFault = false;
 
    public String getId() {
@@ -62,6 +63,14 @@ public class Response extends Message {
 
    public void setDispatchCriteria(String dispatchCriteria) {
       this.dispatchCriteria = dispatchCriteria;
+   }
+
+   public String getCallbackName() {
+      return callbackName;
+   }
+
+   public void setCallbackName(String callbackName) {
+      this.callbackName = callbackName;
    }
 
    public boolean isFault() {

@@ -15,6 +15,7 @@
  */
 package io.github.microcks.domain;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,7 +26,9 @@ import java.util.Set;
  * bindings) and how dispatch request to them.
  * @author laurent
  */
-public class Operation implements BindingsHolder {
+public class Operation implements Serializable, BindingsHolder {
+
+   private static final long serialVersionUID = 1905122041950251207L;
 
    private String name;
    private String method;
@@ -33,6 +36,7 @@ public class Operation implements BindingsHolder {
    private String inputName;
    private String outputName;
    private Map<String, Binding> bindings;
+   private Map<String, CallbackInfo> callbackInfos;
    private ReplyInfo reply;
 
    private boolean override = false;
@@ -105,6 +109,21 @@ public class Operation implements BindingsHolder {
 
    public void setReply(ReplyInfo reply) {
       this.reply = reply;
+   }
+
+   public Map<String, CallbackInfo> getCallbackInfos() {
+      return callbackInfos;
+   }
+
+   public void setCallbackInfso(Map<String, CallbackInfo> callbackInfos) {
+      this.callbackInfos = callbackInfos;
+   }
+
+   public void addCallbackInfo(String key, CallbackInfo value) {
+      if (this.callbackInfos == null) {
+         this.callbackInfos = new HashMap<>();
+      }
+      callbackInfos.put(key, value);
    }
 
    public boolean hasOverride() {

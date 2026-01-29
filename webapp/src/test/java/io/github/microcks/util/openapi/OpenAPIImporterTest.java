@@ -15,6 +15,7 @@
  */
 package io.github.microcks.util.openapi;
 
+import io.github.microcks.domain.CallbackInfo;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
@@ -30,13 +31,13 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
@@ -2188,5 +2189,86 @@ class OpenAPIImporterTest {
       assertEquals("image/png", response.getMediaType());
       assertNotNull(response.getContent());
       assertTrue(response.getContent().startsWith("data:application/octet-stream;base64,"));
+   }
+
+   @Test
+   void testOpenAPIWithCallbacks() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/callback-example-openapi.json", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Callback Example", service.getName());
+      assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations have been found.
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().get(0);
+      assertEquals("POST /streams", operation.getName());
+      assertEquals("POST", operation.getMethod());
+
+      // Parse messages.
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(2, exchanges.size());
+
+      // Check that callback info has been correctly completed.
+      assertNotNull(operation.getCallbackInfos());
+      assertEquals(1, operation.getCallbackInfos().size());
+      assertTrue(operation.getCallbackInfos().containsKey("onData"));
+      CallbackInfo callbackInfo = operation.getCallbackInfos().get("onData");
+      assertEquals("{$request.query.callbackUrl}", callbackInfo.getCallbackUrlExpression());
+      assertEquals("POST", callbackInfo.getMethod().toUpperCase());
+      assertEquals(100, callbackInfo.getOrder());
+
+      // Check messages now.
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof RequestResponsePair pair) {
+            assertNotNull(pair.getCallbacks());
+            assertEquals(1, pair.getCallbacks().size());
+
+            Request request = pair.getRequest();
+            Response response = pair.getResponse();
+            RequestResponsePair callback = pair.getCallbacks().getFirst();
+
+            assertNotNull(request);
+            assertNotNull(response);
+
+            if ("johns".equals(request.getName())) {
+               assertEquals("johns", callback.getRequest().getName());
+               assertEquals("{\"timestamp\":\"2019-08-24T14:16:22Z\",\"userData\":\"johns\"}",
+                     callback.getRequest().getContent());
+               assertEquals("200", callback.getResponse().getStatus());
+            } else if ("tonys".equals(request.getName())) {
+               assertEquals("tonys", callback.getRequest().getName());
+               assertEquals("204", callback.getResponse().getStatus());
+            }
+
+            assertNull(request.getCallbackName());
+            assertNull(response.getCallbackName());
+            assertEquals("onData", callback.getRequest().getCallbackName());
+            assertEquals("onData", callback.getResponse().getCallbackName());
+         } else {
+            fail("Not the expected exchange type");
+         }
+      }
    }
 }

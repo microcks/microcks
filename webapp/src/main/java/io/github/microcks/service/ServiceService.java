@@ -745,6 +745,23 @@ public class ServiceService {
                pair.getRequest().setResponseId(pair.getResponse().getId());
                requestRepository.save(pair.getRequest());
 
+               if (pair.getCallbacks() != null && !pair.getCallbacks().isEmpty()) {
+                  // Associate callbacks request and response with operation and artifact.
+                  pair.getCallbacks().forEach(cbPair -> {
+                     cbPair.getRequest().setOperationId(operationId);
+                     cbPair.getResponse().setOperationId(operationId);
+                     cbPair.getRequest().setSourceArtifact(artifactInfo.getArtifactName());
+                     cbPair.getResponse().setSourceArtifact(artifactInfo.getArtifactName());
+                  });
+
+                  // Save callbacks response and associate requests with response before sabing it.
+                  responseRepository
+                        .saveAll(pair.getCallbacks().stream().map(RequestResponsePair::getResponse).toList());
+                  pair.getCallbacks()
+                        .forEach(cbPair -> cbPair.getRequest().setResponseId(cbPair.getResponse().getId()));
+                  requestRepository.saveAll(pair.getCallbacks().stream().map(RequestResponsePair::getRequest).toList());
+               }
+
             } else if (exchange instanceof UnidirectionalEvent event) {
                // Associate event message with operation and artifact before saving it..
                event.getEventMessage().setOperationId(operationId);

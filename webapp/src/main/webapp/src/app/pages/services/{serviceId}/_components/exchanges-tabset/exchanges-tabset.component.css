@@ -21,6 +21,10 @@
   min-width: 0;
 }
 
+.callbacks-container {
+  padding: 5px;
+}
+
 
 /* On larger screens, make definition lists horizontal */
 @media (min-width: 768px) {

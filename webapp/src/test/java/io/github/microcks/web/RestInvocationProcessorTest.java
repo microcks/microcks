@@ -107,7 +107,8 @@ class RestInvocationProcessorTest {
 
          when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/api/test"));
          when(request.getHeader("Accept")).thenReturn("application/json");
-         when(responseRepo.findByOperationIdAndDispatchCriteria(any(), any())).thenReturn(List.of(mockResponse));
+         when(responseRepo.findNonCallbackByOperationIdAndDispatchCriteria(any(), any()))
+               .thenReturn(List.of(mockResponse));
 
          // Act
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
@@ -130,7 +131,8 @@ class RestInvocationProcessorTest {
          var mockResponse = createMockResponse("application/octet-stream", dataUri);
 
          when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/file"));
-         when(responseRepo.findByOperationIdAndDispatchCriteria(any(), any())).thenReturn(List.of(mockResponse));
+         when(responseRepo.findNonCallbackByOperationIdAndDispatchCriteria(any(), any()))
+               .thenReturn(List.of(mockResponse));
 
          // Act
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
@@ -150,7 +152,7 @@ class RestInvocationProcessorTest {
 
          when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/api/options"));
          when(request.getHeader("Accept")).thenReturn("text/plain"); // This Accept header matches neither response.
-         when(responseRepo.findByOperationIdAndDispatchCriteria(any(), any()))
+         when(responseRepo.findNonCallbackByOperationIdAndDispatchCriteria(any(), any()))
                .thenReturn(List.of(xmlResponse, jsonResponse));
 
          // Act
@@ -182,8 +184,9 @@ class RestInvocationProcessorTest {
          when(request.getQueryString()).thenReturn("id=123");
 
          // Mock repository to find no matching response.
-         when(responseRepo.findByOperationIdAndDispatchCriteria(any(), any())).thenReturn(Collections.emptyList());
-         when(responseRepo.findByOperationIdAndName(any(), any())).thenReturn(Collections.emptyList());
+         when(responseRepo.findNonCallbackByOperationIdAndDispatchCriteria(any(), any()))
+               .thenReturn(Collections.emptyList());
+         when(responseRepo.findNonCallbackByOperationIdAndName(any(), any())).thenReturn(Collections.emptyList());
 
          // Act
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, "{}", Map.of(), request);
@@ -202,8 +205,9 @@ class RestInvocationProcessorTest {
 
          when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/nothing"));
          // Mock all repository lookups to return empty lists.
-         when(responseRepo.findByOperationIdAndDispatchCriteria(any(), any())).thenReturn(Collections.emptyList());
-         when(responseRepo.findByOperationIdAndName(any(), any())).thenReturn(Collections.emptyList());
+         when(responseRepo.findNonCallbackByOperationIdAndDispatchCriteria(any(), any()))
+               .thenReturn(Collections.emptyList());
+         when(responseRepo.findNonCallbackByOperationIdAndName(any(), any())).thenReturn(Collections.emptyList());
          when(responseRepo.findByOperationId(any())).thenReturn(Collections.emptyList());
 
          // Act
