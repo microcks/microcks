@@ -28,13 +28,11 @@ import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.event.ServiceViewChangeEvent;
 import io.github.microcks.event.ServiceViewChangeEventSerializer;
-import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.dispatcher.DispatchCases;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 
-import groovy.transform.ASTTest;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -101,10 +99,9 @@ public class NativeConfiguration {
             hints.reflection().registerType(clazz, MemberCategory.DECLARED_FIELDS,
                   MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
             // Then recurse on subclasses as well...
-            Arrays.stream(clazz.getClasses()).forEach(aClazz -> {
-               hints.reflection().registerType(aClazz, MemberCategory.DECLARED_FIELDS,
-                     MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-            });
+            Arrays.stream(clazz.getClasses()).forEach(aClazz ->
+                  hints.reflection().registerType(aClazz, MemberCategory.DECLARED_FIELDS,
+                        MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
          });
 
          hints.reflection().registerType(
