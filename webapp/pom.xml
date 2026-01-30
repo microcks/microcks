@@ -19,7 +19,7 @@
     <bouncycastle.version>1.79</bouncycastle.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <mongo-java-server.version>1.47.0</mongo-java-server.version>
-    <apache-httpclient.version>5.5</apache-httpclient.version>
+    <apache-httpclient.version>5.6</apache-httpclient.version>
     <commons-lang3.version>3.18.0</commons-lang3.version>
     <commons-io.version>2.16.1</commons-io.version>
     <commons-codec.version>1.17.1</commons-codec.version>
