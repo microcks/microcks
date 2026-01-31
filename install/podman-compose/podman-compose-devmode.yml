@@ -1,18 +1,15 @@
 services:
   mongo:
-    image: docker.io/library/mongo:4.4.29
+    image: mongo:4.4.29
     container_name: microcks-db
     volumes:
-      # Podman does not create missing folders, so we need to use an existing one
-      # Add the ":z" flag to get SELinux configured automatically
-      - "./microcks-data:/data/db"
-    #user: "501:1000"
+      - "~/tmp/microcks-data:/data/db"
     healthcheck:
       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 1s
       retries: 3
-
+ 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:0.7.1
     container_name: microcks-postman-runtime
@@ -22,6 +19,25 @@ services:
       interval: 20s
       timeout: 3s
       retries: 3
+
+  kafka:
+    image: redpandadata/redpanda:v24.3.1
+    container_name: microcks-kafka
+    command: [
+      "redpanda", "start",
+      "--overprovisioned --smp 1 --memory 1G --reserve-memory 0M --node-id 0 --check=false",
+      "--kafka-addr PLAINTEXT://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092",
+      "--advertise-kafka-addr PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092"
+    ]
+    ports:
+      - "9092:9092"
+      - "19092:19092"
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'echo > /dev/tcp/localhost/19092'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   app:
     depends_on:
@@ -36,7 +52,7 @@ services:
       - "9090:9090"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATA_MONGODB_URI=mongodb://microcks-db:27017
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
@@ -44,9 +60,32 @@ services:
       - KEYCLOAK_ENABLED=false
       #- LOGGING_LEVEL_IO_GITHUB_MICROCKS=DEBUG
       #- MAX_UPLOAD_FILE_SIZE=3MB
+      - ASYNC_MINION_URL=http://microcks-async-minion:8081
+      - KAFKA_BOOTSTRAP_SERVER=kafka:19092
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       start_period: 35s
       interval: 10s
       timeout: 3s
+      retries: 3
+
+  async-minion:
+    depends_on:
+      - app
+    ports:
+      - "8081:8081"
+    image: quay.io/microcks/microcks-async-minion:1.13.2
+    container_name: microcks-async-minion
+    restart: on-failure
+    volumes:
+      - "./config:/deployments/config"
+    environment:
+      - QUARKUS_PROFILE=docker-compose
+      #- QUARKUS_LOG_CONSOLE_LEVEL=DEBUG
+      #- QUARKUS_LOG_CATEGORY__IO_GITHUB_MICROCKS__LEVEL=DEBUG
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/q/health/ready"]
+      start_period: 10s
+      interval: 10s
+      timeout: 2s
       retries: 3
