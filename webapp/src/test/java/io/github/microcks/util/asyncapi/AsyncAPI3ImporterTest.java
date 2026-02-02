@@ -21,7 +21,7 @@ import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.RequestReplyEvent;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
@@ -33,9 +33,6 @@ import io.github.microcks.util.ReferenceResolver;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Ports.Binding;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -506,6 +503,7 @@ class AsyncAPI3ImporterTest {
                   EventMessage eventMessage = event.getEventMessage();
                   assertNotNull(eventMessage);
                   assertEquals(contentType, eventMessage.getMediaType());
+                  assertNull(eventMessage.getId());
 
                   if ("laurent".equals(eventMessage.getName())) {
                      assertNotNull(eventMessage.getContent());
@@ -603,5 +601,43 @@ class AsyncAPI3ImporterTest {
       assertNull(op2.getReply().getChannelAddress());
       assertEquals("$message.header#/replyTo", op2.getReply().getAddressLocation());
       assertNull(op2.getReply().getBindings());
+   }
+
+   @Test
+   void testReplyMessagesAsyncAPI3ImportYAML() {
+      AsyncAPI3Importer importer = null;
+      try {
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-reply.yaml", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      List<Exchange> exchanges = null;
+      try {
+         List<Service> services = importer.getServiceDefinitions();
+         Service svc = services.get(0);
+         exchanges = importer.getMessageDefinitions(svc, svc.getOperations().get(0));
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+
+      assertEquals(1, exchanges.size());
+      Exchange exchange = exchanges.get(0);
+      assertTrue(exchange instanceof RequestReplyEvent);
+      RequestReplyEvent reqReplyEvent = (RequestReplyEvent) exchange;
+
+      EventMessage requestMessage = reqReplyEvent.getRequestMessage();
+      assertNotNull(requestMessage);
+      assertEquals("john_signup", requestMessage.getName());
+      assertEquals("{\"email\":\"john.doe@example.com\",\"username\":\"johndoe\",\"fullName\":\"John Doe\"}",
+            requestMessage.getContent());
+
+      EventMessage replyMessage = reqReplyEvent.getReplyMessage();
+      assertNotNull(replyMessage);
+      assertEquals("john_signup", replyMessage.getName());
+      assertEquals(
+            "{\"userId\":\"usr-12345\",\"status\":\"success\",\"message\":\"User account created successfully\"}",
+            replyMessage.getContent());
    }
 }

@@ -23,6 +23,7 @@ import io.github.microcks.domain.GenericResource;
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.RequestReplyEvent;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
@@ -605,6 +606,18 @@ public class ServiceService {
                      event.getEventMessage().setOperationId(operationId);
                      event.getEventMessage().setSourceArtifact(AI_COPILOT_SOURCE);
                      eventMessageRepository.save(event.getEventMessage());
+
+                  } else if (exchange instanceof RequestReplyEvent event) {
+                     // Associate request and reply event messages with operation and artifact.
+                     event.getRequestMessage().setOperationId(operationId);
+                     event.getReplyMessage().setOperationId(operationId);
+                     event.getRequestMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+                     event.getReplyMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+
+                     // Save reply message and associate request with reply before saving it.
+                     eventMessageRepository.save(event.getReplyMessage());
+                     event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
+                     eventMessageRepository.save(event.getRequestMessage());
                   }
                }
                // Publish a Service update event before returning.
@@ -767,6 +780,18 @@ public class ServiceService {
                event.getEventMessage().setOperationId(operationId);
                event.getEventMessage().setSourceArtifact(artifactInfo.getArtifactName());
                eventMessageRepository.save(event.getEventMessage());
+
+            } else if (exchange instanceof RequestReplyEvent event) {
+               // Associate request and reply event messages with operation and artifact.
+               event.getRequestMessage().setOperationId(operationId);
+               event.getReplyMessage().setOperationId(operationId);
+               event.getRequestMessage().setSourceArtifact(artifactInfo.getArtifactName());
+               event.getReplyMessage().setSourceArtifact(artifactInfo.getArtifactName());
+
+               // Save reply message and associate request with reply before saving it.
+               eventMessageRepository.save(event.getReplyMessage());
+               event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
+               eventMessageRepository.save(event.getRequestMessage());
             }
          }
       }
