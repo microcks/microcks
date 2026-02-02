@@ -168,8 +168,10 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
                         defaultContentType);
 
                   // Create a map of reply messages by name for matching.
-                  Map<String, EventMessage> replyMessagesByName = replyMessages.stream().collect(HashMap::new,
-                        (map, msg) -> map.put(msg.getName(), msg), HashMap::putAll);
+                  Map<String, EventMessage> replyMessagesByName = replyMessages != null && !replyMessages.isEmpty()
+                        ? replyMessages.stream().collect(HashMap::new, (map, msg) -> map.put(msg.getName(), msg),
+                              HashMap::putAll)
+                        : new HashMap<>();
 
                   // Match request messages with reply messages by name.
                   for (EventMessage requestMessage : eventMessages) {
