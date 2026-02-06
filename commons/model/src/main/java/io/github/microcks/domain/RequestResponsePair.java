@@ -68,4 +68,9 @@ public class RequestResponsePair extends Exchange {
    public void setCallbacks(List<RequestResponsePair> callbacks) {
       this.callbacks = callbacks;
    }
+
+   @Override
+   public String getName() {
+      return request.getName();
+   }
 }

@@ -50,4 +50,9 @@ public class RequestReplyEvent extends Exchange {
    public void setReplyMessage(EventMessage replyMessage) {
       this.replyMessage = replyMessage;
    }
+
+   @Override
+   public String getName() {
+      return requestMessage.getName();
+   }
 }

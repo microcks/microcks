@@ -22,7 +22,6 @@ import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.repository.CustomServiceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.security.UserInfo;
@@ -159,7 +158,7 @@ public class ServiceController {
          for (Operation operation : service.getOperations()) {
             if (service.getType() == ServiceType.EVENT || service.getType() == ServiceType.GENERIC_EVENT) {
                // If an event, we should explicitly retrieve event messages.
-               List<UnidirectionalEvent> events = messageService
+               List<? extends Exchange> events = messageService
                      .getEventByOperation(IdBuilder.buildOperationId(service, operation));
                messagesMap.put(operation.getName(), events);
             } else {

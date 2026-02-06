@@ -15,6 +15,7 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.OperationsHeaders;
 import io.github.microcks.domain.RequestResponsePair;
@@ -25,7 +26,6 @@ import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.domain.TestOptionals;
 import io.github.microcks.domain.TestResult;
 import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.service.MessageService;
@@ -157,7 +157,7 @@ public class TestController {
    }
 
    @GetMapping(value = "tests/{id}/events/{testCaseId}")
-   public List<UnidirectionalEvent> getEventMessagesForTestCase(@PathVariable("id") String testResultId,
+   public List<? extends Exchange> getEventMessagesForTestCase(@PathVariable("id") String testResultId,
          @PathVariable("testCaseId") String testCaseId) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
       // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal

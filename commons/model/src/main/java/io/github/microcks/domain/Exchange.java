@@ -27,4 +27,5 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author laurent
  */
 public abstract class Exchange {
+   public abstract String getName();
 }

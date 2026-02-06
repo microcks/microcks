@@ -271,13 +271,11 @@ public class ImportExportService {
                List<? extends Exchange> selectedExchanges = null;
                if (ServiceType.EVENT.equals(service.getType())) {
                   selectedExchanges = messageService.getEventByOperation(operationId).stream()
-                        .filter(unidirectionalEvent -> exchangeSelection.getExchanges().get(operation.getName())
-                              .contains(unidirectionalEvent.getEventMessage().getName()))
+                        .filter(ex -> exchangeSelection.getExchanges().get(operation.getName()).contains(ex.getName()))
                         .toList();
                } else {
                   selectedExchanges = messageService.getRequestResponseByOperation(operationId).stream()
-                        .filter(pair -> exchangeSelection.getExchanges().get(operation.getName())
-                              .contains(pair.getRequest().getName()))
+                        .filter(ex -> exchangeSelection.getExchanges().get(operation.getName()).contains(ex.getName()))
                         .toList();
                }
                exporter.addMessageDefinitions(service, operation, selectedExchanges);

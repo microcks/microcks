@@ -38,4 +38,9 @@ public class UnidirectionalEvent extends Exchange {
    public void setEventMessage(EventMessage eventMessage) {
       this.eventMessage = eventMessage;
    }
+
+   @Override
+   public String getName() {
+      return eventMessage.getName();
+   }
 }

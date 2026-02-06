@@ -85,7 +85,7 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
             for (Operation operation : service.getOperations()) {
                if (service.getType() == ServiceType.EVENT || service.getType() == ServiceType.GENERIC_EVENT) {
                   // If an event, we should explicitly retrieve event messages.
-                  List<UnidirectionalEvent> events = messageService
+                  List<? extends Exchange> events = messageService
                         .getEventByOperation(IdBuilder.buildOperationId(service, operation));
                   messagesMap.put(operation.getName(), events);
                } else {
