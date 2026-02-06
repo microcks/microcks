@@ -261,22 +261,15 @@ class MessageServiceTest {
       assertEquals(3, results.size());
 
       // Count types
-      long unidirectionalCount = results.stream()
-            .filter(e -> e instanceof UnidirectionalEvent)
-            .count();
-      long requestReplyCount = results.stream()
-            .filter(e -> e instanceof RequestReplyEvent)
-            .count();
+      long unidirectionalCount = results.stream().filter(e -> e instanceof UnidirectionalEvent).count();
+      long requestReplyCount = results.stream().filter(e -> e instanceof RequestReplyEvent).count();
 
       assertEquals(2, unidirectionalCount);
       assertEquals(1, requestReplyCount);
 
       // Verify the request-reply event
-      RequestReplyEvent requestReply = results.stream()
-            .filter(e -> e instanceof RequestReplyEvent)
-            .map(e -> (RequestReplyEvent) e)
-            .findFirst()
-            .orElse(null);
+      RequestReplyEvent requestReply = results.stream().filter(e -> e instanceof RequestReplyEvent)
+            .map(e -> (RequestReplyEvent) e).findFirst().orElse(null);
 
       assertNotNull(requestReply);
       assertEquals("commandRequest", requestReply.getRequestMessage().getName());
