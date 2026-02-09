@@ -61,20 +61,24 @@ public class AsyncMockRepository {
    }
 
    /**
-    * Retrieve the set of frequencies of Operation found within definitions in store.
+    * Retrieve the set of frequencies of Operation found within definitions in store. Only includes unidirectional event
+    * operations, excludes request-reply operations.
     * @return A set of frequencies for definitions operations
     */
    public Set<Long> getMockDefinitionsFrequencies() {
-      return mockDefinitions.stream().map(d -> d.getOperation().getDefaultDelay()).collect(Collectors.toSet());
+      return mockDefinitions.stream().filter(d -> !d.isRequestReply()).map(d -> d.getOperation().getDefaultDelay())
+            .collect(Collectors.toSet());
    }
 
    /**
-    * Retrieve all the AsyncMockDefinition corresponding to a specified operation frequency.
+    * Retrieve all the AsyncMockDefinition corresponding to a specified operation frequency. Only includes
+    * unidirectional event operations, excludes request-reply operations.
     * @param frequency The operation frequency to get definitions for
     * @return A set of AsyncMockDefinition having specified operation frequency
     */
    public Set<AsyncMockDefinition> getMockDefinitionsByFrequency(Long frequency) {
-      return mockDefinitions.stream().filter(d -> d.getOperation().getDefaultDelay().equals(frequency))
+      return mockDefinitions.stream()
+            .filter(d -> !d.isRequestReply() && d.getOperation().getDefaultDelay().equals(frequency))
             .collect(Collectors.toSet());
    }
 
@@ -88,5 +92,14 @@ public class AsyncMockRepository {
       return mockDefinitions.stream().filter(
             d -> d.getOwnerService().getName().equals(serviceName) && d.getOwnerService().getVersion().equals(version))
             .collect(Collectors.toSet());
+   }
+
+   /**
+    * Retrieve all request-reply AsyncMockDefinitions in the store. Request-reply operations need listeners rather than
+    * scheduled publishing.
+    * @return A set of AsyncMockDefinition for request-reply operations
+    */
+   public Set<AsyncMockDefinition> getRequestReplyMockDefinitions() {
+      return mockDefinitions.stream().filter(AsyncMockDefinition::isRequestReply).collect(Collectors.toSet());
    }
 }

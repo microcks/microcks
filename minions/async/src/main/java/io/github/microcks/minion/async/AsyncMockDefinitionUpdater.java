@@ -15,10 +15,13 @@
  */
 package io.github.microcks.minion.async;
 
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.domain.RequestReplyEvent;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceViewChangeEvent;
 
@@ -27,7 +30,10 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * This bean is responsible for listening the incoming <code>ServiceViewChangeEvent</code> on
@@ -102,14 +108,22 @@ public class AsyncMockDefinitionUpdater {
             logger.info("Found '" + operation.getName() + "' as a candidate for async message mocking");
             // Build an Async mock definition and store it into repository.
             AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(), operation,
-                  serviceView.getMessagesMap().get(operation.getName()).stream()
-                        .filter(UnidirectionalEvent.class::isInstance)
-                        .map(e -> ((UnidirectionalEvent) e).getEventMessage()).toList());
+                  getMessages(serviceView.getMessagesMap().get(operation.getName())));
             mockRepository.storeMockDefinition(mockDefinition);
             schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
             scheduled = true;
          }
       }
       return scheduled;
+   }
+
+   public static List<EventMessage> getMessages(List<? extends Exchange> exchanges) {
+      return exchanges.stream().flatMap(e -> {
+         return switch (e) {
+            case UnidirectionalEvent u -> Stream.of(u.getEventMessage());
+            case RequestReplyEvent r -> Stream.of(r.getRequestMessage(), r.getReplyMessage());
+            default -> Stream.empty();
+         };
+      }).toList();
    }
 }
