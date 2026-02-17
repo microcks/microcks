@@ -39,16 +39,17 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.mongodb.MongoDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.apiTest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -151,5 +152,16 @@ public class MicrocksApplicationFuzz {
 
       assertEquals(201, response.getStatusCode().value());
       log.info("Just uploaded: {}", response.getBody());
+   }
+
+   protected static ResultActions apiTest(MockMvc mockMvc, String requestURI,
+         MockHttpServletRequestBuilder requestBuilder) throws Exception {
+      String method = requestBuilder.buildRequest(mockMvc.getDispatcherServlet().getServletContext()).getMethod();
+
+      try {
+         return mockMvc.perform(requestBuilder);
+      } catch (Exception e) {
+         throw e;
+      }
    }
 }
