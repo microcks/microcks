@@ -15,9 +15,12 @@
  */
 package io.github.microcks.domain;
 
+import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +31,7 @@ import java.util.Set;
  */
 public class Operation implements Serializable, BindingsHolder {
 
+   @Serial
    private static final long serialVersionUID = 1905122041950251207L;
 
    private String name;
@@ -37,6 +41,7 @@ public class Operation implements Serializable, BindingsHolder {
    private String outputName;
    private Map<String, Binding> bindings;
    private Map<String, CallbackInfo> callbackInfos;
+   private List<TriggerInfo> triggerInfos;
    private ReplyInfo reply;
 
    private boolean override = false;
@@ -124,6 +129,21 @@ public class Operation implements Serializable, BindingsHolder {
          this.callbackInfos = new HashMap<>();
       }
       callbackInfos.put(key, value);
+   }
+
+   public List<TriggerInfo> getTriggerInfos() {
+      return triggerInfos;
+   }
+
+   public void setTriggerInfos(List<TriggerInfo> triggerInfos) {
+      this.triggerInfos = triggerInfos;
+   }
+
+   public void addTriggerInfo(TriggerInfo triggerInfo) {
+      if (this.triggerInfos == null) {
+         this.triggerInfos = new ArrayList<>();
+      }
+      this.triggerInfos.add(triggerInfo);
    }
 
    public boolean hasOverride() {

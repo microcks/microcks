@@ -36,7 +36,7 @@ import java.util.Map;
 public class AICopilotConfiguration {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AICopilotConfiguration.class);
+   private static final Logger log = LoggerFactory.getLogger(AICopilotConfiguration.class);
 
    private boolean enabled = false;
 

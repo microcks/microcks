@@ -21,15 +21,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
 /**
  * Repository for AsyncMockDefinitions. Used as a backend storage for jobs that have to publish event messages at
  * specified frequencies. Has to be initialized at application startup and regularly keep-in-sync with Microcks server.
  * @author laurent
  */
+@ApplicationScoped
 public class AsyncMockRepository {
 
-   private Set<AsyncMockDefinition> mockDefinitions = new HashSet<>();
+   private final Set<AsyncMockDefinition> mockDefinitions = new HashSet<>();
 
    /**
     * Retrieve the AsyncMockDefinitions present in store.

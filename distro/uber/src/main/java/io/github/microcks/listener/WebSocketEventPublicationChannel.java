@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.microcks.listener;
 
+import io.github.microcks.event.AsyncAPITriggerCommand;
 import io.github.microcks.event.ServiceViewChangeEvent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,20 +40,28 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 @Primary
 @Profile("uber")
-public class WebSocketServiceChangeEventChannel extends TextWebSocketHandler implements ServiceChangeEventChannel {
+public class WebSocketEventPublicationChannel extends TextWebSocketHandler implements EventPublicationChannel {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(WebSocketServiceChangeEventChannel.class);
+   private static final Logger log = LoggerFactory.getLogger(WebSocketEventPublicationChannel.class);
 
-   private ObjectMapper mapper = new ObjectMapper();
+   private final ObjectMapper mapper = new ObjectMapper();
 
-   private List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+   private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
    @Override
    public void sendServiceViewChangeEvent(ServiceViewChangeEvent event) throws Exception {
       log.debug("Sending ServiceViewChangeEvent to {} connected WS sessions", sessions.size());
       for (WebSocketSession wsSession : sessions) {
          wsSession.sendMessage(new TextMessage(mapper.writeValueAsString(event)));
+      }
+   }
+
+   @Override
+   public void sendAsyncAPITriggerCommand(AsyncAPITriggerCommand command) throws Exception {
+      log.debug("Sending AsyncAPITriggerCommand to {} connected WS sessions", sessions.size());
+      for (WebSocketSession wsSession : sessions) {
+         wsSession.sendMessage(new TextMessage(mapper.writeValueAsString(command)));
       }
    }
 
