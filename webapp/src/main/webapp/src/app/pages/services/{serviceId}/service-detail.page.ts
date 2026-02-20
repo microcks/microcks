@@ -879,11 +879,51 @@ export class ServiceDetailPageComponent implements OnInit {
 
       cmd = 'curl -X ' + verb + ' \'' + mockUrl + '\'';
 
+      const isSoapService =
+        this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP;
+
+      let hasSoapAction = false;
+      let hasSoap12ContentType = false;
+
       // Add request headers if any.
       if (exchange.request.headers != null) {
         for (const header of exchange.request.headers) {
+          const headerName = header.name.toLowerCase();
+
+          if (isSoapService && headerName === 'soapaction') {
+            hasSoapAction = true;
+          }
+
+          if (
+            isSoapService &&
+            headerName === 'content-type' &&
+            header.values.some(v => v.includes('application/soap+xml'))
+          ) {
+            hasSoap12ContentType = true;
+
+            if (
+              !header.values.some(v => v.includes('action=')) &&
+              operation.action
+            ) {
+              cmd += ` -H '${header.name}: ${header.values.join(
+                ', '
+              )}; action="${operation.action}"'`;
+              continue;
+            }
+          }
+
           cmd += ` -H '${header.name}: ${header.values.join(', ')}'`;
         }
+      }
+
+      // Add a SOAPAction header if missing and we are on SOAP 1.1 (plain soap/xml).
+      if (
+        isSoapService &&
+        !hasSoapAction &&
+        !hasSoap12ContentType &&
+        operation.action
+      ) {
+        cmd += ` -H 'SOAPAction: "${operation.action}"'`;
       }
 
       // Add a content-type header if missing and obvious we need one.
