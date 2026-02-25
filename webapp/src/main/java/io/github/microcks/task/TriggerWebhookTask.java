@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -110,18 +111,27 @@ public class TriggerWebhookTask {
          List<WebhookRegistration> toRemove, List<WebhookRegistration> toUpdate) {
       try {
          sendWebhookRequests(registration, requests);
-      } catch (Exception e) {
+      } catch (InterruptedException e) {
+         Thread.currentThread().interrupt();
+         log.error("Error while sending webhook request to {}", registration.getTargetUrl(), e);
+         handleWebhookFailure(registration, toRemove, toUpdate);
+      } catch (IOException e) {
          log.error("Error while sending webhook request to {}", registration.getTargetUrl());
-         // Increment error count and check against threshold.
-         registration.setErrorCount(registration.getErrorCount() + 1);
-         if (registration.getErrorCount() >= registration.getErrorCountThreshold()) {
-            log.error("Webhook registration {} has reached error threshold {} and will be removed",
-                  registration.getId(), registration.getErrorCountThreshold());
-            toRemove.add(registration);
-         } else {
-            // Keep track for update.
-            toUpdate.add(registration);
-         }
+         handleWebhookFailure(registration, toRemove, toUpdate);
+      }
+   }
+
+   private void handleWebhookFailure(WebhookRegistration registration, List<WebhookRegistration> toRemove,
+         List<WebhookRegistration> toUpdate) {
+      // Increment error count and check against threshold.
+      registration.setErrorCount(registration.getErrorCount() + 1);
+      if (registration.getErrorCount() >= registration.getErrorCountThreshold()) {
+         log.error("Webhook registration {} has reached error threshold {} and will be removed", registration.getId(),
+               registration.getErrorCountThreshold());
+         toRemove.add(registration);
+      } else {
+         // Keep track for update.
+         toUpdate.add(registration);
       }
    }
 
@@ -136,7 +146,8 @@ public class TriggerWebhookTask {
       }
    }
 
-   private void sendWebhookRequests(WebhookRegistration registration, List<Request> requests) throws Exception {
+   private void sendWebhookRequests(WebhookRegistration registration, List<Request> requests)
+         throws IOException, InterruptedException {
       // Build the http client and send the request in a fire and forget mode.
       HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2))
             .version(HttpClient.Version.HTTP_1_1).build();
