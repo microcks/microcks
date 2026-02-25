@@ -15,7 +15,13 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestReplyEvent;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
@@ -63,7 +69,7 @@ public class MessageService {
     * @param operationId The identifier of operation to get messages for.
     * @return A list of event messages
     */
-   public List<? extends Exchange> getEventByOperation(String operationId) {
+   public List<Exchange> getEventByOperation(String operationId) {
       // Retrieve event messages using operation identifier.
       List<EventMessage> eventMessages = eventMessageRepository.findByOperationId(operationId);
       if (log.isDebugEnabled()) {
@@ -99,7 +105,7 @@ public class MessageService {
     * @param testCaseId The identifier of test case to get messages for.
     * @return A list of unidirectional event messages
     */
-   public List<? extends Exchange> getEventByTestCase(String testCaseId) {
+   public List<Exchange> getEventByTestCase(String testCaseId) {
       // Retrieve events using testCase identifier.
       List<EventMessage> eventMessages = eventMessageRepository.findByTestCaseId(testCaseId);
       if (log.isDebugEnabled()) {
@@ -130,7 +136,7 @@ public class MessageService {
       return results;
    }
 
-   private List<? extends Exchange> createEvents(List<EventMessage> eventMessages) {
+   private List<Exchange> createEvents(List<EventMessage> eventMessages) {
       List<Exchange> results = new ArrayList<>(eventMessages.size());
 
       Set<String> replyIds = eventMessages.stream().map(EventMessage::getReplyId).filter(Objects::nonNull)

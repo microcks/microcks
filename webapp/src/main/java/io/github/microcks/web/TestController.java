@@ -157,7 +157,7 @@ public class TestController {
    }
 
    @GetMapping(value = "tests/{id}/events/{testCaseId}")
-   public List<? extends Exchange> getEventMessagesForTestCase(@PathVariable("id") String testResultId,
+   public List<Exchange> getEventMessagesForTestCase(@PathVariable("id") String testResultId,
          @PathVariable("testCaseId") String testCaseId) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
       // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal

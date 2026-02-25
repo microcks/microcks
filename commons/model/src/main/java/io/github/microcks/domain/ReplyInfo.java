@@ -15,6 +15,7 @@
  */
 package io.github.microcks.domain;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,13 +24,16 @@ import java.util.Map;
  * reply address and the channel address where replies are sent.
  * @author adamhicks
  */
-public class ReplyInfo implements BindingsHolder {
+public class ReplyInfo implements Serializable, BindingsHolder {
+
+   private static final long serialVersionUID = 2402252041950251207L;
 
    private String addressLocation;
    private String channelAddress;
    private Map<String, Binding> bindings;
 
    public ReplyInfo() {
+      // Default constructor for framework deserialization.
    }
 
    public String getAddressLocation() {
