@@ -20,7 +20,6 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceChangeEvent;
 import io.github.microcks.event.ServiceViewChangeEvent;

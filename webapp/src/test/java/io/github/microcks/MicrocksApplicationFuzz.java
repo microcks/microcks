@@ -110,7 +110,7 @@ public class MicrocksApplicationFuzz {
             (host, portD) -> host.equals("localhost") && portD.equals(mongoDBContainer.getMappedPort(27017)))) {
 
          String name = data.consumeRemainingAsString();
-         apiTest(mockMvc, "/api/version/info", get("/api/version/info").param("name", name));
+         apiTest(mockMvc, get("/api/version/info").param("name", name));
       }
    }
 
@@ -125,11 +125,11 @@ public class MicrocksApplicationFuzz {
             (host, portD) -> host.equals("localhost") && portD.equals(mongoDBContainer.getMappedPort(27017)))) {
 
          int page = data.consumeInt(0, 10);
-         apiTest(mockMvc, "/api/services", get("/api/services").param("page", String.valueOf(page)));
+         apiTest(mockMvc, get("/api/services").param("page", String.valueOf(page)));
 
          String serviceId = data.consumeAsciiString(32);
          String encodedServiceId = URLEncoder.encode(serviceId, StandardCharsets.UTF_8);
-         apiTest(mockMvc, "/api/services/" + encodedServiceId, get("/api/services/" + encodedServiceId));
+         apiTest(mockMvc, get("/api/services/" + encodedServiceId));
       }
    }
 
@@ -154,14 +154,8 @@ public class MicrocksApplicationFuzz {
       log.info("Just uploaded: {}", response.getBody());
    }
 
-   protected static ResultActions apiTest(MockMvc mockMvc, String requestURI,
-         MockHttpServletRequestBuilder requestBuilder) throws Exception {
-      String method = requestBuilder.buildRequest(mockMvc.getDispatcherServlet().getServletContext()).getMethod();
-
-      try {
-         return mockMvc.perform(requestBuilder);
-      } catch (Exception e) {
-         throw e;
-      }
+   protected static ResultActions apiTest(MockMvc mockMvc, MockHttpServletRequestBuilder requestBuilder)
+         throws Exception {
+      return mockMvc.perform(requestBuilder);
    }
 }

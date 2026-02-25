@@ -30,7 +30,6 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -118,12 +117,10 @@ public class AsyncMockDefinitionUpdater {
    }
 
    public static List<EventMessage> getMessages(List<? extends Exchange> exchanges) {
-      return exchanges.stream().flatMap(e -> {
-         return switch (e) {
-            case UnidirectionalEvent u -> Stream.of(u.getEventMessage());
-            case RequestReplyEvent r -> Stream.of(r.getRequestMessage(), r.getReplyMessage());
-            default -> Stream.empty();
-         };
+      return exchanges.stream().flatMap(e -> switch (e) {
+         case UnidirectionalEvent u -> Stream.of(u.getEventMessage());
+         case RequestReplyEvent r -> Stream.of(r.getRequestMessage(), r.getReplyMessage());
+         default -> Stream.empty();
       }).toList();
    }
 }
