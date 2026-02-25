@@ -65,8 +65,8 @@ public class ListenerCommons {
          engine.getContext().setVariable("request", evaluableRequest);
          try {
             return engine.getValue(contentTemplate);
-         } catch (Throwable t) {
-            log.error("Failing at evaluating template {}", contentTemplate, t);
+         } catch (Exception e) {
+            log.error("Failing at evaluating template {}", contentTemplate, e);
          }
       }
       return contentTemplate;
