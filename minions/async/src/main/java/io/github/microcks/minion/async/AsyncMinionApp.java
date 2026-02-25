@@ -15,20 +15,15 @@
  */
 package io.github.microcks.minion.async;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.RequestReplyEvent;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.UnidirectionalEvent;
 
 import io.github.microcks.minion.async.client.ConnectorException;
 import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.KeycloakConnector;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -42,7 +37,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * A Minion App for dealing with Async message mocks.
