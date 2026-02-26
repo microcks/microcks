@@ -136,60 +136,64 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
       List<Exchange> messageDefs = new ArrayList<>();
-
-      // Retrieve default content type, defaulting to application/json.
-      String defaultContentType = "application/json";
-      if (rootSpecification.has("defaultContentType")) {
-         defaultContentType = rootSpecification.get("defaultContentType").asText("application/json");
+      String defaultContentType = getDefaultContentType();
+      JsonNode operationNode = findOperationNode(operation);
+      if (operationNode == null || !operationNode.path(MESSAGES).isArray()) {
+         return messageDefs;
       }
 
-      // Iterate on specification "operations" nodes.
+      List<EventMessage> eventMessages = buildEventMessages(operationNode.path(MESSAGES), defaultContentType);
+      if (eventMessages == null || eventMessages.isEmpty()) {
+         return messageDefs;
+      }
+
+      completeDispatchingCriteria(operation, operationNode, eventMessages);
+      if (operationNode.has(REPLY_NODE)) {
+         List<EventMessage> replyMessages = buildEventMessages(operationNode.path(REPLY_NODE).path(MESSAGES),
+               defaultContentType);
+         addRequestReplyEvents(messageDefs, eventMessages, replyMessages);
+      } else {
+         eventMessages.forEach(eventMessage -> messageDefs.add(new UnidirectionalEvent(eventMessage)));
+      }
+      return messageDefs;
+   }
+
+   private String getDefaultContentType() {
+      if (rootSpecification.has("defaultContentType")) {
+         return rootSpecification.get("defaultContentType").asText("application/json");
+      }
+      return "application/json";
+   }
+
+   private JsonNode findOperationNode(Operation operation) {
       Iterator<Map.Entry<String, JsonNode>> operations = rootSpecification.path("operations").fields();
       while (operations.hasNext()) {
          Map.Entry<String, JsonNode> operationEntry = operations.next();
          JsonNode operationNode = operationEntry.getValue();
-
-         // Got to filter out for current operation only.
          String action = operationNode.path("action").asText();
          String operationName = action.toUpperCase() + " " + operationEntry.getKey();
-
-         if (operationName.equals(operation.getName()) && operationNode.path(MESSAGES).isArray()) {
-            // Build request/event messages.
-            List<EventMessage> eventMessages = buildEventMessages(operationNode.path(MESSAGES), defaultContentType);
-
-            if (eventMessages != null && !eventMessages.isEmpty()) {
-               // Update dispatch information if necessary.
-               completeDispatchingCriteria(operation, operationNode, eventMessages);
-
-               // Check if this is a request-reply operation.
-               if (operationNode.has(REPLY_NODE)) {
-                  // Build reply messages and create request-reply events.
-                  List<EventMessage> replyMessages = buildEventMessages(operationNode.path(REPLY_NODE).path(MESSAGES),
-                        defaultContentType);
-
-                  // Create a map of reply messages by name for matching.
-                  Map<String, EventMessage> replyMessagesByName = replyMessages != null && !replyMessages.isEmpty()
-                        ? replyMessages.stream().collect(HashMap::new, (map, msg) -> map.put(msg.getName(), msg),
-                              HashMap::putAll)
-                        : new HashMap<>();
-
-                  // Match request messages with reply messages by name.
-                  for (EventMessage requestMessage : eventMessages) {
-                     EventMessage replyMessage = replyMessagesByName.get(requestMessage.getName());
-                     if (replyMessage != null) {
-                        messageDefs.add(new RequestReplyEvent(requestMessage, replyMessage));
-                     }
-                  }
-               } else {
-                  // Create unidirectional events.
-                  eventMessages.stream()
-                        .forEach(eventMessage -> messageDefs.add(new UnidirectionalEvent(eventMessage)));
-               }
-            }
-            break;
+         if (operationName.equals(operation.getName())) {
+            return operationNode;
          }
       }
-      return messageDefs;
+      return null;
+   }
+
+   private void addRequestReplyEvents(List<Exchange> messageDefs, List<EventMessage> eventMessages,
+         List<EventMessage> replyMessages) {
+      Map<String, EventMessage> replyMessagesByName = new HashMap<>();
+      if (replyMessages != null) {
+         for (EventMessage replyMessage : replyMessages) {
+            replyMessagesByName.put(replyMessage.getName(), replyMessage);
+         }
+      }
+
+      for (EventMessage requestMessage : eventMessages) {
+         EventMessage replyMessage = replyMessagesByName.get(requestMessage.getName());
+         if (replyMessage != null) {
+            messageDefs.add(new RequestReplyEvent(requestMessage, replyMessage));
+         }
+      }
    }
 
    /** Extract the list of operations from Specification. */
@@ -311,49 +315,51 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    /** If necessary, complete an operation and its messages dispatch information. */
    private void completeDispatchingCriteria(Operation operation, JsonNode operationNode,
          List<EventMessage> eventMessages) {
-      // Update dispatch information if necessary.
-      if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+      if (!DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+         return;
+      }
 
-         // Retrieve information on channel address and parameters.
-         JsonNode channelNode = followRefIfAny(operationNode.get(CHANNEL_NODE));
-         String address = channelNode.get(ADDRESS_NODE).asText();
+      JsonNode channelNode = followRefIfAny(operationNode.get(CHANNEL_NODE));
+      String address = channelNode.get(ADDRESS_NODE).asText();
+      List<AsyncAPIParameter> dynamicParameters = getDynamicParameters(channelNode);
+      Map<String, Map<String, String>> parametersByMessage = getParametersByMessage(channelNode);
+      ObjectMapper mapper = getObjectMapper(true);
 
-         // We have 2 cases here: parameter value can be dynamic, expressed with a location in message
-         // or parameter value can be static, expressed as an examples.
-         List<AsyncAPIParameter> dynamicParameters = getDynamicParameters(channelNode);
-         Map<String, Map<String, String>> parametersByMessage = getParametersByMessage(channelNode);
-         ObjectMapper mapper = getObjectMapper(true);
+      for (EventMessage eventMessage : eventMessages) {
+         Map<String, String> parameterValues = parametersByMessage.getOrDefault(eventMessage.getName(),
+               new HashMap<>());
+         completeDynamicParameterValues(operation, eventMessage, dynamicParameters, mapper, parameterValues);
 
-         for (EventMessage eventMessage : eventMessages) {
-            // Start initializing message parameter values with the static ones.
-            Map<String, String> parameterValues = parametersByMessage.getOrDefault(eventMessage.getName(),
-                  new HashMap<>());
+         String resourcePath = URIBuilder.buildURIFromPattern(address, parameterValues);
+         operation.addResourcePath(resourcePath);
+         eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(address, parameterValues));
+      }
+   }
 
-            // Extract each dynamic parameter with its value coming from message.
-            for (AsyncAPIParameter parameter : dynamicParameters) {
-               String parameterValue = null;
-
-               try {
-                  if (parameter.location().startsWith("$message.payload#")) {
-                     String location = parameter.location().substring("$message.payload#".length());
-                     JsonNode eventMessageRootNode = mapper.readTree(eventMessage.getContent());
-                     parameterValue = eventMessageRootNode.at(location).asText();
-                  }
-               } catch (Exception e) {
-                  log.warn("Failed to extract the location value in {} from message {} for operation {}",
-                        parameter.location(), eventMessage.getName(), operation.getName());
-                  log.warn("Pursuing with the other ones but dispatch will be incomplete");
-               }
-               if (parameterValue != null) {
-                  parameterValues.put(parameter.name(), parameterValue);
-               }
-            }
-
-            // UPdate operation resource paths and message dispatch criteria.
-            String resourcePath = URIBuilder.buildURIFromPattern(address, parameterValues);
-            operation.addResourcePath(resourcePath);
-            eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(address, parameterValues));
+   private void completeDynamicParameterValues(Operation operation, EventMessage eventMessage,
+         List<AsyncAPIParameter> dynamicParameters, ObjectMapper mapper, Map<String, String> parameterValues) {
+      for (AsyncAPIParameter parameter : dynamicParameters) {
+         String parameterValue = extractDynamicParameterValue(operation, eventMessage, parameter, mapper);
+         if (parameterValue != null) {
+            parameterValues.put(parameter.name(), parameterValue);
          }
+      }
+   }
+
+   private String extractDynamicParameterValue(Operation operation, EventMessage eventMessage,
+         AsyncAPIParameter parameter, ObjectMapper mapper) {
+      try {
+         if (!parameter.location().startsWith("$message.payload#")) {
+            return null;
+         }
+         String location = parameter.location().substring("$message.payload#".length());
+         JsonNode eventMessageRootNode = mapper.readTree(eventMessage.getContent());
+         return eventMessageRootNode.at(location).asText();
+      } catch (Exception e) {
+         log.warn("Failed to extract the location value in {} from message {} for operation {}", parameter.location(),
+               eventMessage.getName(), operation.getName());
+         log.warn("Pursuing with the other ones but dispatch will be incomplete");
+         return null;
       }
    }
 
