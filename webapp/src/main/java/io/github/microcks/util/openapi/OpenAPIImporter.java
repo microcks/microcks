@@ -85,6 +85,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    private static final String EXAMPLES_NODE = "examples";
    private static final String EXAMPLE_VALUE_NODE = "value";
    private static final String EXAMPLE_EXTERNAL_VALUE_NODE = "externalValue";
+   private static final String WEBHOOK_OPERATION_SUFFIX = " WEBHOOK";
 
    private static final String X_MICROCKS_REFS = "x-microcks-refs";
 
@@ -245,73 +246,59 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
     */
    private List<Operation> extractOperations() {
       List<Operation> results = new ArrayList<>();
+      appendPathOperations(results);
+      appendWebhookOperations(results);
+      return results;
+   }
 
-      // Iterate on specification "paths" nodes.
+   private void appendPathOperations(List<Operation> results) {
       Set<Entry<String, JsonNode>> paths = rootSpecification.path("paths").properties();
       for (Entry<String, JsonNode> path : paths) {
          String pathName = path.getKey();
          JsonNode pathValue = followRefIfAny(path.getValue());
-
-         // Iterate on specification path, "verbs" nodes.
-         Set<Entry<String, JsonNode>> verbs = pathValue.properties();
-         for (Entry<String, JsonNode> verb : verbs) {
+         for (Entry<String, JsonNode> verb : pathValue.properties()) {
             String verbName = verb.getKey();
-
-            // Only deal with real verbs for now.
-            if (VALID_VERBS.contains(verbName)) {
-               String operationName = verbName.toUpperCase() + " " + pathName.trim();
-
-               Operation operation = new Operation();
-               operation.setName(operationName);
-               operation.setMethod(verbName.toUpperCase());
-
-               // Complete operation properties if any.
-               if (verb.getValue().has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
-                  MetadataExtractor.completeOperationProperties(operation,
-                        verb.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
-               }
-
-               // Deal with dispatcher stuffs if needed.
-               completeOperationWithDispatcher(operation, verb, pathName);
-
-               // Deal with parameter constraints if required parameters.
-               completeOperationWithParameterConstraints(operation, verb.getValue());
-
-               results.add(operation);
+            if (!VALID_VERBS.contains(verbName)) {
+               continue;
             }
+
+            Operation operation = new Operation();
+            operation.setName(verbName.toUpperCase() + " " + pathName.trim());
+            operation.setMethod(verbName.toUpperCase());
+            completeOperationProperties(operation, verb.getValue());
+            completeOperationWithDispatcher(operation, verb, pathName);
+            completeOperationWithParameterConstraints(operation, verb.getValue());
+            results.add(operation);
          }
       }
+   }
 
+   private void appendWebhookOperations(List<Operation> results) {
       Set<Entry<String, JsonNode>> webhooks = rootSpecification.path("webhooks").properties();
       for (Entry<String, JsonNode> webhook : webhooks) {
          String webhookName = webhook.getKey();
          JsonNode webhookValue = followRefIfAny(webhook.getValue());
-
-         // Iterate on specification webhook, "verbs" nodes.
-         Set<Entry<String, JsonNode>> verbs = webhookValue.properties();
-         for (Entry<String, JsonNode> verb : verbs) {
+         for (Entry<String, JsonNode> verb : webhookValue.properties()) {
             String verbName = verb.getKey();
-
-            // Only deal with real verbs for now.
-            if (VALID_VERBS.contains(verbName)) {
-               String operationName = webhookName.trim() + " WEBHOOK";
-
-               Operation operation = new Operation();
-               operation.setName(operationName);
-               operation.setMethod(verbName.toUpperCase());
-               operation.setAction("webhook");
-
-               // Complete operation properties if any.
-               if (verb.getValue().has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
-                  MetadataExtractor.completeOperationProperties(operation,
-                        verb.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
-               }
-
-               results.add(operation);
+            if (!VALID_VERBS.contains(verbName)) {
+               continue;
             }
+
+            Operation operation = new Operation();
+            operation.setName(webhookName.trim() + WEBHOOK_OPERATION_SUFFIX);
+            operation.setMethod(verbName.toUpperCase());
+            operation.setAction("webhook");
+            completeOperationProperties(operation, verb.getValue());
+            results.add(operation);
          }
       }
-      return results;
+   }
+
+   private void completeOperationProperties(Operation operation, JsonNode operationNode) {
+      if (operationNode.has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
+         MetadataExtractor.completeOperationProperties(operation,
+               operationNode.path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
+      }
    }
 
    /** Complete operation with dispatcher rules if not already set. */
@@ -457,51 +444,54 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             String callbackPathExpression = callbackPath.getKey();
 
             for (Entry<String, JsonNode> callbackVerb : callbackPath.getValue().properties()) {
-               // Complete the operation with the callback information.
-               CallbackInfo callbackInfo = new CallbackInfo(callbackPathExpression, callbackVerb.getKey());
-               if (callbackVerb.getValue().has("x-microcks-callback")) {
-                  JsonNode microcksCBExt = callbackVerb.getValue().get("x-microcks-callback");
-                  if (microcksCBExt.has("order")) {
-                     callbackInfo.setOrder(microcksCBExt.get("order").asInt());
-                  }
-               }
+               JsonNode callbackVerbNode = callbackVerb.getValue();
+               addCallbackInfo(operation, callbackName, callbackPathExpression, callbackVerb);
 
-               operation.addCallbackInfo(callbackName, callbackInfo);
+               Map<String, Request> requestBodiesByExample = extractRequestBodies(callbackVerbNode);
+               requestBodiesByExample.values().forEach(request -> request.setCallbackName(callbackName));
 
-               // Initialize new structure for storing results of this callback verb.
-               Map<Request, Response> requestResponseMap = new HashMap<>();
-               Map<String, Request> requestBodiesByExample = extractRequestBodies(callbackVerb.getValue());
-
-               // Update the request with the name of the callback as the exchange reference.
-               for (Request request : requestBodiesByExample.values()) {
-                  request.setCallbackName(callbackName);
-               }
-
-               if (callbackVerb.getValue().has(RESPONSES_NODE)) {
-                  for (Entry<String, JsonNode> responseCode : callbackVerb.getValue().path(RESPONSES_NODE)
-                        .properties()) {
-
-                     Set<Entry<String, JsonNode>> contentNodes = getResponseContent(responseCode.getValue())
-                           .properties();
-                     if (contentNodes.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
-                        requestResponseMap.putAll(getNoContentCallbackRequestResponsePair(callbackName,
-                              requestBodiesByExample, responseCode));
-                     }
-                     for (Entry<String, JsonNode> contentNode : contentNodes) {
-                        requestResponseMap.putAll(getContentCallbackRequestResponsePairs(callbackName,
-                              requestBodiesByExample, responseCode, contentNode));
-                     }
-                  }
-               }
-
-               if (!requestResponseMap.isEmpty()) {
-                  results.addAll(requestResponseMap.entrySet().stream()
-                        .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue())).toList());
-               }
+               Map<Request, Response> requestResponseMap = extractCallbackVerbRequestResponses(callbackName,
+                     callbackVerbNode, requestBodiesByExample);
+               requestResponseMap
+                     .forEach((request, response) -> results.add(new RequestResponsePair(request, response)));
             }
          }
       }
       return results;
+   }
+
+   private void addCallbackInfo(Operation operation, String callbackName, String callbackPathExpression,
+         Entry<String, JsonNode> callbackVerb) {
+      CallbackInfo callbackInfo = new CallbackInfo(callbackPathExpression, callbackVerb.getKey());
+      JsonNode callbackVerbNode = callbackVerb.getValue();
+      if (callbackVerbNode.has("x-microcks-callback")) {
+         JsonNode microcksCBExt = callbackVerbNode.get("x-microcks-callback");
+         if (microcksCBExt.has("order")) {
+            callbackInfo.setOrder(microcksCBExt.get("order").asInt());
+         }
+      }
+      operation.addCallbackInfo(callbackName, callbackInfo);
+   }
+
+   private Map<Request, Response> extractCallbackVerbRequestResponses(String callbackName, JsonNode callbackVerbNode,
+         Map<String, Request> requestBodiesByExample) {
+      Map<Request, Response> requestResponseMap = new HashMap<>();
+      if (!callbackVerbNode.has(RESPONSES_NODE)) {
+         return requestResponseMap;
+      }
+
+      for (Entry<String, JsonNode> responseCode : callbackVerbNode.path(RESPONSES_NODE).properties()) {
+         Set<Entry<String, JsonNode>> contentNodes = getResponseContent(responseCode.getValue()).properties();
+         if (contentNodes.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
+            requestResponseMap
+                  .putAll(getNoContentCallbackRequestResponsePair(callbackName, requestBodiesByExample, responseCode));
+         }
+         for (Entry<String, JsonNode> contentNode : contentNodes) {
+            requestResponseMap.putAll(getContentCallbackRequestResponsePairs(callbackName, requestBodiesByExample,
+                  responseCode, contentNode));
+         }
+      }
+      return requestResponseMap;
    }
 
    /**
@@ -511,34 +501,36 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          Operation operation) {
       Map<Request, Response> results = new HashMap<>();
 
-      // Iterate on specification path, "verbs" nodes.
-      Set<Entry<String, JsonNode>> verbs = webhookNode.properties();
-      for (Entry<String, JsonNode> verb : verbs) {
-
-         // Find the correct operation.
-         if (operation.getName().equals(webhookName.trim() + " WEBHOOK")) {
-            Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
-
-            // No need to go further if no examples.
-            if (verb.getValue().has(RESPONSES_NODE)) {
-               Set<Entry<String, JsonNode>> responseCodes = verb.getValue().path(RESPONSES_NODE).properties();
-               for (Entry<String, JsonNode> responseCode : responseCodes) {
-                  Set<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).properties();
-
-                  if (contents.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
-                     results.putAll(getNoContentRequestResponsePair(operation, null, null, requestBodiesByExample,
-                           Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), responseCode));
-                  }
-                  for (Entry<String, JsonNode> content : contents) {
-                     results.putAll(getContentRequestResponsePairs(operation, null, null, requestBodiesByExample,
-                           Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), responseCode,
-                           content));
-                  }
-               }
-            }
-         }
+      if (!operation.getName().equals(webhookName.trim() + WEBHOOK_OPERATION_SUFFIX)) {
+         return results;
       }
 
+      for (Entry<String, JsonNode> verb : webhookNode.properties()) {
+         Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
+         results.putAll(extractWebhookVerbResponses(operation, verb.getValue(), requestBodiesByExample));
+      }
+
+      return results;
+   }
+
+   private Map<Request, Response> extractWebhookVerbResponses(Operation operation, JsonNode verbNode,
+         Map<String, Request> requestBodiesByExample) {
+      Map<Request, Response> results = new HashMap<>();
+      if (!verbNode.has(RESPONSES_NODE)) {
+         return results;
+      }
+
+      for (Entry<String, JsonNode> responseCode : verbNode.path(RESPONSES_NODE).properties()) {
+         Set<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).properties();
+         if (contents.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
+            results.putAll(getNoContentRequestResponsePair(operation, null, null, requestBodiesByExample,
+                  Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), responseCode));
+         }
+         for (Entry<String, JsonNode> content : contents) {
+            results.putAll(getContentRequestResponsePairs(operation, null, null, requestBodiesByExample,
+                  Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), responseCode, content));
+         }
+      }
       return results;
    }
 

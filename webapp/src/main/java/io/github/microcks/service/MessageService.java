@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Service bean for common processing around messages (request and responses).
@@ -170,21 +172,20 @@ public class MessageService {
 
       List<RequestResponsePair> results = new ArrayList<>();
       Map<String, List<RequestResponsePair>> callbacks = new HashMap<>();
+      Map<String, Response> responsesById = responses.stream()
+            .collect(Collectors.toMap(Response::getId, Function.identity(), (existing, replacement) -> existing));
 
-      // Browse them to reassociate them.
+      // Browse requests and reassociate with responses by ID.
       for (Request request : requests) {
-         for (Response response : responses) {
-            if (request.getResponseId() != null && request.getResponseId().equals(response.getId())) {
-               // We found a matching response.
-               // If a callback, store in callbacks.
-               if (request.getCallbackName() != null) {
-                  callbacks.computeIfAbsent(request.getName(), k -> new ArrayList<>())
-                        .add(new RequestResponsePair(request, response));
-                  break;
-               }
+         String responseId = request.getResponseId();
+         Response response = responseId != null ? responsesById.get(responseId) : null;
+         if (response != null) {
+            RequestResponsePair pair = new RequestResponsePair(request, response);
+            if (request.getCallbackName() != null) {
+               callbacks.computeIfAbsent(request.getName(), k -> new ArrayList<>()).add(pair);
+            } else {
                // Build a pair of original request and response.
-               results.add(new RequestResponsePair(request, response));
-               break;
+               results.add(pair);
             }
          }
       }

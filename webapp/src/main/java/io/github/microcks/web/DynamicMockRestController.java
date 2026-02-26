@@ -15,17 +15,9 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.GenericResource;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.event.MockInvocationEvent;
-import io.github.microcks.repository.GenericResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.json.JsonParseException;
@@ -44,23 +36,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import io.github.microcks.domain.GenericResource;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.event.MockInvocationEvent;
+import io.github.microcks.repository.GenericResourceRepository;
+import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.delay.DelayApplierOptions;
 import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.el.EvaluableRequest;
+import io.github.microcks.util.el.TemplateEngine;
+import io.github.microcks.util.el.TemplateEngineFactory;
 import io.github.microcks.util.tracing.CommonAttributes;
 import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.util.tracing.TraceUtil;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * This is the controller for Dynamic mocks in Microcks.
- * 
+ *
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
@@ -71,6 +69,11 @@ public class DynamicMockRestController {
    private static final SafeLogger log = SafeLogger.getLogger(DynamicMockRestController.class);
 
    public static final String ID_FIELD = "id";
+   private static final String RESOURCE_ID_FIELD = "resource.id";
+   private static final String DELAY_CONFIGURED_MESSAGE = "Configured response delay";
+   private static final String SERVICE_OR_OPERATION_NOT_FOUND = "Service or operation not found";
+   private static final String GET_OPERATION_PREFIX = "GET /";
+   private static final String RESOURCE_LOOKUP_COMPLETED = "Resource lookup completed";
 
    private final ServiceRepository serviceRepository;
    private final GenericResourceRepository genericResourceRepository;
@@ -81,7 +84,7 @@ public class DynamicMockRestController {
 
    /**
     * Build a new DynamicMockRestController with required dependencies.
-    * 
+    *
     * @param serviceRepository         the repository for services
     * @param genericResourceRepository the repository for generic resources
     * @param applicationContext        the Spring application context
@@ -115,8 +118,7 @@ public class DynamicMockRestController {
       span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
             TraceUtil.explainSpanEventBuilder(String.format("Received dynamic mock invocation for POST /%s", resource))
                   .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
-                  .put(CommonAttributes.BODY_CONTENT,
-                        body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
+                  .put(CommonAttributes.BODY_CONTENT, extractBodyPreview(body))
                   .put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
                   .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
 
@@ -136,7 +138,7 @@ public class DynamicMockRestController {
             genericResource = genericResourceRepository.save(genericResource);
 
             span.addEvent("resource.created", TraceUtil.explainSpanEventBuilder("Generic resource created successfully")
-                  .put("resource.id", genericResource.getId()).build());
+                  .put(RESOURCE_ID_FIELD, genericResource.getId()).build());
          } catch (JsonParseException jpe) {
             span.addEvent("resource.creation.failed",
                   TraceUtil.explainSpanEventBuilder("Failed to parse JSON payload").build());
@@ -147,27 +149,13 @@ public class DynamicMockRestController {
 
          // Append id and wait if specified before returning.
          document.append(ID_FIELD, genericResource.getId());
-         DelaySpec delay = null;
-         if (requestedDelay != null) {
-            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
-         }
-
-         // Add delay event if delay is configured.
-         if (delay != null || mockContext.operation.getDefaultDelay() != null) {
-            Long delayValue = delay != null ? delay.baseValue() : mockContext.operation.getDefaultDelay();
-            String delayStrategy = delay != null ? delay.strategyName() : DelayApplierOptions.FIXED;
-            span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
-                  TraceUtil.explainSpanEventBuilder("Configured response delay")
-                        .put(CommonAttributes.DELAY_VALUE, delayValue != null ? delayValue : 0)
-                        .put(CommonAttributes.DELAY_STRATEGY, delayStrategy != null ? delayStrategy : "N/A").build());
-         }
+         DelaySpec delay = createDelaySpec(requestedDelay, requestedDelayStrategy);
+         addDelayConfiguredEvent(span, delay, mockContext.operation);
 
          waitForDelay(startTime, delay, mockContext);
          return new ResponseEntity<>(document.toJson(), HttpStatus.CREATED);
       }
-      span.setStatus(StatusCode.ERROR, "Service or operation not found");
-      // Return a 400 code : bad request.
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return serviceOrOperationNotFound(span);
    }
 
    @GetMapping(value = "/{service}/{version}/{resource}", produces = "application/json")
@@ -188,11 +176,13 @@ public class DynamicMockRestController {
       TraceUtil.enableExplainTracing();
       span.setAttribute(CommonAttributes.SERVICE_NAME, serviceName);
       span.setAttribute(CommonAttributes.SERVICE_VERSION, version);
-      span.setAttribute(CommonAttributes.OPERATION_NAME, "GET /" + resource);
+      span.setAttribute(CommonAttributes.OPERATION_NAME, GET_OPERATION_PREFIX + resource);
 
       // Add an event for the invocation reception.
       span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
-            TraceUtil.explainSpanEventBuilder(String.format("Received dynamic mock invocation for GET /%s", resource))
+            TraceUtil
+                  .explainSpanEventBuilder(
+                        String.format("Received dynamic mock invocation for %s%s", GET_OPERATION_PREFIX, resource))
                   .put("query.page", page).put("query.size", size)
                   .put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
                   .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
@@ -202,7 +192,7 @@ public class DynamicMockRestController {
       String serviceAndVersion = "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
       String resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
 
-      MockContext mockContext = getMockContext(serviceName, version, "GET /" + resource);
+      MockContext mockContext = getMockContext(serviceName, version, GET_OPERATION_PREFIX + resource);
       if (mockContext != null) {
 
          List<GenericResource> genericResources = null;
@@ -214,7 +204,7 @@ public class DynamicMockRestController {
          }
 
          span.addEvent(CommonEvents.RESPONSE_LOOKUP_COMPLETED.getEventName(),
-               TraceUtil.explainSpanEventBuilder("Resource lookup completed")
+               TraceUtil.explainSpanEventBuilder(RESOURCE_LOOKUP_COMPLETED)
                      .put(CommonAttributes.RESPONSE_FOUND, !genericResources.isEmpty())
                      .put("resources.count", genericResources.size()).build());
 
@@ -227,29 +217,15 @@ public class DynamicMockRestController {
                .renderResponseContent(evaluableRequest, engine, transformToResourceJSON(genericResource)))
                .collect(Collectors.toList());
 
-         DelaySpec delay = null;
-         if (requestedDelay != null) {
-            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
-         }
-
-         // Add delay event if delay is configured.
-         if (delay != null || mockContext.operation.getDefaultDelay() != null) {
-            Long delayValue = delay != null ? delay.baseValue() : mockContext.operation.getDefaultDelay();
-            String delayStrategy = delay != null ? delay.strategyName() : DelayApplierOptions.FIXED;
-            span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
-                  TraceUtil.explainSpanEventBuilder("Configured response delay")
-                        .put(CommonAttributes.DELAY_VALUE, delayValue != null ? delayValue : 0)
-                        .put(CommonAttributes.DELAY_STRATEGY, delayStrategy != null ? delayStrategy : "N/A").build());
-         }
+         DelaySpec delay = createDelaySpec(requestedDelay, requestedDelayStrategy);
+         addDelayConfiguredEvent(span, delay, mockContext.operation);
 
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
 
          return new ResponseEntity<>(formatToJSONArray(resources), HttpStatus.OK);
       }
-      span.setStatus(StatusCode.ERROR, "Service or operation not found");
-      // Return a 400 code : bad request.
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return serviceOrOperationNotFound(span);
    }
 
    @GetMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
@@ -269,7 +245,7 @@ public class DynamicMockRestController {
       TraceUtil.enableExplainTracing();
       span.setAttribute(CommonAttributes.SERVICE_NAME, serviceName);
       span.setAttribute(CommonAttributes.SERVICE_VERSION, version);
-      span.setAttribute(CommonAttributes.OPERATION_NAME, "GET /" + resource + "/:id");
+      span.setAttribute(CommonAttributes.OPERATION_NAME, GET_OPERATION_PREFIX + resource + "/:id");
 
       // Add an event for the invocation reception.
       span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
@@ -283,30 +259,18 @@ public class DynamicMockRestController {
       String serviceAndVersion = "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
       String resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
 
-      MockContext mockContext = getMockContext(serviceName, version, "GET /" + resource + "/:id");
+      MockContext mockContext = getMockContext(serviceName, version, GET_OPERATION_PREFIX + resource + "/:id");
       if (mockContext != null) {
          // Get the requested generic resource.
          GenericResource genericResource = genericResourceRepository.findById(resourceId).orElse(null);
 
          span.addEvent(CommonEvents.RESPONSE_LOOKUP_COMPLETED.getEventName(),
-               TraceUtil.explainSpanEventBuilder("Resource lookup completed")
-                     .put(CommonAttributes.RESPONSE_FOUND, genericResource != null).put("resource.id", resourceId)
+               TraceUtil.explainSpanEventBuilder(RESOURCE_LOOKUP_COMPLETED)
+                     .put(CommonAttributes.RESPONSE_FOUND, genericResource != null).put(RESOURCE_ID_FIELD, resourceId)
                      .build());
 
-         DelaySpec delay = null;
-         if (requestedDelay != null) {
-            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
-         }
-
-         // Add delay event if delay is configured.
-         if (delay != null || mockContext.operation.getDefaultDelay() != null) {
-            Long delayValue = delay != null ? delay.baseValue() : mockContext.operation.getDefaultDelay();
-            String delayStrategy = delay != null ? delay.strategyName() : DelayApplierOptions.FIXED;
-            span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
-                  TraceUtil.explainSpanEventBuilder("Configured response delay")
-                        .put(CommonAttributes.DELAY_VALUE, delayValue != null ? delayValue : 0)
-                        .put(CommonAttributes.DELAY_STRATEGY, delayStrategy != null ? delayStrategy : "N/A").build());
-         }
+         DelaySpec delay = createDelaySpec(requestedDelay, requestedDelayStrategy);
+         addDelayConfiguredEvent(span, delay, mockContext.operation);
 
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
@@ -322,16 +286,14 @@ public class DynamicMockRestController {
                   transformToResourceJSON(genericResource)), HttpStatus.OK);
          } else {
             span.addEvent(CommonEvents.NO_RESPONSE_FOUND.getEventName(),
-                  TraceUtil.explainSpanEventBuilder("Resource not found").put("resource.id", resourceId)
+                  TraceUtil.explainSpanEventBuilder("Resource not found").put(RESOURCE_ID_FIELD, resourceId)
                         .put(CommonAttributes.ERROR_STATUS, 404).build());
             // Return a 404 code : not found.
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
          }
       }
 
-      span.setStatus(StatusCode.ERROR, "Service or operation not found");
-      // Return a 400 code : bad request.
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return serviceOrOperationNotFound(span);
    }
 
    @PutMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
@@ -357,14 +319,11 @@ public class DynamicMockRestController {
       span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
             TraceUtil
                   .explainSpanEventBuilder(String.format("Received dynamic mock invocation for PUT /%s/:id", resource))
-                  .put("resource.id", resourceId).put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
+                  .put(RESOURCE_ID_FIELD, resourceId).put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
                   .put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
                   .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
 
-      DelaySpec delay = null;
-      if (requestedDelay != null) {
-         delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
-      }
+      DelaySpec delay = createDelaySpec(requestedDelay, requestedDelayStrategy);
 
       MockContext mockContext = getMockContext(serviceName, version, "PUT /" + resource + "/:id");
       if (mockContext != null) {
@@ -372,8 +331,8 @@ public class DynamicMockRestController {
          GenericResource genericResource = genericResourceRepository.findById(resourceId).orElse(null);
 
          span.addEvent(CommonEvents.RESPONSE_LOOKUP_COMPLETED.getEventName(),
-               TraceUtil.explainSpanEventBuilder("Resource lookup completed")
-                     .put(CommonAttributes.RESPONSE_FOUND, genericResource != null).put("resource.id", resourceId)
+               TraceUtil.explainSpanEventBuilder(RESOURCE_LOOKUP_COMPLETED)
+                     .put(CommonAttributes.RESPONSE_FOUND, genericResource != null).put(RESOURCE_ID_FIELD, resourceId)
                      .build());
 
          if (genericResource != null) {
@@ -391,7 +350,7 @@ public class DynamicMockRestController {
 
                span.addEvent("resource.updated",
                      TraceUtil.explainSpanEventBuilder("Generic resource updated successfully")
-                           .put("resource.id", genericResource.getId()).build());
+                           .put(RESOURCE_ID_FIELD, genericResource.getId()).build());
             } catch (JsonParseException jpe) {
                span.addEvent("resource.update.failed",
                      TraceUtil.explainSpanEventBuilder("Failed to parse JSON payload").build());
@@ -400,16 +359,7 @@ public class DynamicMockRestController {
                return new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
             }
 
-            // Add delay event if delay is configured.
-            if (delay != null || mockContext.operation.getDefaultDelay() != null) {
-               Long delayValue = delay != null ? delay.baseValue() : mockContext.operation.getDefaultDelay();
-               String delayStrategy = delay != null ? delay.strategyName() : DelayApplierOptions.FIXED;
-               span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
-                     TraceUtil.explainSpanEventBuilder("Configured response delay")
-                           .put(CommonAttributes.DELAY_VALUE, delayValue != null ? delayValue : 0)
-                           .put(CommonAttributes.DELAY_STRATEGY, delayStrategy != null ? delayStrategy : "N/A")
-                           .build());
-            }
+            addDelayConfiguredEvent(span, delay, mockContext.operation);
 
             // Wait if specified before returning.
             waitForDelay(startTime, delay, mockContext);
@@ -419,19 +369,10 @@ public class DynamicMockRestController {
 
          } else {
             span.addEvent(CommonEvents.NO_RESPONSE_FOUND.getEventName(),
-                  TraceUtil.explainSpanEventBuilder("Resource not found for update").put("resource.id", resourceId)
+                  TraceUtil.explainSpanEventBuilder("Resource not found for update").put(RESOURCE_ID_FIELD, resourceId)
                         .put(CommonAttributes.ERROR_STATUS, 404).build());
 
-            // Add delay event if delay is configured.
-            if (delay != null || mockContext.operation.getDefaultDelay() != null) {
-               Long delayValue = delay != null ? delay.baseValue() : mockContext.operation.getDefaultDelay();
-               String delayStrategy = delay != null ? delay.strategyName() : DelayApplierOptions.FIXED;
-               span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
-                     TraceUtil.explainSpanEventBuilder("Configured response delay")
-                           .put(CommonAttributes.DELAY_VALUE, delayValue != null ? delayValue : 0)
-                           .put(CommonAttributes.DELAY_STRATEGY, delayStrategy != null ? delayStrategy : "N/A")
-                           .build());
-            }
+            addDelayConfiguredEvent(span, delay, mockContext.operation);
 
             // Wait if specified before returning.
             waitForDelay(startTime, delay, mockContext);
@@ -441,9 +382,7 @@ public class DynamicMockRestController {
          }
       }
 
-      span.setStatus(StatusCode.ERROR, "Service or operation not found");
-      // Return a 400 code : bad request.
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return serviceOrOperationNotFound(span);
    }
 
    @DeleteMapping(value = "/{service}/{version}/{resource}/{resourceId}")
@@ -468,30 +407,18 @@ public class DynamicMockRestController {
       // Add an event for the invocation reception.
       span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
             .explainSpanEventBuilder(String.format("Received dynamic mock invocation for DELETE /%s/:id", resource))
-            .put("resource.id", resourceId).put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
+            .put(RESOURCE_ID_FIELD, resourceId).put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
             .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
 
-      DelaySpec delay = null;
-      if (requestedDelay != null) {
-         delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
-      }
+      DelaySpec delay = createDelaySpec(requestedDelay, requestedDelayStrategy);
 
       MockContext mockContext = getMockContext(serviceName, version, "DELETE /" + resource + "/:id");
       if (mockContext != null) {
          genericResourceRepository.deleteById(resourceId);
 
          span.addEvent("resource.deleted", TraceUtil.explainSpanEventBuilder("Generic resource deleted successfully")
-               .put("resource.id", resourceId).build());
-
-         // Add delay event if delay is configured.
-         if (delay != null || mockContext.operation.getDefaultDelay() != null) {
-            Long delayValue = delay != null ? delay.baseValue() : mockContext.operation.getDefaultDelay();
-            String delayStrategy = delay != null ? delay.strategyName() : DelayApplierOptions.FIXED;
-            span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
-                  TraceUtil.explainSpanEventBuilder("Configured response delay")
-                        .put(CommonAttributes.DELAY_VALUE, delayValue != null ? delayValue : 0)
-                        .put(CommonAttributes.DELAY_STRATEGY, delayStrategy != null ? delayStrategy : "N/A").build());
-         }
+               .put(RESOURCE_ID_FIELD, resourceId).build());
+         addDelayConfiguredEvent(span, delay, mockContext.operation);
 
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
@@ -500,9 +427,7 @@ public class DynamicMockRestController {
          return new ResponseEntity<>(HttpStatus.NO_CONTENT);
       }
 
-      span.setStatus(StatusCode.ERROR, "Service or operation not found");
-      // Return a 400 code : bad request.
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return serviceOrOperationNotFound(span);
    }
 
    /** Sanitize the service name (check encoding and so on...) */
@@ -535,6 +460,16 @@ public class DynamicMockRestController {
       return document.toJson();
    }
 
+   private String extractBodyPreview(String body) {
+      if (body == null) {
+         return "empty";
+      }
+      if (body.length() > 1000) {
+         return body.substring(0, 1000) + "...";
+      }
+      return body;
+   }
+
    private String formatToJSONArray(List<String> resources) {
       StringBuilder builder = new StringBuilder("[");
       for (int i = 0; i < resources.size(); i++) {
@@ -564,6 +499,30 @@ public class DynamicMockRestController {
          applicationContext.publishEvent(event);
          log.debug("Mock invocation event has been published");
       }
+   }
+
+   private DelaySpec createDelaySpec(Long requestedDelay, String requestedDelayStrategy) {
+      if (requestedDelay == null) {
+         return null;
+      }
+      return new DelaySpec(requestedDelay, requestedDelayStrategy);
+   }
+
+   private void addDelayConfiguredEvent(Span span, DelaySpec delay, Operation operation) {
+      if (delay == null && operation.getDefaultDelay() == null) {
+         return;
+      }
+      Long delayValue = delay != null ? delay.baseValue() : operation.getDefaultDelay();
+      String delayStrategy = delay != null ? delay.strategyName() : DelayApplierOptions.FIXED;
+      span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
+            TraceUtil.explainSpanEventBuilder(DELAY_CONFIGURED_MESSAGE)
+                  .put(CommonAttributes.DELAY_VALUE, delayValue != null ? delayValue : 0)
+                  .put(CommonAttributes.DELAY_STRATEGY, delayStrategy != null ? delayStrategy : "N/A").build());
+   }
+
+   private ResponseEntity<String> serviceOrOperationNotFound(Span span) {
+      span.setStatus(StatusCode.ERROR, SERVICE_OR_OPERATION_NOT_FOUND);
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
    private class MockContext {

@@ -15,14 +15,14 @@
  */
 package io.github.microcks.util.el;
 
-import io.github.microcks.util.el.function.ELFunction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import io.github.microcks.util.el.function.ELFunction;
 
 /**
  * Helper object for finding and parsing expressions present into a string template. For example, following template:
@@ -68,7 +68,7 @@ public class ExpressionParser {
             int afterPrefixIndex = prefixIndex + expressionPrefix.length();
             int suffixIndex = skipToCorrectEndSuffix(expressionSuffix, template, afterPrefixIndex);
 
-            validateSuffixFound(template, expressionPrefix, expressionSuffix, prefixIndex, suffixIndex);
+            validateSuffixFound(template, expressionSuffix, prefixIndex, suffixIndex);
             validateSuffixNotEmpty(template, expressionPrefix, expressionSuffix, prefixIndex, afterPrefixIndex,
                   suffixIndex);
 
@@ -97,13 +97,14 @@ public class ExpressionParser {
    }
 
    /** Validate that the suffix was found. */
-   private static void validateSuffixFound(String template, String expressionPrefix, String expressionSuffix,
-         int prefixIndex, int suffixIndex) throws ParseException {
+   private static void validateSuffixFound(String template, String expressionSuffix, int prefixIndex, int suffixIndex)
+         throws ParseException {
       if (suffixIndex == -1) {
+         String templateFragment = template.substring(prefixIndex);
          log.info("No ending suffix '{}' for expression starting at character {}: {}", expressionSuffix, prefixIndex,
-               template.substring(prefixIndex));
+               templateFragment);
          throw new ParseException(template, prefixIndex, "No ending suffix '" + expressionSuffix
-               + "' for expression starting at character " + prefixIndex + ": " + template.substring(prefixIndex));
+               + "' for expression starting at character " + prefixIndex + ": " + templateFragment);
       }
    }
 
@@ -255,7 +256,7 @@ public class ExpressionParser {
 
    private static Expression buildFunctionExpression(String expressionString, int argsStart, int argsEnd,
          EvaluationContext context) {
-      String functionName = null;
+      String functionName;
       String[] args = new String[0];
       // Checking for easier Postman compatibility notation first.
       if (expressionString.startsWith("$")) {
@@ -271,10 +272,8 @@ public class ExpressionParser {
 
       Class<ELFunction> functionClazz = context.lookupFunction(functionName);
       if (functionClazz != null) {
-         ELFunction function = null;
          try {
-            function = functionClazz.getDeclaredConstructor().newInstance();
-            return new FunctionExpression(function, args);
+            return new FunctionExpression(functionClazz.getDeclaredConstructor().newInstance(), args);
          } catch (Exception e) {
             log.error("Exception while instantiating the functionClazz {}", functionClazz, e);
          }
