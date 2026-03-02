@@ -20,6 +20,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 import {
   CardConfig,
@@ -42,6 +43,7 @@ import { ServicesService } from '../../services/services.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    RouterLink,
     CardModule,
     DonutChartModule,
     ScoreTreemapComponent,
