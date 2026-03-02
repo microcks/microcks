@@ -208,9 +208,9 @@ At code freeze the **release lead** is responsible for;
 
 During the three weeks of the `Ship` phase, the **build manager** is in charge to track the "Release" type issue and to coordinates with the **release lead**, the **release tests lead**, and the maintainers to evaluate if and when to build new Release Candidates packages.
 
-- [] Each RC build is announced on the `#announcements` Discord channel to inform the community for validation testing.
+- [ ] Each RC build is announced on the `#announcements` Discord channel to inform the community for validation testing.
 
-- [] Final build is announced on the `#announcements` Discord channel to inform the community for update.
+- [ ] Final build is announced on the `#announcements` Discord channel to inform the community for update.
 
 
 #### Phase outcomes
@@ -244,7 +244,7 @@ At path version decision, the **release lead** is responsible for;
 
 If a patch is needed then the **release lead**:
 
-- []  Creates a hotfix checklist list issue and assigns owners to tasks
-- []  Assigns a contributor(s) to fix the issue(s)
-- []  The **build manager** is responsible for releasing the patch
-- []  Announcing on the Discord `#announcements` channel the patch availability
+- [ ] Creates a hotfix checklist list issue and assigns owners to tasks
+- [ ] Assigns a contributor(s) to fix the issue(s)
+- [ ] The **build manager** is responsible for releasing the patch
+- [ ] Announcing on the Discord `#announcements` channel the patch availability
