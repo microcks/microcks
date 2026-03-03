@@ -15,8 +15,11 @@
  */
 package io.github.microcks.listener;
 
+import io.github.microcks.event.AsyncAPITriggerCommand;
+import io.github.microcks.event.AsyncAPITriggerEvent;
 import io.github.microcks.event.ServiceViewChangeEvent;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -30,20 +33,30 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile({ "default", "prod" })
 @ConditionalOnProperty(value = "async-api.enabled", havingValue = "true", matchIfMissing = true)
-public class KafkaServiceChangeEventChannel implements ServiceChangeEventChannel {
+public class KafkaEventPublicationChannel implements EventPublicationChannel {
 
-   private final KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate;
+   private final KafkaTemplate<String, ServiceViewChangeEvent> serviceChangeKafkaTemplate;
+   private final KafkaTemplate<String, AsyncAPITriggerCommand> asyncAPITriggerTemplate;
 
    /**
     * Build a new KafkaServiceChangeEventChannel from a KafkaTemplate.
-    * @param kafkaTemplate THe template used for sending Kafka messages.
+    * @param serviceChangeKafkaTemplate THe template used for sending Kafka messages for service changes.
+    * @param asyncAPITriggerTemplate    The template used for sending Kafka messages for async API triggers.
     */
-   public KafkaServiceChangeEventChannel(KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate) {
-      this.kafkaTemplate = kafkaTemplate;
+   public KafkaEventPublicationChannel(
+         @Qualifier("serviceViewChangesKafkaTemplate") KafkaTemplate<String, ServiceViewChangeEvent> serviceChangeKafkaTemplate,
+         @Qualifier("asyncAPITriggerCommandKafkaTemplate") KafkaTemplate<String, AsyncAPITriggerCommand> asyncAPITriggerTemplate) {
+      this.serviceChangeKafkaTemplate = serviceChangeKafkaTemplate;
+      this.asyncAPITriggerTemplate = asyncAPITriggerTemplate;
    }
 
    @Override
    public void sendServiceViewChangeEvent(ServiceViewChangeEvent event) throws Exception {
-      kafkaTemplate.send("microcks-services-updates", event.getServiceId(), event);
+      serviceChangeKafkaTemplate.send("microcks-services-updates", event.getServiceId(), event);
+   }
+
+   @Override
+   public void sendAsyncAPITriggerCommand(AsyncAPITriggerCommand command) throws Exception {
+      asyncAPITriggerTemplate.send("microcks-asyncapi-triggers", command.getServiceId(), command);
    }
 }

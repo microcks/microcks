@@ -15,7 +15,7 @@
  */
 package io.github.microcks.config;
 
-import io.github.microcks.listener.WebSocketServiceChangeEventChannel;
+import io.github.microcks.listener.WebSocketEventPublicationChannel;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -33,18 +33,19 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Profile("uber")
 public class WebSocketConfiguration implements WebSocketConfigurer {
 
-   private final WebSocketServiceChangeEventChannel channel;
+   private final WebSocketEventPublicationChannel channel;
 
    /**
     * Build a new WebSocketConfiguration with mandatory dependencies
     * @param channel The channel to register as a handler
     */
-   public WebSocketConfiguration(WebSocketServiceChangeEventChannel channel) {
+   public WebSocketConfiguration(WebSocketEventPublicationChannel channel) {
       this.channel = channel;
    }
 
    @Override
    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
       registry.addHandler(channel, "/api/services-updates").setAllowedOrigins("*");
+      registry.addHandler(channel, "/api/asyncapi-triggers").setAllowedOrigins("*");
    }
 }

@@ -21,8 +21,11 @@ import io.github.microcks.domain.ParameterConstraint;
 import io.github.microcks.domain.ParameterLocation;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.event.AsyncAPITriggerEvent;
 import io.github.microcks.event.CallbackTriggerEvent;
 import io.github.microcks.event.HttpServletRequestSnapshot;
+import io.github.microcks.event.RequestSnapshot;
+import io.github.microcks.event.ResponseSnapshot;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
@@ -247,6 +250,9 @@ public class RestInvocationProcessor {
 
          // Check and emit callbacks event if needed.
          handleCallbackTrigger(ic, request, headers, body, response);
+
+         // Check and emit AsyncAPI trigger if needed.
+         handleAsyncAPITrigger(ic, request, headers, body, responseContent, responseHeaders);
 
          // Return response content.
          return new ResponseResult(status, responseHeaders, responseContent);
@@ -599,6 +605,21 @@ public class RestInvocationProcessor {
                request.getParameterMap(), body);
          CallbackTriggerEvent event = new CallbackTriggerEvent(this, ic.service().getId(), ic.operation(),
                response.getName(), snapshot);
+         applicationContext.publishEvent(event);
+      }
+   }
+
+   /** If this operation has async triggers defined, emit an event to manage async api event sending. */
+   private void handleAsyncAPITrigger(MockInvocationContext ic, HttpServletRequest request,
+         Map<String, List<String>> headers, String body, byte[] responseContent,
+         Map<String, List<String>> responseHeaders) {
+      if (ic.operation().getTriggerInfos() != null && !ic.operation().getTriggerInfos().isEmpty()) {
+         RequestSnapshot requestSnapshot = new RequestSnapshot(ic.resourcePath(), headers, request.getParameterMap(),
+               body);
+         ResponseSnapshot responseSnapshot = new ResponseSnapshot(responseHeaders,
+               new String(responseContent, StandardCharsets.UTF_8));
+         AsyncAPITriggerEvent event = new AsyncAPITriggerEvent(this, ic.service().getId(), ic.operation(),
+               requestSnapshot, responseSnapshot);
          applicationContext.publishEvent(event);
       }
    }
