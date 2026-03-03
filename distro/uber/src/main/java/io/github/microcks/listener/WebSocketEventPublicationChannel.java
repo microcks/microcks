@@ -47,20 +47,21 @@ public class WebSocketEventPublicationChannel extends TextWebSocketHandler imple
 
    private final ObjectMapper mapper = new ObjectMapper();
 
-   private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+   private final List<WebSocketSession> serviceChangesSessions = new CopyOnWriteArrayList<>();
+   private final List<WebSocketSession> asyncAPITriggersSessions = new CopyOnWriteArrayList<>();
 
    @Override
    public void sendServiceViewChangeEvent(ServiceViewChangeEvent event) throws Exception {
-      log.debug("Sending ServiceViewChangeEvent to {} connected WS sessions", sessions.size());
-      for (WebSocketSession wsSession : sessions) {
+      log.debug("Sending ServiceViewChangeEvent to {} connected WS sessions", serviceChangesSessions.size());
+      for (WebSocketSession wsSession : serviceChangesSessions) {
          wsSession.sendMessage(new TextMessage(mapper.writeValueAsString(event)));
       }
    }
 
    @Override
    public void sendAsyncAPITriggerCommand(AsyncAPITriggerCommand command) throws Exception {
-      log.debug("Sending AsyncAPITriggerCommand to {} connected WS sessions", sessions.size());
-      for (WebSocketSession wsSession : sessions) {
+      log.debug("Sending AsyncAPITriggerCommand to {} connected WS sessions", asyncAPITriggersSessions.size());
+      for (WebSocketSession wsSession : asyncAPITriggersSessions) {
          wsSession.sendMessage(new TextMessage(mapper.writeValueAsString(command)));
       }
    }
@@ -68,12 +69,30 @@ public class WebSocketEventPublicationChannel extends TextWebSocketHandler imple
    @Override
    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
       log.debug("afterConnectionEstablished, session: {}", session.getId());
-      sessions.add(session);
+      if (session.getUri() == null || session.getUri().getPath() == null) {
+         log.warn("URI path is null, cannot determine which session list to add to");
+         return;
+      }
+      String uriPath = session.getUri().getPath();
+      if (uriPath.endsWith("/api/services-updates")) {
+         serviceChangesSessions.add(session);
+      } else if (uriPath.endsWith("/api/asyncapi-triggers")) {
+         asyncAPITriggersSessions.add(session);
+      }
    }
 
    @Override
    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
       log.debug("afterConnectionClosed, session: {}", session.getId());
-      sessions.remove(session);
+      if (session.getUri() == null || session.getUri().getPath() == null) {
+         log.warn("URI path is null, cannot determine which session list to remove from");
+         return;
+      }
+      String uriPath = session.getUri().getPath();
+      if (uriPath.endsWith("/api/services-updates")) {
+         serviceChangesSessions.remove(session);
+      } else if (uriPath.endsWith("/api/asyncapi-triggers")) {
+         asyncAPITriggersSessions.remove(session);
+      }
    }
 }

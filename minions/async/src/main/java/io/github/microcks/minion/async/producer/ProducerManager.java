@@ -121,8 +121,6 @@ public class ProducerManager {
          for (String binding : definition.getOperation().getBindings().keySet()) {
             // Ensure this minion supports this binding.
             if (Arrays.asList(supportedBindings).contains(binding)) {
-               Binding bindingDef = definition.getOperation().getBindings().get(binding);
-
                switch (BindingType.valueOf(binding)) {
                   case KAFKA:
                      produceKafkaMockMessages(definition);
@@ -137,6 +135,7 @@ public class ProducerManager {
                      produceWSMockMessages(definition);
                      break;
                   case AMQP:
+                     Binding bindingDef = definition.getOperation().getBindings().get(binding);
                      produceAMQPMockMessages(definition, bindingDef);
                      break;
                   case GOOGLEPUBSUB:
@@ -157,8 +156,8 @@ public class ProducerManager {
    }
 
    /**
-    *
-    * @param command
+    * Produce mock messages for specified triggered service and operation.
+    * @param command The command to emit messages for.
     */
    public void triggerAsyncMockMessages(AsyncAPITriggerCommand command) {
       logger.infof("Triggering async mock message after service {%s} and operation {%s} invocation",
@@ -172,38 +171,65 @@ public class ProducerManager {
 
          for (AsyncMockDefinition definition : mockDefinitions) {
             // Filter only the contextualized messages.
-            List<EventMessage> contextualizedMessages = definition.getEventMessages().stream()
-                  .filter(eventMessage -> eventMessage.getContent().contains("request.")
-                        || eventMessage.getContent().contains("response."))
-                  .toList();
+            List<EventMessage> contextualizedMessages = getContextualizedMessages(definition);
+            triggerAsyncMockMessages(command, definition, contextualizedMessages);
+         }
+      }
+   }
 
-            for (EventMessage eventMessage : contextualizedMessages) {
-               for (String binding : definition.getOperation().getBindings().keySet()) {
-                  // Ensure this minion supports this binding.
-                  if (Arrays.asList(supportedBindings).contains(binding)) {
-
-                     switch (BindingType.valueOf(binding)) {
-                        case KAFKA:
-                           produceKafkaMockMessage(definition, eventMessage,
-                                 renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                           break;
-                        case WS:
-                           produceWSMockMessage(definition, eventMessage,
-                                 renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                           break;
-                        default:
-                           break;
-                     }
-                  }
+   /** Browse the list of selected message and trigger mock messages for each of them. */
+   protected void triggerAsyncMockMessages(AsyncAPITriggerCommand command, AsyncMockDefinition definition,
+         List<EventMessage> contextualizedMessages) {
+      for (EventMessage eventMessage : contextualizedMessages) {
+         for (String binding : definition.getOperation().getBindings().keySet()) {
+            // Ensure this minion supports this binding.
+            if (Arrays.asList(supportedBindings).contains(binding)) {
+               switch (BindingType.valueOf(binding)) {
+                  case KAFKA:
+                     produceKafkaMockMessage(definition, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  case NATS:
+                     produceNatsMockMessage(definition, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  case MQTT:
+                     produceMQTTMockMessage(definition, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  case WS:
+                     produceWSMockMessage(definition, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  case AMQP:
+                     Binding bindingDef = definition.getOperation().getBindings().get(binding);
+                     produceAMQPMockMessage(definition, bindingDef, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  case GOOGLEPUBSUB:
+                     produceGooglePubSubMockMessage(definition, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  case SQS:
+                     produceSQSMockMessage(definition, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  case SNS:
+                     produceSNSMockMessage(definition, eventMessage,
+                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+                     break;
+                  default:
+                     break;
                }
             }
          }
       }
    }
 
+
    /** Take care publishing Kafka mock messages for definition. */
    protected void produceKafkaMockMessages(AsyncMockDefinition definition) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
          produceKafkaMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
       }
    }
@@ -288,26 +314,36 @@ public class ProducerManager {
 
    /** Take care publishing Nats mock messages for definition. */
    protected void produceNatsMockMessages(AsyncMockDefinition definition) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
-         String topic = natsProducerManager.getTopicName(definition, eventMessage);
-         String message = renderEventMessageContent(eventMessage);
-         natsProducerManager.publishMessage(topic, message, natsProducerManager
-               .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceNatsMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
       }
+   }
+
+   /** Take care publishing Nats message for definition. */
+   protected void produceNatsMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+         String renderedContent) {
+      String topic = natsProducerManager.getTopicName(definition, eventMessage);
+      natsProducerManager.publishMessage(topic, renderedContent, natsProducerManager
+            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
    }
 
    /** Take care publishing MQTT mock messages for definition. */
    protected void produceMQTTMockMessages(AsyncMockDefinition definition) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
-         String topic = mqttProducerManager.getTopicName(definition, eventMessage);
-         String message = renderEventMessageContent(eventMessage);
-         mqttProducerManager.publishMessage(topic, message);
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceMQTTMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
       }
+   }
+
+   /** Take care publishing MQTT message for definition. */
+   protected void produceMQTTMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+         String renderedContent) {
+      String topic = mqttProducerManager.getTopicName(definition, eventMessage);
+      mqttProducerManager.publishMessage(topic, renderedContent);
    }
 
    /** Take care publishing WebSocket mock messages for definition. */
    protected void produceWSMockMessages(AsyncMockDefinition definition) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
          produceWSMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
       }
    }
@@ -321,43 +357,63 @@ public class ProducerManager {
 
    /** Take care publishing AMQP mock messages for definition. */
    protected void produceAMQPMockMessages(AsyncMockDefinition definition, Binding bindingDef) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
-         String destinationName = amqpProducerManager.getDestinationName(definition, eventMessage);
-         String message = renderEventMessageContent(eventMessage);
-         amqpProducerManager.publishMessage(bindingDef.getDestinationType(), destinationName, message,
-               amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
-                     eventMessage.getHeaders()));
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceAMQPMockMessage(definition, bindingDef, eventMessage, renderEventMessageContent(eventMessage));
       }
+   }
+
+   /** Take care publishing AMQP message for definition. */
+   protected void produceAMQPMockMessage(AsyncMockDefinition definition, Binding bindingDef, EventMessage eventMessage,
+         String renderedContent) {
+      String destinationName = amqpProducerManager.getDestinationName(definition, eventMessage);
+      amqpProducerManager.publishMessage(bindingDef.getDestinationType(), destinationName, renderedContent,
+            amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
+                  eventMessage.getHeaders()));
    }
 
    /** Take care publishing Google PubSub mock messages for definition. */
    protected void produceGooglePubSubMockMessages(AsyncMockDefinition definition) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
-         String topicName = googlePubSubProducerManager.getTopicName(definition, eventMessage);
-         String message = renderEventMessageContent(eventMessage);
-         googlePubSubProducerManager.publishMessage(topicName, message, googlePubSubProducerManager
-               .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceGooglePubSubMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
       }
+   }
+
+   /** Take care publishing Google PubSub message for definition. */
+   protected void produceGooglePubSubMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+         String renderedContent) {
+      String topicName = googlePubSubProducerManager.getTopicName(definition, eventMessage);
+      googlePubSubProducerManager.publishMessage(topicName, renderedContent, googlePubSubProducerManager
+            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
    }
 
    /** Take care publishing SQS mock messages for definition. */
    protected void produceSQSMockMessages(AsyncMockDefinition definition) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
-         String queueName = amazonSQSProducerManager.getQueueName(definition, eventMessage);
-         String message = renderEventMessageContent(eventMessage);
-         amazonSQSProducerManager.publishMessage(queueName, message, amazonSQSProducerManager
-               .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceSQSMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
       }
+   }
+
+   /** Take care publishing SQS message for definition. */
+   protected void produceSQSMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+         String renderedContent) {
+      String queueName = amazonSQSProducerManager.getQueueName(definition, eventMessage);
+      amazonSQSProducerManager.publishMessage(queueName, renderedContent, amazonSQSProducerManager
+            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
    }
 
    /** Take care publishing SNS mock messages for definition. */
    protected void produceSNSMockMessages(AsyncMockDefinition definition) {
-      for (EventMessage eventMessage : definition.getEventMessages()) {
-         String topicName = amazonSNSProducerManager.getTopicName(definition, eventMessage);
-         String message = renderEventMessageContent(eventMessage);
-         amazonSNSProducerManager.publishMessage(topicName, message, amazonSNSProducerManager
-               .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceSNSMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
       }
+   }
+
+   /** Take care publishing SNS message for definition. */
+   protected void produceSNSMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+         String renderedContent) {
+      String topicName = amazonSNSProducerManager.getTopicName(definition, eventMessage);
+      amazonSNSProducerManager.publishMessage(topicName, renderedContent, amazonSNSProducerManager
+            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
    }
 
    /**
@@ -383,6 +439,22 @@ public class ProducerManager {
          operationPart = replacePartPlaceholders(operationPart, eventMessage);
       }
       return operationPart;
+   }
+
+   /** Get the event messages that are not contextualized with request or response part. */
+   private List<EventMessage> getPureEventMessages(AsyncMockDefinition definition) {
+      return definition.getEventMessages().stream()
+            .filter(eventMessage -> !eventMessage.getContent().contains("request.")
+                  && !eventMessage.getContent().contains("response."))
+            .toList();
+   }
+
+   /** Get the event messages that are contextualized with request or response part. */
+   private List<EventMessage> getContextualizedMessages(AsyncMockDefinition definition) {
+      return definition.getEventMessages().stream()
+            .filter(eventMessage -> eventMessage.getContent().contains("request.")
+                  || eventMessage.getContent().contains("response."))
+            .toList();
    }
 
    /** Render event message content from definition applying template rendering if required. */

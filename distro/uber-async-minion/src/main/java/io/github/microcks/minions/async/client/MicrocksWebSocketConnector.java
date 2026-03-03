@@ -15,10 +15,12 @@
  */
 package io.github.microcks.minions.async.client;
 
+import io.github.microcks.event.AsyncAPITriggerCommand;
 import io.github.microcks.event.ServiceViewChangeEvent;
 import io.github.microcks.minion.async.AsyncMockDefinitionUpdater;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.microcks.minion.async.AsyncMockProducerTrigger;
 import io.quarkus.arc.Unremovable;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -57,8 +59,12 @@ public class MicrocksWebSocketConnector {
 
       try {
          uri = new URI("ws://" + microcksHostAndPort + "/api/services-updates");
-         ContainerProvider.getWebSocketContainer().connectToServer(WebSocketClient.class, uri);
+         ContainerProvider.getWebSocketContainer().connectToServer(ServiceUpdatesWebSocketClient.class, uri);
          logger.debug("Now connected to Microcks /api/services-updates WS endpoint");
+
+         uri = new URI("ws://" + microcksHostAndPort + "/api/asyncapi-triggers");
+         ContainerProvider.getWebSocketContainer().connectToServer(AsyncAPITriggersWebSocketClient.class, uri);
+         logger.debug("Now connected to Microcks /api/asyncapi-triggers WS endpoint");
       } catch (URISyntaxException e) {
          logger.error("Exception while building the Microcks WebSocket URI, check your settings", e);
          throw e;
@@ -72,24 +78,24 @@ public class MicrocksWebSocketConnector {
    }
 
    @ClientEndpoint
-   public static class WebSocketClient {
+   public static class ServiceUpdatesWebSocketClient {
 
       private final AsyncMockDefinitionUpdater definitionUpdater;
       private final ObjectMapper mapper;
 
       /**
-       * Create a WebSocketClient with mandatory dependencies.
+       * Create a ServiceUpdatesWebSocketClient with mandatory dependencies.
        * @param definitionUpdater to update Async mocks definition when needed
        * @param mapper            to deserialize ServiceViewChangeEvents
        */
-      public WebSocketClient(AsyncMockDefinitionUpdater definitionUpdater, ObjectMapper mapper) {
+      public ServiceUpdatesWebSocketClient(AsyncMockDefinitionUpdater definitionUpdater, ObjectMapper mapper) {
          this.definitionUpdater = definitionUpdater;
          this.mapper = mapper;
       }
 
       @OnOpen
       public void open(Session session) {
-         logger.debug("Opening a WebSocket Session on Microcks server");
+         logger.debug("Opening a WebSocket Session on Microcks server for services-updates");
          // Send a message to indicate that we are ready,
          // as the message handler may not be registered immediately after this callback.
          session.getAsyncRemote().sendText("_ready_");
@@ -97,13 +103,54 @@ public class MicrocksWebSocketConnector {
 
       @OnMessage
       public void message(String message) {
-         logger.debugf("Received this WebSocket message: " + message);
+         logger.debugf("Received this WebSocket message for services-updates: %s", message);
          try {
             ServiceViewChangeEvent serviceViewChangeEvent = mapper.readValue(message, ServiceViewChangeEvent.class);
             logger.infof("Received a new change event [%s] for '%s', at %d", serviceViewChangeEvent.getChangeType(),
                   serviceViewChangeEvent.getServiceId(), serviceViewChangeEvent.getTimestamp());
 
             definitionUpdater.applyServiceChangeEvent(serviceViewChangeEvent);
+         } catch (Exception e) {
+            logger.error("WebSocket message cannot be converted into a ServiceViewChangeEvent", e);
+            logger.error("Ignoring this WebSocket message");
+         }
+      }
+   }
+
+   @ClientEndpoint
+   public static class AsyncAPITriggersWebSocketClient {
+
+      private final AsyncMockProducerTrigger mockProducerTrigger;
+      private final ObjectMapper mapper;
+
+      /**
+       * Create a AsyncAPITriggersWebSocketClient with mandatory dependencies.
+       * @param mockProducerTrigger to produce Async mocks when needed
+       * @param mapper              to deserialize AsyncAPITriggerCommand
+       */
+      public AsyncAPITriggersWebSocketClient(AsyncMockProducerTrigger mockProducerTrigger, ObjectMapper mapper) {
+         this.mockProducerTrigger = mockProducerTrigger;
+         this.mapper = mapper;
+      }
+
+      @OnOpen
+      public void open(Session session) {
+         logger.debug("Opening a WebSocket Session on Microcks server for asyncapi-triggers");
+         // Send a message to indicate that we are ready,
+         // as the message handler may not be registered immediately after this callback.
+         session.getAsyncRemote().sendText("_ready_");
+      }
+
+      @OnMessage
+      public void message(String message) {
+         logger.debugf("Received this WebSocket message for asyncapi-triggers: %s", message);
+         try {
+            AsyncAPITriggerCommand asyncAPITriggerCommand = mapper.readValue(message, AsyncAPITriggerCommand.class);
+            logger.infof("Receive a new trigger command [%s] for '%s', at %d]",
+                  asyncAPITriggerCommand.getOperation().getName(), asyncAPITriggerCommand.getServiceId(),
+                  asyncAPITriggerCommand.getTimestamp());
+
+            mockProducerTrigger.applyAsyncAPITriggerCommand(asyncAPITriggerCommand);
          } catch (Exception e) {
             logger.error("WebSocket message cannot be converted into a ServiceViewChangeEvent", e);
             logger.error("Ignoring this WebSocket message");

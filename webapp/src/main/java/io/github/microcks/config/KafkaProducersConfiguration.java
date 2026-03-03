@@ -1,3 +1,18 @@
+/*
+ * Copyright The Microcks Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.microcks.config;
 
 import io.github.microcks.event.AsyncAPITriggerCommand;
@@ -13,6 +28,12 @@ import org.springframework.kafka.core.ProducerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Allows the configuration of the different Kafka producer for service change and asyncapi trigger events. Each
+ * producer can be configured with specific properties, but they will all share the common properties defined in the
+ * "kafka" configuration.
+ * @author laurent
+ */
 @Configuration
 @ConditionalOnProperty(value = "async-api.enabled", havingValue = "true", matchIfMissing = true)
 public class KafkaProducersConfiguration {

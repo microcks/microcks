@@ -21,6 +21,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
+/**
+ * This bean is responsible for listening the incoming <code>AsyncAPITriggerCommand</code> on
+ * <code>microcks-asyncapi-triggers</code> Kafka topic and triggering the production of asynchronous messages
+ * accordingly.
+ * @author laurent
+ */
 @ApplicationScoped
 public class AsyncMockProducerTrigger {
 
@@ -40,6 +46,11 @@ public class AsyncMockProducerTrigger {
    @Incoming("microcks-asyncapi-triggers")
    public void onAsyncAPITriggerCommand(AsyncAPITriggerCommand asyncAPITriggerCommand) {
       logger.debugf("Received AsyncAPI trigger command for service %s", asyncAPITriggerCommand.getServiceId());
+
+      applyAsyncAPITriggerCommand(asyncAPITriggerCommand);
+   }
+
+   public void applyAsyncAPITriggerCommand(AsyncAPITriggerCommand asyncAPITriggerCommand) {
       producerManager.triggerAsyncMockMessages(asyncAPITriggerCommand);
    }
 }
