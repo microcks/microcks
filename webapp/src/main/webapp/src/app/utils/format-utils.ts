@@ -30,7 +30,7 @@ import {
  * @returns The formatted mock URL.
  */
 export function formatMockUrl(serviceView: ServiceView, operation: Operation,
-      urlType: 'raw' | 'valid', 
+      urlType: 'raw' | 'valid',
       dispatchCriteria: string | null, queryParameters: Parameter[] | null): string {
   let result = document.location.origin;
 
@@ -160,4 +160,16 @@ function removeVerbInUrl(operationName: string): string {
 
 function encodeUrl(url: string): string {
   return url.replace(/\s/g, '+');
+}
+
+/**
+ * Normalize Windows/Mac line endings so UI rendering and comparisons use a single LF format.
+ * @param content The content to normalize.
+ * @returns The content with normalized line endings.
+ */
+export function normalizeLineEndings(content: string): string {
+  if (content == null) {
+    return content;
+  }
+  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }
