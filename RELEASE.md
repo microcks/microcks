@@ -1,6 +1,6 @@
 # Release Cycle and Cadence
 
-The Microcks project aims to release four updates in a yearly time period, typically one in each quarter (every 3 months).
+The Microcks project aims to release four updates per year, typically one each quarter (every three months).
 
 > Here's below a typical implementation for 2026.
 
@@ -25,7 +25,7 @@ Although this is the desired candence, imbalance between scope and availability 
 
 All release artifacts must follow [Semantic Versioning](https://semver.org). Each release milestone increments the minor version. In exceptional cases, the major version can be increased too.
 
-At code freeze of a release milestone, the `master` (or `main`) branch is forked into a branch named `release-<MAJOR>.<MINOR>`, which lives forever. To trigger a release candidate or a release, tagging should happen in the correspondig release branch. For example, to release version `1.14.0`, the tag `1.14.0` must be cut out of the `release-1.14` branch.
+At code freeze of a release milestone, the `master` (or `main`) branch is forked into a branch named `release-<MAJOR>.<MINOR>`, which lives forever. To trigger a release candidate or a release, tagging should happen in the corresponding release branch. For example, to release version `1.14.0`, the tag `1.14.0` must be cut out of the `release-1.14` branch.
 
 Hotfixes should be applied directly on `master` (or `main`) branch and then reported via cherry-picking into each of the impacted release branches, depending on the lifecycle policy (see below).
 
@@ -59,7 +59,7 @@ Ideally, a release should be 100% automated and require only the tag to be pushe
 
 ## Release milestone
 
-The Micrcosk project is under continuous development addressing issues for both bugs on existing features and new features. Features go through a lifecycle from proposal, design, code, test, docs, and often quickstart and other dependant repository deliverables. Feature proposals can be raised and reviewed by the community and maintainers at any time. 
+The Microcks project is under continuous development addressing issues for both bugs on existing features and new features. Features go through a lifecycle from proposal, design, code, test, docs, and often quickstart and other dependant repository deliverables. Feature proposals can be raised and reviewed by the community and maintainers at any time. 
 
 Microcks is an open source and agile project, with feature planning and implementation happening at all times. Given the project scale and globally distributed developer base, it is critical to project velocity to not solely rely on a stabilization phase and rather have continuous integration testing which ensures the project is always stable so that individual commits can be flagged as having broken something. This includes continuous feature tests suites, performance tests and end-to-end testing for integration.
 
@@ -73,7 +73,7 @@ To be flexible enough, we define the following needs of parallelism between phas
   * `Design` phase of next release might start just before the `Ship` phase of the previous one. Thus, we can decide if a non-ready feature needs to be split or reported on the next release,
   * `Maintain` phase occurs during the `Build` phase of the next release. Producing a new release during the maintenance phase is not mandatory (depends on fix or CVE criticity), and the choice can be made to integrate into the `Build` of the next release.
 
-All of this together, we can represent things like this with this Gantt diagram for the 2026 releases:
+Overall, this can be illustrated with the following Gantt diagram for the 2026 releases:
 
 ```mermaid
 gantt
@@ -133,7 +133,7 @@ On assignment, the release team lead and shadow(s) are included into the Github 
 `Design` phase is the moment we refine the backlogs and pick features or enhancements we plan to release in a version. In this phase, a set of feature proposals and significant design changes to existing features are reviewed where contributors are able to dedicate time to completing the issue or starting an issue for a future release.
 
 For a feature to be considered for selection it must have a feature proposal issue, tagged appropriately. The proposal must include:
-- [ ] A design in an implementable state that is reviewed and commented by approvers/maintainers
+- [ ] A design in an implementable state that is reviewed and commented by maintainers and code owners
 - [ ] A test plan and a Sponsor (ie. a user/adopter that will provide feedback during the `Build` phase)
 - [ ] A linked open issue for the current milestone (if the design was discussed into a GitHub Discussion or Discord)
 
@@ -166,7 +166,7 @@ At the conclusion of this phase, the **release lead**, working with maintainers 
 
 ### Build phase definition (~ 10 weeks)
 
-`Build` phase is the moment where contributors and volunteers develop, test, and document changes. This is the feature implementation and bug fixing phase and culminates in a code freeze period. During this phase maintainers and approvers do continuous triages on their repos assigning or removing issues from the milestone and communicating any decisions that may affect other repos. It is recommended to triage on Monday’s before the Thursday Community Meeting.
+`Build` phase is the moment where contributors and volunteers develop, test, and document changes. This is the feature implementation and bug fixing phase and culminates in a code freeze period. During this phase, maintainers and code owners do continuous triages on their repos assigning or removing issues from the milestone and communicating any decisions that may affect other repos. It is recommended to triage on the Monday before the Community Meeting on Thursday.
 
 #### Communication & meetings
 
@@ -232,7 +232,7 @@ Packages produced during this phase are versioned with `<MAJOR>.<MINOR>.N` tagge
 
 * Is it a fix for a functionnal feature aimed to be delivered in previous `Ship` phase?
 * Is it a fix for a regression that appeared during current release?
-* Is if a fix for a Critical vulnerability - rated with a CVSS score of 9.0 to 10.0?
+* Is it a fix for a Critical vulnerability - rated with a CVSS score of 9.0 to 10.0?
 
 #### Communication & meetings
 
@@ -244,7 +244,7 @@ At path version decision, the **release lead** is responsible for;
 
 If a patch is needed then the **release lead**:
 
-- [ ] Creates a hotfix checklist list issue and assigns owners to tasks
+- [ ] Creates a hotfix checklist issue and assigns owners to tasks
 - [ ] Assigns a contributor(s) to fix the issue(s)
 - [ ] The **build manager** is responsible for releasing the patch
-- [ ] Announcing on the Discord `#announcements` channel the patch availability
+- [ ] Announcing the patch availability on the Discord `#announcements` channel
