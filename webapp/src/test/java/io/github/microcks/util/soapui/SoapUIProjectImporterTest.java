@@ -197,47 +197,6 @@ class SoapUIProjectImporterTest {
    }
 
    @Test
-   void testCRLFPayloadsAreNormalizedOnImport() {
-      SoapUIProjectImporter importer = null;
-      try {
-         importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/HelloService-crlf-soapui-project.xml");
-      } catch (Exception e) {
-         fail("Exception should not be thrown");
-      }
-
-      List<Service> services = null;
-      try {
-         services = importer.getServiceDefinitions();
-      } catch (MockRepositoryImportException e) {
-         fail("Exception should not be thrown");
-      }
-      assertEquals(1, services.size());
-      Service service = services.get(0);
-      Operation operation = service.getOperations().iterator().next();
-
-      List<Exchange> exchanges = null;
-      try {
-         exchanges = importer.getMessageDefinitions(service, operation);
-      } catch (Exception e) {
-         fail("No exception should be thrown when importing message definitions.");
-      }
-      assertEquals(3, exchanges.size());
-
-      for (Exchange exchange : exchanges) {
-         assertTrue(exchange instanceof RequestResponsePair, "Exchange has wrong type");
-         RequestResponsePair entry = (RequestResponsePair) exchange;
-         Request request = entry.getRequest();
-         Response response = entry.getResponse();
-
-         assertNotNull(request.getContent());
-         assertNotNull(response.getContent());
-         assertFalse(request.getContent().contains("\r"), "Request content should not contain carriage returns");
-         assertFalse(response.getContent().contains("\r"), "Response content should not contain carriage returns");
-      }
-   }
-
-   @Test
    void testSimpleScriptProjectImport() {
       SoapUIProjectImporter importer = null;
       try {

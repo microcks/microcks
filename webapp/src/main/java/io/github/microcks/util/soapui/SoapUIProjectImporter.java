@@ -728,8 +728,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          throws MockRepositoryImportException, Exception {
       Response response = new Response();
       response.setName(mockResponse.getAttribute(NAME_ATTRIBUTE));
-      response.setContent(
-            normalizeLineEndings(getConfigUniqueDirectChild(mockResponse, "responseContent").getTextContent()));
+      response.setContent(getConfigUniqueDirectChild(mockResponse, "responseContent").getTextContent());
       response.setHeaders(buildHeaders(mockResponse));
       response.setDispatchCriteria(dispatchCriteria);
       response.setStatus(mockResponse.getAttribute("httpResponseStatus"));
@@ -744,8 +743,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       Request request = new Request();
       request.setName(testRequest.getAttribute(NAME_ATTRIBUTE));
       if (hasConfigDirectChild(testRequest, REQUEST_TAG)) {
-         request
-               .setContent(normalizeLineEndings(getConfigUniqueDirectChild(testRequest, REQUEST_TAG).getTextContent()));
+         request.setContent(getConfigUniqueDirectChild(testRequest, REQUEST_TAG).getTextContent());
       }
       request.setHeaders(buildHeaders(testRequest));
 
@@ -761,13 +759,6 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          }
       }
       return request;
-   }
-
-   private String normalizeLineEndings(String content) {
-      if (content == null) {
-         return null;
-      }
-      return content.replace("\r\n", "\n").replace("\r", "\n");
    }
 
    private Set<Header> buildHeaders(Element requestOrResponse) throws Exception {
