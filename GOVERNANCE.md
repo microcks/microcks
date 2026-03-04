@@ -76,6 +76,12 @@ Here’s how to join and participate: https://github.com/microcks/community/blob
 
 The maintainers will also have closed meetings to discuss security reports or Code of Conduct violations. Any maintainer in charge should schedule such meetings upon receiving a security issue or CoC report. All current Maintainers must be invited to such closed meetings, except for any maintainer accused of a CoC violation.
 
+## Steering Committee
+To support sustainable growth and ensure the project remains responsive to high-scale users, Microcks features a **Steering Committee (SC)**. The SC acts as a functional component of governance, focusing on strategic project orientation and incorporating the "adopter's voice" into the long-term roadmap.
+
+Detailed guidelines regarding the SC's composition, election process, and operational mandate can be found in the:
+👉 [Microcks Steering Committee Charter](https://github.com/microcks/community/blob/main/steering/STEERING.md)
+
 ## Governance Changes
 Changes to governance policy and any supporting documents must be agreed upon and approved by 66% (2/3) of the maintainers either by vote or by review and approval of a PR on the document.
 
