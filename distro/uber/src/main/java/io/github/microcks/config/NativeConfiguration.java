@@ -26,15 +26,15 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.event.AsyncAPITriggerCommand;
+import io.github.microcks.event.AsyncAPITriggerCommandSerializer;
 import io.github.microcks.event.ServiceViewChangeEvent;
 import io.github.microcks.event.ServiceViewChangeEventSerializer;
-import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.dispatcher.DispatchCases;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 
-import groovy.transform.ASTTest;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -85,6 +85,12 @@ public class NativeConfiguration {
          hints.reflection().registerType(TypeReference.of(ServiceViewChangeEventSerializer.class),
                MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(AsyncAPITriggerCommand.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(AsyncAPITriggerCommandSerializer.class),
+               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
+               MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+
          hints.reflection().registerType(TypeReference.of(DispatchCases.class), MemberCategory.DECLARED_FIELDS,
                MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
          hints.reflection().registerType(TypeReference.of(FallbackSpecification.class), MemberCategory.DECLARED_FIELDS,

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.microcks.minions.async.config;
 
 import io.github.microcks.domain.Binding;
@@ -32,7 +31,9 @@ import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.event.AsyncAPITriggerCommand;
 import io.github.microcks.event.ServiceViewChangeEvent;
+import io.github.microcks.minion.async.client.AsyncAPITriggerCommandDeserializer;
 import io.github.microcks.minion.async.client.ServiceViewChangeEventDeserializer;
 
 import org.graalvm.nativeimage.hosted.Feature;
@@ -52,6 +53,8 @@ public class RuntimeReflectionRegistrationFeature implements Feature {
    public void beforeAnalysis(BeforeAnalysisAccess access) {
       registerClassForReflection(ServiceViewChangeEvent.class);
       registerClassForReflection(ServiceViewChangeEventDeserializer.class);
+      registerClassForReflection(AsyncAPITriggerCommand.class);
+      registerClassForReflection(AsyncAPITriggerCommandDeserializer.class);
 
       registerClassForReflection(ServiceView.class);
       registerClassForReflection(Metadata.class);
