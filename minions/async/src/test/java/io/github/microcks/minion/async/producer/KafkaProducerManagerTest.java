@@ -26,9 +26,11 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * This is a test case for KafkaProducerManager.
+ *
  * @author laurent
  */
 class KafkaProducerManagerTest {
@@ -54,11 +56,11 @@ class KafkaProducerManagerTest {
       AsyncMockDefinition definition = new AsyncMockDefinition(service, operation, eventsMessages);
 
       String topicName = producerManager.getTopicName(definition, eventMessage);
-      assertEquals("StreetlightsAPI-0.1.0-receiveLightMeasurement", topicName);
+      assertEquals("smartylighting.streetlights.1.0.event.lighting.measured", topicName);
    }
 
    @Test
-   void testGetDynamicTopicName() {
+   void testGetTopicNameThrowsWhenMultipleResourcePaths() {
       KafkaProducerManager producerManager = new KafkaProducerManager();
 
       Service service = new Service();
@@ -68,22 +70,38 @@ class KafkaProducerManagerTest {
       Operation operation = new Operation();
       operation.setName("RECEIVE receiveLightMeasurement");
       operation.setMethod("RECEIVE");
-      operation.setDispatcher("URI_PARTS");
-      operation.setDispatcherRules("/streetlightId");
       operation.setResourcePaths(Set.of("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured",
             "smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured"));
       service.addOperation(operation);
 
       EventMessage eventMessage = new EventMessage();
       eventMessage.setName("Sample");
-      eventMessage.setDispatchCriteria("streetlightId=da059782-3ad0-4e45-88ce-ef3392bc7797");
       List<EventMessage> eventsMessages = List.of(eventMessage);
 
       AsyncMockDefinition definition = new AsyncMockDefinition(service, operation, eventsMessages);
 
-      String topicName = producerManager.getTopicName(definition, eventMessage);
-      assertEquals(
-            "StreetlightsAPI-0.1.0-smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured",
-            topicName);
+      assertThrows(IllegalArgumentException.class, () -> producerManager.getTopicName(definition, eventMessage));
+   }
+
+   @Test
+   void testGetTopicNameThrowsWhenNoResourcePaths() {
+      KafkaProducerManager producerManager = new KafkaProducerManager();
+
+      Service service = new Service();
+      service.setName("Streetlights API");
+      service.setVersion("0.1.0");
+
+      Operation operation = new Operation();
+      operation.setName("RECEIVE receiveLightMeasurement");
+      operation.setMethod("RECEIVE");
+      service.addOperation(operation);
+
+      EventMessage eventMessage = new EventMessage();
+      eventMessage.setName("Sample");
+      List<EventMessage> eventsMessages = List.of(eventMessage);
+
+      AsyncMockDefinition definition = new AsyncMockDefinition(service, operation, eventsMessages);
+
+      assertThrows(IllegalArgumentException.class, () -> producerManager.getTopicName(definition, eventMessage));
    }
 }

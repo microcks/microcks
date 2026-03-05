@@ -31,7 +31,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.KafkaContainer;
@@ -55,6 +54,7 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 /**
  * This is an integration test case using <a href="https://testcontainers.com/">Testcontainers</a> to test
  * {@link AsyncAPITestManager} class.
+ *
  * @author laurent
  */
 @Testcontainers

@@ -46,6 +46,7 @@ import java.util.*;
 
 /**
  * Kafka implementation of producer for async event messages.
+ *
  * @author laurent
  */
 @ApplicationScoped
@@ -80,6 +81,7 @@ public class KafkaProducerManager {
 
    /**
     * Tells if producer is connected to a Schema registry and thus able to send Avro GenericRecord.
+    *
     * @return True if connected to a Schema registry, false otherwise.
     */
    public boolean isRegistryEnabled() {
@@ -128,7 +130,8 @@ public class KafkaProducerManager {
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
             props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl.get());
-            // If authentication turned on (see https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
+            // If authentication turned on (see
+            // https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
             if (schemaRegistryUsername.isPresent()) {
                props.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, schemaRegistryUsername.get());
                props.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, schemaRegistryCredentialsSource);
@@ -160,6 +163,7 @@ public class KafkaProducerManager {
 
    /**
     * Publish a message on specified topic.
+    *
     * @param topic   The destination topic for message
     * @param key     The message key
     * @param value   The message payload
@@ -175,6 +179,7 @@ public class KafkaProducerManager {
 
    /**
     * Publish a raw byte array message on specified topic.
+    *
     * @param topic   The destination topic for message
     * @param key     The message key
     * @param value   The message payload
@@ -190,6 +195,7 @@ public class KafkaProducerManager {
 
    /**
     * Publish an Avro GenericRecord built with Schema onto specified topic and using underlying schema registry.
+    *
     * @param topic   The destination topic for message
     * @param key     The message key
     * @param value   The message payload
@@ -205,6 +211,7 @@ public class KafkaProducerManager {
 
    /**
     * Transform and render Microcks headers into Kafka specific headers.
+    *
     * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
     *                KafkaProducerManager level.)
     * @param headers The Microcks event message headers definition.
@@ -234,29 +241,29 @@ public class KafkaProducerManager {
    }
 
    /**
-    * Get the Kafka topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
+    * Get the Kafka topic name corresponding to a AsyncMockDefinition. The operation must have exactly one resource
+    * path, which will be used as the topic name.
+    *
     * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic
     * @return The topic name for definition and event
+    * @throws IllegalArgumentException if the operation does not have exactly one resource path
     */
    public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      // Produce service name part of topic name.
-      String serviceName = definition.getOwnerService().getName().replace(" ", "");
-      serviceName = serviceName.replace("-", "");
+      Set<String> resourcePaths = definition.getOperation().getResourcePaths();
 
-      // Produce version name part of topic name.
-      String versionName = definition.getOwnerService().getVersion().replace(" ", "");
+      if (resourcePaths == null || resourcePaths.size() != 1) {
+         throw new IllegalArgumentException(
+               String.format("Operation '%s' must have exactly one resource path to determine topic name, but has: %s",
+                     definition.getOperation().getName(), resourcePaths));
+      }
 
-      // Produce operation name part of topic name.
-      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
-      operationName = operationName.replace('/', '-');
-
-      // Aggregate the 3 parts using '_' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
+      return resourcePaths.iterator().next();
    }
 
    /**
     * Completing the ProducerRecord with the set of provided headers.
+    *
     * @param kafkaRecord The record to complete
     * @param headers     The set of headers
     */
