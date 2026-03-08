@@ -69,7 +69,7 @@ jobs:
 
       - name: Build and push container image for webapp
         id: build-and-push-webapp
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
           context: ${{github.workspace}}/webapp
           sbom: true
@@ -101,7 +101,7 @@ jobs:
 
       - name: Build and push container for async minion
         id: build-and-push-async
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
           context: ${{github.workspace}}/minions/async
           sbom: true
@@ -134,7 +134,7 @@ jobs:
 
       - name: Build and push container image for uber distro
         id: build-and-push-uber
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
           context: ${{github.workspace}}/distro/uber
           sbom: true
@@ -167,7 +167,7 @@ jobs:
 
       - name: Build and push container for async minion in uber distro
         id: build-and-push-uber-async
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
           context: ${{github.workspace}}/distro/uber-async-minion
           sbom: true
