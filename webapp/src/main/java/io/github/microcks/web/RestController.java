@@ -101,35 +101,8 @@ public class RestController {
          @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
          HttpMethod method) {
 
-      log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}", serviceName, version,
-            request.getRequestURI(), method);
-      log.debug("Request body: {}", body);
-
-      long startTime = System.currentTimeMillis();
-
-      // Find matching service and operation.
-      MockInvocationContext ic = findInvocationContext(serviceName, version, request, method);
-      if (ic.service() == null) {
-         return new ResponseEntity<>(
-               String.format("The service %s with version %s does not exist!", serviceName, version).getBytes(),
-               HttpStatus.NOT_FOUND);
-      }
-
-      // Check matching operation.
-      if (ic.operation() == null) {
-         // Handle OPTIONS request if CORS policy is enabled.
-         if (Boolean.TRUE.equals(enableCorsPolicy) && HttpMethod.OPTIONS.equals(method)) {
-            log.debug("No valid operation found but Microcks configured to apply CORS policy");
-            return handleCorsRequest(request);
-         }
-
-         log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
-         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-      }
-      log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
-            ic.operation().getDispatcherRules());
-      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
-      return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
+      return doExecute(serviceName, version, requestedDelay, requestedDelayStrategy, body, headers, request, method,
+            false);
    }
 
    @SuppressWarnings("java:S3752")
@@ -141,6 +114,15 @@ public class RestController {
          @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
          HttpMethod method) {
 
+      return doExecute(serviceName, version, requestedDelay, requestedDelayStrategy, body, headers, request, method,
+            true);
+   }
+
+   /** Common execution logic for both execute and validateAndExecute endpoints. */
+   private ResponseEntity<byte[]> doExecute(String serviceName, String version, Long requestedDelay,
+         String requestedDelayStrategy, String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method,
+         boolean validateRequest) {
+
       log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}", serviceName, version,
             request.getRequestURI(), method);
       log.debug("Request body: {}", body);
@@ -169,7 +151,25 @@ public class RestController {
       log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
             ic.operation().getDispatcherRules());
 
-      // Try to validate request payload (body) if we have one.
+      // Try to validate request payload (body) if validation is enabled.
+      if (validateRequest) {
+         ResponseEntity<byte[]> validationError = validateRequestBody(serviceName, version, body, request, ic);
+         if (validationError != null) {
+            return validationError;
+         }
+      }
+
+      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+      return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
+   }
+
+   /**
+    * Validate request body against OpenAPI/Swagger schema. Returns error response if validation fails, null otherwise.
+    */
+   @CheckForNull
+   private ResponseEntity<byte[]> validateRequestBody(String serviceName, String version, String body,
+         HttpServletRequest request, MockInvocationContext ic) {
+
       String shortContentType = getShortContentType(request.getContentType());
       if (body != null && !body.trim().isEmpty()
             && OpenAPITestRunner.APPLICATION_JSON_TYPES_PATTERN.matcher(shortContentType).matches()) {
@@ -191,9 +191,7 @@ public class RestController {
             return new ResponseEntity<>(errors.toString().getBytes(), HttpStatus.BAD_REQUEST);
          }
       }
-
-      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
-      return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
+      return null;
    }
 
    /** Get the errors from OpenAPI/Swagger schema validation. */
