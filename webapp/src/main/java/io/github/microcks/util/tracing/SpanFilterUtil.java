@@ -42,27 +42,28 @@ public class SpanFilterUtil {
     * @return True if the value matches the pattern, false otherwise.
     */
    public static boolean matchesWildcard(String pattern, String value) {
-      if (pattern == null || value == null) {
-         return pattern == null && value == null;
-      }
-
-      // If pattern is "*", match everything
-      if ("*".equals(pattern)) {
+      // No pattern means no filtering — accept everything.
+      if (pattern == null || isWildcard(pattern)) {
          return true;
       }
-
-      // Try exact match first
+      // A non-wildcard pattern cannot match a null value.
+      if (value == null) {
+         return false;
+      }
+      // Try exact match first, then fall back to regex.
       if (pattern.equals(value)) {
          return true;
       }
-
-      // Try regex match
       try {
          return value.matches(pattern);
       } catch (PatternSyntaxException e) {
-         // Invalid regex pattern, fallback to false
          return false;
       }
+   }
+
+   /** Check if pattern is a catch-all wildcard. */
+   private static boolean isWildcard(String pattern) {
+      return "*".equals(pattern) || ".*".equals(pattern);
    }
 
    /**

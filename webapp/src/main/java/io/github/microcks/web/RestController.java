@@ -34,6 +34,7 @@ import io.github.microcks.util.openapi.SwaggerSchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -129,13 +130,34 @@ public class RestController {
 
       long startTime = System.currentTimeMillis();
 
+      // Add an event for the invocation reception with a human-friendly message.
+      Span span = Span.current();
+      TraceUtil.enableExplainTracing();
+
+      span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
+            .explainSpanEventBuilder(
+                  String.format("Received REST invocation %s %s", method.name(), request.getRequestURI()))
+            .put(CommonAttributes.HTTP_METHOD, request.getMethod())
+            .put(CommonAttributes.QUERY_STRING, request.getQueryString() != null ? request.getQueryString() : "empty")
+            .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
+            .put(CommonAttributes.BODY_CONTENT,
+                  body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
+            .put(CommonAttributes.URI_FULL,
+                  request.getRequestURL().toString()
+                        + (request.getQueryString() != null ? "?" + request.getQueryString() : ""))
+            .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
+
       // Find matching service and operation.
       MockInvocationContext ic = findInvocationContext(serviceName, version, request, method);
       if (ic.service() == null) {
-         return new ResponseEntity<>(
-               String.format("The service %s with version %s does not exist!", serviceName, version).getBytes(),
-               HttpStatus.NOT_FOUND);
+         String msg = String.format("The service %s with version %s does not exist!", serviceName, version);
+         span.addEvent(CommonEvents.SERVICE_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
+         span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
+         return new ResponseEntity<>(msg.getBytes(), HttpStatus.NOT_FOUND);
       }
+      // Found a valid service, add its name and version as span attributes.
+      span.setAttribute(CommonAttributes.SERVICE_NAME, ic.service().getName());
+      span.setAttribute(CommonAttributes.SERVICE_VERSION, ic.service().getVersion());
 
       // Check matching operation.
       if (ic.operation() == null) {
@@ -146,10 +168,16 @@ public class RestController {
          }
 
          log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
+         String msg = String.format("No valid operation found for %s %s on service %s/%s", method.name(),
+               ic.resourcePath(), serviceName, version);
+         span.addEvent(CommonEvents.OPERATION_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
+         span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
          return new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
       log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
             ic.operation().getDispatcherRules());
+      span.setAttribute(CommonAttributes.OPERATION_NAME, ic.operation().getName());
+      span.setAttribute(CommonAttributes.OPERATION_METHOD, ic.operation().getMethod());
 
       // Try to validate request payload (body) if validation is enabled.
       if (validateRequest) {
@@ -177,10 +205,13 @@ public class RestController {
 
          Resource openapiSpecResource = findResourceCandidate(ic.service());
          if (openapiSpecResource == null) {
-            return new ResponseEntity<>(
-                  String.format("The service %s with version %s does not have an OpenAPI/Swagger schema!", serviceName,
-                        version).getBytes(),
-                  HttpStatus.PRECONDITION_FAILED);
+            String msg = String.format("The service %s with version %s does not have an OpenAPI/Swagger schema!",
+                  serviceName, version);
+            Span span = Span.current();
+            TraceUtil.enableExplainTracing();
+            span.addEvent(CommonEvents.SCHEMA_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
+            span.setStatus(StatusCode.ERROR, msg);
+            return new ResponseEntity<>(msg.getBytes(), HttpStatus.PRECONDITION_FAILED);
          }
 
          List<String> errors = getErrors(body, ic, shortContentType, openapiSpecResource);
@@ -188,6 +219,12 @@ public class RestController {
          log.debug("Schema validation errors: {}", errors.size());
          // Return a 400 http code with errors.
          if (!errors.isEmpty()) {
+            String msg = String.format("Request body validation failed with %d error(s): %s", errors.size(), errors);
+            Span span = Span.current();
+            TraceUtil.enableExplainTracing();
+            span.addEvent(CommonEvents.VALIDATION_FAILED.getEventName(),
+                  TraceUtil.explainSpanEventBuilder(msg).build());
+            span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
             return new ResponseEntity<>(errors.toString().getBytes(), HttpStatus.BAD_REQUEST);
          }
       }
@@ -235,25 +272,6 @@ public class RestController {
          DelaySpec delay, String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
 
       Span span = Span.current();
-      TraceUtil.enableExplainTracing();
-      span.setAttribute(CommonAttributes.SERVICE_NAME, ic.service().getName());
-      span.setAttribute(CommonAttributes.SERVICE_VERSION, ic.service().getVersion());
-      span.setAttribute(CommonAttributes.OPERATION_NAME, ic.operation().getName());
-      span.setAttribute(CommonAttributes.OPERATION_METHOD, ic.operation().getMethod());
-
-      // Add an event for the invocation reception with a human-friendly message.
-      span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
-            .explainSpanEventBuilder(
-                  String.format("Received REST invocation %s %s", ic.operation().getMethod(), ic.resourcePath()))
-            .put(CommonAttributes.HTTP_METHOD, request.getMethod())
-            .put(CommonAttributes.QUERY_STRING, request.getQueryString() != null ? request.getQueryString() : "empty")
-            .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
-            .put(CommonAttributes.BODY_CONTENT,
-                  body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
-            .put(CommonAttributes.URI_FULL,
-                  request.getRequestURL().toString()
-                        + (request.getQueryString() != null ? "?" + request.getQueryString() : ""))
-            .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
 
       String violationMsg = validateParameterConstraintsIfAny(ic.operation(), request);
       if (violationMsg != null) {

@@ -54,7 +54,19 @@ public enum CommonEvents {
    RESPONSE_SELECTED("response_selected"),
 
    /** Event emitted when no response could be found or generated (returns 400 error). */
-   NO_RESPONSE_AVAILABLE("no_response_available");
+   NO_RESPONSE_AVAILABLE("no_response_available"),
+
+   /** Event emitted when the requested service is not found in the repository. */
+   SERVICE_NOT_FOUND("service_not_found"),
+
+   /** Event emitted when no matching operation is found for the incoming request. */
+   OPERATION_NOT_FOUND("operation_not_found"),
+
+   /** Event emitted when no OpenAPI/Swagger schema is found for request body validation. */
+   SCHEMA_NOT_FOUND("schema_not_found"),
+
+   /** Event emitted when request body validation against the API schema fails. */
+   VALIDATION_FAILED("validation_failed");
 
    private final String eventName;
 
