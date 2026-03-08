@@ -146,6 +146,17 @@ public class SoapController {
 
       long startTime = System.currentTimeMillis();
 
+      // Add an event for the invocation reception with a human-friendly message.
+      Span span = Span.current();
+      TraceUtil.enableExplainTracing();
+      span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
+            .explainSpanEventBuilder(String.format("Received SOAP invocation for service %s/%s", serviceName, version))
+            .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
+            .put(CommonAttributes.BODY_CONTENT,
+                  body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
+            .put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
+            .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
+
       // Setup serviceAndVersion for proxy dispatchers
       String serviceAndVersion = MockControllerCommons.composeServiceAndVersion(serviceName, version);
 
@@ -157,10 +168,13 @@ public class SoapController {
       // Retrieve service and correct operation.
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       if (service == null) {
-         return new ResponseEntity<>(
-               String.format("The service %s with version %s does not exist!", serviceName, version),
-               HttpStatus.NOT_FOUND);
+         String msg = String.format("The service %s with version %s does not exist!", serviceName, version);
+         span.addEvent(CommonEvents.SERVICE_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
+         span.setStatus(StatusCode.ERROR, msg);
+         return new ResponseEntity<>(msg, HttpStatus.NOT_FOUND);
       }
+      span.setAttribute(CommonAttributes.SERVICE_NAME, service.getName());
+      span.setAttribute(CommonAttributes.SERVICE_VERSION, service.getVersion());
       Operation rOperation = null;
 
       // Enhancement : retrieve SOAPAction from request headers
@@ -201,24 +215,9 @@ public class SoapController {
       if (rOperation != null) {
          log.debug("Found a valid operation with rules: {}", rOperation.getDispatcherRules());
 
-         // Setup span attributes and event for invocation
-         Span span = Span.current();
-         TraceUtil.enableExplainTracing();
-         span.setAttribute(CommonAttributes.SERVICE_NAME, service.getName());
-         span.setAttribute(CommonAttributes.SERVICE_VERSION, service.getVersion());
+         // Set operation-level span attributes.
          span.setAttribute(CommonAttributes.OPERATION_NAME, rOperation.getName());
          span.setAttribute(CommonAttributes.OPERATION_ACTION, action != null ? action : "none");
-
-         // Add an event for the invocation reception with a human-friendly message.
-         span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
-               TraceUtil
-                     .explainSpanEventBuilder(
-                           String.format("Received SOAP invocation for operation %s", rOperation.getName()))
-                     .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
-                     .put(CommonAttributes.BODY_CONTENT,
-                           body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
-                     .put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
-                     .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
 
          if (validate != null && validate) {
             log.debug("Soap message validation is turned on, validating...");
@@ -388,7 +387,10 @@ public class SoapController {
          return new ResponseEntity<>(responseContent, responseHeaders, HttpStatus.OK);
       }
 
-      return new ResponseEntity<>(String.format("The operation %s does not exist!", action), HttpStatus.NOT_FOUND);
+      String msg = String.format("The operation %s does not exist!", action);
+      span.addEvent(CommonEvents.OPERATION_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
+      span.setStatus(StatusCode.ERROR, msg);
+      return new ResponseEntity<>(msg, HttpStatus.NOT_FOUND);
    }
 
    /**
