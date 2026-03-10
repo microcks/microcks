@@ -117,12 +117,10 @@ public class AsyncMockDefinitionUpdater {
    }
 
    public static List<EventMessage> getMessages(List<? extends Exchange> exchanges) {
-      return exchanges.stream().flatMap(e -> {
-         return switch (e) {
-            case UnidirectionalEvent u -> Stream.of(u.getEventMessage());
-            case RequestReplyEvent r -> Stream.of(r.getRequestMessage(), r.getReplyMessage());
-            default -> Stream.empty();
-         };
+      return exchanges.stream().flatMap(e -> switch (e) {
+         case UnidirectionalEvent u -> Stream.of(u.getEventMessage());
+         case RequestReplyEvent r -> Stream.of(r.getRequestMessage(), r.getReplyMessage());
+         default -> Stream.empty();
       }).toList();
    }
 }
