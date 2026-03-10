@@ -43,6 +43,7 @@ import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -71,8 +72,17 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
 
       // Find the callbackInfo and callback name.
       CallbackInfo callbackInfo = selectCallbackInfo(event);
+      if (callbackInfo == null) {
+         log.warn("No callbackInfo found on operation {}", event.getOperation().getName());
+         return;
+      }
       String callbackName = event.getOperation().getCallbackInfos().entrySet().stream()
-            .filter(entry -> entry.getValue().equals(callbackInfo)).findFirst().get().getKey();
+            .filter(entry -> entry.getValue().equals(callbackInfo)).map(Map.Entry::getKey).findFirst().orElse(null);
+      if (callbackName == null) {
+         log.warn("No callback name found for callbackInfo {} on operation {}", callbackInfo,
+               event.getOperation().getName());
+         return;
+      }
 
       // Check if we're able to find a callback url.
       String callbackUrlLocation = callbackInfo.getCallbackUrlExpression();
@@ -92,7 +102,9 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
             try {
                Thread.sleep(Duration.ofSeconds(3));
             } catch (InterruptedException e) {
+               Thread.currentThread().interrupt();
                log.warn("Interrupted while simulating waiting for callback request to be send", e);
+               return;
             }
 
             log.debug("Calling callback URL {} with request {}", callbackUrl, callbackRequest.getName());
@@ -118,9 +130,13 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
 
    /** Select the correct callback info from event operation. */
    private CallbackInfo selectCallbackInfo(CallbackTriggerEvent event) {
+      if (event.getOperation().getCallbackInfos() == null || event.getOperation().getCallbackInfos().isEmpty()) {
+         return null;
+      }
+
       // Sort by order the CallbackInfo from included event operation.
       List<CallbackInfo> infos = event.getOperation().getCallbackInfos().values().stream()
-            .sorted((info1, info2) -> Comparator.comparingInt(CallbackInfo::getOrder).compare(info1, info2)).toList();
+            .sorted(Comparator.comparing(CallbackInfo::getOrder, Comparator.nullsLast(Integer::compareTo))).toList();
 
       log.debug("Ordered callbackInfos:");
       for (CallbackInfo info : infos) {

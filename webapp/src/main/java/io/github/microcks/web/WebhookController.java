@@ -88,7 +88,7 @@ public class WebhookController {
       // Check Service and Operation exist.
       String[] parts = registrationRequest.getOperationId().split("-");
       if (parts.length != 2) {
-         log.error("Invalid operationId '{}'", registrationRequest.getOperationId());
+         log.error("Invalid operationId received for webhook registration");
          return new ResponseEntity<>("OperationId is invalid", HttpStatus.NOT_FOUND);
       }
       String serviceId = parts[0];
