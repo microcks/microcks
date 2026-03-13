@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.theokanning.openai.completion.chat.ChatCompletionChoice;
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.completion.chat.ChatMessageRole;
@@ -38,6 +37,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
@@ -80,6 +80,9 @@ public class OpenAICopilot implements AICopilot {
    private static final String OPENAI_BASE_URL = "https://api.openai.com/";
 
    private static final String SECTION_DELIMITER = "\n#####\n";
+   private static final int MAX_PARSE_RETRIES = 5;
+   private static final String PREVIOUS_OUTPUT_TAG = "previous_output";
+   private static final String RETRY_PROMPT_SUFFIX = "Please regenerate a valid example and avoid this issue.";
 
    private RestTemplate restTemplate;
 
@@ -151,34 +154,7 @@ public class OpenAICopilot implements AICopilot {
          prompt = preparePromptForGrpc(service, operation, contract, number);
       }
 
-      log.debug("Asking OpenAI to suggest samples for this prompt: {}", prompt);
-
-      final List<ChatMessage> messages = new ArrayList<>();
-      final ChatMessage assistantMessage = new ChatMessage(ChatMessageRole.ASSISTANT.value(), prompt);
-      messages.add(assistantMessage);
-
-      ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder().model(model).messages(messages).n(1)
-            .maxTokens(maxTokens).logitBias(new HashMap<>()).build();
-
-      // Build a full HttpEntity as we need to specify authentication headers.
-      HttpEntity<ChatCompletionRequest> request = new HttpEntity<>(chatCompletionRequest,
-            createAuthenticationHeaders());
-      ChatCompletionResult completionResult = restTemplate
-            .exchange(apiUrl + "/v1/chat/completions", HttpMethod.POST, request, ChatCompletionResult.class).getBody();
-
-      if (completionResult != null) {
-         ChatCompletionChoice choice = completionResult.getChoices().get(0);
-         log.debug("Got this raw output from OpenAI: {}", choice.getMessage().getContent());
-
-         if (service.getType() == ServiceType.EVENT) {
-            return AICopilotHelper.parseUnidirectionalEventTemplateOutput(choice.getMessage().getContent());
-         } else {
-            return AICopilotHelper.parseRequestResponseTemplateOutput(service, operation,
-                  choice.getMessage().getContent());
-         }
-      }
-      // Return empty list.
-      return new ArrayList<>();
+      return suggestSampleExchangesWithRetry(service, operation, prompt);
    }
 
    private String preparePromptForOpenAPI(Operation operation, Resource contract, int number) throws Exception {
@@ -271,7 +247,6 @@ public class OpenAICopilot implements AICopilot {
       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
       mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-      mapper.addMixIn(ChatCompletionRequest.class, ChatCompletionRequestMixIn.class);
       return mapper;
    }
 
@@ -279,5 +254,112 @@ public class OpenAICopilot implements AICopilot {
       HttpHeaders headers = new HttpHeaders();
       headers.set("Authorization", "Bearer " + apiKey);
       return headers;
+   }
+
+   private List<? extends Exchange> suggestSampleExchangesWithRetry(Service service, Operation operation,
+         String basePrompt) throws Exception {
+      List<RetryTurn> retryHistory = new ArrayList<>();
+
+      for (int retryIndex = 0; retryIndex <= MAX_PARSE_RETRIES; retryIndex++) {
+         String prompt = buildPromptWithRetryHistory(basePrompt, retryHistory);
+         String content = requestCompletionContent(prompt);
+         if (content == null) {
+            log.warn("OpenAI returned no content for service {} operation {}", service.getName(), operation.getName());
+            return new ArrayList<>();
+         }
+
+         try {
+            return parseCompletionContent(service, operation, content);
+         } catch (Exception e) {
+            retryHistory.add(new RetryTurn(safeErrorMessage(e), content));
+            if (retryIndex == MAX_PARSE_RETRIES) {
+               log.error(
+                     "Could not generate valid AI samples for service {} operation {} after {} retries. Last error: {}",
+                     service.getName(), operation.getName(), MAX_PARSE_RETRIES, safeErrorMessage(e));
+               return new ArrayList<>();
+            }
+            log.warn("Parsing OpenAI output failed for service {} operation {}. Retrying attempt {}/{}. Error: {}",
+                  service.getName(), operation.getName(), retryIndex + 1, MAX_PARSE_RETRIES, safeErrorMessage(e));
+         }
+      }
+      return new ArrayList<>();
+   }
+
+   private String requestCompletionContent(String prompt) {
+      log.debug("Asking OpenAI to suggest samples for this prompt: {}", prompt);
+
+      final List<ChatMessage> messages = new ArrayList<>();
+      final ChatMessage assistantMessage = new ChatMessage(ChatMessageRole.ASSISTANT.value(), prompt);
+      messages.add(assistantMessage);
+
+      HttpEntity<Map<String, Object>> request = new HttpEntity<>(buildChatCompletionPayload(messages),
+            createAuthenticationHeaders());
+      ResponseEntity<ChatCompletionResult> responseEntity = restTemplate.exchange(apiUrl + "/v1/chat/completions",
+            HttpMethod.POST, request, ChatCompletionResult.class);
+      ChatCompletionResult completionResult = responseEntity.getBody();
+
+      if (completionResult == null || completionResult.getChoices() == null
+            || completionResult.getChoices().isEmpty()) {
+         return null;
+      }
+
+      ChatCompletionChoice choice = completionResult.getChoices().get(0);
+      if (choice == null || choice.getMessage() == null) {
+         return null;
+      }
+
+      log.debug("Got this raw output from OpenAI: {}", choice.getMessage().getContent());
+      return choice.getMessage().getContent();
+   }
+
+   private List<? extends Exchange> parseCompletionContent(Service service, Operation operation, String content)
+         throws Exception {
+      if (service.getType() == ServiceType.EVENT) {
+         return AICopilotHelper.parseUnidirectionalEventTemplateOutput(content);
+      }
+      return AICopilotHelper.parseRequestResponseTemplateOutput(service, operation, content);
+   }
+
+   private String buildPromptWithRetryHistory(String basePrompt, List<RetryTurn> retryHistory) {
+      if (retryHistory.isEmpty()) {
+         return basePrompt;
+      }
+
+      StringBuilder prompt = new StringBuilder(basePrompt);
+      prompt.append("\n");
+      for (int i = 0; i < retryHistory.size(); i++) {
+         RetryTurn retryTurn = retryHistory.get(i);
+         prompt.append(String.format("<turn_%d>%n", i + 1));
+         prompt.append("The previous output failed with this error: `").append(retryTurn.errorMessage()).append("`.\n");
+         prompt.append("<").append(PREVIOUS_OUTPUT_TAG).append(">\n");
+         prompt.append(retryTurn.previousOutput()).append("\n");
+         prompt.append("</").append(PREVIOUS_OUTPUT_TAG).append(">\n");
+         prompt.append(String.format("</turn_%d>%n", i + 1));
+      }
+      prompt.append(RETRY_PROMPT_SUFFIX);
+      return prompt.toString();
+   }
+
+   private String safeErrorMessage(Exception exception) {
+      return exception.getMessage() != null ? exception.getMessage() : exception.getClass().getSimpleName();
+   }
+
+   private Map<String, Object> buildChatCompletionPayload(List<ChatMessage> messages) {
+      Map<String, Object> payload = new HashMap<>();
+      payload.put("model", model);
+      payload.put("messages", messages);
+      payload.put("n", 1);
+      payload.put("logit_bias", new HashMap<>());
+
+      String maxTokenParameter = usesMaxCompletionTokens(model) ? "max_completion_tokens" : "max_tokens";
+      payload.put(maxTokenParameter, maxTokens);
+      return payload;
+   }
+
+   static boolean usesMaxCompletionTokens(String model) {
+      return model != null && model.toLowerCase().startsWith("gpt-5");
+   }
+
+   private record RetryTurn(String errorMessage, String previousOutput) {
    }
 }
