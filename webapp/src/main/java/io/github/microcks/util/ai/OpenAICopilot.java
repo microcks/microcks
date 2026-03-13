@@ -349,7 +349,10 @@ public class OpenAICopilot implements AICopilot {
       payload.put("model", model);
       payload.put("messages", messages);
       payload.put("n", 1);
-      payload.put("logit_bias", new HashMap<>());
+
+      if (supportsLogitBias(model)) {
+         payload.put("logit_bias", new HashMap<>());
+      }
 
       String maxTokenParameter = usesMaxCompletionTokens(model) ? "max_completion_tokens" : "max_tokens";
       payload.put(maxTokenParameter, maxTokens);
@@ -358,6 +361,10 @@ public class OpenAICopilot implements AICopilot {
 
    static boolean usesMaxCompletionTokens(String model) {
       return model != null && model.toLowerCase().startsWith("gpt-5");
+   }
+
+   static boolean supportsLogitBias(String model) {
+      return !usesMaxCompletionTokens(model);
    }
 
    private record RetryTurn(String errorMessage, String previousOutput) {
