@@ -15,6 +15,7 @@ The following members are Top-level [maintainers](https://github.com/microcks/.g
 |----------------------------------------------------------|--------------------------------------------------------------|-------------------|
 | Laurent Broudoux | [lbroudoux](https://github.com/lbroudoux) | Sponsored by Postman |
 | Yacine Kheddache | [yada](https://github.com/yada) | Sponsored by Postman |
+| Sebastien DEGODEZ | [SebastienDegodez](https://github.com/SebastienDegodez) | AXA France |
 
 ## Code Owners
 
@@ -24,7 +25,6 @@ The following members are [code owners](https://github.com/microcks/.github/blob
 |----------------------------------------------------------|-------------------------------------------------------------|-------------------|-------------------|
 | Harshvardhan Parmar | [Harsh4902](https://github.com/Harsh4902) | Yosemite Crew | [Microcks CLI](https://github.com/microcks/microcks-cli) |
 | Hugo Guerrero | [hguerrero](https://github.com/hguerrero) | Kong (Ex Red Hat) | [Docker Desktop Extension](https://github.com/microcks/microcks-docker-desktop-extension) |
-| Sebastien DEGODEZ | [SebastienDegodez](https://github.com/SebastienDegodez) | AXA France | [Testcontainers .NET](https://github.com/microcks/microcks-testcontainers-dotnet) |
 
 ## Emeritus
 
