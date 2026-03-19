@@ -7,7 +7,7 @@ updates:
       day: sunday
     open-pull-requests-limit: 3
     rebase-strategy: disabled
-    target-branch: "1.13.x"
+    target-branch: "master"
 
   - package-ecosystem: npm
     directory: /webapp
@@ -16,7 +16,7 @@ updates:
       day: sunday
     open-pull-requests-limit: 3
     rebase-strategy: disabled
-    target-branch: "1.13.x"
+    target-branch: "master"
 
   - package-ecosystem: github-actions
     directory: /
@@ -25,4 +25,4 @@ updates:
       day: sunday
     open-pull-requests-limit: 3
     rebase-strategy: disabled
-    target-branch: "1.13.x"
+    target-branch: "master"
