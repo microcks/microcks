@@ -45,5 +45,5 @@ if [[ $# -eq 1 ]]; then
   fi
 else
   echo "pre-release.sh must be called with <version> as 1st argument. Example:"
-  echo "$ ./pre-release.sh 1.7.1"
+  echo "$ ./pre-release.sh 1.14.0"
 fi
