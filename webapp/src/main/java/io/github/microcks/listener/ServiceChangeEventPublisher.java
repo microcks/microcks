@@ -20,7 +20,6 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceChangeEvent;
 import io.github.microcks.event.ServiceViewChangeEvent;
@@ -41,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Application event listener that send a message on Kafka topic on incoming ServiceUpdateEvent.
+ * Application event listener that send a message on event publication channel on incoming ServiceUpdateEvent.
  * @author laurent
  */
 @Component
@@ -54,7 +53,7 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
 
    private final ServiceRepository serviceRepository;
    private final MessageService messageService;
-   private final ServiceChangeEventChannel channel;
+   private final EventPublicationChannel channel;
 
 
    /**
@@ -64,7 +63,7 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
     * @param channel           the channel for ServiceChangeEvent
     */
    public ServiceChangeEventPublisher(ServiceRepository serviceRepository, MessageService messageService,
-         ServiceChangeEventChannel channel) {
+         EventPublicationChannel channel) {
       this.serviceRepository = serviceRepository;
       this.messageService = messageService;
       this.channel = channel;
@@ -85,7 +84,7 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
             for (Operation operation : service.getOperations()) {
                if (service.getType() == ServiceType.EVENT || service.getType() == ServiceType.GENERIC_EVENT) {
                   // If an event, we should explicitly retrieve event messages.
-                  List<UnidirectionalEvent> events = messageService
+                  List<? extends Exchange> events = messageService
                         .getEventByOperation(IdBuilder.buildOperationId(service, operation));
                   messagesMap.put(operation.getName(), events);
                } else {

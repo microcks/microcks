@@ -21,6 +21,8 @@ import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.ReplyInfo;
+import io.github.microcks.domain.RequestReplyEvent;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
@@ -152,14 +154,37 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
          String operationName = action.toUpperCase() + " " + operationEntry.getKey();
 
          if (operationName.equals(operation.getName()) && operationNode.path(MESSAGES).isArray()) {
-            // Search for event messages.
-            List<EventMessage> eventMessages = buildEventMessages(operationNode, defaultContentType);
+            // Build request/event messages.
+            List<EventMessage> eventMessages = buildEventMessages(operationNode.path(MESSAGES), defaultContentType);
 
             if (eventMessages != null && !eventMessages.isEmpty()) {
                // Update dispatch information if necessary.
                completeDispatchingCriteria(operation, operationNode, eventMessages);
 
-               eventMessages.stream().forEach(eventMessage -> messageDefs.add(new UnidirectionalEvent(eventMessage)));
+               // Check if this is a request-reply operation.
+               if (operationNode.has(REPLY_NODE)) {
+                  // Build reply messages and create request-reply events.
+                  List<EventMessage> replyMessages = buildEventMessages(operationNode.path(REPLY_NODE).path(MESSAGES),
+                        defaultContentType);
+
+                  // Create a map of reply messages by name for matching.
+                  Map<String, EventMessage> replyMessagesByName = replyMessages != null && !replyMessages.isEmpty()
+                        ? replyMessages.stream().collect(HashMap::new, (map, msg) -> map.put(msg.getName(), msg),
+                              HashMap::putAll)
+                        : new HashMap<>();
+
+                  // Match request messages with reply messages by name.
+                  for (EventMessage requestMessage : eventMessages) {
+                     EventMessage replyMessage = replyMessagesByName.get(requestMessage.getName());
+                     if (replyMessage != null) {
+                        messageDefs.add(new RequestReplyEvent(requestMessage, replyMessage));
+                     }
+                  }
+               } else {
+                  // Create unidirectional events.
+                  eventMessages.stream()
+                        .forEach(eventMessage -> messageDefs.add(new UnidirectionalEvent(eventMessage)));
+               }
             }
             break;
          }
@@ -239,7 +264,48 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
          }
       }
 
+      // Extract reply information if present.
+      if (operationNode.has(REPLY_NODE)) {
+         ReplyInfo replyInfo = extractReplyInfo(operationNode.get(REPLY_NODE));
+         if (replyInfo != null) {
+            operation.setReply(replyInfo);
+         }
+      }
+
       return operation;
+   }
+
+   /** Extract reply information from a reply node. */
+   private ReplyInfo extractReplyInfo(JsonNode replyNode) {
+      ReplyInfo replyInfo = new ReplyInfo();
+      boolean hasData = false;
+
+      // Extract address location (runtime expression).
+      if (replyNode.has(ADDRESS_NODE)) {
+         JsonNode addressNode = replyNode.get(ADDRESS_NODE);
+         if (addressNode.has(LOCATION_NODE)) {
+            replyInfo.setAddressLocation(addressNode.get(LOCATION_NODE).asText());
+            hasData = true;
+         }
+      }
+
+      // Extract channel address from the reply channel reference.
+      if (replyNode.has(CHANNEL_NODE)) {
+         JsonNode channelRef = replyNode.get(CHANNEL_NODE);
+         JsonNode channelNode = followRefIfAny(channelRef);
+         if (channelNode.has(ADDRESS_NODE)) {
+            replyInfo.setChannelAddress(channelNode.get(ADDRESS_NODE).asText());
+            hasData = true;
+         }
+
+         // Copy channel bindings to the reply object.
+         if (channelNode.has(BINDINGS)) {
+            AsyncAPICommons.completeChannelLevelBindings(replyInfo, channelNode.get(BINDINGS));
+            hasData = true;
+         }
+      }
+
+      return hasData ? replyInfo : null;
    }
 
    /** If necessary, complete an operation and its messages dispatch information. */
@@ -353,28 +419,26 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    }
 
 
-   /** Build a list of EventMessages from an operation Json node. */
-   private List<EventMessage> buildEventMessages(JsonNode operationNode, String defaultContentType) {
+   /** Build a list of EventMessages from a "messages" Json node. */
+   private List<EventMessage> buildEventMessages(JsonNode messagesNode, String defaultContentType) {
       List<EventMessage> eventMessages = null;
-      Iterator<JsonNode> messages = operationNode.path(MESSAGES).elements();
-      while (messages.hasNext()) {
-         JsonNode operationMessageNode = messages.next();
-         JsonNode messageInChannelNode = followRefIfAny(operationMessageNode);
-         JsonNode messageNode = followRefIfAny(messageInChannelNode);
+      for (JsonNode messageRefNode : messagesNode) {
+         JsonNode messageInChannelNode = followRefIfAny(messageRefNode);
+         JsonNode msgNode = followRefIfAny(messageInChannelNode);
 
          // Get message content type.
          String contentType = defaultContentType;
-         if (messageNode.has("contentType")) {
-            contentType = messageNode.path("contentType").asText();
+         if (msgNode.has("contentType")) {
+            contentType = msgNode.path("contentType").asText();
          }
 
          // Retrieve the messageName from message ref found in operation.
-         String messageName = operationMessageNode.path("$ref").textValue();
+         String messageName = messageRefNode.path("$ref").textValue();
 
-         if (messageName != null && messageNode.has(EXAMPLES_NODE)) {
+         if (messageName != null && msgNode.has(EXAMPLES_NODE)) {
             // Compute a short message name if examples have no name attribute.
             messageName = messageName.substring(messageName.lastIndexOf("/") + 1);
-            eventMessages = buildEventMessageFromExamples(messageName, contentType, messageNode.get(EXAMPLES_NODE));
+            eventMessages = buildEventMessageFromExamples(messageName, contentType, msgNode.get(EXAMPLES_NODE));
          }
       }
       return eventMessages;

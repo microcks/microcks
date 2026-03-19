@@ -224,7 +224,12 @@ public class GrpcServerCallHandler {
 
                } else {
                   // Error during invocation processing. Write it to the stream.
-                  streamObserver.onError(response.status().withDescription(response.errorDescription()).asException());
+                  if (response.content() != null) {
+                     streamObserver.onError(response.status().withDescription(response.content()).asException());
+                  } else {
+                     streamObserver
+                           .onError(response.status().withDescription(response.errorDescription()).asException());
+                  }
                }
 
             } else {

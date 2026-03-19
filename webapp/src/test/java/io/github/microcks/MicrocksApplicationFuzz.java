@@ -15,6 +15,7 @@
  */
 package io.github.microcks;
 
+import com.code_intelligence.jazzer.api.BugDetectors;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
@@ -38,16 +39,17 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.mongodb.MongoDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.apiTest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -90,35 +92,45 @@ public class MicrocksApplicationFuzz {
    private boolean beforeCalled = false;
 
    @BeforeEach
-   public void beforeEach() {
+   void beforeEach() {
       beforeCalled = true;
 
       // Upload PetStore reference artifact.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
    }
 
-   @FuzzTest(maxDuration = "10s")
+   @FuzzTest(maxDuration = "20s")
    public void fuzzVersionInfo(FuzzedDataProvider data) throws Exception {
       if (!beforeCalled) {
          throw new RuntimeException("BeforeEach was not called");
       }
 
-      String name = data.consumeRemainingAsString();
-      apiTest(mockMvc, "/api/version/info", get("/api/version/info").param("name", name));
+      // Allow connection to MongoDB container.
+      try (var unused = BugDetectors.allowNetworkConnections(
+            (host, portD) -> host.equals("localhost") && portD.equals(mongoDBContainer.getMappedPort(27017)))) {
+
+         String name = data.consumeRemainingAsString();
+         apiTest(mockMvc, get("/api/version/info").param("name", name));
+      }
    }
 
-   @FuzzTest(maxDuration = "10s")
+   @FuzzTest(maxDuration = "20s")
    public void fuzzServices(FuzzedDataProvider data) throws Exception {
       if (!beforeCalled) {
          throw new RuntimeException("BeforeEach was not called");
       }
 
-      int page = data.consumeInt(0, 10);
-      apiTest(mockMvc, "/api/services", get("/api/services").param("page", String.valueOf(page)));
+      // Allow connection to MongoDB container.
+      try (var unused = BugDetectors.allowNetworkConnections(
+            (host, portD) -> host.equals("localhost") && portD.equals(mongoDBContainer.getMappedPort(27017)))) {
 
-      String serviceId = data.consumeAsciiString(32);
-      String encodedServiceId = URLEncoder.encode(serviceId, StandardCharsets.UTF_8);
-      apiTest(mockMvc, "/api/services/" + encodedServiceId, get("/api/services/" + encodedServiceId));
+         int page = data.consumeInt(0, 10);
+         apiTest(mockMvc, get("/api/services").param("page", String.valueOf(page)));
+
+         String serviceId = data.consumeAsciiString(32);
+         String encodedServiceId = URLEncoder.encode(serviceId, StandardCharsets.UTF_8);
+         apiTest(mockMvc, get("/api/services/" + encodedServiceId));
+      }
    }
 
    /** */
@@ -140,5 +152,10 @@ public class MicrocksApplicationFuzz {
 
       assertEquals(201, response.getStatusCode().value());
       log.info("Just uploaded: {}", response.getBody());
+   }
+
+   protected static ResultActions apiTest(MockMvc mockMvc, MockHttpServletRequestBuilder requestBuilder)
+         throws Exception {
+      return mockMvc.perform(requestBuilder);
    }
 }

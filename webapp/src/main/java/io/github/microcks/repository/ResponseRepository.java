@@ -34,7 +34,13 @@ public interface ResponseRepository extends MongoRepository<Response, String> {
 
    List<Response> findByOperationIdAndName(String operationId, String name);
 
+   @Query("{ 'operationId' : ?0, 'name' : ?1 , 'callbackName' : { '$exists' : false }}")
+   List<Response> findNonCallbackByOperationIdAndName(String operationId, String name);
+
    List<Response> findByOperationIdAndDispatchCriteria(String operationId, String dispatchCriteria);
+
+   @Query("{ 'operationId' : ?0, 'dispatchCriteria' : ?1 , 'callbackName' : { '$exists' : false }}")
+   List<Response> findNonCallbackByOperationIdAndDispatchCriteria(String operationId, String dispatchCriteria);
 
    List<Response> findByOperationIdAndSourceArtifact(String operationId, String sourceArtifact);
 

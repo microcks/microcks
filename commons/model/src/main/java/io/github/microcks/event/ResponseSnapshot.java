@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.github.microcks.event;
 
-import io.github.microcks.event.ServiceViewChangeEvent;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
- * This represents a communication via the one me may publish events that relates services changes.
+ * A very simple (Http) response snapshot.
+ * @param headers The headers of the response.
+ * @param body    The body of the response, if any.
  * @author laurent
  */
-public interface ServiceChangeEventChannel {
-
-   /**
-    * Send a change event on a Service complete view.
-    * @param event The event to send or propagate via this channel.
-    * @throws Exception if the case event cannot be sent
-    */
-   void sendServiceViewChangeEvent(ServiceViewChangeEvent event) throws Exception;
+public record ResponseSnapshot(Map<String, List<String>> headers, String body) implements Serializable {
 }

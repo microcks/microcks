@@ -50,6 +50,7 @@ export type Operation = {
   inputName: string;
   outputName: string;
   bindings: { [key: string]: Binding };
+  callbackInfos: { [cbName: string]: CallbackInfo };
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
@@ -85,6 +86,12 @@ export enum BindingType {
   GOOGLEPUBSUB,
   SQS,
 }
+
+export type CallbackInfo = {
+  method: string;
+  callbackUrlExpression: string;
+  order: number;
+};
 
 export type ParameterConstraint = {
   name: string;
@@ -151,6 +158,7 @@ type Message = {
 export interface Request extends Message {
   id: string;
   responseId: string;
+  callbackName: string;
   queryParameters: Parameter[];
 }
 export interface Response extends Message {
@@ -175,6 +183,7 @@ export interface UnidirectionalEvent extends Exchange {
 export interface RequestResponsePair extends Exchange {
   request: Request;
   response: Response;
+  callbacks?: RequestResponsePair[];
 }
 
 export type ServiceView = {

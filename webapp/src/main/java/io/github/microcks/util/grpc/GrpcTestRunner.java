@@ -167,9 +167,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          return results;
       }
 
-      // Use a builder for out type with a Json parser to merge content and build outMsg.
-      DynamicMessage.Builder reqBuilder = DynamicMessage.newBuilder(md.getInputType());
-      DynamicMessage.Builder resBuilder = DynamicMessage.newBuilder(md.getOutputType());
+      // Use Json parser and printer to merge content and build outMsg.
       JsonFormat.Parser parser = JsonFormat.parser();
       JsonFormat.Printer printer = JsonFormat.printer();
 
@@ -180,8 +178,8 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          String contentResponse = null;
          Status status = Status.OK;
 
-         reqBuilder.clear();
-         resBuilder.clear();
+         // Use a builder to produce request message.
+         DynamicMessage.Builder reqBuilder = DynamicMessage.newBuilder(md.getInputType());
 
          // Now produce the request message byte array.
          parser.merge(request.getContent(), reqBuilder);

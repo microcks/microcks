@@ -24,7 +24,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { NotificationService } from '../../../../../components/patternfly-ng/notification';
 
-import { ServiceView, Operation, Exchange, EventMessage, Parameter, RequestResponsePair, UnidirectionalEvent } from '../../../../../models/service.model';
+import { ServiceView, Operation, Exchange, EventMessage, Parameter, RequestResponsePair, UnidirectionalEvent, CallbackInfo } from '../../../../../models/service.model';
 import { ConfigService } from '../../../../../services/config.service';
 
 @Component({
@@ -43,6 +43,8 @@ import { ConfigService } from '../../../../../services/config.service';
 export class ExchangesTabsetComponent {
 
   readonly hlLang: string[] = ['json', 'xml', 'yaml'];
+
+  callbacksVisible: boolean = false;
 
   @ViewChild('tabs', { static: true }) tabs!: TabsetComponent;
 
@@ -106,6 +108,13 @@ export class ExchangesTabsetComponent {
     return null;
   }
 
+  getCallbackUrlExpression(callbackName: string): string {
+    return this.getCallbackInfo(callbackName)?.callbackUrlExpression || '';
+  }
+  getCallbackInfo(callbackName: string): CallbackInfo | null {
+    return this.item.callbackInfos[callbackName] || null;
+  }
+
   private normalizeName(val: string | null | undefined): string | null {
     if (val == null) return null;
     try {
@@ -138,6 +147,7 @@ export class ExchangesTabsetComponent {
 
   // Update URL when a tab becomes active
   public onTabSelected(exchange: Exchange): void {
+    console.log('Exchange tab selected');
     const exchangeName = this.getExchangeName(exchange);
     const operationName = this.item.name;
     const qp = this.route.snapshot.queryParamMap;
@@ -150,7 +160,18 @@ export class ExchangesTabsetComponent {
       queryParamsHandling: 'merge',
       replaceUrl: true
     });
+    this.callbacksVisible = false;
   }
+
+  public onCallbackTabSelected(callback: Exchange): void {
+    console.log('Callback tab selected');
+    this.callbacksVisible = true;
+  }
+
+  public onCallbackTabSelectedEvent(event: any): void {
+    console.log('Callback tab selected event', event);
+    this.callbacksVisible = true;
+  } 
 
   /** Build an absolute URL pointing to the provided exchange (deep link). */
   public buildExchangeLink(exchange: Exchange): string {

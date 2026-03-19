@@ -85,7 +85,7 @@ class GrpcServerCallHandlerIT extends AbstractBaseIT {
          assertNotEquals(0, result.getExitCode());
          assertTrue(result.getStdout().trim().isEmpty());
          assertTrue(result.getStderr().contains("Code: NotFound"));
-         assertTrue(result.getStderr().contains("Message: Mocked response status code"));
+         assertTrue(result.getStderr().contains("{\"greeting\":\"Unknown user\"}"));
       } catch (Exception e) {
          fail("No exception should be thrown");
       } finally {

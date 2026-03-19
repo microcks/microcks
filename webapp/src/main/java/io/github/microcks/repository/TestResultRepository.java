@@ -36,6 +36,6 @@ public interface TestResultRepository extends MongoRepository<TestResult, String
    @Query("{ 'testDate' : { $gt: ?0 } }")
    List<TestResult> findAllWithTestDateAfter(Date date);
 
-   @Query(value = "{ 'serviceId' : ?0}}", count = true)
+   @Query(value = "{ 'serviceId' : ?0}", count = true)
    long countByServiceId(String serviceId);
 }

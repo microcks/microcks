@@ -19,13 +19,11 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.UnidirectionalEvent;
 
 import io.github.microcks.minion.async.client.ConnectorException;
 import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.KeycloakConnector;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-
 import io.quarkus.runtime.StartupEvent;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -135,10 +133,8 @@ public class AsyncMinionApp {
 
                      for (Operation operation : operations) {
                         AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(),
-                              operation,
-                              serviceView.getMessagesMap().get(operation.getName()).stream()
-                                    .filter(UnidirectionalEvent.class::isInstance)
-                                    .map(e -> ((UnidirectionalEvent) e).getEventMessage()).toList());
+                              operation, AsyncMockDefinitionUpdater
+                                    .getMessages(serviceView.getMessagesMap().get(operation.getName())));
                         mockRepository.storeMockDefinition(mockDefinition);
                         schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
                      }

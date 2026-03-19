@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.microcks.minions.async.config;
 
 import io.github.microcks.domain.Binding;
+import io.github.microcks.domain.CallbackInfo;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
@@ -25,12 +25,15 @@ import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.ReplyInfo;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.event.AsyncAPITriggerCommand;
 import io.github.microcks.event.ServiceViewChangeEvent;
+import io.github.microcks.minion.async.client.AsyncAPITriggerCommandDeserializer;
 import io.github.microcks.minion.async.client.ServiceViewChangeEventDeserializer;
 
 import org.graalvm.nativeimage.hosted.Feature;
@@ -50,11 +53,15 @@ public class RuntimeReflectionRegistrationFeature implements Feature {
    public void beforeAnalysis(BeforeAnalysisAccess access) {
       registerClassForReflection(ServiceViewChangeEvent.class);
       registerClassForReflection(ServiceViewChangeEventDeserializer.class);
+      registerClassForReflection(AsyncAPITriggerCommand.class);
+      registerClassForReflection(AsyncAPITriggerCommandDeserializer.class);
 
       registerClassForReflection(ServiceView.class);
       registerClassForReflection(Metadata.class);
       registerClassForReflection(Operation.class);
       registerClassForReflection(Binding.class);
+      registerClassForReflection(CallbackInfo.class);
+      registerClassForReflection(ReplyInfo.class);
       registerClassForReflection(ParameterConstraint.class);
       registerClassForReflection(Message.class);
       registerClassForReflection(Header.class);

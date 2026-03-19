@@ -21,6 +21,11 @@ import io.github.microcks.domain.ParameterConstraint;
 import io.github.microcks.domain.ParameterLocation;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.event.AsyncAPITriggerEvent;
+import io.github.microcks.event.CallbackTriggerEvent;
+import io.github.microcks.event.HttpServletRequestSnapshot;
+import io.github.microcks.event.RequestSnapshot;
+import io.github.microcks.event.ResponseSnapshot;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
@@ -243,6 +248,12 @@ public class RestInvocationProcessor {
          HttpHeaders responseHeaders = getResponseHeaders(ic, body, request, dispatchContext, response);
          byte[] responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
 
+         // Check and emit callbacks event if needed.
+         handleCallbackTrigger(ic, request, headers, body, response);
+
+         // Check and emit AsyncAPI trigger if needed.
+         handleAsyncAPITrigger(ic, request, headers, body, responseContent, responseHeaders);
+
          // Return response content.
          return new ResponseResult(status, responseHeaders, responseContent);
       }
@@ -439,16 +450,20 @@ public class RestInvocationProcessor {
    private Response getResponse(MockInvocationContext ic, HttpServletRequest request, DispatchContext dispatchContext) {
       Response response = null;
 
-      // Filter depending on requested media type.
       // TODO: validate dispatchCriteria with dispatcherRules
-      List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
+      // We should take care of removing callback responses.
+      List<Response> responses = responseRepository.findNonCallbackByOperationIdAndDispatchCriteria(
             IdBuilder.buildOperationId(ic.service(), ic.operation()), dispatchContext.dispatchCriteria());
+
+      // Filter depending on requested media type.
       response = getResponseByMediaType(responses, request);
 
       if (response == null) {
          // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
-         responses = responseRepository.findByOperationIdAndName(
+         // We should take care of getting the non-callback responses.
+         responses = responseRepository.findNonCallbackByOperationIdAndName(
                IdBuilder.buildOperationId(ic.service(), ic.operation()), dispatchContext.dispatchCriteria());
+
          response = getResponseByMediaType(responses, request);
       }
       return response;
@@ -579,6 +594,33 @@ public class RestInvocationProcessor {
       // Publish an invocation event before returning if enabled.
       if (Boolean.TRUE.equals(enableInvocationStats)) {
          MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
+      }
+   }
+
+   /** If this operation has callbacks defined, emit an event to manage callbacls asynchronously. */
+   private void handleCallbackTrigger(MockInvocationContext ic, HttpServletRequest request,
+         Map<String, List<String>> headers, String body, Response response) {
+      if (ic.operation().getCallbackInfos() != null && !ic.operation().getCallbackInfos().isEmpty()) {
+         HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot(ic.resourcePath(), headers,
+               request.getParameterMap(), body);
+         CallbackTriggerEvent event = new CallbackTriggerEvent(this, ic.service().getId(), ic.operation(),
+               response.getName(), snapshot);
+         applicationContext.publishEvent(event);
+      }
+   }
+
+   /** If this operation has async triggers defined, emit an event to manage async api event sending. */
+   private void handleAsyncAPITrigger(MockInvocationContext ic, HttpServletRequest request,
+         Map<String, List<String>> headers, String body, byte[] responseContent,
+         Map<String, List<String>> responseHeaders) {
+      if (ic.operation().getTriggerInfos() != null && !ic.operation().getTriggerInfos().isEmpty()) {
+         RequestSnapshot requestSnapshot = new RequestSnapshot(ic.resourcePath(), headers, request.getParameterMap(),
+               body);
+         ResponseSnapshot responseSnapshot = new ResponseSnapshot(responseHeaders,
+               new String(responseContent, StandardCharsets.UTF_8));
+         AsyncAPITriggerEvent event = new AsyncAPITriggerEvent(this, ic.service().getId(), ic.operation(),
+               requestSnapshot, responseSnapshot);
+         applicationContext.publishEvent(event);
       }
    }
 }

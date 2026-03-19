@@ -15,8 +15,12 @@
  */
 package io.github.microcks.domain;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,7 +29,10 @@ import java.util.Set;
  * bindings) and how dispatch request to them.
  * @author laurent
  */
-public class Operation {
+public class Operation implements Serializable, BindingsHolder {
+
+   @Serial
+   private static final long serialVersionUID = 1905122041950251207L;
 
    private String name;
    private String method;
@@ -33,6 +40,9 @@ public class Operation {
    private String inputName;
    private String outputName;
    private Map<String, Binding> bindings;
+   private Map<String, CallbackInfo> callbackInfos;
+   private List<TriggerInfo> triggerInfos;
+   private ReplyInfo reply;
 
    private boolean override = false;
    private String dispatcher;
@@ -96,6 +106,44 @@ public class Operation {
          this.bindings = new HashMap<>();
       }
       bindings.put(name, binding);
+   }
+
+   public ReplyInfo getReply() {
+      return reply;
+   }
+
+   public void setReply(ReplyInfo reply) {
+      this.reply = reply;
+   }
+
+   public Map<String, CallbackInfo> getCallbackInfos() {
+      return callbackInfos;
+   }
+
+   public void setCallbackInfso(Map<String, CallbackInfo> callbackInfos) {
+      this.callbackInfos = callbackInfos;
+   }
+
+   public void addCallbackInfo(String key, CallbackInfo value) {
+      if (this.callbackInfos == null) {
+         this.callbackInfos = new HashMap<>();
+      }
+      callbackInfos.put(key, value);
+   }
+
+   public List<TriggerInfo> getTriggerInfos() {
+      return triggerInfos;
+   }
+
+   public void setTriggerInfos(List<TriggerInfo> triggerInfos) {
+      this.triggerInfos = triggerInfos;
+   }
+
+   public void addTriggerInfo(TriggerInfo triggerInfo) {
+      if (this.triggerInfos == null) {
+         this.triggerInfos = new ArrayList<>();
+      }
+      this.triggerInfos.add(triggerInfo);
    }
 
    public boolean hasOverride() {

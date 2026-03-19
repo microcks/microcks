@@ -44,6 +44,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * This is a controller for managing import of uploaded or downloaded artifact contract files.
@@ -130,7 +131,7 @@ public class UploadArtifactController {
          String localFile = null;
          try {
             // Save upload to local file before import.
-            localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis() + ".artifact";
+            localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + UUID.randomUUID() + ".artifact";
 
             try (ReadableByteChannel rbc = Channels.newChannel(file.getInputStream());
                   FileOutputStream fos = new FileOutputStream(localFile)) {

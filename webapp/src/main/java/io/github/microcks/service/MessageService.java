@@ -24,7 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Service bean for common processing around messages (request and responses).
@@ -55,23 +59,17 @@ public class MessageService {
 
 
    /**
-    * Retrieve unidirectional events corresponding to an Operation.
+    * Retrieve events corresponding to an Operation.
     * @param operationId The identifier of operation to get messages for.
-    * @return A list of unidirectional event messages
+    * @return A list of event messages
     */
-   public List<UnidirectionalEvent> getEventByOperation(String operationId) {
+   public List<? extends Exchange> getEventByOperation(String operationId) {
       // Retrieve event messages using operation identifier.
       List<EventMessage> eventMessages = eventMessageRepository.findByOperationId(operationId);
       if (log.isDebugEnabled()) {
          log.debug("Found {} event(s) for operation {}", eventMessages.size(), operationId);
       }
-
-      // Just wrap then into an UnidirectionalEvent exchange.
-      List<UnidirectionalEvent> results = new ArrayList<>(eventMessages.size());
-      for (EventMessage eventMessage : eventMessages) {
-         results.add(new UnidirectionalEvent(eventMessage));
-      }
-      return results;
+      return createEvents(eventMessages);
    }
 
    /**
@@ -101,19 +99,13 @@ public class MessageService {
     * @param testCaseId The identifier of test case to get messages for.
     * @return A list of unidirectional event messages
     */
-   public List<UnidirectionalEvent> getEventByTestCase(String testCaseId) {
+   public List<? extends Exchange> getEventByTestCase(String testCaseId) {
       // Retrieve events using testCase identifier.
       List<EventMessage> eventMessages = eventMessageRepository.findByTestCaseId(testCaseId);
       if (log.isDebugEnabled()) {
          log.debug("Found {} event(s) for testCase {}", eventMessages.size(), testCaseId);
       }
-
-      // Just wrap then into an UnidirectionalEvent exchange.
-      List<UnidirectionalEvent> results = new ArrayList<>(eventMessages.size());
-      for (EventMessage eventMessage : eventMessages) {
-         results.add(new UnidirectionalEvent(eventMessage));
-      }
-      return results;
+      return createEvents(eventMessages);
    }
 
    /**
@@ -138,20 +130,74 @@ public class MessageService {
       return results;
    }
 
+   private List<? extends Exchange> createEvents(List<EventMessage> eventMessages) {
+      List<Exchange> results = new ArrayList<>(eventMessages.size());
+
+      Set<String> replyIds = eventMessages.stream().map(EventMessage::getReplyId).filter(Objects::nonNull)
+            .collect(java.util.stream.Collectors.toSet());
+
+      Map<String, EventMessage> messagesById = eventMessages.stream()
+            .collect(java.util.stream.Collectors.toMap(EventMessage::getId, msg -> msg));
+
+      // Process messages
+      for (EventMessage eventMessage : eventMessages) {
+         // Skip if this message is a reply to another message
+         if (replyIds.contains(eventMessage.getId())) {
+            continue;
+         }
+
+         // Check if this message has a reply
+         if (eventMessage.getReplyId() != null) {
+            EventMessage replyMessage = messagesById.get(eventMessage.getReplyId());
+            if (replyMessage != null) {
+               // Create a request-reply event
+               results.add(new RequestReplyEvent(eventMessage, replyMessage));
+            } else {
+               // Reply message not found, log warning and skip
+               log.warn("EventMessage {} has replyId {} but reply message not found, skipping", eventMessage.getName(),
+                     eventMessage.getReplyId());
+            }
+         } else {
+            // No reply ID, create a unidirectional event
+            results.add(new UnidirectionalEvent(eventMessage));
+         }
+      }
+      return results;
+   }
+
    /** */
    private List<RequestResponsePair> associatePairs(List<Request> requests, List<Response> responses) {
+
       List<RequestResponsePair> results = new ArrayList<>();
+      Map<String, List<RequestResponsePair>> callbacks = new HashMap<>();
 
       // Browse them to reassociate them.
       for (Request request : requests) {
          for (Response response : responses) {
             if (request.getResponseId() != null && request.getResponseId().equals(response.getId())) {
-               // If found a matching response, build a pair.
+               // We found a matching response.
+               // If a callback, store in callbacks.
+               if (request.getCallbackName() != null) {
+                  callbacks.computeIfAbsent(request.getName(), k -> new ArrayList<>())
+                        .add(new RequestResponsePair(request, response));
+                  break;
+               }
+               // Build a pair of original request and response.
                results.add(new RequestResponsePair(request, response));
                break;
             }
          }
       }
+
+      if (!callbacks.isEmpty()) {
+         for (RequestResponsePair pair : results) {
+            List<RequestResponsePair> cbs = callbacks.get(pair.getRequest().getName());
+            if (cbs != null) {
+               pair.setCallbacks(cbs);
+            }
+         }
+      }
+
       return results;
    }
 }

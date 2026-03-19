@@ -32,13 +32,23 @@ public class IdBuilder {
    }
 
    /**
+    * Build a unique operation Id from service id and operation.
+    * @param serviceId The domain service holding operation identifier
+    * @param operation A domain bean representing operation to build an id for
+    * @return A unique identifier for operation.
+    */
+   public static String buildOperationId(String serviceId, Operation operation) {
+      return serviceId + "-" + operation.getName();
+   }
+
+   /**
     * Build a unique operation Id from service and operation.
     * @param service   The domain service holding operation
     * @param operation A domain bean representing operation to build an id for
     * @return A unique identifier for operation.
     */
    public static String buildOperationId(Service service, Operation operation) {
-      return service.getId() + "-" + operation.getName();
+      return buildOperationId(service.getId(), operation);
    }
 
    /**

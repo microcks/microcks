@@ -19,6 +19,7 @@ import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
 import io.github.microcks.domain.ParameterLocation;
+import io.github.microcks.domain.TriggerInfo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -66,8 +67,8 @@ public class MetadataExtractor {
       if (node.has("frequency")) {
          operation.setDefaultDelay(node.path("frequency").asLong());
       }
-      if (node.has("frequenceStrategy")) {
-         String strategy = node.path("frequenceStrategy").asText();
+      if (node.has("frequencyStrategy")) {
+         String strategy = node.path("frequencyStrategy").asText();
          operation.setDefaultDelayStrategy(strategy);
       }
       if (node.has("dispatcher")) {
@@ -82,6 +83,17 @@ public class MetadataExtractor {
             operation.addParameterConstraint(constraint);
          });
       }
+      if (node.has("triggers")) {
+         JsonNode triggersNode = node.get("triggers");
+         if (triggersNode.isArray()) {
+            triggersNode.elements().forEachRemaining(triggerNode -> {
+               TriggerInfo triggerInfo = extractTriggerInfo(triggerNode.asText());
+               if (triggerInfo != null) {
+                  operation.addTriggerInfo(triggerInfo);
+               }
+            });
+         }
+      }
    }
 
    private static ParameterConstraint extractParameterConstraint(JsonNode node) {
@@ -94,5 +106,13 @@ public class MetadataExtractor {
          constraint.setMustMatchRegexp(node.get("mustMatchRegexp").asText());
       }
       return constraint;
+   }
+
+   private static TriggerInfo extractTriggerInfo(String triggerInfo) {
+      String[] parts = triggerInfo.split(":");
+      if (parts.length == 3) {
+         return new TriggerInfo(parts[0], parts[1], parts[2]);
+      }
+      return null;
    }
 }

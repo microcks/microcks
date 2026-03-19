@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -42,6 +43,7 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * This is a utility class for accessing HTTP content using diverse security authentication mechanisms and output
@@ -52,7 +54,7 @@ import java.util.Map;
 public class HTTPDownloader {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(HTTPDownloader.class);
+   private static final Logger log = LoggerFactory.getLogger(HTTPDownloader.class);
 
    /** Constant representing the header line in a custom CA Cert in PEM format. */
    private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
@@ -119,7 +121,7 @@ public class HTTPDownloader {
 
       // Build remote URLConnection and local target file.
       HttpURLConnection connection = prepareURLConnection(remoteUrl, secret, disableSSLValidation);
-      File localFile = File.createTempFile("microcks-" + System.currentTimeMillis(), ".download");
+      File localFile = File.createTempFile("microcks-" + UUID.randomUUID(), ".download");
 
       try (ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
             // Transfer file to local.
@@ -147,7 +149,7 @@ public class HTTPDownloader {
 
       // Build remote URLConnection and local target file.
       HttpURLConnection connection = prepareURLConnection(remoteUrl, secret, disableSSLValidation);
-      File localFile = File.createTempFile("microcks-" + System.currentTimeMillis(), ".download");
+      File localFile = File.createTempFile("microcks-" + UUID.randomUUID(), ".download");
 
       Map<String, List<String>> responseHeaders = null;
       try (ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
@@ -166,7 +168,7 @@ public class HTTPDownloader {
          throws IOException {
 
       // Build remote URL and connection to prepare.
-      URL website = new URL(remoteUrl);
+      URL website = URI.create(remoteUrl).toURL();
 
       HttpURLConnection connection = (HttpURLConnection) website.openConnection();
 
@@ -176,7 +178,7 @@ public class HTTPDownloader {
             if (disableSSLValidation) {
                log.debug("SSL Validation is disabled for {}, installing accept everything TrustManager", remoteUrl);
                installAcceptEverythingTrustManager(connection);
-            } else if (secret != null && secret.getCaCertPem() != null && secret.getCaCertPem().trim().length() > 0) {
+            } else if (secret != null && secret.getCaCertPem() != null && !secret.getCaCertPem().trim().isEmpty()) {
                log.debug("Secret for {} contains a CA Cert, installing certificate into TrustManager", remoteUrl);
                installCustomCaCertTrustManager(secret.getCaCertPem(), connection);
             }
@@ -198,7 +200,7 @@ public class HTTPDownloader {
 
          // If Token authentication required, set request property.
          if (secret.getToken() != null) {
-            if (secret.getTokenHeader() != null && secret.getTokenHeader().trim().length() > 0) {
+            if (secret.getTokenHeader() != null && !secret.getTokenHeader().trim().isEmpty()) {
                log.debug("Secret for {} contains token and token header, adding them as request header", remoteUrl);
                connection.setRequestProperty(secret.getTokenHeader().trim(), secret.getToken());
             } else {
@@ -270,8 +272,8 @@ public class HTTPDownloader {
 
    /** Simple wrapper around a downloaded local file and the header we received during the download. */
    public static class FileAndHeaders {
-      private File localFile;
-      private Map<String, List<String>> responseHeaders;
+      private final File localFile;
+      private final Map<String, List<String>> responseHeaders;
 
       public FileAndHeaders(File localFile, Map<String, List<String>> responseHeaders) {
          this.localFile = localFile;

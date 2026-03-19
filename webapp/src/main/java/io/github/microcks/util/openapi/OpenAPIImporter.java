@@ -15,7 +15,7 @@
  */
 package io.github.microcks.util.openapi;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.github.microcks.domain.CallbackInfo;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Metadata;
@@ -41,6 +41,7 @@ import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -50,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -77,12 +79,14 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    private static final String PARAMETERS_NODE = "parameters";
    private static final String PARAMETERS_QUERY_VALUE = "query";
+   private static final String RESPONSES_NODE = "responses";
    private static final String CONTENT_NODE = "content";
    private static final String HEADERS_NODE = "headers";
    private static final String EXAMPLES_NODE = "examples";
    private static final String EXAMPLE_VALUE_NODE = "value";
    private static final String EXAMPLE_EXTERNAL_VALUE_NODE = "externalValue";
 
+   private static final String X_MICROCKS_REFS = "x-microcks-refs";
 
    /**
     * Build a new importer.
@@ -152,11 +156,12 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
       Map<Request, Response> result = new HashMap<>();
+      // Callbacks are optional - so don't eagerly initialize.
+      List<RequestResponsePair> callbacks = null;
 
       // Iterate on specification "paths" nodes.
-      Iterator<Entry<String, JsonNode>> paths = rootSpecification.path("paths").fields();
-      while (paths.hasNext()) {
-         Entry<String, JsonNode> path = paths.next();
+      Set<Entry<String, JsonNode>> paths = rootSpecification.path("paths").properties();
+      for (Entry<String, JsonNode> path : paths) {
          String pathName = path.getKey();
          JsonNode pathValue = followRefIfAny(path.getValue());
 
@@ -165,9 +170,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                "path");
 
          // Iterate on specification path, "verbs" nodes.
-         Iterator<Entry<String, JsonNode>> verbs = pathValue.fields();
-         while (verbs.hasNext()) {
-            Entry<String, JsonNode> verb = verbs.next();
+         Set<Entry<String, JsonNode>> verbs = pathValue.properties();
+         for (Entry<String, JsonNode> verb : verbs) {
             String verbName = verb.getKey();
 
             // Find the correct operation.
@@ -183,7 +187,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
 
                // No need to go further if no examples.
-               if (verb.getValue().has("responses")) {
+               if (verb.getValue().has(RESPONSES_NODE)) {
 
                   // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
                   DispatchCriteriaHelper.DispatcherDetails details = DispatchCriteriaHelper
@@ -191,29 +195,47 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   String rootDispatcher = details.rootDispatcher();
                   String rootDispatcherRules = details.rootDispatcherRules();
 
-                  Iterator<Entry<String, JsonNode>> responseCodes = verb.getValue().path("responses").fields();
-                  while (responseCodes.hasNext()) {
-                     Entry<String, JsonNode> responseCode = responseCodes.next();
-                     Iterator<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).fields();
+                  Set<Entry<String, JsonNode>> responseCodes = verb.getValue().path(RESPONSES_NODE).properties();
+                  for (Entry<String, JsonNode> responseCode : responseCodes) {
+                     Set<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).properties();
 
-                     if (!contents.hasNext() && responseCode.getValue().has("x-microcks-refs")) {
+                     if (contents.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
                         result.putAll(getNoContentRequestResponsePair(operation, rootDispatcher, rootDispatcherRules,
                               requestBodiesByExample, pathParametersByExample, queryParametersByExample,
                               headerParametersByExample, responseCode));
                      }
-                     while (contents.hasNext()) {
-                        Entry<String, JsonNode> content = contents.next();
+                     for (Entry<String, JsonNode> content : contents) {
                         result.putAll(getContentRequestResponsePairs(operation, rootDispatcher, rootDispatcherRules,
                               requestBodiesByExample, pathParametersByExample, queryParametersByExample,
                               headerParametersByExample, responseCode, content));
                      }
                   }
                }
+
+               if (verb.getValue().has("callbacks")) {
+                  callbacks = extractCallbackExchanges(verb.getValue().get("callbacks"), operation);
+               }
             }
          }
       }
 
-      // Adapt map to list of Exchanges.
+      // Iterate on specification "webhooks" nodes.
+      Set<Entry<String, JsonNode>> webhooks = rootSpecification.path("webhooks").properties();
+      for (Entry<String, JsonNode> webhook : webhooks) {
+         result.putAll(extractWebhookRequestResponses(webhook.getKey(), followRefIfAny(webhook.getValue()), operation));
+      }
+
+      // If we have callbacks, use a RequestResponsePair with callbacks.
+      if (callbacks != null && !callbacks.isEmpty()) {
+         final List<RequestResponsePair> finalCallbacks = callbacks;
+         return result.entrySet().stream()
+               .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue(),
+                     finalCallbacks.stream()
+                           .filter(pair -> pair.getRequest().getName().equals(entry.getKey().getName())).toList()))
+               .collect(Collectors.toList());
+      }
+
+      // Adapt map to list of simple RequestResponsePair Exchanges.
       return result.entrySet().stream().map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
    }
@@ -225,16 +247,14 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       List<Operation> results = new ArrayList<>();
 
       // Iterate on specification "paths" nodes.
-      Iterator<Entry<String, JsonNode>> paths = rootSpecification.path("paths").fields();
-      while (paths.hasNext()) {
-         Entry<String, JsonNode> path = paths.next();
+      Set<Entry<String, JsonNode>> paths = rootSpecification.path("paths").properties();
+      for (Entry<String, JsonNode> path : paths) {
          String pathName = path.getKey();
          JsonNode pathValue = followRefIfAny(path.getValue());
 
          // Iterate on specification path, "verbs" nodes.
-         Iterator<Entry<String, JsonNode>> verbs = pathValue.fields();
-         while (verbs.hasNext()) {
-            Entry<String, JsonNode> verb = verbs.next();
+         Set<Entry<String, JsonNode>> verbs = pathValue.properties();
+         for (Entry<String, JsonNode> verb : verbs) {
             String verbName = verb.getKey();
 
             // Only deal with real verbs for now.
@@ -256,6 +276,36 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
                // Deal with parameter constraints if required parameters.
                completeOperationWithParameterConstraints(operation, verb.getValue());
+
+               results.add(operation);
+            }
+         }
+      }
+
+      Set<Entry<String, JsonNode>> webhooks = rootSpecification.path("webhooks").properties();
+      for (Entry<String, JsonNode> webhook : webhooks) {
+         String webhookName = webhook.getKey();
+         JsonNode webhookValue = followRefIfAny(webhook.getValue());
+
+         // Iterate on specification webhook, "verbs" nodes.
+         Set<Entry<String, JsonNode>> verbs = webhookValue.properties();
+         for (Entry<String, JsonNode> verb : verbs) {
+            String verbName = verb.getKey();
+
+            // Only deal with real verbs for now.
+            if (VALID_VERBS.contains(verbName)) {
+               String operationName = webhookName.trim() + " WEBHOOK";
+
+               Operation operation = new Operation();
+               operation.setName(operationName);
+               operation.setMethod(verbName.toUpperCase());
+               operation.setAction("webhook");
+
+               // Complete operation properties if any.
+               if (verb.getValue().has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
+                  MetadataExtractor.completeOperationProperties(operation,
+                        verb.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
+               }
 
                results.add(operation);
             }
@@ -340,9 +390,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                      exampleParams.put(parameterName, getValueString(current));
                   }
                } else if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isObject()) {
-                  final var fieldsIterator = ((ObjectNode) exampleValue).fields();
-                  while (fieldsIterator.hasNext()) {
-                     var current = fieldsIterator.next();
+                  final var fields = ((ObjectNode) exampleValue).properties();
+                  for (Entry<String, JsonNode> current : fields) {
                      exampleParams.put(current.getKey(), getValueString(current.getValue()));
                   }
 
@@ -392,6 +441,104 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             }
          }
       }
+      return results;
+   }
+
+   /**
+    * Extract callback exchanges within callbacks specification node.
+    */
+   private List<RequestResponsePair> extractCallbackExchanges(JsonNode callbacksNode, Operation operation) {
+      List<RequestResponsePair> results = new ArrayList<>();
+
+      for (Entry<String, JsonNode> callbackNode : callbacksNode.properties()) {
+         String callbackName = callbackNode.getKey();
+
+         for (Entry<String, JsonNode> callbackPath : callbackNode.getValue().properties()) {
+            String callbackPathExpression = callbackPath.getKey();
+
+            for (Entry<String, JsonNode> callbackVerb : callbackPath.getValue().properties()) {
+               // Complete the operation with the callback information.
+               CallbackInfo callbackInfo = new CallbackInfo(callbackPathExpression, callbackVerb.getKey());
+               if (callbackVerb.getValue().has("x-microcks-callback")) {
+                  JsonNode microcksCBExt = callbackVerb.getValue().get("x-microcks-callback");
+                  if (microcksCBExt.has("order")) {
+                     callbackInfo.setOrder(microcksCBExt.get("order").asInt());
+                  }
+               }
+
+               operation.addCallbackInfo(callbackName, callbackInfo);
+
+               // Initialize new structure for storing results of this callback verb.
+               Map<Request, Response> requestResponseMap = new HashMap<>();
+               Map<String, Request> requestBodiesByExample = extractRequestBodies(callbackVerb.getValue());
+
+               // Update the request with the name of the callback as the exchange reference.
+               for (Request request : requestBodiesByExample.values()) {
+                  request.setCallbackName(callbackName);
+               }
+
+               if (callbackVerb.getValue().has(RESPONSES_NODE)) {
+                  for (Entry<String, JsonNode> responseCode : callbackVerb.getValue().path(RESPONSES_NODE)
+                        .properties()) {
+
+                     Set<Entry<String, JsonNode>> contentNodes = getResponseContent(responseCode.getValue())
+                           .properties();
+                     if (contentNodes.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
+                        requestResponseMap.putAll(getNoContentCallbackRequestResponsePair(callbackName,
+                              requestBodiesByExample, responseCode));
+                     }
+                     for (Entry<String, JsonNode> contentNode : contentNodes) {
+                        requestResponseMap.putAll(getContentCallbackRequestResponsePairs(callbackName,
+                              requestBodiesByExample, responseCode, contentNode));
+                     }
+                  }
+               }
+
+               if (!requestResponseMap.isEmpty()) {
+                  results.addAll(requestResponseMap.entrySet().stream()
+                        .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue())).toList());
+               }
+            }
+         }
+      }
+      return results;
+   }
+
+   /**
+    * Extract webhook request/response pairs with a webhook specification node.
+    */
+   private Map<Request, Response> extractWebhookRequestResponses(String webhookName, JsonNode webhookNode,
+         Operation operation) {
+      Map<Request, Response> results = new HashMap<>();
+
+      // Iterate on specification path, "verbs" nodes.
+      Set<Entry<String, JsonNode>> verbs = webhookNode.properties();
+      for (Entry<String, JsonNode> verb : verbs) {
+
+         // Find the correct operation.
+         if (operation.getName().equals(webhookName.trim() + " WEBHOOK")) {
+            Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
+
+            // No need to go further if no examples.
+            if (verb.getValue().has(RESPONSES_NODE)) {
+               Set<Entry<String, JsonNode>> responseCodes = verb.getValue().path(RESPONSES_NODE).properties();
+               for (Entry<String, JsonNode> responseCode : responseCodes) {
+                  Set<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).properties();
+
+                  if (contents.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
+                     results.putAll(getNoContentRequestResponsePair(operation, null, null, requestBodiesByExample,
+                           Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), responseCode));
+                  }
+                  for (Entry<String, JsonNode> content : contents) {
+                     results.putAll(getContentRequestResponsePairs(operation, null, null, requestBodiesByExample,
+                           Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), responseCode,
+                           content));
+                  }
+               }
+            }
+         }
+      }
+
       return results;
    }
 
@@ -516,6 +663,42 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /**
+    * Get the request/response pairs for a response content with a callback..
+    */
+   private Map<Request, Response> getContentCallbackRequestResponsePairs(String callbackName,
+         Map<String, Request> requestBodiesByExample, Entry<String, JsonNode> responseCode,
+         Entry<String, JsonNode> content) {
+
+      Map<Request, Response> results = new HashMap<>();
+
+      JsonNode examplesNode = followRefIfAny(content.getValue().path(EXAMPLES_NODE));
+
+      Iterator<String> exampleNames = examplesNode.fieldNames();
+      while (exampleNames.hasNext()) {
+         String exampleName = exampleNames.next();
+
+         // Do we have a request or path or query or header parameters?
+         Request request = requestBodiesByExample.get(exampleName);
+         if (request != null) {
+            JsonNode example = examplesNode.path(exampleName);
+
+            // We should have everything at hand to build response here.
+            Response response = new Response();
+            response.setName(exampleName);
+            response.setMediaType(content.getKey());
+            response.setStatus(responseCode.getKey());
+            response.setCallbackName(callbackName);
+            response.setContent(getSerializedExampleValue(example));
+            if (!responseCode.getKey().startsWith("2")) {
+               response.setFault(true);
+            }
+            results.put(request, response);
+         }
+      }
+      return results;
+   }
+
+   /**
     * Get the request/response pairs for a response without content. A response without content has a x-microcks-refs
     * property to get bounds to requests.
     */
@@ -526,7 +709,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          Map<String, Multimap<String, String>> headerParametersByExample, Entry<String, JsonNode> responseCode) {
 
       Map<Request, Response> results = new HashMap<>();
-      JsonNode requestRefs = responseCode.getValue().path("x-microcks-refs");
+      JsonNode requestRefs = responseCode.getValue().path(X_MICROCKS_REFS);
 
       if (requestRefs.isArray()) {
          // Find here potential headers for output of this operation examples.
@@ -655,6 +838,40 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       response.setDispatchCriteria(dispatchCriteria);
    }
 
+   /**
+    * Get the request/response pairs for a callback response without content. A response without content has a
+    * x-microcks-refs property to get bounds to requests.
+    */
+   private Map<Request, Response> getNoContentCallbackRequestResponsePair(String callbackName,
+         Map<String, Request> requestBodiesByExample, Entry<String, JsonNode> responseCode) {
+
+      Map<Request, Response> results = new HashMap<>();
+      JsonNode requestRefs = responseCode.getValue().path(X_MICROCKS_REFS);
+
+      if (requestRefs.isArray()) {
+         Iterator<JsonNode> requestRefsIterator = requestRefs.elements();
+         while (requestRefsIterator.hasNext()) {
+            String exampleName = requestRefsIterator.next().textValue();
+
+            // Do we have a request or path or query or header parameters?
+            Request request = requestBodiesByExample.get(exampleName);
+            if (request != null) {
+               // We should have everything at hand to build response here.
+               Response response = new Response();
+               response.setName(exampleName);
+               response.setStatus(responseCode.getKey());
+               response.setCallbackName(callbackName);
+               if (!responseCode.getKey().startsWith("2")) {
+                  response.setFault(true);
+               }
+
+               results.put(request, response);
+            }
+         }
+      }
+      return results;
+   }
+
    /** Get the value of an example. This can be direct value field or those of followed $ref */
    private JsonNode getExampleValue(JsonNode example) {
       if (example.has(EXAMPLE_VALUE_NODE)) {
@@ -700,7 +917,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          String parameterIn = parameter.path("in").asText();
          String parameterType = followRefIfAny(parameter.path("schema")).path("type").asText();
          if (!"path".equals(parameterIn)) {
-            if (params.length() > 0) {
+            if (!params.isEmpty()) {
                params.append(" && ");
             }
             if (parameterType.equals("object")) {

@@ -69,6 +69,8 @@ import { ConfigService } from '../../../services/config.service';
 import { ContractsService } from '../../../services/contracts.service';
 import { MetricsService } from '../../../services/metrics.service';
 import { ServicesService } from '../../../services/services.service';
+import { normalizeLineEndings } from '../../../utils/format-utils';
+import { ManageWebhooksDialogComponent } from './_components/manage-webhooks.dialog';
 
 @Component({
   selector: 'app-service-detail-page',
@@ -341,7 +343,7 @@ export class ServiceDetailPageComponent implements OnInit {
     this.copilotSvc.launchSamplesGeneration(this.resolvedServiceView.service).subscribe((res) => {
       this.aiCopilotTaskId = res.taskId;
       console.log('AI Copilot task id: ' + this.aiCopilotTaskId);
-      this.notificationService.message( 
+      this.notificationService.message(
         NotificationType.INFO,
         this.resolvedServiceView.service.name,
         'AI Copilot Samples generation started...',
@@ -435,6 +437,19 @@ export class ServiceDetailPageComponent implements OnInit {
           },
         });
     });
+  }
+
+  public openManageWebhooks(operation: Operation): void {
+    const initialState = {
+      closeBtnName: 'Close',
+      operation: operation,
+      operationId: this.serviceId + '-' + operation.name,
+    };
+    console.log('Opening Manage Webhooks dialog for operationId: ' + this.serviceId + '-' + operation.name);
+    this.modalRef = this.modalService.show(ManageWebhooksDialogComponent, {
+      initialState,
+    });
+    this.modalRef.setClass('modal-lg');
   }
 
   public openManageSamples(): void {
@@ -818,22 +833,23 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public formatRequestContent(requestContent: string): string {
+    const normalizedContent = normalizeLineEndings(requestContent);
     if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
       try {
-        const request = JSON.parse(requestContent);
-        return request.query;
+        const request = JSON.parse(normalizedContent);
+        return normalizeLineEndings(request.query);
       } catch (error) {
         console.log(
           'Error while parsing GraphQL request content: ' + (error! as any)['message']
         );
-        return requestContent;
+        return normalizedContent;
       }
     }
-    return this.prettyPrintIfJSON(requestContent);
+    return this.prettyPrintIfJSON(normalizedContent);
   }
   public formatGraphQLVariables(requestContent: string): string {
     try {
-      const request = JSON.parse(requestContent);
+      const request = JSON.parse(normalizeLineEndings(requestContent));
       if (request.variables) {
         return JSON.stringify(request.variables, null, 2);
       }
@@ -845,18 +861,19 @@ export class ServiceDetailPageComponent implements OnInit {
     return '';
   }
   public prettyPrintIfJSON(content: string): string {
+    const normalizedContent = normalizeLineEndings(content);
     if (
-      (content.startsWith('[') || content.startsWith('{')) &&
-      content.indexOf('\n') == -1
+      (normalizedContent.startsWith('[') || normalizedContent.startsWith('{')) &&
+      normalizedContent.indexOf('\n') == -1
     ) {
       try {
-        const jsonContent = JSON.parse(content);
+        const jsonContent = JSON.parse(normalizedContent);
         return JSON.stringify(jsonContent, null, 2);
       } catch (error) {
-        return content;
+        return normalizedContent;
       }
     }
-    return content;
+    return normalizedContent;
   }
 
   public formatCurlCmd(
@@ -907,7 +924,8 @@ export class ServiceDetailPageComponent implements OnInit {
     if (exchange.request.content != null
         && exchange.request.content != undefined
          && exchange.request.content != '') {
-      cmd += ' -d \'' + exchange.request.content.replace(/\n/g, '') + '\'';
+      const normalizedRequestContent = normalizeLineEndings(exchange.request.content);
+      cmd += ' -d \'' + normalizedRequestContent.replace(/\n/g, '') + '\'';
     }
 
     if (this.resolvedServiceView.service.type === ServiceType.GRPC) {
@@ -1046,5 +1064,9 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public isAsyncMockEnabled(operation: Operation): boolean {
     return this.hasAsyncAPIFeatureEnabled() && operation.defaultDelay != 0;
+  }
+
+  public isWebhookOperation(operation: Operation): boolean {
+    return operation.action === 'webhook';
   }
 }

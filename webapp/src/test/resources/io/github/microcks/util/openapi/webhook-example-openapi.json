@@ -1,0 +1,60 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Webhook Example",
+    "version": "1.0.0"
+  },
+  "webhooks": {
+    "newPet": {
+      "post": {
+        "requestBody": {
+          "description": "Information about a new pet in the system",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Pet"
+              },
+              "examples": {
+                "zaza": {
+                  "value": {
+                    "id": 1,
+                    "name": "Zaza",
+                    "tag": "{{ randomValue(cat, dog) }}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 200 status to indicate that the data was received successfully",
+            "x-microcks-refs": [
+              "zaza"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

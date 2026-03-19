@@ -15,11 +15,17 @@
  */
 package io.github.microcks.domain;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Binding details for asynchronous operations.
  * @author laurent
  */
-public class Binding {
+public class Binding implements Serializable {
+
+   @Serial
+   private static final long serialVersionUID = 2405172041950251808L;
 
    private BindingType type;
    private String keyType;

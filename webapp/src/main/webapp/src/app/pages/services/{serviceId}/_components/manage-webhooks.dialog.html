@@ -1,0 +1,115 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left"><i class="fa fa-filter"></i> Manage Webhooks Registrations</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <h4><i class="fa fa-bolt"></i> {{operation.name}} registrations</h4>
+
+  <div class="container-fluid webhooks-container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="controls">
+          <div class="filter-toolbar">
+            <button class="btn btn-link" (click)="selectAllRegistrations()">Select All</button>
+            <button class="btn btn-link" (click)="unselectAllRegistrations()">Delesect All</button>
+          </div>
+        </div>
+        <pfng-list id="registrationsList" [items]="webhookRegistrations" [config]="registrationsListConfig"
+            [itemTemplate]="registrationTemplate">
+
+          <ng-template #registrationTemplate let-item="item" let-index="index">
+            <div class="list-view-pf-left">
+              <input type="checkbox" name="registrationIds" [(ngModel)]="selectedRegistrations[item.id]">
+            </div>
+            <div class="list-view-pf-body">
+              <div class="list-view-pf-description d-block">
+                <a href="{{ item.targetUrl }}">{{ item.targetUrl }}</a>
+                <div><i class="fa fa-clock-o"></i>&nbsp; Every {{ item.frequency / 1000 }} seconds</div>
+              </div>
+              <div class="list-view-pf-additional-info">
+                <div class="list-view-pf-additional-info-item d-block">
+                  <small>Registered on {{ item.createdOn | date : 'medium' }}</small><br/>
+                  <small>Expires at {{ item.expiresAt | date : 'medium' }}</small>
+                </div>
+              </div>
+            </div>
+            <div class="list-view-pf-actions">
+              {{ item.errorCount }}/{{ item.errorCountThreshold }} errors
+            </div>
+          </ng-template>
+        </pfng-list>
+
+        <pfng-pagination [config]="paginationConfig" (onPageNumberChange)="handlePageNumber($event)"
+          (onPageSizeChange)="handlePageSize($event)">
+        </pfng-pagination>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid webhooks-container" *ngIf="displayCreationForm">
+    <div class="row">
+      <div class="col-md-9">
+        <h2>New Webhook Registration</h2>
+
+        <form class="form-horizontal">
+          <fieldset>
+            <div class="control-group">
+              <label class="control-label required-pf" for="targetUrl">Target URL</label>
+              <div class="controls">
+                <input type="url" class="form-control" id="targetUrl" name="targetUrl" [(ngModel)]="newRegistration.targetUrl"
+                  placeholder="https://example.com/webhook-endpoint" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="control-group form-inline">
+                  <label class="control-label" for="frequency">Frequency</label>
+                  <div class="controls">
+                    <select class="form-control" name="frequency" [(ngModel)]="newRegistration.frequency">
+                      <option *ngFor="let frequency of frequencies" [value]="frequency">{{ frequency / 1000 }} </option>
+                    </select> &nbsp; sec
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="control-group form-inline">
+                  <label class="control-label" for="expiresIn">Expires In</label>
+                  <div class="controls">
+                    <select class="form-control" name="expiresIn" [(ngModel)]="expiresIn">
+                      <option *ngFor="let duration of durations" [value]="duration">{{ duration }} </option>
+                    </select> &nbsp; day(s)
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="control-group">
+                  <label class="control-label" for="errorCountThreshold">Errors Threshold</label>
+                  <div class="controls">
+                    <input type="number" class="form-control" id="errorCountThreshold" name="errorCountThreshold" [(ngModel)]="newRegistration.errorCountThreshold"
+                      value="5" required>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+    <button type="button" *ngIf="!displayCreationForm" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+    <button class="btn btn-primary" *ngIf="!displayCreationForm" (click)="openCreationForm()">
+      <span class="fa fa-plus"></span> Create
+    </button>
+    <button class="btn btn-danger" *ngIf="!displayCreationForm" (click)="deleteRegistrations()" [disabled]="!deleteEnabled()">
+      Delete
+    </button>
+    <button type="button" class="btn btn-default" *ngIf="displayCreationForm" (click)="cancelCreation()">Cancel</button>
+    <button type="submit" class="btn btn-primary" *ngIf="displayCreationForm" (click)="addWebhookRegistration()">
+      <span class="fa fa-plus"></span> Add
+    </button>
+  </div>
+</div>

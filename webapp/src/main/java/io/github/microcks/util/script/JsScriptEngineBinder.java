@@ -15,6 +15,10 @@
  */
 package io.github.microcks.util.script;
 
+import io.github.microcks.util.tracing.CommonAttributes;
+import io.github.microcks.util.tracing.TraceUtil;
+import io.github.microcks.util.DispatchStyles;
+
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
 
@@ -25,7 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.github.microcks.util.tracing.TraceUtil;
+
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.opentelemetry.api.trace.StatusCode;
@@ -368,7 +372,9 @@ public class JsScriptEngineBinder {
          String res = jsApi.process();
          Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
                TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using JS dispatcher")
-                     .put("dispatch.type", "SCRIPT").put("dispatch.result", res).build());
+                     .put(CommonAttributes.DISPATCHER, DispatchStyles.JS).put(CommonAttributes.DISPATCH_CRITERIA, res)
+                     .build());
+
          return res;
 
       } catch (Exception e) {
@@ -376,8 +382,10 @@ public class JsScriptEngineBinder {
          Span.current().recordException(e);
          Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
                TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using JS dispatcher")
-                     .put("dispatch.type", "JS").put("dispatch.result", "null")
-                     .put("dispatch.script", script == null ? "" : script).build());
+                     .put(CommonAttributes.DISPATCHER, DispatchStyles.JS)
+                     .put(CommonAttributes.DISPATCHER_RULES, script == null ? "" : script)
+                     .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
+
          Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
          if (runner != null) {
             log.error("script stdout: {}", runner.stdout());

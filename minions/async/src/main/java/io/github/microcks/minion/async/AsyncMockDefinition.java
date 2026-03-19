@@ -77,4 +77,13 @@ public class AsyncMockDefinition {
    public int hashCode() {
       return Objects.hash(ownerService.getId(), operation.getName());
    }
+
+   /**
+    * Check if this mock definition is for a request-reply operation. Request-reply operations have ReplyInfo configured
+    * and should use listeners rather than scheduled publishing.
+    * @return true if this is a request-reply operation, false for unidirectional events
+    */
+   public boolean isRequestReply() {
+      return operation.getReply() != null;
+   }
 }

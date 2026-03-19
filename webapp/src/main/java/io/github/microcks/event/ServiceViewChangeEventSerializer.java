@@ -27,7 +27,7 @@ import org.apache.kafka.common.serialization.Serializer;
  */
 public class ServiceViewChangeEventSerializer implements Serializer<ServiceViewChangeEvent> {
 
-   private ObjectMapper mapper = new ObjectMapper();
+   private final ObjectMapper mapper = new ObjectMapper();
 
    @Override
    public byte[] serialize(String topic, ServiceViewChangeEvent serviceViewChangeEvent) {

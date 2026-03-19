@@ -20,10 +20,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @JsonSubTypes.Type(value = RequestResponsePair.class, name = "reqRespPair"),
-      @JsonSubTypes.Type(value = UnidirectionalEvent.class, name = "unidirEvent") })
+      @JsonSubTypes.Type(value = UnidirectionalEvent.class, name = "unidirEvent"),
+      @JsonSubTypes.Type(value = RequestReplyEvent.class, name = "reqReplyEvent") })
 /**
  * Abstract bean representing a Service or API Exchange..
  * @author laurent
  */
 public abstract class Exchange {
+   public abstract String getName();
 }

@@ -180,7 +180,12 @@
         </div>
         <div class="list-pf-content-wrapper">
           <div class="list-pf-main-content">
-            <div class="list-pf-title">{{ item.name }}</div>
+            <div class="list-pf-title">
+              <span *ngIf="isWebhookOperation(item)">
+                <i class="fa fa-bolt"></i>
+              </span>
+              {{ item.name }}
+            </div>
             <div class="list-pf-description text-overflow-pf">
               <span [ngSwitch]="item.method">
                 <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
@@ -208,6 +213,8 @@
               </button>
               <ul id="dropdown-actions" *dropdownMenu class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight">
                 <li><a [routerLink]="['operation', item.name]">Edit Properties</a></li>
+                <li><a (click)="openManageWebhooks(item)" *ngIf="isWebhookOperation(item)">Manage Webhooks <i
+                      class="fa fa-bolt"></i></a></li>
                 <li><a (click)="openGenerateSamples(item.name)" *ngIf="allowAICopilotOnSamples()">AI Copilot Samples <i
                       class="pficon pficon-optimize"></i></a></li>
               </ul>
@@ -375,5 +382,6 @@
       </ng-template>
 
     </pfng-list>
+    <br/><br/>
   </div>
 </div>

@@ -23,6 +23,7 @@ import io.github.microcks.domain.GenericResource;
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.RequestReplyEvent;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
@@ -605,6 +606,18 @@ public class ServiceService {
                      event.getEventMessage().setOperationId(operationId);
                      event.getEventMessage().setSourceArtifact(AI_COPILOT_SOURCE);
                      eventMessageRepository.save(event.getEventMessage());
+
+                  } else if (exchange instanceof RequestReplyEvent event) {
+                     // Associate request and reply event messages with operation and artifact.
+                     event.getRequestMessage().setOperationId(operationId);
+                     event.getReplyMessage().setOperationId(operationId);
+                     event.getRequestMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+                     event.getReplyMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+
+                     // Save reply message and associate request with reply before saving it.
+                     eventMessageRepository.save(event.getReplyMessage());
+                     event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
+                     eventMessageRepository.save(event.getRequestMessage());
                   }
                }
                // Publish a Service update event before returning.
@@ -745,11 +758,40 @@ public class ServiceService {
                pair.getRequest().setResponseId(pair.getResponse().getId());
                requestRepository.save(pair.getRequest());
 
+               if (pair.getCallbacks() != null && !pair.getCallbacks().isEmpty()) {
+                  // Associate callbacks request and response with operation and artifact.
+                  pair.getCallbacks().forEach(cbPair -> {
+                     cbPair.getRequest().setOperationId(operationId);
+                     cbPair.getResponse().setOperationId(operationId);
+                     cbPair.getRequest().setSourceArtifact(artifactInfo.getArtifactName());
+                     cbPair.getResponse().setSourceArtifact(artifactInfo.getArtifactName());
+                  });
+
+                  // Save callbacks response and associate requests with response before sabing it.
+                  responseRepository
+                        .saveAll(pair.getCallbacks().stream().map(RequestResponsePair::getResponse).toList());
+                  pair.getCallbacks()
+                        .forEach(cbPair -> cbPair.getRequest().setResponseId(cbPair.getResponse().getId()));
+                  requestRepository.saveAll(pair.getCallbacks().stream().map(RequestResponsePair::getRequest).toList());
+               }
+
             } else if (exchange instanceof UnidirectionalEvent event) {
                // Associate event message with operation and artifact before saving it..
                event.getEventMessage().setOperationId(operationId);
                event.getEventMessage().setSourceArtifact(artifactInfo.getArtifactName());
                eventMessageRepository.save(event.getEventMessage());
+
+            } else if (exchange instanceof RequestReplyEvent event) {
+               // Associate request and reply event messages with operation and artifact.
+               event.getRequestMessage().setOperationId(operationId);
+               event.getReplyMessage().setOperationId(operationId);
+               event.getRequestMessage().setSourceArtifact(artifactInfo.getArtifactName());
+               event.getReplyMessage().setSourceArtifact(artifactInfo.getArtifactName());
+
+               // Save reply message and associate request with reply before saving it.
+               eventMessageRepository.save(event.getReplyMessage());
+               event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
+               eventMessageRepository.save(event.getRequestMessage());
             }
          }
       }
