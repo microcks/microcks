@@ -20,10 +20,16 @@ root_dir=$(pwd)
 
 # Need 2 arguments: first is version we just release, second is issue id for release.
 if [[ $# -eq 2 ]]; then
-  # Package Helm chart.
-  cd install/kubernetes
-  helm package microcks
   echo $root_dir
+
+  # Package docker and podman compose files.
+  cd install
+  tar -czvf docker-compose-$1.tgz ./docker-compose
+  tar -czvf podman-compose-$1.tgz ./podman-compose
+
+  # Package Helm chart.
+  cd kubernetes
+  helm package microcks
 
   # Get a local copy of microcks.io and move help package.
   mkdir $root_dir/tmp && cd $root_dir/tmp
@@ -37,9 +43,15 @@ if [[ $# -eq 2 ]]; then
   mv ./static/helm/tmp/index.yaml ./static/helm/index.yaml
   mv ./static/helm/tmp/microcks-$1.tgz ./static/helm/microcks-$1.tgz
 
+  # Move docker and podman compose archives to microcks.io repo.
+  mkdir ./static/compose
+  mv $root_dir/install/docker-compose-$1.tgz ./static/compose/docker-compose-$1.tgz
+  mv $root_dir/install/podman-compose-$1.tgz ./static/compose/podman-compose-$1.tgz
+
   # Add and commit before cleaning up things.
-  git add ./static/helm/microcks-$1.tgz
+  git add ./static/helm/microcks-$1.tgz ./static/compose/docker-compose-$1.tgz ./static/compose/podman-compose-$1.tgz
   git commit -m 'microcks/microcks#'"$2"' chore: Release Helm chart for '"$1"'' ./static/helm/index.yaml ./static/helm/microcks-$1.tgz
+  git commit -m 'microcks/microcks#'"$2"' chore: Release Compose files for '"$1"'' ./static/compose/docker-compose-$1.tgz ./static/compose/podman-compose-$1.tgz
   git push origin master
 
   rm -rf ./static/helm/tmp
@@ -50,5 +62,5 @@ if [[ $# -eq 2 ]]; then
   rm -rf $root_dir/tmp
 else
   echo "post-release.sh must be called with <version> <release-issue> as 1st argument. Example:"
-  echo "$ ./post-release.sh 1.7.1 837"
+  echo "$ ./post-release.sh 1.14.0 2000"
 fi
