@@ -111,7 +111,7 @@ class TracingControllerIT extends AbstractBaseIT {
          assertThat(spansResponse.getBody().toString()).contains("/rest/pastry-details/1.0.0/pastry")
                .contains("processInvocation").contains("explain-trace")
                .contains("Selected dispatcher and rules for this invocation")
-               .contains("Received REST invocation GET /pastry");
+               .contains("Received REST invocation GET /rest/pastry-details/1.0.0/pastry");
       }
    }
 
