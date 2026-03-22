@@ -4,26 +4,25 @@
 # Props to https://github.com/wow-actions/welcome 
 
 name: Welcome New Users with Thanks and Tip non-stargazers ;-)
+
 on:
-  pull_request_target:
-    types: [opened, closed]
   issues:
     types: [opened]
-permissions:
-  contents: read  # Set permissions as read-only by default at the top level
+  pull_request:
+    types: [opened, closed]
+
+permissions: {}
+
 jobs:
-  run:
-    permissions:
-      issues: write  # for wow-actions/welcome to comment on issues
-      pull-requests: write  # wow-actions/welcome to comment on PRs
+  welcome-issue:
+    if: github.event_name == 'issues'
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
         with:
-          # GitHub token as default GITHUB_TOKEN
-      
-          FIRST_ISSUE_REACTIONS: '+1, hooray, rocket, heart'
-          
+          FIRST_ISSUE_REACTIONS: "+1, hooray, rocket, heart"
           FIRST_ISSUE: |
             👋 @{{ author }}
             
@@ -36,9 +35,22 @@ jobs:
             If you need to know why and how to add yourself to the list, please read the blog post ["Join the Microcks Adopters list and Empower the vibrant open source Community 🙌"](https://microcks.io/blog/join-adopters-list/)
             
             Hope you have a great time there! 
-          
-          FIRST_PR_REACTIONS: '+1, hooray, rocket, heart'
-          
+          STAR_MESSAGE: |
+            🌟 ~~~~~~~~~ 🌟
+
+            📢 If you like Microcks, please ⭐ star ⭐ our repo to support it!
+            
+            🙏 It really helps the project to gain momentum and credibility. It's a small contribution back to the project with a big impact.
+
+  welcome-pr-opened:
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
+        with:
+          FIRST_PR_REACTIONS: "+1, hooray, rocket, heart"
           FIRST_PR: |
             👋 @{{ author }}
             
@@ -47,7 +59,15 @@ jobs:
             Thanks and congrats 🎉 for opening your first pull request here! Be sure to follow the pull request template or please update it accordingly.
             
             Hope you have a great time there! 
-          
+
+  welcome-pr-merged:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
+        with:
           FIRST_PR_MERGED: |
             🎉 @{{ author }}
             
@@ -60,11 +80,3 @@ jobs:
             If you need to know why and how to add yourself to the list, please read the blog post ["Join the Microcks Adopters list and Empower the vibrant open source Community 🙌"](https://microcks.io/blog/join-adopters-list/)
             
             Kudos and please keep going, we need you 🙌
-            
-          STAR_MESSAGE: |
-            🌟 ~~~~~~~~~ 🌟
-
-            📢 If you like Microcks, please ⭐ star ⭐ our repo to support it!
-            
-            🙏 It really helps the project to gain momentum and credibility. It's a small contribution back to the project with a big impact.
-            
