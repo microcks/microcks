@@ -118,8 +118,16 @@ public class AsyncAPICommons {
          switch (bindingName) {
             case "kafka":
                break;
+            case "amqp":
+               Binding b = retrieveOrInitBinding(holder, BindingType.AMQP);
+               // Extract routing key from cc field (first entry if present).
+               if (bindingNode.has("cc") && bindingNode.get("cc").isArray()
+                     && bindingNode.get("cc").size() > 0) {
+                  b.setRoutingKey(bindingNode.get("cc").get(0).asText());
+               }
+               break;
             case "mqtt":
-               Binding b = retrieveOrInitBinding(holder, BindingType.MQTT);
+               b = retrieveOrInitBinding(holder, BindingType.MQTT);
                b.setQoS(bindingNode.path("qos").asText(null));
                b.setPersistent(bindingNode.path("retain").asBoolean(false));
                break;

@@ -101,10 +101,12 @@ public class AMQPProducerManager {
     * 
     * @param destinationType The type of destination (queue, topic, fanout, ...)
     * @param destinationName The name of destination
+    * @param routingKey      The routing key to use when publishing (may be null or empty)
     * @param value           The message payload
     * @param headers         A set of headers if any (maybe null or empty)
     */
-   public void publishMessage(String destinationType, String destinationName, String value, Set<Header> headers) {
+   public void publishMessage(String destinationType, String destinationName, String routingKey, String value,
+         Set<Header> headers) {
       logger.infof("Publishing on destination {%s}, message: %s ", destinationName, value);
       try (Channel channel = amqpConnection.createChannel()) {
          channel.exchangeDeclare(destinationName, destinationType);
@@ -118,7 +120,9 @@ public class AMQPProducerManager {
             }
             properties = new AMQP.BasicProperties.Builder().headers(amqpHeaders).build();
          }
-         channel.basicPublish(destinationName, "", properties, value.getBytes(StandardCharsets.UTF_8));
+         String effectiveRoutingKey = (routingKey != null) ? routingKey : "";
+         channel.basicPublish(destinationName, effectiveRoutingKey, properties,
+               value.getBytes(StandardCharsets.UTF_8));
       } catch (IOException | TimeoutException ioe) {
          logger.warnf("Message %s sending has thrown an exception", ioe);
       }

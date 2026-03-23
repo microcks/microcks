@@ -1,0 +1,41 @@
+asyncapi: '2.1.0'
+info:
+  title: Account Service
+  version: 1.0.0
+  description: This service is in charge of processing user signups
+channels:
+  user/signedup:
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: user-signedup
+          type: topic
+          durable: true
+          autoDelete: false
+    subscribe:
+      bindings:
+        amqp:
+          cc:
+            - user.signed_up
+          ack: false
+      message:
+        $ref: '#/components/messages/UserSignedUp'
+components:
+  messages:
+    UserSignedUp:
+      payload:
+        type: object
+        properties:
+          displayName:
+            type: string
+            description: Name of the user
+          email:
+            type: string
+            format: email
+            description: Email of the user
+      examples:
+        - name: laurent
+          payload:
+            displayName: Laurent Broudoux
+            email: laurent@microcks.io

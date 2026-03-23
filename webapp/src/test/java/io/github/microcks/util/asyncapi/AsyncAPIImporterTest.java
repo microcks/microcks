@@ -1043,4 +1043,47 @@ class AsyncAPIImporterTest {
          }
       }
    }
+
+   @Test
+   void testAsyncAPIWithAMQPBindingRoutingKey() {
+      AsyncAPIImporter importer = null;
+      try {
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-amqp.yaml", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Account Service", service.getName());
+      assertEquals(ServiceType.EVENT, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+         if ("SUBSCRIBE user/signedup".equals(operation.getName())) {
+            assertEquals("SUBSCRIBE", operation.getMethod());
+
+            // Check that AMQP channel binding has been parsed (exchange type).
+            assertNotNull(operation.getBindings().get(BindingType.AMQP.name()));
+            assertEquals("topic", operation.getBindings().get(BindingType.AMQP.name()).getDestinationType());
+
+            // Check that AMQP operation binding cc field is extracted as routingKey.
+            assertEquals("user.signed_up",
+                  operation.getBindings().get(BindingType.AMQP.name()).getRoutingKey());
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
 }
