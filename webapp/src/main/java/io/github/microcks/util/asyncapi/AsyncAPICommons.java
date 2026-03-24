@@ -121,8 +121,7 @@ public class AsyncAPICommons {
             case "amqp":
                Binding b = retrieveOrInitBinding(holder, BindingType.AMQP);
                // Extract routing key from cc field (first entry if present).
-               if (bindingNode.has("cc") && bindingNode.get("cc").isArray()
-                     && bindingNode.get("cc").size() > 0) {
+               if (bindingNode.has("cc") && bindingNode.get("cc").isArray() && bindingNode.get("cc").size() > 0) {
                   b.setRoutingKey(bindingNode.get("cc").get(0).asText());
                }
                break;

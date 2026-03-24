@@ -1079,8 +1079,7 @@ class AsyncAPIImporterTest {
             assertEquals("topic", operation.getBindings().get(BindingType.AMQP.name()).getDestinationType());
 
             // Check that AMQP operation binding cc field is extracted as routingKey.
-            assertEquals("user.signed_up",
-                  operation.getBindings().get(BindingType.AMQP.name()).getRoutingKey());
+            assertEquals("user.signed_up", operation.getBindings().get(BindingType.AMQP.name()).getRoutingKey());
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
