@@ -67,7 +67,7 @@ class AmazonSQSProducerManagerIT {
 
    @Container
    private static final LocalStackContainer localStackContainer = new LocalStackContainer(
-         DockerImageName.parse("localstack/localstack:latest")).withNetwork(NETWORK).withNetworkAliases("localstack")
+         DockerImageName.parse("localstack/localstack:4.14")).withNetwork(NETWORK).withNetworkAliases("localstack")
                .withServices(LocalStackContainer.Service.SQS);
 
    @BeforeEach
