@@ -903,6 +903,17 @@ export class ServiceDetailPageComponent implements OnInit {
         }
       }
 
+      // Add SOAPAction header if this is a SOAP service and no SOAP action header is present.
+      if (this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP && operation.action) {
+        const requestHeaders = exchange.request.headers ?? [];
+        const hasSoapActionHeader = requestHeaders.some(h => h.name.toLowerCase() === 'soapaction');
+        const hasSoap12ActionInContentType = requestHeaders.some(h => h.name.toLowerCase() === 'content-type' &&
+          h.values.some(v => v.toLowerCase().includes('action=')));
+        if (!hasSoapActionHeader && !hasSoap12ActionInContentType) {
+          cmd += ` -H 'SOAPAction: ${operation.action}'`;
+        }
+      }
+
       // Add a content-type header if missing and obvious we need one.
       if (
         exchange.request.content != null &&
