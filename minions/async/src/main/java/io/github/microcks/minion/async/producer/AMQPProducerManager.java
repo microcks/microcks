@@ -121,8 +121,7 @@ public class AMQPProducerManager {
             properties = new AMQP.BasicProperties.Builder().headers(amqpHeaders).build();
          }
          String effectiveRoutingKey = (routingKey != null) ? routingKey : "";
-         channel.basicPublish(destinationName, effectiveRoutingKey, properties,
-               value.getBytes(StandardCharsets.UTF_8));
+         channel.basicPublish(destinationName, effectiveRoutingKey, properties, value.getBytes(StandardCharsets.UTF_8));
       } catch (IOException | TimeoutException ioe) {
          logger.warnf("Message %s sending has thrown an exception", ioe);
       }

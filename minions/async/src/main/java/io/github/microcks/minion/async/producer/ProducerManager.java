@@ -366,8 +366,7 @@ public class ProducerManager {
    protected void produceAMQPMockMessage(AsyncMockDefinition definition, Binding bindingDef, EventMessage eventMessage,
          String renderedContent) {
       String destinationName = amqpProducerManager.getDestinationName(definition, eventMessage);
-      amqpProducerManager.publishMessage(bindingDef.getDestinationType(), destinationName,
-            bindingDef.getRoutingKey(),
+      amqpProducerManager.publishMessage(bindingDef.getDestinationType(), destinationName, bindingDef.getRoutingKey(),
             renderedContent, amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
                   eventMessage.getHeaders()));
    }
