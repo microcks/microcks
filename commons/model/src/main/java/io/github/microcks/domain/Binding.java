@@ -34,6 +34,7 @@ public class Binding implements Serializable {
    private String method;
    private String qoS;
    private boolean persistent;
+   private String routingKey;
 
    public Binding() {
    }
@@ -96,5 +97,13 @@ public class Binding implements Serializable {
 
    public void setPersistent(boolean persistent) {
       this.persistent = persistent;
+   }
+
+   public String getRoutingKey() {
+      return routingKey;
+   }
+
+   public void setRoutingKey(String routingKey) {
+      this.routingKey = routingKey;
    }
 }
