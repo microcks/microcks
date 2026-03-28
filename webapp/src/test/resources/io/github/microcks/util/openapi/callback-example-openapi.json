@@ -67,7 +67,8 @@
             "{$request.query.callbackUrl}": {
               "post": {
                 "x-microcks-callback": {
-                  "order": 100
+                  "order": 100,
+                  "timeout": 5000
                 },
                 "requestBody": {
                   "description": "subscription payload",

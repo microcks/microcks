@@ -2238,6 +2238,7 @@ class OpenAPIImporterTest {
       assertEquals("{$request.query.callbackUrl}", callbackInfo.getCallbackUrlExpression());
       assertEquals("POST", callbackInfo.getMethod().toUpperCase());
       assertEquals(100, callbackInfo.getOrder());
+      assertEquals(5000L, callbackInfo.getResponseTimeout());
 
       // Check messages now.
       for (Exchange exchange : exchanges) {

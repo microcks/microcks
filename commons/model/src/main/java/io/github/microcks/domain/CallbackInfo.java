@@ -32,6 +32,7 @@ public class CallbackInfo implements Serializable {
    private String method;
    private Integer order;
    private Long defaultDelay;
+   private Long responseTimeout;
 
    public CallbackInfo() {
    }
@@ -71,5 +72,13 @@ public class CallbackInfo implements Serializable {
 
    public void setDefaultDelay(Long defaultDelay) {
       this.defaultDelay = defaultDelay;
+   }
+
+   public Long getResponseTimeout() {
+      return responseTimeout;
+   }
+
+   public void setResponseTimeout(Long responseTimeout) {
+      this.responseTimeout = responseTimeout;
    }
 }

@@ -111,7 +111,8 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
             // Render templates in content if any and send.
             callbackRequest.setContent(ListenerCommons.renderContent(event.getRequest(),
                   event.getRenderedResponseBody(), callbackRequest.getContent()));
-            sendCallbackRequest(callbackUrl, callbackInfo.getMethod(), callbackRequest);
+            sendCallbackRequest(callbackUrl, callbackInfo.getMethod(), callbackRequest,
+                  callbackInfo.getResponseTimeout());
 
             // Should we re-emit another CallbackTriggerEvent for next in order?
             if (event.getOperation().getCallbackInfos().size() > event.getStep() + 1) {
@@ -197,7 +198,10 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
    }
 
    /** Send the callback request to URL using HttpClient. */
-   private void sendCallbackRequest(String callbackUrl, String method, Request callbackRequest) {
+   private void sendCallbackRequest(String callbackUrl, String method, Request callbackRequest,
+         Long responseTimeoutMs) {
+      // Default to 2000ms when not configured; configurable via x-microcks-callback: timeout:
+      long timeoutMs = (responseTimeoutMs != null && responseTimeoutMs > 0) ? responseTimeoutMs : 2000L;
       if (callbackRequest.getQueryParameters() != null && !callbackRequest.getQueryParameters().isEmpty()) {
          String query = callbackRequest.getQueryParameters().stream()
                .map(p -> urlEncode(p.getName()) + "=" + urlEncode(p.getValue())).collect(Collectors.joining("&"));
@@ -215,7 +219,7 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
 
       // Initialize request builder.
       HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(URI.create(callbackUrl))
-            .timeout(Duration.ofSeconds(2)).method(normalizedMethod, publisher);
+            .timeout(Duration.ofMillis(timeoutMs)).method(normalizedMethod, publisher);
 
       setRequestHeaders(requestBuilder, callbackRequest, body, methodAllowsBody);
 

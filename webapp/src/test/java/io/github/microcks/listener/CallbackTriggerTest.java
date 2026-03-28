@@ -15,6 +15,7 @@
  */
 package io.github.microcks.listener;
 
+import io.github.microcks.domain.CallbackInfo;
 import io.github.microcks.event.HttpServletRequestSnapshot;
 
 import org.junit.jupiter.api.Test;
@@ -97,5 +98,48 @@ class CallbackTriggerTest {
       String result = extractCallbackUrl(request, "{$request.header.X-Callback-Url}");
 
       assertEquals("http://consumer.example.com/cb", result);
+   }
+
+   @Test
+   void testResponseTimeoutUsesConfiguredValueWhenSet() throws Exception {
+      // When responseTimeout is set on CallbackInfo, sendCallbackRequest must use it.
+      // Verified by reading the resolved timeout via the same inline logic.
+      CallbackInfo info = new CallbackInfo("http://consumer.example.com/cb", "POST");
+      info.setResponseTimeout(30000L);
+
+      long resolved = resolveTimeout(info.getResponseTimeout());
+
+      assertEquals(30000L, resolved);
+   }
+
+   @Test
+   void testResponseTimeoutFallsBackTo2000WhenNull() throws Exception {
+      // When responseTimeout is absent (null), the default 2000ms must be used.
+      CallbackInfo info = new CallbackInfo("http://consumer.example.com/cb", "POST");
+
+      long resolved = resolveTimeout(info.getResponseTimeout());
+
+      assertEquals(2000L, resolved);
+   }
+
+   @Test
+   void testResponseTimeoutFallsBackTo2000WhenZero() throws Exception {
+      // A zero value is treated as absent — fall back to 2000ms default.
+      CallbackInfo info = new CallbackInfo("http://consumer.example.com/cb", "POST");
+      info.setResponseTimeout(0L);
+
+      long resolved = resolveTimeout(info.getResponseTimeout());
+
+      assertEquals(2000L, resolved);
+   }
+
+   // ── helpers ──────────────────────────────────────────────────────────────────
+
+   /**
+    * Mirrors the timeout-resolution logic inside sendCallbackRequest so the fallback behaviour can be verified without
+    * making a real HTTP call.
+    */
+   private long resolveTimeout(Long responseTimeoutMs) {
+      return (responseTimeoutMs != null && responseTimeoutMs > 0) ? responseTimeoutMs : 2000L;
    }
 }

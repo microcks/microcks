@@ -464,6 +464,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   if (microcksCBExt.has("order")) {
                      callbackInfo.setOrder(microcksCBExt.get("order").asInt());
                   }
+                  if (microcksCBExt.has("timeout")) {
+                     callbackInfo.setResponseTimeout(microcksCBExt.get("timeout").asLong());
+                  }
                }
 
                operation.addCallbackInfo(callbackName, callbackInfo);
