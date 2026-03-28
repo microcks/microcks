@@ -151,6 +151,13 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
 
    /** Extract the URL from snapshot request using the callbackUrlLocation expression. */
    private String extractCallbackUrlFromRequest(HttpServletRequestSnapshot request, String callbackUrlLocation) {
+      // If the expression is already a literal absolute URL, use it directly.
+      // This supports OpenAPI 3.x literal URL callback keys per spec §4.8.20.
+      if (callbackUrlLocation != null
+            && (callbackUrlLocation.startsWith("http://") || callbackUrlLocation.startsWith("https://"))) {
+         log.debug("Using literal callback URL {}", callbackUrlLocation);
+         return callbackUrlLocation;
+      }
       // Sanitize location that starts with {$ and ends with }.
       callbackUrlLocation = callbackUrlLocation.substring(2, callbackUrlLocation.length() - 1);
       // Check if we have a reference to a request header, a query parameter or the body content.
