@@ -109,14 +109,16 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
 
             log.debug("Calling callback URL {} with request {}", callbackUrl, callbackRequest.getName());
             // Render templates in content if any and send.
-            callbackRequest.setContent(ListenerCommons.renderContent(event.getRequest(), callbackRequest.getContent()));
+            callbackRequest.setContent(ListenerCommons.renderContent(event.getRequest(),
+                  event.getRenderedResponseBody(), callbackRequest.getContent()));
             sendCallbackRequest(callbackUrl, callbackInfo.getMethod(), callbackRequest);
 
             // Should we re-emit another CallbackTriggerEvent for next in order?
             if (event.getOperation().getCallbackInfos().size() > event.getStep() + 1) {
                log.debug("Re-emitting CallbackTriggerEvent for next callbackInfo");
-               applicationContext.publishEvent(new CallbackTriggerEvent(this, event.getServiceId(),
-                     event.getOperation(), event.getResponseName(), event.getRequest(), event.getStep() + 1));
+               applicationContext.publishEvent(
+                     new CallbackTriggerEvent(this, event.getServiceId(), event.getOperation(), event.getResponseName(),
+                           event.getRequest(), event.getRenderedResponseBody(), event.getStep() + 1));
             }
          } else {
             log.warn("No callback request found for callbackName {} on operation {}", callbackName,

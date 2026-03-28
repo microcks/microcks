@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * This is a test case for ListenerCommons class.
@@ -88,5 +89,61 @@ class ListenerCommonsTest {
 
       // Assertions: fallback to the original template
       assertEquals("Error null", renderedContent);
+   }
+
+   @Test
+   void testRenderContentWithResponseBodyFieldExtraction() {
+      // Snapshot with no relevant fields — transId must come from response body only
+      HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/nafath/initiate", Map.of(), Map.of(),
+            "{\"nationalId\":\"1234567890\"}");
+
+      String renderedResponseBody = "{\"transId\":\"abc-123\",\"random\":42}";
+      String template = "{{response.body/transId}}";
+
+      String result = ListenerCommons.renderContent(snapshot, renderedResponseBody, template);
+
+      assertEquals("abc-123", result);
+   }
+
+   @Test
+   void testRenderContentWithResponseBodyAndRequestParams() {
+      // The full Nafath callback use case: transId from response, requestId from query param
+      HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/nafath/initiate", Map.of(),
+            Map.of("requestId", new String[] { "req-uuid-999" }), "{\"nationalId\":\"1234567890\"}");
+
+      String renderedResponseBody = "{\"transId\":\"txn-uuid-777\",\"random\":55}";
+      String template = "{\"transId\":\"{{response.body/transId}}\",\"requestId\":\"{{request.params[requestId]}}\"}";
+
+      String result = ListenerCommons.renderContent(snapshot, renderedResponseBody, template);
+
+      assertEquals("{\"transId\":\"txn-uuid-777\",\"requestId\":\"req-uuid-999\"}", result);
+   }
+
+   @Test
+   void testRenderContentWithNullResponseBodyDoesNotExposeResponseVariable() {
+      // When renderedResponseBody is null, response variable must not be set —
+      // template referencing response.body should not resolve
+      HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/test-path", Map.of(), Map.of(), null);
+
+      String template = "{{response.body/transId}}";
+
+      String result = ListenerCommons.renderContent(snapshot, null, template);
+
+      // response variable is absent — expression evaluates to empty string, not the raw template
+      assertNotEquals(template, result);
+      assertEquals("", result);
+   }
+
+   @Test
+   void testRenderContentWithBlankResponseBodyIsIgnored() {
+      // Blank renderedResponseBody must behave the same as null — no response variable set
+      HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/test-path", Map.of(),
+            Map.of("userId", new String[] { "42" }), null);
+
+      String template = "user={{request.params[userId]}}";
+
+      String result = ListenerCommons.renderContent(snapshot, "   ", template);
+
+      assertEquals("user=42", result);
    }
 }

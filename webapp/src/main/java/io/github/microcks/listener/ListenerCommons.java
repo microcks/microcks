@@ -47,6 +47,15 @@ public class ListenerCommons {
     * @return The rendered content or the original template if no evaluation was possible.
     */
    public static String renderContent(HttpServletRequestSnapshot requestSnapshot, String contentTemplate) {
+      return renderContent(requestSnapshot, null, contentTemplate);
+   }
+
+   /**
+    * Render callback (or async) content using the incoming request and optionally the rendered mock HTTP response body.
+    * When {@code renderedResponseBody} is JSON, templates may use e.g. {@code response.body/transId}.
+    */
+   public static String renderContent(HttpServletRequestSnapshot requestSnapshot, String renderedResponseBody,
+         String contentTemplate) {
       if (contentTemplate != null && contentTemplate.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
 
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
@@ -61,8 +70,11 @@ public class ListenerCommons {
                .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getFirst())));
 
-         // Register the request variable and evaluate the response.
          engine.getContext().setVariable("request", evaluableRequest);
+         if (renderedResponseBody != null && !renderedResponseBody.isBlank()) {
+            EvaluableRequest evaluableResponse = new EvaluableRequest(renderedResponseBody, new String[] {});
+            engine.getContext().setVariable("response", evaluableResponse);
+         }
          try {
             return engine.getValue(contentTemplate);
          } catch (Exception e) {

@@ -28,6 +28,8 @@ public class CallbackTriggerEvent extends ApplicationEvent {
    private final Operation operation;
    private final String responseName;
    private final HttpServletRequestSnapshot request;
+   /** JSON body actually returned to the client (rendered mock response); used for OpenAPI callback templates. */
+   private final String renderedResponseBody;
 
    private int step = 0;
 
@@ -41,11 +43,7 @@ public class CallbackTriggerEvent extends ApplicationEvent {
     */
    public CallbackTriggerEvent(Object source, String serviceId, Operation operation, String responseName,
          HttpServletRequestSnapshot request) {
-      super(source);
-      this.serviceId = serviceId;
-      this.operation = operation;
-      this.responseName = responseName;
-      this.request = request;
+      this(source, serviceId, operation, responseName, request, null, 0);
    }
 
    /**
@@ -59,11 +57,20 @@ public class CallbackTriggerEvent extends ApplicationEvent {
     */
    public CallbackTriggerEvent(Object source, String serviceId, Operation operation, String responseName,
          HttpServletRequestSnapshot request, int order) {
+      this(source, serviceId, operation, responseName, request, null, order);
+   }
+
+   /**
+    * Full constructor including rendered HTTP response body (for callback templates: {@code response.body/...}).
+    */
+   public CallbackTriggerEvent(Object source, String serviceId, Operation operation, String responseName,
+         HttpServletRequestSnapshot request, String renderedResponseBody, int order) {
       super(source);
       this.serviceId = serviceId;
       this.operation = operation;
       this.responseName = responseName;
       this.request = request;
+      this.renderedResponseBody = renderedResponseBody;
       this.step = order;
    }
 
@@ -81,6 +88,10 @@ public class CallbackTriggerEvent extends ApplicationEvent {
 
    public HttpServletRequestSnapshot getRequest() {
       return request;
+   }
+
+   public String getRenderedResponseBody() {
+      return renderedResponseBody;
    }
 
    public int getStep() {

@@ -249,7 +249,7 @@ public class RestInvocationProcessor {
          byte[] responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
 
          // Check and emit callbacks event if needed.
-         handleCallbackTrigger(ic, request, headers, body, response);
+         handleCallbackTrigger(ic, request, headers, body, response, responseContent);
 
          // Check and emit AsyncAPI trigger if needed.
          handleAsyncAPITrigger(ic, request, headers, body, responseContent, responseHeaders);
@@ -599,12 +599,15 @@ public class RestInvocationProcessor {
 
    /** If this operation has callbacks defined, emit an event to manage callbacls asynchronously. */
    private void handleCallbackTrigger(MockInvocationContext ic, HttpServletRequest request,
-         Map<String, List<String>> headers, String body, Response response) {
+         Map<String, List<String>> headers, String body, Response response, byte[] responseContent) {
       if (ic.operation().getCallbackInfos() != null && !ic.operation().getCallbackInfos().isEmpty()) {
          HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot(ic.resourcePath(), headers,
                request.getParameterMap(), body);
+         String renderedBody = responseContent != null
+               ? new String(responseContent, java.nio.charset.StandardCharsets.UTF_8)
+               : null;
          CallbackTriggerEvent event = new CallbackTriggerEvent(this, ic.service().getId(), ic.operation(),
-               response.getName(), snapshot);
+               response.getName(), snapshot, renderedBody, 0);
          applicationContext.publishEvent(event);
       }
    }
