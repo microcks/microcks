@@ -53,7 +53,7 @@ jobs:
         run: |
           git config user.name "microcks-bot"
           git config user.email "info@microcks.io"
-          git commit -m "Releasing version ${{ github.event.inputs.version }}" .
+          git commit --no-verify -m "Releasing version ${{ github.event.inputs.version }}" .
           git tag ${{ github.event.inputs.version }}
           git push origin ${{ github.event.inputs.version }}
 
@@ -86,7 +86,7 @@ jobs:
 
       - name: Commit, push and tag changes
         run: |
-          git commit -m "Setting SNAPSHOT version ${{ github.event.inputs.nextVersion }}-SNAPSHOT" .
+          git commit --no-verify -m "Setting SNAPSHOT version ${{ github.event.inputs.nextVersion }}-SNAPSHOT" .
           git push origin ${{ github.event.inputs.branch }}
 
       - name: Set up Helm
