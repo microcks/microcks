@@ -33,6 +33,7 @@ public class ServiceStateStore implements StateStore {
 
    private final ServiceStateRepository repository;
    private final String serviceId;
+   private final int defaultSecondsTtl;
 
    /**
     * Build a ServiceStateStore for required elements.
@@ -40,12 +41,24 @@ public class ServiceStateStore implements StateStore {
     * @param serviceId  The ID of Service this state store will be scoped to
     */
    public ServiceStateStore(ServiceStateRepository repository, String serviceId) {
+      this(repository, serviceId, DEFAULT_SECONDS_TTL);
+   }
+
+   /**
+    * Build a ServiceStateStore for required elements with a customized default TTL.
+    * 
+    * @param repository        The MongoDB repository to use for persistence
+    * @param serviceId         The ID of Service this state store will be scoped to
+    * @param defaultSecondsTtl The default Time To Live in seconds for the state elements
+    */
+   public ServiceStateStore(ServiceStateRepository repository, String serviceId, int defaultSecondsTtl) {
       this.repository = repository;
       this.serviceId = serviceId;
+      this.defaultSecondsTtl = defaultSecondsTtl;
    }
 
    public void put(String key, String value) {
-      put(key, value, DEFAULT_SECONDS_TTL);
+      put(key, value, defaultSecondsTtl);
    }
 
    public void put(String key, String value, int secondsTTL) {
