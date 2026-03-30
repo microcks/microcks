@@ -111,6 +111,9 @@ public class RestInvocationProcessor {
    @Value("${mocks.enable-binary-response-decode:false}")
    private boolean enableBinaryResponseDecode;
 
+   @Value("${mocks.service-state-store.default-ttl:10}")
+   private int defaultTtl;
+
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
     * @param serviceStateRepository       The repository to access service state
@@ -355,8 +358,8 @@ public class RestInvocationProcessor {
                      // Evaluating request with script coming from operation dispatcher rules.
                      String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
                      ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
-                           requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request,
-                           uriParameters);
+                           requestContext, new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl),
+                           request, uriParameters);
                      dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
                   } catch (Exception e) {
                      // Get current span and record failure
@@ -378,7 +381,8 @@ public class RestInvocationProcessor {
                   // Evaluating request with script coming from operation dispatcher rules.
                   String script = JsScriptEngineBinder.wrapIntoFunction(dispatcherRules);
                   Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()), request, jsUriParameters);
+                        new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl), request,
+                        jsUriParameters);
                   String result = JsScriptEngineBinder.invokeProcessFn(script, scriptContext);
                   if (result != null) {
                      dispatchCriteria = result;

@@ -95,4 +95,26 @@ class ServiceStateStoreTest {
       state = repository.findByServiceIdAndKey(SERVICE_ID, "foo");
       assertNull(state);
    }
+
+   @Test
+   void testCustomDefaultTtl() {
+      // Arrange
+      int customTtl = 60;
+      ServiceStateStore customStore = new ServiceStateStore(repository, SERVICE_ID, customTtl);
+
+      // Act
+      customStore.put("my-key", "my-value");
+
+      // Assert
+      ServiceState state = repository.findByServiceIdAndKey(SERVICE_ID, "my-key");
+      assertNotNull(state);
+      assertEquals("my-value", state.getValue());
+
+      // Verify expiration is set correctly
+      long expectedExpiration = System.currentTimeMillis() + (customTtl * 1000L);
+      long diff = Math.abs(expectedExpiration - state.getExpireAt().getTime());
+
+      // Allow 1 second variance for processing execution time
+      assertTrue(diff < 1000, "TTL Expiration should be within bounds");
+   }
 }
