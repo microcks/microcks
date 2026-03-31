@@ -289,9 +289,8 @@ public class OpenAICopilot implements AICopilot {
    private String requestCompletionContent(String prompt) {
       log.debug("Asking OpenAI to suggest samples for this prompt: {}", prompt);
 
-   final List<ChatMessage> messages = Collections.singletonList(
-         new ChatMessage(ChatMessageRole.ASSISTANT.value(), prompt)
-   );
+      final List<ChatMessage> messages = Collections
+            .singletonList(new ChatMessage(ChatMessageRole.ASSISTANT.value(), prompt));
 
       HttpEntity<Map<String, Object>> request = new HttpEntity<>(buildChatCompletionPayload(messages),
             createAuthenticationHeaders());
