@@ -386,14 +386,14 @@ export class LiveTracesGraphComponent
 
     traces.forEach((trace) => {
       // Extract unique service-operation combinations from the trace
-      let service = "unknown";
-      let operation = "unknown";
+      let service = "Unknown Services";
+      let operation = "Unknown Operations";
 
       for (const span of trace) {
         const attrs = span.attributes || {};
         service = (attrs["service.name"] as string) || service;
         operation = (attrs["operation.name"] as string) || operation;
-        if (service !== "unknown" && operation !== "unknown") {
+        if (service !== "Unknown Services" && operation !== "Unknown Operations") {
           break; // Found valid service and operation
         }
       }

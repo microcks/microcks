@@ -161,11 +161,17 @@ public class GrpcServerCallHandler {
             Service service = serviceRepository.findByNameAndVersion(serviceName, serviceVersion);
             if (service == null) {
                // No service found.
-               log.debug("No GRPC Service def found for [{}, {}]", serviceName, serviceVersion);
+               String msg = String.format("No GRPC Service def found for [%s, %s]", serviceName, serviceVersion);
+               log.debug(msg);
+               Span.current().addEvent(CommonEvents.SERVICE_NOT_FOUND.getEventName(),
+                     TraceUtil.explainSpanEventBuilder(msg).build());
+               Span.current().setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
                streamObserver.onError(Status.UNIMPLEMENTED
                      .withDescription("No GRPC Service def found for " + fullMethodName).asException());
                return;
             }
+            Span.current().setAttribute(CommonAttributes.SERVICE_NAME, service.getName());
+            Span.current().setAttribute(CommonAttributes.SERVICE_VERSION, service.getVersion());
             Operation grpcOperation = null;
             for (Operation operation : service.getOperations()) {
                if (operation.getName().equals(operationName)) {
@@ -234,7 +240,12 @@ public class GrpcServerCallHandler {
 
             } else {
                // No operation found.
-               log.debug("No valid operation found for [{}, {}] and {}", serviceName, serviceVersion, operationName);
+               String msg = String.format("No valid operation found for [%s, %s] and %s", serviceName, serviceVersion,
+                     operationName);
+               log.debug(msg);
+               Span.current().addEvent(CommonEvents.OPERATION_NOT_FOUND.getEventName(),
+                     TraceUtil.explainSpanEventBuilder(msg).build());
+               Span.current().setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
                streamObserver.onError(Status.UNIMPLEMENTED
                      .withDescription("No valid operation found for " + fullMethodName).asException());
             }
