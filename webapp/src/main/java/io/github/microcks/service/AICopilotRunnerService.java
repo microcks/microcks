@@ -67,11 +67,16 @@ public class AICopilotRunnerService {
       for (Operation operation : service.getOperations()) {
          try {
             List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation, contract, 3);
+            if (exchanges == null || exchanges.isEmpty()) {
+               log.warn("No AI Copilot samples were generated for service {} operation {}", service.getName(),
+                     operation.getName());
+               continue;
+            }
             serviceService.addAICopilotExchangesToServiceOperation(service.getId(), operation.getName(),
                   (List<Exchange>) exchanges, userInfo);
          } catch (Exception e) {
-            log.error("Caught an exception while generating samples", e);
-            return CompletableFuture.completedFuture(false);
+            log.error("Caught an exception while generating samples for service {} operation {}", service.getName(),
+                  operation.getName(), e);
          }
       }
       return CompletableFuture.completedFuture(true);
