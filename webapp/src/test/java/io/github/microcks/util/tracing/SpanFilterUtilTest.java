@@ -45,7 +45,9 @@ class SpanFilterUtilTest {
    void testMatchesWildcard_nullValues() {
       assertTrue(SpanFilterUtil.matchesWildcard(null, null));
       assertFalse(SpanFilterUtil.matchesWildcard("pattern", null));
-      assertFalse(SpanFilterUtil.matchesWildcard(null, "value"));
+      assertTrue(SpanFilterUtil.matchesWildcard(null, "value"));
+      assertTrue(SpanFilterUtil.matchesWildcard(".*", null));
+      assertTrue(SpanFilterUtil.matchesWildcard("*", null));
    }
 
    @Test
