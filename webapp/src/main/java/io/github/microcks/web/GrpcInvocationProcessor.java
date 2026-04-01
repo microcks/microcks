@@ -18,6 +18,9 @@ package io.github.microcks.web;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.event.AsyncAPITriggerEvent;
+import io.github.microcks.event.RequestSnapshot;
+import io.github.microcks.event.ResponseSnapshot;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.OpenTelemetryResolverService;
@@ -150,6 +153,13 @@ public class GrpcInvocationProcessor {
       if (!responses.isEmpty()) {
          Response response = responses.getFirst();
 
+         span.addEvent(CommonEvents.RESPONSE_SELECTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Selected response to return")
+                     .put(CommonAttributes.RESPONSE_NAME, response.getName())
+                     .put(CommonAttributes.RESPONSE_STATUS_STRING, response.getStatus())
+                     .put("response.mediaType", response.getMediaType() != null ? response.getMediaType() : "none")
+                     .build());
+
          // Render response content before.
          String responseContent = MockControllerCommons.renderResponseContent(jsonBody,
                dispatchContext.requestContext(), response);
@@ -170,6 +180,9 @@ public class GrpcInvocationProcessor {
             MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
          }
 
+         // Check and emit AsyncAPI trigger if needed.
+         handleAsyncAPITrigger(ic, jsonBody, responseContent);
+
          // Return a GrpcResponseResult with the response content.
          if (response.getStatus() == null || response.getStatus().trim().equals("0")
                || statusInHttpRange(response.getStatus())) {
@@ -182,6 +195,12 @@ public class GrpcInvocationProcessor {
       }
 
       // No response found.
+      span.addEvent(CommonEvents.NO_RESPONSE_FOUND.getEventName(),
+            TraceUtil.explainSpanEventBuilder("No matching response found for dispatch criteria")
+                  .put(CommonAttributes.DISPATCH_CRITERIA, dispatchContext.dispatchCriteria())
+                  .put(CommonAttributes.ERROR_STATUS, 404).build());
+      span.setStatus(StatusCode.ERROR, "No matching response found for dispatch criteria");
+
       log.info("No appropriate response found for this input {}, returning an error", jsonBody);
       return new GrpcResponseResult(Status.NOT_FOUND, null, "No response found for the GRPC input request");
    }
@@ -324,6 +343,17 @@ public class GrpcInvocationProcessor {
          responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(service, grpcOperation));
       }
       return responses;
+   }
+
+   /** If this operation has async triggers defined, emit an event to manage async api event sending. */
+   private void handleAsyncAPITrigger(MockInvocationContext ic, String jsonBbody, String responseContent) {
+      if (ic.operation().getTriggerInfos() != null && !ic.operation().getTriggerInfos().isEmpty()) {
+         RequestSnapshot requestSnapshot = new RequestSnapshot(jsonBbody);
+         ResponseSnapshot responseSnapshot = new ResponseSnapshot(responseContent);
+         AsyncAPITriggerEvent event = new AsyncAPITriggerEvent(this, ic.service().getId(), ic.operation(),
+               requestSnapshot, responseSnapshot);
+         applicationContext.publishEvent(event);
+      }
    }
 
    /** Return true if status is in HTTP status range. */

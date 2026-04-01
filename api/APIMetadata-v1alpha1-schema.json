@@ -108,6 +108,15 @@
           "items": {
             "$ref": "#/definitions/parameterConstraint"
           }
+        },
+        "triggers": {
+          "$id": "#/definitions/operationItem/properties/triggers",
+          "type": "array",
+          "title": "The events this operation triggers",
+          "description": "The events this operation triggers when it is invoked.",
+          "items": {
+            "$ref": "#/definitions/trigger"
+          }
         }
       }
     },
@@ -153,6 +162,12 @@
           "description": "A regular expression parameter value must match."
         }
       }
+    },
+    "trigger": {
+      "$id": "#/definitions/trigger",
+      "type": "string",
+      "title": "A triggered event",
+      "description": "A triggered event must be <Async API name>:<Async API version>:<Async API operation>"
     }
   }
 }
