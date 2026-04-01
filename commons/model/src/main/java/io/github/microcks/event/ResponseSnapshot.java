@@ -16,6 +16,7 @@
 package io.github.microcks.event;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,4 +27,9 @@ import java.util.Map;
  * @author laurent
  */
 public record ResponseSnapshot(Map<String, List<String>> headers, String body) implements Serializable {
+
+   /** Build a response snapshot with no headers and a body. */
+   public ResponseSnapshot(String body) {
+      this(Collections.emptyMap(), body);
+   }
 }

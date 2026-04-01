@@ -319,6 +319,18 @@
                   </dd>
                   <dt>Default delay:</dt>
                   <dd>{{ item.defaultDelay || 0 }} ms with <code>{{ item.defaultDelayStrategy || 'fixed' }}</code> strategy</dd>
+                  <span *ngIf="item.triggerInfos && item.triggerInfos.length > 0">
+                    <dt>Triggers:</dt>
+                    <dd>
+                      <span *ngFor="let triggerInfo of item.triggerInfos; last as isLast">
+                        <a routerLink="../{{triggerInfo.serviceName}}:{{triggerInfo.serviceVersion}}" target="_blank" rel="noopener">
+                          {{ triggerInfo.serviceName }}:{{ triggerInfo.serviceVersion }}:{{ triggerInfo.operationName }}
+                          <i class="fa fa-external-link" aria-hidden="true"></i>
+                        </a>
+                        <span *ngIf="!isLast">, </span>
+                      </span>
+                    </dd>
+                  </span>
                 </dl>
               </div>
             </div>

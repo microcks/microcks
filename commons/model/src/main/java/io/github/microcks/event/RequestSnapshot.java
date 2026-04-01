@@ -16,6 +16,7 @@
 package io.github.microcks.event;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,4 +30,9 @@ import java.util.Map;
  */
 public record RequestSnapshot(String path, Map<String, List<String>> headers, Map<String, String[]> queryParameters,
       String body) implements Serializable {
+
+   /** Build a request snapshot with no headers, no query parameters and a body. */
+   public RequestSnapshot(String body) {
+      this("/", Collections.emptyMap(), Collections.emptyMap(), body);
+   }
 }

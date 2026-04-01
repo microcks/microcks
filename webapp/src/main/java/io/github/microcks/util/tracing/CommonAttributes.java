@@ -81,6 +81,8 @@ public class CommonAttributes {
    public static final AttributeKey<String> RESPONSE_NAME = AttributeKey.stringKey("response.name");
    /** A 'response.status' span attribute. */
    public static final AttributeKey<Long> RESPONSE_STATUS = AttributeKey.longKey("response.status");
+   /** A 'response.status' span attribute. */
+   public static final AttributeKey<String> RESPONSE_STATUS_STRING = AttributeKey.stringKey("response.status");
 
    /** A 'error.status' span attribute. */
    public static final AttributeKey<Long> ERROR_STATUS = AttributeKey.longKey("error.status");

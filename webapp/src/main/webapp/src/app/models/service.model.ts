@@ -51,6 +51,7 @@ export type Operation = {
   outputName: string;
   bindings: { [key: string]: Binding };
   callbackInfos: { [cbName: string]: CallbackInfo };
+  triggerInfos: TriggerInfo[];
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
@@ -92,6 +93,12 @@ export type CallbackInfo = {
   callbackUrlExpression: string;
   order: number;
 };
+
+export type TriggerInfo = {
+  serviceName: string,
+  serviceVersion: string,
+  operationName: string
+}
 
 export type ParameterConstraint = {
   name: string;

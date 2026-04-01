@@ -288,6 +288,13 @@ public class ServiceService {
                         existingOp.getParameterConstraints().addAll(operation.getParameterConstraints());
                      }
                   }
+                  if (operation.getTriggerInfos() != null) {
+                     if (existingOp.getTriggerInfos() == null) {
+                        existingOp.setTriggerInfos(operation.getTriggerInfos());
+                     } else {
+                        existingOp.getTriggerInfos().addAll(operation.getTriggerInfos());
+                     }
+                  }
                }
             }
 
@@ -683,6 +690,7 @@ public class ServiceService {
                   op.setDispatcher(existingOperation.getDispatcher());
                   op.setDispatcherRules(existingOperation.getDispatcherRules());
                   op.setParameterConstraints(existingOperation.getParameterConstraints());
+                  op.setTriggerInfos(existingOperation.getTriggerInfos());
                   op.setOverride(true);
                }
             }
