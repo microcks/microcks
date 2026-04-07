@@ -245,7 +245,7 @@ export class OperationOverridePageComponent implements OnInit {
 
     // Compute method depending on service type.
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
-      request.method = this.newOperation!.method;
+      request.method = this.operation!.method;
       if (request.content) {
         if (request.content.startsWith('[') || request.content.startsWith('{')) {
           request.headers = { 'Content-Type': 'application/json' };
