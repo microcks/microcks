@@ -18,6 +18,7 @@ package io.github.microcks.config;
 import io.github.microcks.service.SpanStorageService;
 import io.github.microcks.util.otel.CustomExplainTraceProcessor;
 
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
@@ -84,11 +85,16 @@ public class OtelAutoConfigurationCustomizerProvider {
 
    @Bean
    public AutoConfigurationCustomizerProvider otelCustomizer() {
-      return p -> p.addTracerProviderCustomizer(this::configureSdkTracerProvider);
+      return p -> p.addTracerProviderCustomizer(this::configureSdkTracerProvider)
+            .addPropagatorCustomizer(this::configurePropagator);
    }
 
    private SdkTracerProviderBuilder configureSdkTracerProvider(SdkTracerProviderBuilder tracerProvider,
          ConfigProperties config) {
       return tracerProvider.addSpanProcessor(new CustomExplainTraceProcessor(spanStorageService));
+   }
+
+   private TextMapPropagator configurePropagator(TextMapPropagator propagator, ConfigProperties config) {
+      return TextMapPropagator.composite(propagator, new XTraceIdTextMapPropagator());
    }
 }
