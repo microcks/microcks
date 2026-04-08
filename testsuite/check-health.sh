@@ -118,8 +118,8 @@ else
         echo "Attempt $attempt for deployment '$dep' failed."
         ((attempt++))
         if [[ $attempt -le $retries ]]; then
-          echo "Retrying in 5 seconds..."
-          sleep 5
+          echo "Retrying in 10 seconds..."
+          sleep 10
         fi
       fi
     done
