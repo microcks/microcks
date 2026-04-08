@@ -130,7 +130,7 @@ class AsyncAPITestManagerIT {
       testSpecification.setRunnerType(TestRunnerType.ASYNC_API_SCHEMA);
       testSpecification.setAsyncAPISpec(asyncAPIContent);
       testSpecification.setOperationName(config.operationName);
-      testSpecification.setTimeoutMS(2200L);
+      testSpecification.setTimeoutMS(5000L);
       testSpecification.setTestResultId("test-result-id");
 
       AsyncAPITestManager manager = new AsyncAPITestManager(microcksAPIConnector, schemaRegistry);
@@ -139,12 +139,14 @@ class AsyncAPITestManagerIT {
       // Act.
       manager.launchTest(testSpecification);
 
-      // Wait a bit so that consumption task has actually started.
-      await().during(1250, TimeUnit.MILLISECONDS).until(() -> true);
+      // Wait for the consumer to complete partition assignment before sending
+      // messages.
+      await().during(2500, TimeUnit.MILLISECONDS).until(() -> true);
       sendTextMessagesOnTopic(5, config.message);
 
-      // Wait a bit so that consumption task has actually finished.
-      await().during(3, TimeUnit.SECONDS).until(() -> true);
+      // Wait until the test result is actually reported rather than sleeping a fixed
+      // duration.
+      await().atMost(10, TimeUnit.SECONDS).until(() -> reportedTestCases.containsKey("test-result-id"));
 
       // Assert.
       Assertions.assertEquals(1, reportedTestCases.size());
