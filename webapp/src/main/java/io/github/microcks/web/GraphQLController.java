@@ -15,65 +15,37 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.ParameterConstraintUtil;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.graphql.GraphQLHttpRequest;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
-import graphql.language.Argument;
-import graphql.language.Definition;
-import graphql.language.Document;
-import graphql.language.Field;
-import graphql.language.FragmentDefinition;
-import graphql.language.FragmentSpread;
-import graphql.language.OperationDefinition;
-import graphql.language.Selection;
-import graphql.language.SelectionSet;
-import graphql.language.StringValue;
-import graphql.language.VariableReference;
+import graphql.language.*;
+import graphql.parser.Parser;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import graphql.parser.Parser;
+import io.github.microcks.domain.*;
+import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.util.ParameterConstraintUtil;
+import io.github.microcks.util.SafeLogger;
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.graphql.GraphQLHttpRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import io.github.microcks.util.delay.DelaySpec;
+import java.util.*;
 
 /**
  * A controller for mocking GraphQL responses.
@@ -252,6 +224,29 @@ public class GraphQLController {
       for (GraphQLQueryResponse response : graphqlResponses) {
          dataNode.set(StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
                response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy());
+      }
+      // Aggregate errors
+      ArrayNode errorsNode = mapper.createArrayNode();
+      for (GraphQLQueryResponse response : graphqlResponses) {
+         JsonNode errors = response.getJsonResponse().path("errors");
+         if (errors.isArray()) {
+            errors.forEach(errorsNode::add);
+         }
+      }
+      if (!errorsNode.isEmpty()) {
+         aggregated.set("errors", errorsNode);
+      }
+
+      // Aggregate extensions
+      ObjectNode extensionsNode = mapper.createObjectNode();
+      for (GraphQLQueryResponse response : graphqlResponses) {
+         JsonNode extensions = response.getJsonResponse().path("extensions");
+         if (extensions.isObject()) {
+            extensions.properties().forEach(e -> extensionsNode.set(e.getKey(), e.getValue().deepCopy()));
+         }
+      }
+      if (!extensionsNode.isEmpty()) {
+         aggregated.set("extensions", extensionsNode);
       }
       responseNode = aggregated;
       try {

@@ -17,10 +17,12 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
-
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.skyscreamer.jsonassert.RegularExpressionValueMatcher;
+import org.skyscreamer.jsonassert.comparator.CustomComparator;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -154,6 +156,36 @@ class GraphQLControllerIT extends AbstractBaseIT {
                      + "      \"id\": \"ZmlsbXM6MQ==\",\n" + "      \"title\": \"A New Hope\",\n"
                      + "      \"episodeID\": 4,\n" + "      \"starCount\": 432\n" + "    }\n" + "  }\n" + "}",
                response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+   }
+
+   @Test
+   void testFilmsGraphQLAPIMockingErrorsAndExtensions() {
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-1.0-examples.yml", false);
+
+      String query = "{\"query\": \"mutation AddStar($filmId: String) {\\n" + "  addStar(filmId: $filmId) {\\n"
+            + "    id\\n" + "    title\\n" + "    episodeID\\n" + "    director\\n" + "    starCount\\n"
+            + "    rating\\n" + "  }\\n" + "}\", \"variables\": {\"filmId\": \"notavailable\"}" + "}";
+
+      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertNotNull(response.getBody(), "Response body should not be null");
+      assertTrue(response.getBody().contains("\"errors\""));
+      assertTrue(response.getBody().contains("\"extensions\""));
+      try {
+         JSONAssert.assertEquals("{\n" + "  \"errors\": [\n" + "    {\n"
+               + "      \"message\": \"The system is not available, due to maintenance, please try again later.\",\n"
+               + "      \"extensions\": {\n" + "        \"code\": \"MAINTENANCE_MODE\"\n" + "      }\n" + "    }\n"
+               + "  ],\n" + "  \"data\": {\n" + "    \"addStar\": null\n" + "  },\n" + "  \"extensions\": {\n"
+               + "    \"correlationId\": {\n" + "      \"traceId\": \"123e4567-e89b-12d3-a456-426614174000\"\n"
+               + "    }\n" + "  }\n" + "}", response.getBody(),
+               new CustomComparator(JSONCompareMode.LENIENT,
+                     new Customization("extensions.correlationId.traceId", new RegularExpressionValueMatcher<>(
+                           "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"))));
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
