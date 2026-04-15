@@ -36,6 +36,10 @@ microcks:
 
   grpcEnableTLS: true
   #grpcSecretRef: my-secret-for-microcks-grpc
+
+  # Uncomment to enable TLS on Microcks HTTP/HTTPS endpoint directly.
+  httpEnableTLS: false
+  #httpSecretRef: my-secret-for-microcks-http
   #grpcIngressClassName: nginx
 
   # gRPC ingress annotations are also used for GRPCRoute resources.
