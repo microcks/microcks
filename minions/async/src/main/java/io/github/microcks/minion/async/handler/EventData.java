@@ -1,3 +1,18 @@
+/*
+ * Copyright The Microcks Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.microcks.minion.async.handler;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
@@ -11,11 +26,13 @@ import java.util.Iterator;
 
 /**
  * Compute dispatch criteria for async request-reply events.
+ *
+ * @author adamhicks
  */
 public class EventData {
 
-   private static final Logger LOGGER = Logger.getLogger(EventData.class);
-   private static final ObjectMapper MAPPER = new ObjectMapper();
+   private static final Logger logger = Logger.getLogger(EventData.class);
+   private static final ObjectMapper mapper = new ObjectMapper();
 
    private EventData() {
    }
@@ -29,15 +46,15 @@ public class EventData {
          return true;
       }
       try {
-         JsonNode expectedNode = MAPPER.readTree(expectedCriteria);
-         JsonNode incomingNode = MAPPER.readTree(payload);
+         JsonNode expectedNode = mapper.readTree(expectedCriteria);
+         JsonNode incomingNode = mapper.readTree(payload);
          return isJsonSubset(expectedNode, incomingNode);
       } catch (StreamReadException e) {
-         LOGGER.errorf("message data is not valid JSON: %s", e.getMessage());
+         logger.errorf("message data is not valid JSON: %s", e.getMessage());
          return false;
 
       } catch (IOException e) {
-         LOGGER.errorf("Error reading expected message data: %s", e.getMessage());
+         logger.errorf("Error reading expected message data: %s", e.getMessage());
          return false;
       }
    }
