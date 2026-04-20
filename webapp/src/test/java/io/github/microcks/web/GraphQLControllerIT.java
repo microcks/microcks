@@ -17,6 +17,7 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
+
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
