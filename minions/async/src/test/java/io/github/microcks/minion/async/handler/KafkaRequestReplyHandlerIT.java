@@ -80,8 +80,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class KafkaRequestReplyHandlerIT {
 
-   private static final String REQUEST_TOPIC = "user-signup-request";
-   private static final String REPLY_TOPIC = "user-signup-reply";
+   private static final String REQUEST_TOPIC = "UserAccountService-1.0.0-user-signup";
+   private static final String REPLY_TOPIC = "UserAccountService-1.0.0-user-signup-reply";
    private static final Network NETWORK = Network.newNetwork();
 
    @Container
