@@ -19,11 +19,11 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.ServiceView;
-
 import io.github.microcks.minion.async.client.ConnectorException;
 import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.KeycloakConnector;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.github.microcks.minion.async.handler.RequestReplyHandlerManager;
 import io.quarkus.runtime.StartupEvent;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -40,6 +40,7 @@ import java.util.Optional;
 
 /**
  * A Minion App for dealing with Async message mocks.
+ *
  * @author laurent
  */
 @ApplicationScoped
@@ -64,24 +65,28 @@ public class AsyncMinionApp {
    final AsyncMockRepository mockRepository;
    final SchemaRegistry schemaRegistry;
    final ProducerScheduler producerScheduler;
+   final RequestReplyHandlerManager requestReplyHandlerManager;
 
    /**
     * Build a new instance of the AsyncMinionApp with required dependencies.
-    * @param microcksAPIConnector to access Microcks API
-    * @param keycloakConnector    to access Keycloak server for authentication
-    * @param mockRepository       to store and retrieve mock definitions
-    * @param schemaRegistry       to store and retrieve schema definitions
-    * @param producerScheduler    to initiate producer jobs
+    *
+    * @param microcksAPIConnector       to access Microcks API
+    * @param keycloakConnector          to access Keycloak server for authentication
+    * @param mockRepository             to store and retrieve mock definitions
+    * @param schemaRegistry             to store and retrieve schema definitions
+    * @param producerScheduler          to initiate producer jobs
+    * @param requestReplyHandlerManager to manage request-reply handlers
     */
    public AsyncMinionApp(@RestClient MicrocksAPIConnector microcksAPIConnector, KeycloakConnector keycloakConnector,
-         AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry, ProducerScheduler producerScheduler) {
+         AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry, ProducerScheduler producerScheduler,
+         RequestReplyHandlerManager requestReplyHandlerManager) {
       this.microcksAPIConnector = microcksAPIConnector;
       this.keycloakConnector = keycloakConnector;
       this.mockRepository = mockRepository;
       this.schemaRegistry = schemaRegistry;
       this.producerScheduler = producerScheduler;
+      this.requestReplyHandlerManager = requestReplyHandlerManager;
    }
-
 
    /** Application startup method. */
    void onStart(@Observes StartupEvent ev) {
@@ -98,7 +103,8 @@ public class AsyncMinionApp {
       }
 
       try {
-         // First retrieve an authentication token before fetching async messages to publish.
+         // First retrieve an authentication token before fetching async messages to
+         // publish.
          String oauthToken;
          if (config.isEnabled()) {
             // We've got a full Keycloak config, attempt an authent.
@@ -149,6 +155,9 @@ public class AsyncMinionApp {
 
          logger.info("Starting scheduling of all producer jobs...");
          producerScheduler.scheduleAllProducerJobs();
+
+         logger.info("Starting all request-reply handlers...");
+         requestReplyHandlerManager.startAllHandlers();
 
       } catch (ConnectorException ce) {
          logger.error("Cannot authenticate to Keycloak server and thus enable to call Microcks API"

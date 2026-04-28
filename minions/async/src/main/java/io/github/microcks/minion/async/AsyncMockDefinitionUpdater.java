@@ -24,6 +24,7 @@ import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.domain.RequestReplyEvent;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceViewChangeEvent;
+import io.github.microcks.minion.async.handler.RequestReplyHandlerManager;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -37,6 +38,7 @@ import java.util.stream.Stream;
 /**
  * This bean is responsible for listening the incoming <code>ServiceViewChangeEvent</code> on
  * <code>microcks-services-updates</code> Kafka topic and updating the AsyncMockRepository accordingly.
+ *
  * @author laurent
  */
 @ApplicationScoped
@@ -53,15 +55,20 @@ public class AsyncMockDefinitionUpdater {
 
    final AsyncMockRepository mockRepository;
    final SchemaRegistry schemaRegistry;
+   final RequestReplyHandlerManager requestReplyHandlerManager;
 
    /**
     * Create a new AsyncMockDefinitionUpdater with required dependencies.
-    * @param mockRepository The repository for mock definitions
-    * @param schemaRegistry The registry for schema definitions
+    *
+    * @param mockRepository             The repository for mock definitions
+    * @param schemaRegistry             The registry for schema definitions
+    * @param requestReplyHandlerManager The manager for request-reply handlers
     */
-   public AsyncMockDefinitionUpdater(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry) {
+   public AsyncMockDefinitionUpdater(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry,
+         RequestReplyHandlerManager requestReplyHandlerManager) {
       this.mockRepository = mockRepository;
       this.schemaRegistry = schemaRegistry;
+      this.requestReplyHandlerManager = requestReplyHandlerManager;
    }
 
    @Incoming("microcks-services-updates")
@@ -78,13 +85,15 @@ public class AsyncMockDefinitionUpdater {
          logger.infof("Removing mock definitions for %s", serviceViewChangeEvent.getServiceId());
          mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
          schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
+         requestReplyHandlerManager.stopHandlersForService(serviceViewChangeEvent.getServiceId());
       } else {
          // Only deal with service of type EVENT...
          if (serviceViewChangeEvent.getServiceView() != null && (serviceViewChangeEvent.getServiceView().getService()
                .getType().equals(ServiceType.EVENT)
                || serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.GENERIC_EVENT))) {
 
-            // Browse and check operation regarding restricted frequencies and supported bindings.
+            // Browse and check operation regarding restricted frequencies and supported
+            // bindings.
             boolean scheduled = scheduleOperations(serviceViewChangeEvent.getServiceView());
 
             if (!scheduled) {
@@ -92,12 +101,15 @@ public class AsyncMockDefinitionUpdater {
                      serviceViewChangeEvent.getServiceId());
                mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
                schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
+               requestReplyHandlerManager.stopHandlersForService(serviceViewChangeEvent.getServiceId());
             }
          }
       }
    }
 
-   /** Browse and check operation regarding restricted frequencies and supported bindings. */
+   /**
+    * Browse and check operation regarding restricted frequencies and supported bindings.
+    */
    private boolean scheduleOperations(ServiceView serviceView) {
       boolean scheduled = false;
       for (Operation operation : serviceView.getService().getOperations()) {
@@ -110,6 +122,13 @@ public class AsyncMockDefinitionUpdater {
                   getMessages(serviceView.getMessagesMap().get(operation.getName())));
             mockRepository.storeMockDefinition(mockDefinition);
             schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
+
+            // If this is a request-reply operation, start a handler for it
+            if (mockDefinition.isRequestReply()) {
+               logger.info("Starting request-reply handler for " + operation.getName());
+               requestReplyHandlerManager.startHandlerForDefinition(mockDefinition);
+            }
+
             scheduled = true;
          }
       }
