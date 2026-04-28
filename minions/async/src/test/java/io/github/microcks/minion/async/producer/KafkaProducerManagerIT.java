@@ -127,7 +127,6 @@ class KafkaProducerManagerIT {
 
       Operation signedupOperation = new Operation();
       signedupOperation.setName("SUBSCRIBE user/signedup");
-      signedupOperation.addResourcePath(TOPIC_NAME);
       service.setOperations(List.of(signedupOperation));
 
       // Assemble them into a repository.
@@ -211,7 +210,6 @@ class KafkaProducerManagerIT {
 
       Operation signedupOperation = new Operation();
       signedupOperation.setName("SUBSCRIBE user/signedup");
-      signedupOperation.addResourcePath(TOPIC_NAME);
       service.setOperations(List.of(signedupOperation));
 
       // Assemble them into a repository.

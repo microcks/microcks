@@ -250,15 +250,19 @@ public class KafkaProducerManager {
     * @throws IllegalArgumentException if the operation does not have exactly one resource path
     */
    public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      Set<String> resourcePaths = definition.getOperation().getResourcePaths();
+      // Produce service name part of topic name.
+      String serviceName = definition.getOwnerService().getName().replace(" ", "");
+      serviceName = serviceName.replace("-", "");
 
-      if (resourcePaths == null || resourcePaths.size() != 1) {
-         throw new IllegalArgumentException(
-               String.format("Operation '%s' must have exactly one resource path to determine topic name, but has: %s",
-                     definition.getOperation().getName(), resourcePaths));
-      }
+      // Produce version name part of topic name.
+      String versionName = definition.getOwnerService().getVersion().replace(" ", "");
 
-      return resourcePaths.iterator().next();
+      // Produce operation name part of topic name.
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
+      operationName = operationName.replace('/', '-');
+
+      // Aggregate the 3 parts using '_' as delimiter.
+      return serviceName + "-" + versionName + "-" + operationName;
    }
 
    /**
