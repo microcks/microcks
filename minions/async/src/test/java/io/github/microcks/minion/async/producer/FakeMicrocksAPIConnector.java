@@ -29,6 +29,7 @@ import java.util.List;
 
 /**
  * A fake implementation of MicrocksAPIConnector for testing purposes.
+ *
  * @author laurent
  */
 public class FakeMicrocksAPIConnector implements MicrocksAPIConnector {
@@ -36,7 +37,7 @@ public class FakeMicrocksAPIConnector implements MicrocksAPIConnector {
    private final String serviceId;
    private final String asyncAPIContent;
 
-   FakeMicrocksAPIConnector(String serviceId, String asyncAPIContent) {
+   public FakeMicrocksAPIConnector(String serviceId, String asyncAPIContent) {
       this.serviceId = serviceId;
       this.asyncAPIContent = asyncAPIContent;
    }

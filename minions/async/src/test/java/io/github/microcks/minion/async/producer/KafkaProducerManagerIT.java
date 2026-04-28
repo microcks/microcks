@@ -77,6 +77,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * This is an integration test case using <a href="https://testcontainers.com/">Testcontainers</a> to test
  * {@link KafkaProducerManager} and {@link ProducerManager} classes.
+ *
  * @author laurent
  */
 @Testcontainers
@@ -166,8 +167,10 @@ class KafkaProducerManagerIT {
          String json = AvroUtil.avroToJson(message, union);
          assertTrue(json.contains("Alice") || json.contains("bob@example.com"));
          assertTrue(json.contains("displayName") || json.contains("name"));
-         // We'll probably have a {"displayName": "bob@example.com"} result here because of the union type
-         // and the limitation of Avro that doesn't serialize property names. Both schema can actually be used
+         // We'll probably have a {"displayName": "bob@example.com"} result here because
+         // of the union type
+         // and the limitation of Avro that doesn't serialize property names. Both schema
+         // can actually be used
          // for deserialization and so the first wins!
       }
    }
@@ -180,7 +183,7 @@ class KafkaProducerManagerIT {
                   .withEnv("SCHEMA_REGISTRY_HOST_NAME", "schema-registry")
                   .withEnv("SCHEMA_REGISTRY_LISTENERS", "http://0.0.0.0:8889")
                   .withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS",
-                        //"PLAINTEXT://" + kafkaContainer.getNetworkAliases().get(0) + ":9092")
+                        // "PLAINTEXT://" + kafkaContainer.getNetworkAliases().get(0) + ":9092")
                         "PLAINTEXT://kafka:19092")
                   .waitingFor(Wait.forHttp("/subjects").forStatusCode(200));
       schemaRegistryContainer.start();

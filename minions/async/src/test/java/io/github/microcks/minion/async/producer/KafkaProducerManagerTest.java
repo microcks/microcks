@@ -26,9 +26,11 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * This is a test case for KafkaProducerManager.
+ *
  * @author laurent
  */
 class KafkaProducerManagerTest {
@@ -82,6 +84,7 @@ class KafkaProducerManagerTest {
       AsyncMockDefinition definition = new AsyncMockDefinition(service, operation, eventsMessages);
 
       String topicName = producerManager.getTopicName(definition, eventMessage);
+
       assertEquals(
             "StreetlightsAPI-0.1.0-smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured",
             topicName);
