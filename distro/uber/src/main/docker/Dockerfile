@@ -10,7 +10,7 @@ LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
       io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/distro/uber/README.md"
 
 # Install Java runtime
-RUN microdnf install java-21-openjdk-headless openssl curl-minimal ca-certificates -y \
+RUN microdnf install java-25-openjdk-headless openssl curl-minimal ca-certificates -y \
  && microdnf clean all \
  && rm /var/lib/rpm/rpmdb.sqlite \
  && mkdir -p /deployments

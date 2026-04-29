@@ -13,17 +13,17 @@
 
   <properties>
     <multi-project.rootdir>../..</multi-project.rootdir>
-    <compiler-plugin.version>3.11.0</compiler-plugin.version>
+    <compiler-plugin.version>3.14.1</compiler-plugin.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>3.20.2.2</quarkus.platform.version>
-    <quarkus-plugin.version>3.20.2.2</quarkus-plugin.version>
+    <quarkus.platform.version>3.31.4</quarkus.platform.version>
+    <quarkus-plugin.version>3.31.4</quarkus-plugin.version>
 
     <apache-httpclient.version>5.3</apache-httpclient.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
@@ -260,6 +260,7 @@
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus-plugin.version}</version>
+        <extensions>true</extensions>
         <executions>
           <execution>
             <goals>

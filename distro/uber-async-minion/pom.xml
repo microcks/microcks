@@ -14,13 +14,13 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>../..</multi-project.rootdir>
 
-    <compiler-plugin.version>3.11.0</compiler-plugin.version>
-    <java.version>21</java.version>
+    <compiler-plugin.version>3.14.1</compiler-plugin.version>
+    <java.version>25</java.version>
 
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>3.20.2.2</quarkus.platform.version>
-    <quarkus-plugin.version>3.20.2.2</quarkus-plugin.version>
+    <quarkus.platform.version>3.31.4</quarkus.platform.version>
+    <quarkus-plugin.version>3.31.4</quarkus-plugin.version>
 
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
   </properties>
@@ -72,6 +72,7 @@
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus-plugin.version}</version>
+        <extensions>true</extensions>
         <executions>
           <execution>
             <goals>
