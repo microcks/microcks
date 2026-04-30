@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
@@ -59,6 +60,8 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
    private final RequestRepository requestRepository;
    private final ApplicationContext applicationContext;
 
+   @Value("${mocks.rest.callbacks.default-delay:3000}")
+   long defaultDelay = 3000;
 
    public CallbackTrigger(RequestRepository requestRepository, ApplicationContext applicationContext) {
       this.requestRepository = requestRepository;
@@ -100,7 +103,7 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
 
          if (callbackRequest != null) {
             try {
-               Thread.sleep(Duration.ofSeconds(3));
+               Thread.sleep(Duration.ofMillis(defaultDelay));
             } catch (InterruptedException e) {
                Thread.currentThread().interrupt();
                log.warn("Interrupted while simulating waiting for callback request to be send", e);
@@ -161,15 +164,24 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
             case "query":
                String paramName = parts[2];
                log.debug("Extracting query parameter {} from request", paramName);
+               if (request.queryParameters().get(paramName) == null
+                     || request.queryParameters().get(paramName).length == 0) {
+                  log.warn("No query parameter {} found in request", paramName);
+                  return null;
+               }
                return request.queryParameters().get(paramName)[0];
             case "header":
                String headerName = parts[2];
                log.debug("Extracting header value {} from request", headerName);
+               if (request.headers().get(headerName) == null || request.headers().get(headerName).isEmpty()) {
+                  log.warn("No header {} found in request", headerName);
+                  return null;
+               }
                return request.headers().get(headerName).getFirst();
             default:
                if (location.startsWith("body#")) {
                   String jsonPointerExp = location.substring("body#".length());
-                  log.debug("Extracting JSON pointer expresseion {} from request", jsonPointerExp);
+                  log.debug("Extracting JSON pointer expression {} from request", jsonPointerExp);
                   try {
                      ObjectMapper mapper = new ObjectMapper();
                      JsonNode rootNode = mapper.readTree(new StringReader(request.body()));
