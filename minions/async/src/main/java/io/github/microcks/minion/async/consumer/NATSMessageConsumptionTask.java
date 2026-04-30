@@ -136,6 +136,7 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
             subscriber.close();
          } catch (InterruptedException e) {
             logger.warn("Closing NATS subscriber raised an exception", e);
+            Thread.currentThread().interrupt();
          }
       }
    }
