@@ -68,7 +68,7 @@ public class ExpressionParser {
             int afterPrefixIndex = prefixIndex + expressionPrefix.length();
             int suffixIndex = skipToCorrectEndSuffix(expressionSuffix, template, afterPrefixIndex);
 
-            validateSuffixFound(template, expressionPrefix, expressionSuffix, prefixIndex, suffixIndex);
+            validateSuffixFound(template, expressionSuffix, prefixIndex, suffixIndex);
             validateSuffixNotEmpty(template, expressionPrefix, expressionSuffix, prefixIndex, afterPrefixIndex,
                   suffixIndex);
 
@@ -97,13 +97,14 @@ public class ExpressionParser {
    }
 
    /** Validate that the suffix was found. */
-   private static void validateSuffixFound(String template, String expressionPrefix, String expressionSuffix,
-         int prefixIndex, int suffixIndex) throws ParseException {
+   private static void validateSuffixFound(String template, String expressionSuffix, int prefixIndex, int suffixIndex)
+         throws ParseException {
       if (suffixIndex == -1) {
+         String unparsed = template.substring(prefixIndex);
          log.info("No ending suffix '{}' for expression starting at character {}: {}", expressionSuffix, prefixIndex,
-               template.substring(prefixIndex));
+               unparsed);
          throw new ParseException(template, prefixIndex, "No ending suffix '" + expressionSuffix
-               + "' for expression starting at character " + prefixIndex + ": " + template.substring(prefixIndex));
+               + "' for expression starting at character " + prefixIndex + ": " + unparsed);
       }
    }
 
