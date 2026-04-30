@@ -34,7 +34,7 @@ public class RandomIntELFunction extends AbstractRandomELFunction {
                int maxValue = Integer.MAX_VALUE;
                try {
                   maxValue = Integer.parseInt(args[0]);
-               } catch (NumberFormatException nfe) {
+               } catch (NumberFormatException _) {
                   // Ignore, we'll stick to integer max value.
                }
                return String.valueOf(getRandom().nextInt(maxValue));
@@ -44,7 +44,7 @@ public class RandomIntELFunction extends AbstractRandomELFunction {
                try {
                   minValue = Integer.parseInt(args[0]);
                   maxValue = Integer.parseInt(args[1]);
-               } catch (NumberFormatException nfe) {
+               } catch (NumberFormatException _) {
                   // Ignore, we'll stick to the defaults.
                }
                return String.valueOf(getRandom().nextInt(maxValue - minValue) + minValue);

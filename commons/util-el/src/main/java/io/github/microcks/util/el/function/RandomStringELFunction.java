@@ -37,7 +37,7 @@ public class RandomStringELFunction extends AbstractRandomELFunction {
          int maxLength = DEFAULT_LENGTH;
          try {
             maxLength = Integer.parseInt(args[0]);
-         } catch (NumberFormatException nfe) {
+         } catch (NumberFormatException _) {
             // Ignore, we'll stick to the default.
          }
          return generateString(getRandom(), maxLength);
