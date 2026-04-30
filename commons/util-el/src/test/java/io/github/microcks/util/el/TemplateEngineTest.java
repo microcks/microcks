@@ -57,7 +57,7 @@ class TemplateEngineTest {
       String content = null;
       try {
          content = engine.getValue(template);
-      } catch (Throwable t) {
+      } catch (Throwable _) {
          fail("Contextless template should not fail.");
       }
       assertTrue(content.startsWith("{\"signedAt\": \"1"));
@@ -75,7 +75,7 @@ class TemplateEngineTest {
       try {
          content = engine.getValue(template);
          postmanContent = engine.getValue(postmanTemplate);
-      } catch (Throwable t) {
+      } catch (Throwable _) {
          fail("Contextless template should not fail.");
       }
       assertTrue(content.startsWith("{\"signedAt\": \"1"));

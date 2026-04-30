@@ -80,7 +80,7 @@ public class NowELFunction implements ELFunction {
       }
       try {
          int d = Integer.parseInt(strNum);
-      } catch (NumberFormatException nfe) {
+      } catch (NumberFormatException _) {
          return false;
       }
       return true;
