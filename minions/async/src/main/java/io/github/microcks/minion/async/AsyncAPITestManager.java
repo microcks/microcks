@@ -128,6 +128,7 @@ public class AsyncAPITestManager {
                logger.debugf("Consumption ends and we got {%d} messages to validate", outputs.size());
             } catch (InterruptedException e) {
                logger.infof("AsyncAPITestThread for {%s} was interrupted", specification.getTestResultId());
+               Thread.currentThread().interrupt();
             } catch (ExecutionException e) {
                logger.errorf(e, "AsyncAPITestThread for {%s} raise an ExecutionException",
                      specification.getTestResultId());

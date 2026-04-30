@@ -348,8 +348,9 @@ public class MockControllerCommons {
             synchronized (semaphore) {
                try {
                   semaphore.wait(waitDelay - duration);
-               } catch (Exception e) {
+               } catch (InterruptedException e) {
                   log.debug("Delay semaphore was interrupted");
+                  Thread.currentThread().interrupt();
                }
             }
          }
