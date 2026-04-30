@@ -31,8 +31,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>../..</multi-project.rootdir>
     <java.version>25</java.version>
-    <junit.version>5.10.2</junit.version>
-    <jackson.version>2.19.2</jackson.version>
     <json-schema-validator.version>1.5.6</json-schema-validator.version>
     <avro.version>1.12.1</avro.version>
     <mockito.version>5.20.0</mockito.version>
@@ -46,7 +44,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
 
     <!-- import for networknt/json-schema-validator -->
@@ -107,7 +104,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
