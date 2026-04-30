@@ -47,9 +47,11 @@ jobs:
           mvn -B -q -Pprod -DskipTests install
 
       - name: Set IMAGE_TAG environment from input
+        env:
+          IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
           set -x
-          echo "IMAGE_TAG=${{ inputs.image-tag }}" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$IMAGE_TAGE-native" >> "$GITHUB_ENV"
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
@@ -61,9 +63,14 @@ jobs:
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Login to Quay.io and Docker Hub registries and setup multi-arch builder
+        env:
+          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+          QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
-          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
+          echo $QUAY_PASSWORD | docker login -u $QUAY_USERNAME --password-stdin quay.io
+          echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin docker.io
           BUILDER=buildx-multi-arch
           docker buildx inspect $BUILDER || docker buildx create --name=$BUILDER --driver=docker-container --driver-opt=network=host
 
