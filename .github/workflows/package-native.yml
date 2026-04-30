@@ -43,7 +43,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
           set -x
-          echo "IMAGE_TAG=$IMAGE_TAGE-native" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$IMAGE_TAG-native" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
@@ -90,7 +90,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
           set -x
-          echo "IMAGE_TAG=$IMAGE_TAGE-native" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$IMAGE_TAG-native" >> "$GITHUB_ENV"
 
       - name: Login to Quay.io and Docker Hub registries
         env:
@@ -149,7 +149,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
           set -x
-          echo "IMAGE_TAG=$IMAGE_TAGE-native" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$IMAGE_TAG-native" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
@@ -187,7 +187,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
           set -x
-          echo "IMAGE_TAG=$IMAGE_TAGE-native" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$IMAGE_TAG-native" >> "$GITHUB_ENV"
 
       - name: Login to Quay.io and Docker Hub registries
         env:
@@ -230,7 +230,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
           set -x
-          echo "IMAGE_TAG=$IMAGE_TAGE-native" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$IMAGE_TAG-native" >> "$GITHUB_ENV"
 
       - name: Login to Quay.io and Docker Hub registries
         env:

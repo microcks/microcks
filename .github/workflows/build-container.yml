@@ -51,7 +51,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
           set -x
-          echo "IMAGE_TAG=$IMAGE_TAGE-native" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
