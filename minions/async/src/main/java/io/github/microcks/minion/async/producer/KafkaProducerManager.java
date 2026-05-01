@@ -223,16 +223,19 @@ public class KafkaProducerManager {
 
          for (io.github.microcks.domain.Header header : headers) {
             // For Kafka, header is mono valued so just consider the first value.
-            String firstValue = header.getValues().stream().findFirst().get();
-            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-               try {
-                  renderedHeaders.add(new RecordHeader(header.getName(), engine.getValue(firstValue).getBytes()));
-               } catch (Throwable t) {
-                  logger.error("Failing at evaluating template " + firstValue, t);
+            Optional<String> firstValueOpt = header.getValues().stream().findFirst();
+            if (firstValueOpt.isPresent()) {
+               String firstValue = firstValueOpt.get();
+               if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+                  try {
+                     renderedHeaders.add(new RecordHeader(header.getName(), engine.getValue(firstValue).getBytes()));
+                  } catch (Throwable t) {
+                     logger.error("Failing at evaluating template " + firstValue, t);
+                     renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
+                  }
+               } else {
                   renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
                }
-            } else {
-               renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
             }
          }
          return renderedHeaders;
