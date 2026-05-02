@@ -92,8 +92,14 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
       this.equalsOnThis = equalsOnThis;
    }
 
+   @Override
    public boolean equals(Object o) {
       return this.equalsOnThis ? this == o : super.equals(o);
+   }
+
+   @Override
+   public int hashCode() {
+      return this.equalsOnThis ? System.identityHashCode(this) : super.hashCode();
    }
 
    public String[] getKeys() {
