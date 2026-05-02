@@ -17,9 +17,6 @@ package io.github.microcks.repository;
 
 import io.github.microcks.domain.GenericResource;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 
@@ -31,11 +28,14 @@ import java.util.List;
  */
 public class GenericResourceRepositoryImpl implements CustomGenericResourceRepository {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(GenericResourceRepositoryImpl.class);
-
-   @Autowired
    private MongoTemplate template;
+
+   /**
+    * @param template The MongoTemplate
+    */
+   public GenericResourceRepositoryImpl(MongoTemplate template) {
+      this.template = template;
+   }
 
    @Override
    public List<GenericResource> findByServiceIdAndJSONQuery(String serviceId, String jsonQuery) {
