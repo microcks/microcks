@@ -107,8 +107,8 @@ public class UploadArtifactController {
             return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          } finally {
             // Cleanup and remove local file.
-            if (localFile != null) {
-               localFile.delete();
+            if (localFile != null && !localFile.delete()) {
+               log.warn("Failed to delete temporary artifact file " + localFile.getAbsolutePath());
             }
          }
 
@@ -153,7 +153,10 @@ public class UploadArtifactController {
          } finally {
             // Cleanup and remove local file.
             if (localFile != null) {
-               Paths.get(localFile).toFile().delete();
+               File tempFile = Paths.get(localFile).toFile();
+               if (!tempFile.delete()) {
+                  log.warn("Failed to delete temporary artifact file " + tempFile.getAbsolutePath());
+               }
             }
          }
 

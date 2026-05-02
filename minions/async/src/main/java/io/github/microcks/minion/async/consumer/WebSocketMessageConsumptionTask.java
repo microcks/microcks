@@ -124,8 +124,8 @@ public class WebSocketMessageConsumptionTask implements MessageConsumptionTask {
             logger.warn("Closing WebSocket session raised an exception", e);
          }
       }
-      if (trustStore != null && trustStore.exists()) {
-         trustStore.delete();
+      if (trustStore != null && trustStore.exists() && !trustStore.delete()) {
+         logger.warn("Failed to delete WebSocket trust store at {}", trustStore.getAbsolutePath());
       }
    }
 }
