@@ -36,12 +36,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -98,9 +97,9 @@ public class McpController {
     * @param version     The version of the service to connect to.
     * @return The SSE emitter to use for the connection.
     */
-   @RequestMapping(value = "/mcp/{service}/{version}/sse", method = { RequestMethod.GET })
+   @GetMapping(value = "/mcp/{service}/{version}/sse")
    public SseEmitter handleSSE(@PathVariable("service") String serviceName, @PathVariable("version") String version) {
-      log.info("Handling a Mcp SSE for service {} and version {}", serviceName, version);
+      log.info("Handling a Mcp SSE for service {} and version {}", sanitize(serviceName), sanitize(version));
 
       String sessionId = UUID.randomUUID().toString();
       log.debug("Creating new SSE connection for session: {}", sessionId);
@@ -144,11 +143,12 @@ public class McpController {
     * @return The response entity.
     */
    @PostMapping(value = "/mcp/{service}/{version}/message", produces = "text/event-stream")
-   public ResponseEntity<?> handleMessage(@PathVariable("service") String serviceName,
+   public ResponseEntity<Object> handleMessage(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "sessionId") String sessionId,
          @RequestBody McpSchema.JSONRPCRequest request, @RequestHeader HttpHeaders headers) {
 
-      log.info("Handling a {} Mcp request for service {} and version {}", request.method(), serviceName, version);
+      log.info("Handling a {} Mcp request for service {} and version {}", sanitize(request.method()),
+            sanitize(serviceName), sanitize(version));
 
       // Check session is known and valid.
       SseTransportChannel channel = channelsBySessionId.get(sessionId);
@@ -176,11 +176,12 @@ public class McpController {
     * @return The response entity.
     */
    @PostMapping(value = "/mcp/{service}/{version}", produces = { "application/json" })
-   public ResponseEntity<?> handleHttpStreamable(@PathVariable("service") String serviceName,
+   public ResponseEntity<Object> handleHttpStreamable(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestBody McpSchema.JSONRPCRequest request,
          @RequestHeader HttpHeaders headers) {
 
-      log.info("Handling a Mcp Http streamable call for service {} and version {}", serviceName, version);
+      log.info("Handling a Mcp Http streamable call for service {} and version {}", sanitize(serviceName),
+            sanitize(version));
 
       try {
          McpSchema.JSONRPCResponse response = handleMcpRequest(serviceName, version, request, headers);
@@ -206,15 +207,10 @@ public class McpController {
 
       Object result = null;
       switch (request.method()) {
-         case McpSchema.METHOD_INITIALIZE -> {
-            result = handleInitializeRequest(request, service);
-         }
-         case McpSchema.METHOD_TOOLS_LIST -> {
-            result = handleToolsListRequest(request, service);
-         }
-         case McpSchema.METHOD_TOOLS_CALL -> {
-            result = handleToolsCallRequest(request, headers, service);
-         }
+         case McpSchema.METHOD_INITIALIZE -> result = handleInitializeRequest(request, service);
+         case McpSchema.METHOD_TOOLS_LIST -> result = handleToolsListRequest(service);
+         case McpSchema.METHOD_TOOLS_CALL -> result = handleToolsCallRequest(request, headers, service);
+         default -> log.warn("Unsupported method: {}", sanitize(request.method()));
       }
 
       McpSchema.JSONRPCResponse response = null;
@@ -240,9 +236,6 @@ public class McpController {
             });
 
       if (McpSchema.SUPPORTED_PROTOCOL_VERSIONS.contains(initializeRequest.protocolVersion())) {
-         McpSchema.ClientCapabilities clientCapabilities = initializeRequest.capabilities();
-         McpSchema.Implementation clientInfo = initializeRequest.clientInfo();
-
          McpSchema.ServerCapabilities serverCapabilities = new McpSchema.ServerCapabilities(null, null,
                new McpSchema.ServerCapabilities.PromptCapabilities(false),
                new McpSchema.ServerCapabilities.ResourceCapabilities(false, false),
@@ -255,7 +248,7 @@ public class McpController {
    }
 
    /** Handle the MCP tools/list request. */
-   private Object handleToolsListRequest(McpSchema.JSONRPCRequest request, Service service) {
+   private Object handleToolsListRequest(Service service) {
       // Find the contract resource to build the correct converter.
       Resource resource = getContractResource(service);
       McpToolConverter converter = buildMcpToolConverter(service, resource);
@@ -324,6 +317,7 @@ public class McpController {
       switch (service.getType()) {
          case GRPC -> resourceType = ResourceType.PROTOBUF_DESCRIPTOR;
          case GRAPHQL -> resourceType = ResourceType.GRAPHQL_SCHEMA;
+         default -> log.warn("Unhandled service type: {}", service.getType());
       }
       return resourceType;
    }
@@ -331,18 +325,20 @@ public class McpController {
    private McpToolConverter buildMcpToolConverter(Service service, Resource resource) {
       McpToolConverter converter = null;
 
-      switch (service.getType()) {
-         case GRPC -> converter = new GrpcMcpToolConverter(service, resource, grpcInvocationProcessor, mapper);
-         case GRAPHQL -> converter = new GraphQLMcpToolConverter(service, resource, graphQLInvocationProcessor, mapper);
-         default -> converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
+      if (service.getType() == io.github.microcks.domain.ServiceType.GRPC) {
+         converter = new GrpcMcpToolConverter(service, resource, grpcInvocationProcessor, mapper);
+      } else if (service.getType() == io.github.microcks.domain.ServiceType.GRAPHQL) {
+         converter = new GraphQLMcpToolConverter(service, resource, graphQLInvocationProcessor, mapper);
+      } else {
+         converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
       }
       return converter;
    }
 
-   private Header getHeader(String name, Set<Header> headers) {
-      if (headers != null) {
-         return headers.stream().filter(header -> header.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+   private static String sanitize(String value) {
+      if (value == null) {
+         return null;
       }
-      return null;
+      return value.replaceAll("[\\n\\r\\t]", "_");
    }
 }
