@@ -125,7 +125,7 @@ public class WebSocketMessageConsumptionTask implements MessageConsumptionTask {
          }
       }
       if (trustStore != null && trustStore.exists() && !trustStore.delete()) {
-         logger.warn("Failed to delete WebSocket trust store at {}", trustStore.getAbsolutePath());
+         logger.warnf("Failed to delete WebSocket trust store at {%s}", trustStore.getAbsolutePath());
       }
    }
 }
