@@ -45,6 +45,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 import java.net.URLEncoder;
@@ -80,9 +81,7 @@ public class ProducerManager {
    final AmazonSQSProducerManager amazonSQSProducerManager;
    final AmazonSNSProducerManager amazonSNSProducerManager;
 
-   @Inject
-   @RootWebSocketProducerManager
-   WebSocketProducerManager wsProducerManager;
+   final WebSocketProducerManager wsProducerManager;
 
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
@@ -90,6 +89,57 @@ public class ProducerManager {
    @ConfigProperty(name = "minion.default-avro-encoding", defaultValue = "RAW")
    String defaultAvroEncoding;
 
+   @Dependent
+   public static class ProducerDependencies {
+      final KafkaProducerManager kafkaProducerManager;
+      final MQTTProducerManager mqttProducerManager;
+      final NATSProducerManager natsProducerManager;
+      final AMQPProducerManager amqpProducerManager;
+      final GooglePubSubProducerManager googlePubSubProducerManager;
+      final AmazonSQSProducerManager amazonSQSProducerManager;
+      final AmazonSNSProducerManager amazonSNSProducerManager;
+
+      @Inject
+      public ProducerDependencies(KafkaProducerManager kafkaProducerManager, MQTTProducerManager mqttProducerManager,
+            NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
+            GooglePubSubProducerManager googlePubSubProducerManager, AmazonSQSProducerManager amazonSQSProducerManager,
+            AmazonSNSProducerManager amazonSNSProducerManager) {
+         this.kafkaProducerManager = kafkaProducerManager;
+         this.mqttProducerManager = mqttProducerManager;
+         this.natsProducerManager = natsProducerManager;
+         this.amqpProducerManager = amqpProducerManager;
+         this.googlePubSubProducerManager = googlePubSubProducerManager;
+         this.amazonSQSProducerManager = amazonSQSProducerManager;
+         this.amazonSNSProducerManager = amazonSNSProducerManager;
+      }
+   }
+
+   /**
+    * Create a new ProducerManager.
+    * @param mockRepository    The async mock repository
+    * @param schemaRegistry    The schema registry
+    * @param dependencies      The wrapper for all other producer managers
+    * @param wsProducerManager The WebSocket producer manager
+    */
+   @Inject
+   public ProducerManager(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry,
+         ProducerDependencies dependencies, @RootWebSocketProducerManager WebSocketProducerManager wsProducerManager) {
+      this.mockRepository = mockRepository;
+      this.schemaRegistry = schemaRegistry;
+      this.kafkaProducerManager = dependencies.kafkaProducerManager;
+      this.mqttProducerManager = dependencies.mqttProducerManager;
+      this.natsProducerManager = dependencies.natsProducerManager;
+      this.amqpProducerManager = dependencies.amqpProducerManager;
+      this.googlePubSubProducerManager = dependencies.googlePubSubProducerManager;
+      this.amazonSQSProducerManager = dependencies.amazonSQSProducerManager;
+      this.amazonSNSProducerManager = dependencies.amazonSNSProducerManager;
+      this.wsProducerManager = wsProducerManager;
+   }
+
+   /**
+    * Constructor for backward compatibility and tests.
+    */
+   @SuppressWarnings("java:S107")
    public ProducerManager(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry,
          KafkaProducerManager kafkaProducerManager, MQTTProducerManager mqttProducerManager,
          NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
@@ -104,6 +154,7 @@ public class ProducerManager {
       this.googlePubSubProducerManager = googlePubSubProducerManager;
       this.amazonSQSProducerManager = amazonSQSProducerManager;
       this.amazonSNSProducerManager = amazonSNSProducerManager;
+      this.wsProducerManager = new WebSocketProducerManager();
    }
 
    /**
@@ -184,45 +235,50 @@ public class ProducerManager {
          for (String binding : definition.getOperation().getBindings().keySet()) {
             // Ensure this minion supports this binding.
             if (Arrays.asList(supportedBindings).contains(binding)) {
-               switch (BindingType.valueOf(binding)) {
-                  case KAFKA:
-                     produceKafkaMockMessage(definition, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  case NATS:
-                     produceNatsMockMessage(definition, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  case MQTT:
-                     produceMQTTMockMessage(definition, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  case WS:
-                     produceWSMockMessage(definition, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  case AMQP:
-                     Binding bindingDef = definition.getOperation().getBindings().get(binding);
-                     produceAMQPMockMessage(definition, bindingDef, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  case GOOGLEPUBSUB:
-                     produceGooglePubSubMockMessage(definition, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  case SQS:
-                     produceSQSMockMessage(definition, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  case SNS:
-                     produceSNSMockMessage(definition, eventMessage,
-                           renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
-                     break;
-                  default:
-                     break;
-               }
+               triggerBindingMockMessage(command, definition, eventMessage, binding);
             }
          }
+      }
+   }
+
+   private void triggerBindingMockMessage(AsyncAPITriggerCommand command, AsyncMockDefinition definition,
+         EventMessage eventMessage, String binding) {
+      switch (BindingType.valueOf(binding)) {
+         case KAFKA:
+            produceKafkaMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case NATS:
+            produceNatsMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case MQTT:
+            produceMQTTMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case WS:
+            produceWSMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case AMQP:
+            Binding bindingDef = definition.getOperation().getBindings().get(binding);
+            produceAMQPMockMessage(definition, bindingDef, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case GOOGLEPUBSUB:
+            produceGooglePubSubMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case SQS:
+            produceSQSMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case SNS:
+            produceSNSMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         default:
+            break;
       }
    }
 
@@ -466,7 +522,7 @@ public class ProducerManager {
 
          try {
             content = engine.getValue(content);
-         } catch (Throwable t) {
+         } catch (Exception t) {
             logger.errorf("Failing at evaluating template '%s'", content, t);
          }
       }
@@ -490,7 +546,7 @@ public class ProducerManager {
 
          try {
             content = engine.getValue(content);
-         } catch (Throwable t) {
+         } catch (Exception t) {
             logger.errorf("Failing at evaluating template '%s'", content, t);
          }
       }

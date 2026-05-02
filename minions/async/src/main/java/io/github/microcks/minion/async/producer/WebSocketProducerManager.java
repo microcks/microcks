@@ -41,12 +41,22 @@ public class WebSocketProducerManager {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   @Inject
    AsyncMockRepository asyncMockRepository;
 
-   @Inject
    WebSocketSessionRegistry sessionRegistry;
 
+   /**
+    * Create a new WebSocketProducerManager.
+    * @param asyncMockRepository The async mock repository
+    * @param sessionRegistry     The WebSocket session registry
+    */
+   @Inject
+   public WebSocketProducerManager(AsyncMockRepository asyncMockRepository, WebSocketSessionRegistry sessionRegistry) {
+      this.asyncMockRepository = asyncMockRepository;
+      this.sessionRegistry = sessionRegistry;
+   }
+
+   /** No-arg constructor required for JAX-RS WebSocket endpoint lifecycle. */
    public WebSocketProducerManager() {
    }
 
@@ -62,13 +72,11 @@ public class WebSocketProducerManager {
       List<Session> sessions = sessionRegistry.getSessions(channel);
       if (sessions != null && !sessions.isEmpty()) {
          logger.debugf("Sending message to %d WebSocket sessions", sessions.size());
-         sessions.forEach(s -> {
-            s.getAsyncRemote().sendObject(message, result -> {
-               if (result.getException() != null) {
-                  logger.error("Unable to send message: " + result.getException());
-               }
-            });
-         });
+         sessions.forEach(s -> s.getAsyncRemote().sendObject(message, result -> {
+            if (result.getException() != null) {
+               logger.error("Unable to send message: " + result.getException());
+            }
+         }));
       }
    }
 
@@ -93,7 +101,7 @@ public class WebSocketProducerManager {
             logger.infof("No mock available on '%s', closing the session", session.getRequestURI().toString());
             session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT,
                   "No mock available on " + session.getRequestURI()));
-         } catch (Exception e) {
+         } catch (Exception _) {
             logger.infof("Caught an exception while rejecting a WebSocket opening on unmanaged '%'",
                   session.getRequestURI().toString());
          }

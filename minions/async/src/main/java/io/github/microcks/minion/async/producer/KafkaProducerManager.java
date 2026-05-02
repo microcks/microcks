@@ -61,8 +61,20 @@ public class KafkaProducerManager {
 
    private Producer<String, GenericRecord> registryProducer;
 
-   @Inject
    Config config;
+
+   /**
+    * Create a new KafkaProducerManager.
+    * @param config The MicroProfile config
+    */
+   @Inject
+   public KafkaProducerManager(Config config) {
+      this.config = config;
+   }
+
+   /** No-arg constructor for test use only. Do not call create() on this instance. */
+   public KafkaProducerManager() {
+   }
 
    @ConfigProperty(name = "kafka.bootstrap.servers")
    String bootstrapServers;
@@ -223,21 +235,24 @@ public class KafkaProducerManager {
 
          for (io.github.microcks.domain.Header header : headers) {
             // For Kafka, header is mono valued so just consider the first value.
-            String firstValue = header.getValues().stream().findFirst().get();
-            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-               try {
-                  renderedHeaders.add(new RecordHeader(header.getName(), engine.getValue(firstValue).getBytes()));
-               } catch (Throwable t) {
-                  logger.error("Failing at evaluating template " + firstValue, t);
+            Optional<String> firstValueOpt = header.getValues().stream().findFirst();
+            if (firstValueOpt.isPresent()) {
+               String firstValue = firstValueOpt.get();
+               if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+                  try {
+                     renderedHeaders.add(new RecordHeader(header.getName(), engine.getValue(firstValue).getBytes()));
+                  } catch (Exception t) {
+                     logger.error("Failing at evaluating template " + firstValue, t);
+                     renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
+                  }
+               } else {
                   renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
                }
-            } else {
-               renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
             }
          }
          return renderedHeaders;
       }
-      return null;
+      return Collections.emptySet();
    }
 
    /**
