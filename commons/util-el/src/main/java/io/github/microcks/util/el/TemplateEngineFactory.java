@@ -23,6 +23,11 @@ import io.github.microcks.util.el.function.*;
  */
 public class TemplateEngineFactory {
 
+   private TemplateEngineFactory() {
+      // Utility class 
+   }
+
+
    /**
     * Helper method for getting a {@code TemplateEngine} initialized with built-in functions.
     * @return A new TemplateEngine instance.
