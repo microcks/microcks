@@ -108,7 +108,9 @@ public class UploadArtifactController {
          } finally {
             // Cleanup and remove local file.
             if (localFile != null) {
-               localFile.delete();
+               if (!localFile.delete()) {
+                  log.warn("Failed to delete file: " + localFile.getAbsolutePath());
+               }
             }
          }
 
@@ -153,7 +155,9 @@ public class UploadArtifactController {
          } finally {
             // Cleanup and remove local file.
             if (localFile != null) {
-               Paths.get(localFile).toFile().delete();
+               if (!Paths.get(localFile).toFile().delete()) {
+                  log.warn("Failed to delete file: " + localFile);
+               }
             }
          }
 
