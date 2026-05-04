@@ -188,6 +188,45 @@ public class SafeLogger {
    }
 
    /**
+    * Log a message at the WARN level according to the specified format and argument. This form avoids superfluous
+    * object creation when the logger is disabled for the WARN level.
+    * @param format the format string
+    * @param arg    the argument
+    */
+   public void warn(String format, Object arg) {
+      if (log.isWarnEnabled()) {
+         log.warn(encode(format), encode(arg));
+      }
+   }
+
+   /**
+    * Log a message at the WARN level according to the specified format and arguments. This form avoids superfluous
+    * object creation when the logger is disabled for the WARN level.
+    * @param format the format string
+    * @param arg1   the first argument
+    * @param arg2   the second argument
+    */
+   public void warn(String format, Object arg1, Object arg2) {
+      if (log.isWarnEnabled()) {
+         log.warn(encode(format), encode(arg1), encode(arg2));
+      }
+   }
+
+   /**
+    * Log a message at the WARN level according to the specified format and arguments. This form avoids superfluous
+    * string concatenation when the logger is disabled for the WARN level. However, this variant incurs the hidden (and
+    * relatively small) cost of creating an Object[] before invoking the method, even if this logger is disabled for
+    * WARN. The variants taking one and two arguments exist solely in order to avoid this hidden cost.
+    * @param format    the format string
+    * @param arguments a list of 3 or more arguments
+    */
+   public void warn(String format, Object... arguments) {
+      if (log.isWarnEnabled()) {
+         log.warn(encode(format), encode(arguments));
+      }
+   }
+
+   /**
     * Is the logger instance enabled for the ERROR level?
     * @return True if this Logger is enabled for the ERROR level, false otherwise.
     */
