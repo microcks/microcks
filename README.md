@@ -59,11 +59,11 @@ The current development version is `1.15.0-SNAPSHOT`.
 
 Here are the naming conventions we're using for current releases, ongoing development maintenance activities.
 
-| Status      | Version           | Branch   | Container images tags |
-| ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.13.2`          | `master` | `1.13.2`, `latest`    |
-| Dev         | `1.13.3-SNAPSHOT` | `1.13.x` | `nightly`             |
-| Maintenance | `1.12.2-SNAPSHOT` | `1.12.x` | `maintenance`         |
+| Status      | Version           | Branch         | Container images tags |
+| ----------- |-------------------|----------------|-----------------------|
+| Stable      | `1.14.0`          | `release-1.14` | `1.14.0`, `latest`    |
+| Dev         | `1.15.0-SNAPSHOT` | `master`       | `nightly`             |
+| Maintenance | `1.13.3-SNAPSHOT` | `1.13.x`       | `maintenance`         |
 
 Have a look at our [tested configurations](TESTED_CONFIGURATIONS.md) to know more about the versions of dependencies 
 and integrations that we are using for development and testing.
