@@ -15,13 +15,14 @@
  */
 package io.github.microcks.minion.async.producer;
 
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.github.microcks.util.el.TemplateEngine;
+
 import io.apicurio.registry.serde.SerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.util.el.TemplateEngine;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;

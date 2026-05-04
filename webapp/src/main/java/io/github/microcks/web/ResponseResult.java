@@ -18,6 +18,9 @@ package io.github.microcks.web;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * A thin wrapper around a response result.
  * @param status  The HTTP status code
@@ -25,4 +28,27 @@ import org.springframework.http.HttpStatusCode;
  * @param content The content of the response
  */
 public record ResponseResult(HttpStatusCode status, HttpHeaders headers, byte[] content) {
+
+   @Override
+   public boolean equals(Object o) {
+      if (this == o) {
+         return true;
+      }
+      if (!(o instanceof ResponseResult other)) {
+         return false;
+      }
+      return Objects.equals(status, other.status) && Objects.equals(headers, other.headers)
+            && Arrays.equals(content, other.content);
+   }
+
+   @Override
+   public int hashCode() {
+      return 31 * Objects.hash(status, headers) + Arrays.hashCode(content);
+   }
+
+   @Override
+   public String toString() {
+      return "ResponseResult[status=" + status + ", headers=" + headers + ", content=byte["
+            + (content == null ? 0 : content.length) + "]]";
+   }
 }
