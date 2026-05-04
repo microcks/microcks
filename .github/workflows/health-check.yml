@@ -7,10 +7,11 @@ on:
         required: true
   schedule:
     - cron: '0 4 * * *'  # Everyday at 4am UTC
-permissions: read-all
 
 jobs:
   check-compose:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -77,6 +78,8 @@ jobs:
           ${{ matrix.method }}-compose down -v --remove-orphans
 
   check-helm:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -89,7 +92,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.branch || '1.13.x' }}
+          ref: ${{ github.event.inputs.branch }}
 
       - name: Set up Minikube
         uses: medyagh/setup-minikube@e9e035a86bbc3caea26a450bd4dbf9d0c453682e # v0.0.14

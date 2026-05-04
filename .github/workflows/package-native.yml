@@ -24,6 +24,8 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: amd64
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -77,6 +79,8 @@ jobs:
 
   push-app-images:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     environment: Build
     needs: build-native-images
     strategy:
@@ -130,6 +134,8 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: amd64
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -174,6 +180,8 @@ jobs:
 
   push-async-minion-images:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     environment: Build
     needs: build-async-minion-images
     strategy:
