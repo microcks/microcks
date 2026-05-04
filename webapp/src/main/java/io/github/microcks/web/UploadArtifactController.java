@@ -108,7 +108,7 @@ public class UploadArtifactController {
          } finally {
             // Cleanup and remove local file.
             if (localFile != null && !localFile.delete()) {
-               log.warn("Failed to delete temporary artifact file " + localFile.getAbsolutePath());
+               log.warn("Failed to delete temporary artifact file {}", localFile.getAbsolutePath());
             }
          }
 
@@ -155,7 +155,7 @@ public class UploadArtifactController {
             if (localFile != null) {
                File tempFile = Paths.get(localFile).toFile();
                if (!tempFile.delete()) {
-                  log.warn("Failed to delete temporary artifact file " + tempFile.getAbsolutePath());
+                  log.warn("Failed to delete temporary artifact file {}", tempFile.getAbsolutePath());
                }
             }
          }
