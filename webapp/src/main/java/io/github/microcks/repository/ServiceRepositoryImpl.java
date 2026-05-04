@@ -18,7 +18,6 @@ package io.github.microcks.repository;
 import io.github.microcks.domain.Service;
 
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -39,45 +38,46 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
  */
 public class ServiceRepositoryImpl implements CustomServiceRepository {
 
-   @Autowired
+   private static final String NUMBER_FIELD = "number";
+
    private MongoTemplate template;
+
+   public ServiceRepositoryImpl(MongoTemplate template) {
+      this.template = template;
+   }
 
    @Override
    public List<Service> findByIdIn(List<String> ids) {
       // Convert ids into BSON ObjectId.
-      List<ObjectId> objIds = new ArrayList<ObjectId>();
+      List<ObjectId> objIds = new ArrayList<>();
       for (String id : ids) {
          objIds.add(new ObjectId(id));
       }
 
-      List<Service> results = template.find(new Query(Criteria.where("_id").in(objIds)), Service.class);
-
-      return results;
+      return template.find(new Query(Criteria.where("_id").in(objIds)), Service.class);
    }
 
    @Override
    public List<Service> findByLabels(Map<String, String> labels) {
       Query query = new Query();
-      for (String labelKey : labels.keySet()) {
-         query.addCriteria(Criteria.where("metadata.labels." + labelKey).is(labels.get(labelKey)));
+      for (Map.Entry<String, String> entry : labels.entrySet()) {
+         query.addCriteria(Criteria.where("metadata.labels." + entry.getKey()).is(entry.getValue()));
       }
-      List<Service> results = template.find(query, Service.class);
-      return results;
+      return template.find(query, Service.class);
    }
 
    @Override
    public List<Service> findByLabelsAndNameLike(Map<String, String> labels, String name) {
       Query query = new Query(Criteria.where("name").regex(name, "i"));
-      for (String labelKey : labels.keySet()) {
-         query.addCriteria(Criteria.where("metadata.labels." + labelKey).is(labels.get(labelKey)));
+      for (Map.Entry<String, String> entry : labels.entrySet()) {
+         query.addCriteria(Criteria.where("metadata.labels." + entry.getKey()).is(entry.getValue()));
       }
-      List<Service> results = template.find(query, Service.class);
-      return results;
+      return template.find(query, Service.class);
    }
 
    public List<ServiceCount> countServicesByType() {
-      Aggregation aggregation = newAggregation(project("type"), group("type").count().as("number"),
-            project("number").and("type").previousOperation(), sort(DESC, "number"));
+      Aggregation aggregation = newAggregation(project("type"), group("type").count().as(NUMBER_FIELD),
+            project(NUMBER_FIELD).and("type").previousOperation(), sort(DESC, NUMBER_FIELD));
       AggregationResults<ServiceCount> results = template.aggregate(aggregation, Service.class, ServiceCount.class);
       return results.getMappedResults();
    }

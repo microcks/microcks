@@ -16,9 +16,6 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.ImportJob;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -32,29 +29,27 @@ import java.util.Map;
  */
 public class ImportJobRepositoryImpl implements CustomImportJobRepository {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ImportJobRepositoryImpl.class);
-
-   @Autowired
    private MongoTemplate template;
+
+   public ImportJobRepositoryImpl(MongoTemplate template) {
+      this.template = template;
+   }
 
    @Override
    public List<ImportJob> findByLabels(Map<String, String> labels) {
       Query query = new Query();
-      for (String labelKey : labels.keySet()) {
-         query.addCriteria(Criteria.where("metadata.labels." + labelKey).is(labels.get(labelKey)));
+      for (Map.Entry<String, String> entry : labels.entrySet()) {
+         query.addCriteria(Criteria.where("metadata.labels." + entry.getKey()).is(entry.getValue()));
       }
-      List<ImportJob> results = template.find(query, ImportJob.class);
-      return results;
+      return template.find(query, ImportJob.class);
    }
 
    @Override
    public List<ImportJob> findByLabelsAndNameLike(Map<String, String> labels, String name) {
       Query query = new Query(Criteria.where("name").regex(name, "i"));
-      for (String labelKey : labels.keySet()) {
-         query.addCriteria(Criteria.where("metadata.labels." + labelKey).is(labels.get(labelKey)));
+      for (Map.Entry<String, String> entry : labels.entrySet()) {
+         query.addCriteria(Criteria.where("metadata.labels." + entry.getKey()).is(entry.getValue()));
       }
-      List<ImportJob> results = template.find(query, ImportJob.class);
-      return results;
+      return template.find(query, ImportJob.class);
    }
 }
