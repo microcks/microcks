@@ -185,7 +185,7 @@ public class AsyncAPISchemaValidator {
          } else {
             schemaNode = retrieveSingleMessageSchemaNode(specificationNode, messageNode);
          }
-      } catch (Exception e) {
+      } catch (AsyncAPISchemaException e) {
          // Just return exception message as validation message.
          return Collections.singletonList(e.getMessage());
       }
@@ -214,7 +214,7 @@ public class AsyncAPISchemaValidator {
       Schema avroSchema;
       try {
          avroSchema = retrieveMessageAvroSchema(specificationNode, messagePathPointer, schemaMap);
-      } catch (Exception e) {
+      } catch (AsyncAPISchemaException e) {
          return List.of(e.getMessage());
       }
 
@@ -251,7 +251,7 @@ public class AsyncAPISchemaValidator {
       Schema avroSchema = null;
       try {
          avroSchema = retrieveMessageAvroSchema(specificationNode, messagePathPointer, schemaMap);
-      } catch (Exception e) {
+      } catch (AsyncAPISchemaException e) {
          return List.of(e.getMessage());
       }
 
@@ -365,7 +365,7 @@ public class AsyncAPISchemaValidator {
 
    /** Build a Json schema node for messages expressed as a direct oneOf structure. */
    private static JsonNode buildOneOfMessageSchemaNode(JsonNode specificationNode, ArrayNode oneOfMessageNode)
-         throws Exception {
+         throws AsyncAPISchemaException {
       // Initialize a oneOf schema with array.
       ObjectMapper mapper = new ObjectMapper();
       ObjectNode schemaNode = mapper.createObjectNode();
@@ -385,11 +385,11 @@ public class AsyncAPISchemaValidator {
 
    /** Retrieve the Json schema node corresponding to a single message definition. */
    private static JsonNode retrieveSingleMessageSchemaNode(JsonNode specificationNode, JsonNode messageNode)
-         throws Exception {
+         throws AsyncAPISchemaException {
       // Check that message node has a payload attribute.
       if (!messageNode.has(ASYNC_SCHEMA_PAYLOAD_ELEMENT)) {
          log.debug("messageNode {} has no 'payload' attribute", messageNode);
-         throw new Exception("message definition has no valid payload in AsyncAPI specification");
+         throw new AsyncAPISchemaException("message definition has no valid payload in AsyncAPI specification");
       }
       // Navigate to payload definition.
       messageNode = messageNode.path(ASYNC_SCHEMA_PAYLOAD_ELEMENT);
