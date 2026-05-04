@@ -29,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Assertion that checks if response content is actually conformance to a Schema definition.
@@ -60,7 +61,14 @@ public class SchemaConformanceAssertion implements SoapUIAssertion {
          log.debug("Asserting Soap response is valid against WSDL");
 
          // Validate against Soap message against WSDL.
-         Resource wsdl = context.resources().stream().filter(r -> r.getType() == ResourceType.WSDL).findFirst().get();
+         Optional<Resource> wsdlOpt = context.resources().stream().filter(r -> r.getType() == ResourceType.WSDL)
+               .findFirst();
+         if (!wsdlOpt.isPresent()) {
+            log.warn("No WSDL resource found for SOAP service, cannot validate response");
+            errorMessages = List.of("No WSDL resource available for SOAP validation");
+            return AssertionStatus.FAILED;
+         }
+         Resource wsdl = wsdlOpt.get();
          QName partQName = new QName(context.service().getXmlNS(), context.operation().getOutputName());
          errorMessages = SoapMessageValidator.validateSoapMessage(wsdl.getContent(), partQName,
                exchange.responseContent(), context.resourceUrl());

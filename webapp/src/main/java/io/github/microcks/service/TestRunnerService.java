@@ -74,6 +74,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -197,8 +198,14 @@ public class TestRunnerService {
 
       for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
          // Retrieve operation corresponding to testCase.
-         Operation operation = service.getOperations().stream()
-               .filter(o -> o.getName().equals(testCaseResult.getOperationName())).findFirst().get();
+         Optional<Operation> operationOpt = service.getOperations().stream()
+               .filter(o -> o.getName().equals(testCaseResult.getOperationName())).findFirst();
+         if (!operationOpt.isPresent()) {
+            log.warn("No operation named '{}' found on service '{}', skipping test case",
+                  testCaseResult.getOperationName(), service.getName());
+            continue;
+         }
+         Operation operation = operationOpt.get();
          String testCaseId = IdBuilder.buildTestCaseId(testResult, operation);
 
          // Prepare collection of requests to launch.

@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Mock repository exporter that exports Microcks domain objects definitions into the APIExamples YAML format.
@@ -171,7 +172,10 @@ public class ExamplesExporter implements MockRepositoryExporter {
       if (message.getHeaders() != null && !message.getHeaders().isEmpty()) {
          ObjectNode headersNode = messageNode.putObject("headers");
          for (Header header : message.getHeaders()) {
-            headersNode.put(header.getName(), header.getValues().stream().findFirst().get());
+            Optional<String> firstValueOpt = header.getValues().stream().findFirst();
+            if (firstValueOpt.isPresent()) {
+               headersNode.put(header.getName(), firstValueOpt.get());
+            }
          }
       }
    }
