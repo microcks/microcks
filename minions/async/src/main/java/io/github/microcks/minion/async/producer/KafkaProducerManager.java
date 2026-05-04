@@ -15,13 +15,14 @@
  */
 package io.github.microcks.minion.async.producer;
 
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.github.microcks.util.el.TemplateEngine;
+
 import io.apicurio.registry.serde.SerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.util.el.TemplateEngine;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -61,8 +62,20 @@ public class KafkaProducerManager {
 
    private Producer<String, GenericRecord> registryProducer;
 
-   @Inject
    Config config;
+
+   /**
+    * Create a new KafkaProducerManager.
+    * @param config The MicroProfile config
+    */
+   @Inject
+   public KafkaProducerManager(Config config) {
+      this.config = config;
+   }
+
+   /** No-arg constructor for test use only. Do not call create() on this instance. */
+   public KafkaProducerManager() {
+   }
 
    @ConfigProperty(name = "kafka.bootstrap.servers")
    String bootstrapServers;
@@ -229,7 +242,7 @@ public class KafkaProducerManager {
                if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
                   try {
                      renderedHeaders.add(new RecordHeader(header.getName(), engine.getValue(firstValue).getBytes()));
-                  } catch (Throwable t) {
+                  } catch (Exception t) {
                      logger.error("Failing at evaluating template " + firstValue, t);
                      renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
                   }
@@ -240,7 +253,7 @@ public class KafkaProducerManager {
          }
          return renderedHeaders;
       }
-      return null;
+      return Collections.emptySet();
    }
 
    /**
