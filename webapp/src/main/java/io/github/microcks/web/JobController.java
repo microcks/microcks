@@ -169,8 +169,8 @@ public class JobController {
    public ResponseEntity<ImportJob> startJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Starting job with id {}", jobId);
       ImportJob job = jobRepository.findById(jobId).orElse(null);
-      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
-            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+      if (job != null && (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job))) {
          job.setActive(true);
          initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
@@ -184,8 +184,8 @@ public class JobController {
    public ResponseEntity<ImportJob> stopJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Stopping job with id {}", jobId);
       ImportJob job = jobRepository.findById(jobId).orElse(null);
-      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
-            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+      if (job != null && (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job))) {
          job.setActive(false);
          initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
