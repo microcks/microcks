@@ -47,48 +47,58 @@ public class OpenAPIOverlayExporterTest {
          """;
 
    private static final String EXPECTED_EXPORT_ACTION_1 = """
-         - target: "$.paths['/pastry/{name}'].patch.parameters[?@.name=='name'].examples"
+         - target: "$.paths['/pastry/{name}'].patch.parameters[?@.name=='name']"
            update:
-             Eclair Cafe:
-               value: Eclair Cafe
+             examples:
+               eclair-cafe:
+                 value: Eclair Cafe
+                 summary: Eclair Cafe
          """;
    private static final String EXPECTED_EXPORT_ACTION_2 = """
-         - target: "$.paths['/pastry/{name}'].patch.requestBody.content['application/json'].examples"
+         - target: "$.paths['/pastry/{name}'].patch.requestBody.content['application/json']"
            update:
-             Eclair Cafe:
-               value: |-
-                 {
-                   "price": 2.6
-                 }
+             examples:
+               eclair-cafe:
+                 value: |-
+                   {
+                     "price": 2.6
+                   }
+                 summary: Eclair Cafe
          """;
    private static final String EXPECTED_EXPORT_ACTION_3 = """
-         - target: "$.paths['/pastry/{name}'].patch.responses.200.content['application/json'].examples"
+         - target: "$.paths['/pastry/{name}'].patch.responses['200'].content['application/json']"
            update:
-             Eclair Cafe:
-               value: |-
-                 {
-                   "name": "Eclair Cafe",
-                   "description": "Delicieux Eclair au Cafe pas calorique du tout",
-                   "size": "M",
-                   "price": 2.6,
-                   "status": "available"
-                 }
+             examples:
+               eclair-cafe:
+                 value: |-
+                   {
+                     "name": "Eclair Cafe",
+                     "description": "Delicieux Eclair au Cafe pas calorique du tout",
+                     "size": "M",
+                     "price": 2.6,
+                     "status": "available"
+                   }
+                 summary: Eclair Cafe
          """;
    private static final String EXPECTED_EXPORT_ACTION_4 = """
-         - target: "$.paths['/pastry/{name}'].get.parameters[?@.name=='name'].examples"
+         - target: "$.paths['/pastry/{name}'].get.parameters[?@.name=='name']"
            update:
-             Eclair Chocolat:
-               value: Eclair Chocolat
+             examples:
+               eclair-chocolat:
+                 value: Eclair Chocolat
+                 summary: Eclair Chocolat
          """;
    private static final String EXPECTED_EXPORT_ACTION_5 = """
-         - target: "$.paths['/pastry/{name}'].get.responses.200.content['application/json'].examples"
+         - target: "$.paths['/pastry/{name}'].get.responses['200'].content['application/json']"
            update:
-             Eclair Chocolat:
-               value: |-
-                 {
-                   "name": "Eclair Chocolat",
-                   "price": 2.5
-                 }
+             examples:
+               eclair-chocolat:
+                 value: |-
+                   {
+                     "name": "Eclair Chocolat",
+                     "price": 2.5
+                   }
+                 summary: Eclair Chocolat
          """;
 
    @Test
