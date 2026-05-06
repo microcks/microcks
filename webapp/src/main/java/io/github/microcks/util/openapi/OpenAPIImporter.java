@@ -639,6 +639,16 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          // Do we have to complete request with path parameters?
          Multimap<String, String> pathParameters = pathParametersByExample.get(exampleName);
          if (pathParameters != null) {
+            // For URI_PARTS/URI_ELEMENTS, verify all required path parameters have example values.
+            // If any {param} placeholder remains unresolved, the example is incomplete and must be skipped
+            // to avoid storing a dispatch criteria that can never match an incoming request at runtime.
+            if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
+                  || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+               String resourcePathPattern = operation.getName().split(" ")[1];
+               if (URIBuilder.buildURIFromPattern(resourcePathPattern, pathParameters).contains("{")) {
+                  continue;
+               }
+            }
             completeRequestWithPathParameters(request, pathParameters);
          } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
                || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
