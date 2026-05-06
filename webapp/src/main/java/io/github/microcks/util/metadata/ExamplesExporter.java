@@ -172,10 +172,8 @@ public class ExamplesExporter implements MockRepositoryExporter {
       if (message.getHeaders() != null && !message.getHeaders().isEmpty()) {
          ObjectNode headersNode = messageNode.putObject("headers");
          for (Header header : message.getHeaders()) {
-            Optional<String> firstValueOpt = header.getValues().stream().findFirst();
-            if (firstValueOpt.isPresent()) {
-               headersNode.put(header.getName(), firstValueOpt.get());
-            }
+            header.getValues().stream().findFirst()
+                  .ifPresent(value -> headersNode.put(header.getName(), value));
          }
       }
    }
