@@ -215,6 +215,8 @@ public class McpController {
          case McpSchema.METHOD_TOOLS_CALL -> {
             result = handleToolsCallRequest(request, headers, service);
          }
+         default -> {
+         }
       }
 
       McpSchema.JSONRPCResponse response = null;
