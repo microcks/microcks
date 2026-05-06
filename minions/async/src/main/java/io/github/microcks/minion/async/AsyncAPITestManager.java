@@ -139,16 +139,16 @@ public class AsyncAPITestManager {
                logger.infof("AsyncAPITestThread for {%s} was timed-out", specification.getTestResultId());
                testCaseReturn.addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
                      "Timeout: no message received in " + specification.getTimeoutMS() + " ms", null, null));
-            } catch (Throwable t) {
+            } catch (Exception e) {
                // We faced a low-level issue... add an empty test return with failure and message.
-               logger.error("Caught a low-level throwable", t);
+               logger.error("Caught a low-level exception", e);
                testCaseReturn
                      .addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
-                           "Exception: low-level failure: " + t.getMessage(), null, null));
+                           "Exception: low-level failure: " + e.getMessage(), null, null));
             } finally {
                try {
                   messageConsumptionTask.close();
-               } catch (Throwable t) {
+               } catch (Exception _) {
                   // This was best effort, just ignore the exception...
                }
                executorService.shutdown();

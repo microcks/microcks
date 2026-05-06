@@ -68,15 +68,17 @@ public class AsyncAPISchemaUtil {
 
    /**
     * Retrieve the Avro schema corresponding to a message using its JSON pointer in Spec. Complete the {@code schemaMap}
-    * if provided. Raise a simple exception with message if problem while navigating the spec.
+    * if provided. Raise an {@link AsyncAPISchemaException} with message if problem while navigating the spec.
+    * @throws AsyncAPISchemaException if a problem occurs while navigating the spec
     */
    public static Schema retrieveMessageAvroSchema(JsonNode specificationNode, String messagePathPointer,
-         SchemaMap schemaMap) throws Exception {
+         SchemaMap schemaMap) throws AsyncAPISchemaException {
       // Extract Json node for message pointer.
       JsonNode messageNode = specificationNode.at(messagePathPointer);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
-         throw new Exception("messagePathPointer does not represent a valid JSON Pointer in AsyncAPI specification");
+         throw new AsyncAPISchemaException(
+               "messagePathPointer does not represent a valid JSON Pointer in AsyncAPI specification");
       }
       // Message node can be just a reference.
       messageNode = followRefIfAny(messageNode, specificationNode);
@@ -99,7 +101,7 @@ public class AsyncAPISchemaUtil {
 
    /** Build an array of Avro schemas for messages expressed as a direct oneOf structure. */
    private static Schema buildOneOfMessagesAvroSchemas(JsonNode specificationNode, ArrayNode oneOfMessageNode,
-         SchemaMap schemaMap) throws Exception {
+         SchemaMap schemaMap) throws AsyncAPISchemaException {
       // Initialize a oneOf schema with array.
       Schema[] schemas = new Schema[oneOfMessageNode.size()];
 
@@ -115,11 +117,12 @@ public class AsyncAPISchemaUtil {
    }
 
    /** Build an Avro schema for spring message definition. */
-   private static Schema buildSingleMessageAvroSchema(JsonNode messageNode, SchemaMap schemaMap) throws Exception {
+   private static Schema buildSingleMessageAvroSchema(JsonNode messageNode, SchemaMap schemaMap)
+         throws AsyncAPISchemaException {
       // Check that message node has a payload attribute.
       if (!messageNode.has(ASYNC_SCHEMA_PAYLOAD_ELEMENT)) {
          log.debug("messageNode {} has no 'payload' attribute", messageNode);
-         throw new Exception("message definition has no valid payload in AsyncAPI specification");
+         throw new AsyncAPISchemaException("message definition has no valid payload in AsyncAPI specification");
       }
 
       // Navigate to payload definition.
@@ -143,7 +146,7 @@ public class AsyncAPISchemaUtil {
          }
          if (schemaContent == null) {
             log.info("No schema content found in SchemaMap. {} is not found", ref);
-            throw new Exception("no schema content found for " + ref + " in used SchemaMap.");
+            throw new AsyncAPISchemaException("no schema content found for " + ref + " in used SchemaMap.");
          }
       } else {
          // Schema is specified within the payload definition.

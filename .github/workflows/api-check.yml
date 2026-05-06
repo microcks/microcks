@@ -7,7 +7,8 @@ on:
         required: true
   schedule:
     - cron: '0 5 * * *'  # Everyday at 5am UTC
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   run-api-tests-uber:
