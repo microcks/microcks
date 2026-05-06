@@ -17,13 +17,13 @@ import { TruncatePipeModule } from '../pipe/truncate/truncate.pipe.module';
  */
 @NgModule({
   imports: [
-    BsDropdownModule.forRoot(),
+    BsDropdownModule,
     CommonModule,
     FilterComponent, FilterFieldsComponent, FilterResultsComponent,
     FormsModule,
-    PopoverModule.forRoot(),
+    PopoverModule,
     SearchHighlightPipeModule,
-    TooltipModule.forRoot(),
+    TooltipModule,
     TruncatePipeModule
   ],
   declarations: [
