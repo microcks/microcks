@@ -106,7 +106,7 @@ postman:
   image:
     registry: quay.io
     repository: microcks/microcks-postman-runtime
-    tag: 0.7.1
+    tag: 0.7.2
     digest:
   replicas: 1
   resources:
