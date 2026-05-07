@@ -129,9 +129,20 @@
       <artifactId>opentelemetry-exporter-otlp</artifactId>
     </dependency>
 
+    <!-- Provides KafkaProperties (moved out of spring-boot-autoconfigure in SB 4). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-kafka</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
+    </dependency>
+
+    <!-- Provides RestTemplateBuilder (moved out of spring-boot in SB 4). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-restclient</artifactId>
     </dependency>
 
     <dependency>
