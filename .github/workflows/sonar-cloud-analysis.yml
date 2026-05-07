@@ -10,7 +10,7 @@ on:
 permissions: read-all
 jobs:
   build:
-    if: github.repository_owner == 'microcks'
+    if: github.repository_owner == 'microcks' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     name: Build and analyze
     runs-on: ubuntu-latest
     steps:

@@ -31,6 +31,7 @@ import io.github.microcks.util.graphql.GraphQLHttpRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -252,6 +253,29 @@ public class GraphQLController {
       for (GraphQLQueryResponse response : graphqlResponses) {
          dataNode.set(StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
                response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy());
+      }
+      // Aggregate errors
+      ArrayNode errorsNode = mapper.createArrayNode();
+      for (GraphQLQueryResponse response : graphqlResponses) {
+         JsonNode errors = response.getJsonResponse().path("errors");
+         if (errors.isArray()) {
+            errors.forEach(errorsNode::add);
+         }
+      }
+      if (!errorsNode.isEmpty()) {
+         aggregated.set("errors", errorsNode);
+      }
+
+      // Aggregate extensions
+      ObjectNode extensionsNode = mapper.createObjectNode();
+      for (GraphQLQueryResponse response : graphqlResponses) {
+         JsonNode extensions = response.getJsonResponse().path("extensions");
+         if (extensions.isObject()) {
+            extensions.properties().forEach(e -> extensionsNode.set(e.getKey(), e.getValue().deepCopy()));
+         }
+      }
+      if (!extensionsNode.isEmpty()) {
+         aggregated.set("extensions", extensionsNode);
       }
       responseNode = aggregated;
       try {
