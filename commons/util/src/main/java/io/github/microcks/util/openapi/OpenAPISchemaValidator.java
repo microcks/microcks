@@ -288,8 +288,11 @@ public class OpenAPISchemaValidator {
 
          // If no match here, it's maybe contentType contains charset but not the spec.
          // Remove charset information and try again.
-         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-            return getMessageContentNode(responseCodeNode, contentType.substring(0, contentType.indexOf(";")));
+         int semiColonIdx = contentType.indexOf(";");
+         if (contentType.contains("charset=") && semiColonIdx != -1) {
+            if (semiColonIdx > 0) {
+               return getMessageContentNode(responseCodeNode, contentType.substring(0, semiColonIdx));
+            }
          }
       }
       return contentNode;

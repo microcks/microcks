@@ -101,8 +101,11 @@ public class GraphQLTestRunner extends HttpTestRunner {
          log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType());
          contentType = httpResponse.getHeaders().getContentType().toString();
          // Sanitize charset information from media-type.
-         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-            contentType = contentType.substring(0, contentType.indexOf(";"));
+         int semiColonIdx = contentType.indexOf(";");
+         if (contentType.contains("charset=") && semiColonIdx != -1) {
+            if (semiColonIdx > 0) {
+               contentType = contentType.substring(0, semiColonIdx);
+            }
          }
       }
 
