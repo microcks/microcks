@@ -215,6 +215,9 @@ public class McpController {
          case McpSchema.METHOD_TOOLS_CALL -> {
             result = handleToolsCallRequest(request, headers, service);
          }
+         default -> {
+            // Unrecognized methods fall through; result remains null yielding a 'Method not found' response
+         }
       }
 
       McpSchema.JSONRPCResponse response = null;
