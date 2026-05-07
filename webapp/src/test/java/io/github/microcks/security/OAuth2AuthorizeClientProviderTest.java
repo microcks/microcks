@@ -19,12 +19,12 @@ import io.github.microcks.domain.OAuth2AuthorizedClient;
 import io.github.microcks.domain.OAuth2ClientContext;
 import io.github.microcks.domain.OAuth2GrantType;
 
+import io.github.microcks.security.oauth2.DefaultPasswordTokenResponseClient;
+import io.github.microcks.security.oauth2.OAuth2PasswordGrantRequest;
+
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.oauth2.client.endpoint.DefaultPasswordTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.OAuth2PasswordGrantRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -115,7 +115,7 @@ public class OAuth2AuthorizeClientProviderTest {
       ClientRegistration registration = ClientRegistration.withRegistrationId("test-idp").clientId("myrealm-test")
             .clientSecret("QAzrPEJJeDkjKtePKoXyzkqY6exkBauh")
             .tokenUri(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token")
-            .authorizationGrantType(AuthorizationGrantType.PASSWORD).scope("openid").build();
+            .authorizationGrantType(OAuth2PasswordGrantRequest.PASSWORD).scope("openid").build();
 
       OAuth2PasswordGrantRequest request = new OAuth2PasswordGrantRequest(registration, "admin", "myrealm123");
       OAuth2AccessTokenResponse response = client.getTokenResponse(request);
