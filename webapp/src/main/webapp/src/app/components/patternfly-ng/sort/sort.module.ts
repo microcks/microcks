@@ -9,7 +9,7 @@ import { SortComponent } from './sort.component';
  * A module containing objects associated with the sort component
  */
 @NgModule({
-  imports: [CommonModule, BsDropdownModule.forRoot(), SortComponent],
+  imports: [CommonModule, BsDropdownModule, SortComponent],
   declarations: [
     //SortComponent
   ],

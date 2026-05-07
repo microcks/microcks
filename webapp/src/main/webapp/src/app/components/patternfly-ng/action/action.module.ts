@@ -12,7 +12,7 @@ import { ActionComponent } from './action.component';
 @NgModule({
   imports: [
     ActionComponent,
-    BsDropdownModule.forRoot(),
+    BsDropdownModule,
     CommonModule,
     FormsModule,
   ],

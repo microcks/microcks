@@ -8,7 +8,7 @@
         <ul class="dropdown-menu" *dropdownMenu>
           <li class="display-length-increment"
               [ngClass]="{'selected': increment === config.pageSize}"
-              *ngFor="let increment of config?.pageSizeIncrements">
+              *ngFor="let increment of config.pageSizeIncrements">
             <a role="menuitem" (click)="onPageSizeUpdate($event, increment)">{{increment}}</a></li>
         </ul>
       </div>

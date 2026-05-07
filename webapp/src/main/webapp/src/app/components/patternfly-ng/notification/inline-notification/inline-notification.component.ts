@@ -24,7 +24,7 @@ import { NotificationType } from '../notification-type';
  * import { BsDropdownConfig, BsDropdownModule } from 'ngx-bootstrap/dropdown';
  *
  * &#64;NgModule({
- *   imports: [InlineNotificationModule, BsDropdownModule.forRoot(),...],
+ *   imports: [InlineNotificationModule, BsDropdownModule,...],
  *   providers: [BsDropdownConfig]
  * })
  * export class AppModule(){}
