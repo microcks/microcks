@@ -184,7 +184,9 @@ public class ReferenceResolver {
    public void cleanResolvedReferences() {
       if (cleanResolvedFiles) {
          for (File referenceFile : resolvedReferences.values()) {
-            referenceFile.delete();
+            if (!referenceFile.delete()) {
+               log.warn("Failed to delete resolved reference file {}", referenceFile.getAbsolutePath());
+            }
          }
       }
       resolvedReferences.clear();
