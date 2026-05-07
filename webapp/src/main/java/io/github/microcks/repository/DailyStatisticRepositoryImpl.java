@@ -15,7 +15,14 @@
  */
 package io.github.microcks.repository;
 
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
 import io.github.microcks.domain.DailyStatistic;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
@@ -25,15 +32,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
-import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.util.List;
-
-import static org.springframework.data.domain.Sort.Direction.ASC;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 /**
  * Implementation of CustomDailyStatisticRepository.
@@ -58,7 +59,6 @@ public class DailyStatisticRepositoryImpl implements CustomDailyStatisticReposit
    @Override
    public void incrementDailyStatistic(String day, String serviceName, String serviceVersion, String hourKey,
          String minuteKey, int count) {
-
       // Build a query to select specific object within collection.
       Query query = new Query(
             Criteria.where("day").is(day).and("serviceName").is(serviceName).and("serviceVersion").is(serviceVersion));
@@ -73,39 +73,41 @@ public class DailyStatisticRepositoryImpl implements CustomDailyStatisticReposit
 
    @Override
    public DailyStatistic aggregateDailyStatistics(String day) {
-
-      // Build a query to pre-select the statistics that will be aggregated.
+      // Build aggregation pipeline to sum dailyCount and hourlyCount across all services.
+      // The $group stage sums each hourly bucket into temporary aliases (h0..h23).
       GroupOperation groupOp = group("day").sum(DAILY_COUNT_FIELD).as(DAILY_COUNT_FIELD);
       for (int i = 0; i < 24; i++) {
          groupOp = groupOp.sum("hourlyCount." + i).as("h" + i);
       }
 
-      ProjectionOperation projectOp = project(DAILY_COUNT_FIELD).and("_id").as("day");
-      for (int i = 0; i < 24; i++) {
-         projectOp = projectOp.and("h" + i).as("hourlyCount." + i);
-      }
+      Aggregation aggregation = newAggregation(match(Criteria.where("day").is(day)), groupOp);
 
-      Aggregation aggregation = newAggregation(match(Criteria.where("day").is(day)), groupOp, projectOp);
+      // Deserialize to Document and build the DailyStatistic
+      // reconstruct the hourlyCount Map<String, Integer> from the h0..h23 aliases.
+      AggregationResults<Document> results = template.aggregate(aggregation, DailyStatistic.class, Document.class);
+      Document doc = results.getUniqueMappedResult();
 
-      AggregationResults<DailyStatistic> results = template.aggregate(aggregation, DailyStatistic.class,
-            DailyStatistic.class);
-      DailyStatistic result = results.getUniqueMappedResult();
+      if (doc != null) {
+         DailyStatistic result = new DailyStatistic();
+         result.setDay(doc.getString("_id"));
+         result.setDailyCount(doc.get(DAILY_COUNT_FIELD, Number.class).longValue());
 
-      // Output some debug messages.
-      if (log.isDebugEnabled()) {
-         log.debug("aggregateDailyStatistics aggregation for day {}", day);
-         log.debug("aggregateDailyStatistics aggregation result counts: {}", results.getMappedResults().size());
-         for (DailyStatistic ds : results.getMappedResults()) {
-            log.debug("aggregateDailyStatistics aggregation result value: {}", ds.getDailyCount());
+         Map<String, Integer> hourlyCount = new HashMap<>(24);
+         for (int i = 0; i < 24; i++) {
+            Number val = doc.get("h" + i, Number.class);
+            hourlyCount.put(String.valueOf(i), val != null ? val.intValue() : 0);
          }
-      }
+         result.setHourlyCount(hourlyCount);
 
-      // We've got a result if we've got an output.
-      if (result != null) {
+         if (log.isDebugEnabled()) {
+            log.debug("aggregateDailyStatistics aggregation for day {}", day);
+            log.debug("aggregateDailyStatistics aggregation result dailyCount: {}", result.getDailyCount());
+         }
+
          return result;
       }
 
-      // Build and return an empty object otherwise?
+      // Build and return an empty object otherwise.
       DailyStatistic statistic = new DailyStatistic();
       statistic.setDay(day);
       statistic.setDailyCount(0);
@@ -130,28 +132,5 @@ public class DailyStatisticRepositoryImpl implements CustomDailyStatisticReposit
             .limit(limit);
 
       return template.find(query, DailyStatistic.class);
-   }
-
-
-   /** Utility class used for wrapping a DailyStatistic object within MapReduce command results. */
-   public class WrappedDailyStatistic {
-      private String id;
-      private DailyStatistic value;
-
-      public String getId() {
-         return id;
-      }
-
-      public void setId(String id) {
-         this.id = id;
-      }
-
-      public DailyStatistic getValue() {
-         return value;
-      }
-
-      public void setValue(DailyStatistic value) {
-         this.value = value;
-      }
    }
 }
