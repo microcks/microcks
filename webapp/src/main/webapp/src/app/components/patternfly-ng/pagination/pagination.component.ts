@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 
 import { cloneDeep, defaults, isEqual } from 'lodash-es';
 
@@ -46,7 +47,8 @@ import { PaginationEvent } from './pagination-event';
   templateUrl: './pagination.component.html',
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    BsDropdownModule
   ]
 })
 export class PaginationComponent implements DoCheck, OnInit {
@@ -271,4 +273,3 @@ export class PaginationComponent implements DoCheck, OnInit {
     return (this.config.pageNumber === this.lastPageNumber);
   }
 }
-
