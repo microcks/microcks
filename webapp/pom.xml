@@ -267,6 +267,21 @@
       <version>${spring-boot.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- SB4 split MockMvc / @AutoConfigureMockMvc out of spring-boot-test-autoconfigure. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <version>${spring-boot.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- SB4 moved TestRestTemplate to its own module. @SpringBootTest no longer
+         auto-provides a bean — test classes need @AutoConfigureTestRestTemplate. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-resttestclient</artifactId>
+      <version>${spring-boot.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>de.bwaldvogel</groupId>
       <artifactId>mongo-java-server</artifactId>
