@@ -382,12 +382,11 @@ public class TestRunnerService {
             .setSSLSocketFactory(sslsf).build();
 
       CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager)
-            .setDefaultRequestConfig(
-                  RequestConfig.custom().setResponseTimeout(Timeout.ofMilliseconds(runnerTimeout)).build())
+            .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(200))
+                  .setResponseTimeout(Timeout.ofMilliseconds(runnerTimeout)).build())
             .build();
 
       HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
-      factory.setConnectTimeout(200);
 
       switch (runnerType) {
          case SOAP_HTTP:

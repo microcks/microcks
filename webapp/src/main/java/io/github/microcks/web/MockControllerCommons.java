@@ -132,8 +132,8 @@ public class MockControllerCommons {
          externalUrl = externalUrl.replaceFirst("/$", "") + resourcePath;
          if (!externalUrl.contentEquals(request.getRequestURL())) {
             try {
-               return Optional
-                     .of(UriComponentsBuilder.fromHttpUrl(externalUrl).query(request.getQueryString()).build().toUri());
+               return Optional.of(
+                     UriComponentsBuilder.fromUriString(externalUrl).query(request.getQueryString()).build().toUri());
             } catch (IllegalArgumentException ex) {
                log.warn("Invalid external URL in the dispatcher - {}", externalUrl);
             }
@@ -315,7 +315,7 @@ public class MockControllerCommons {
 
    /** Retrieve delay header or default to the one provided as parameter. */
    public static DelaySpec getDelay(HttpHeaders headers, Long delayParameter, String strategyName) {
-      if (headers.containsKey(MockControllerCommons.X_MICROCKS_DELAY_HEADER)) {
+      if (headers.containsHeader(MockControllerCommons.X_MICROCKS_DELAY_HEADER)) {
          String delayHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
          try {
             String delayStrategyHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_STRATEGY_HEADER);

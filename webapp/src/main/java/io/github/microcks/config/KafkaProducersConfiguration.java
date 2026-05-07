@@ -58,7 +58,7 @@ public class KafkaProducersConfiguration {
       Map<String, Object> properties = new HashMap<>(kafkaMultipleProducersProperties.buildCommonProperties());
       KafkaProperties.Producer producerProps = kafkaMultipleProducersProperties.getProducers().get(producerName);
       if (producerProps != null) {
-         properties.putAll(producerProps.buildProperties(null));
+         properties.putAll(producerProps.buildProperties());
       }
       return new DefaultKafkaProducerFactory<>(properties);
    }

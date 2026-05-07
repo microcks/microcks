@@ -213,7 +213,7 @@ public class McpController {
             result = handleToolsListRequest(request, service);
          }
          case McpSchema.METHOD_TOOLS_CALL -> {
-            result = handleToolsCallRequest(request, headers, service);
+            result = handleToolsCallRequest(request, headers.asMultiValueMap(), service);
          }
       }
 

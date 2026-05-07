@@ -21,20 +21,31 @@ import io.github.microcks.domain.OAuth2GrantType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.oauth2.client.endpoint.DefaultClientCredentialsTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.DefaultPasswordTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.DefaultRefreshTokenTokenResponseClient;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.client.endpoint.OAuth2ClientCredentialsGrantRequest;
-import org.springframework.security.oauth2.client.endpoint.OAuth2PasswordGrantRequest;
 import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGrantRequest;
+import org.springframework.security.oauth2.client.endpoint.RestClientClientCredentialsTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.RestClientRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Process OAuth2 authorization flow and tries to authorize from a client context.
@@ -77,17 +88,42 @@ public class OAuth2AuthorizedClientProvider {
             oAuth2ClientContext.getTokenUri(), String.join(" ", accessToken.getScopes()), accessToken.getTokenValue());
    }
 
+   /**
+    * Spring Security 7 removed the Resource Owner Password Credentials grant per OAuth 2.1. Microcks keeps it for
+    * legacy IDPs in test contexts only by issuing the token request manually against the configured endpoint.
+    */
    private OAuth2AccessToken getResourceOwnerPasswordAccessToken(OAuth2ClientContext oAuth2ClientContext) {
-      // Build a ClientRegistration with PASSWORD grant type.
-      ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
-            .authorizationGrantType(AuthorizationGrantType.PASSWORD).build();
+      String credentials = Base64.getEncoder()
+            .encodeToString((oAuth2ClientContext.getClientId() + ":" + oAuth2ClientContext.getClientSecret())
+                  .getBytes(StandardCharsets.UTF_8));
 
-      DefaultPasswordTokenResponseClient client = new DefaultPasswordTokenResponseClient();
-      OAuth2PasswordGrantRequest request = new OAuth2PasswordGrantRequest(registration,
-            oAuth2ClientContext.getUsername(), oAuth2ClientContext.getPassword());
-      OAuth2AccessTokenResponse response = client.getTokenResponse(request);
+      MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+      // The PASSWORD/USERNAME constants were dropped alongside the Password Grant in Spring Security 7;
+      // the parameter names themselves are still part of the OAuth 2.0 spec.
+      form.add(OAuth2ParameterNames.GRANT_TYPE, "password");
+      form.add("username", oAuth2ClientContext.getUsername());
+      form.add("password", oAuth2ClientContext.getPassword());
+      String scope = oAuth2ClientContext.getScopes() != null ? oAuth2ClientContext.getScopes() + " openid" : "openid";
+      form.add(OAuth2ParameterNames.SCOPE, scope);
 
-      return response.getAccessToken();
+      Map<String, Object> response = RestClient.create().post().uri(oAuth2ClientContext.getTokenUri())
+            .header(HttpHeaders.AUTHORIZATION, "Basic " + credentials)
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve()
+            .body(new ParameterizedTypeReference<>() {
+            });
+
+      if (response == null || response.get(OAuth2ParameterNames.ACCESS_TOKEN) == null) {
+         throw new OAuth2AuthorizationException(
+               new OAuth2Error("invalid_token_response", "Token endpoint returned no access_token", null));
+      }
+
+      String tokenValue = response.get(OAuth2ParameterNames.ACCESS_TOKEN).toString();
+      long expiresIn = response.get("expires_in") instanceof Number n ? n.longValue() : 3600L;
+      Set<String> scopes = response.get(OAuth2ParameterNames.SCOPE) instanceof String s ? Set.of(s.split(" "))
+            : Set.of();
+      Instant now = Instant.now();
+      return new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, tokenValue, now, now.plusSeconds(expiresIn),
+            scopes);
    }
 
    private OAuth2AccessToken getClientCredentialsAccessToken(OAuth2ClientContext oAuth2ClientContext) {
@@ -95,7 +131,7 @@ public class OAuth2AuthorizedClientProvider {
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
             .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS).build();
 
-      DefaultClientCredentialsTokenResponseClient client = new DefaultClientCredentialsTokenResponseClient();
+      RestClientClientCredentialsTokenResponseClient client = new RestClientClientCredentialsTokenResponseClient();
       OAuth2ClientCredentialsGrantRequest request = new OAuth2ClientCredentialsGrantRequest(registration);
       OAuth2AccessTokenResponse response = client.getTokenResponse(request);
 
@@ -107,7 +143,7 @@ public class OAuth2AuthorizedClientProvider {
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN).build();
 
-      DefaultRefreshTokenTokenResponseClient clientRT = new DefaultRefreshTokenTokenResponseClient();
+      RestClientRefreshTokenTokenResponseClient clientRT = new RestClientRefreshTokenTokenResponseClient();
       OAuth2RefreshTokenGrantRequest requestRT = new OAuth2RefreshTokenGrantRequest(registration,
             new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, "fake-one", null, null),
             new OAuth2RefreshToken(oAuth2ClientContext.getRefreshToken(), null));

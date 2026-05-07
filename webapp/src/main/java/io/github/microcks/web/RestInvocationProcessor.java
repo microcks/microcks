@@ -252,7 +252,7 @@ public class RestInvocationProcessor {
          handleCallbackTrigger(ic, request, headers, body, response);
 
          // Check and emit AsyncAPI trigger if needed.
-         handleAsyncAPITrigger(ic, request, headers, body, responseContent, responseHeaders);
+         handleAsyncAPITrigger(ic, request, headers, body, responseContent, responseHeaders.asMultiValueMap());
 
          // Return response content.
          return new ResponseResult(status, responseHeaders, responseContent);

@@ -128,7 +128,7 @@ public class OpenAICopilot implements AICopilot {
 
       // Initialize a Rest template for interacting with OpenAI API.
       // We need to register a custom Jackson converter to handle serialization of name and function_call of messages.
-      restTemplate = new RestTemplateBuilder().setReadTimeout(timeout)
+      restTemplate = new RestTemplateBuilder().readTimeout(timeout)
             .additionalMessageConverters(mappingJacksonHttpMessageConverter()).build();
    }
 
