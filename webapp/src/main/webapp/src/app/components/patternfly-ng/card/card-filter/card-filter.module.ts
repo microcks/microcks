@@ -11,7 +11,7 @@ import { CardFilterComponent } from './card-filter.component';
  */
 @NgModule({
   imports: [
-    BsDropdownModule,
+    BsDropdownModule.forRoot(),
     CommonModule,
     FormsModule,
     CardFilterComponent

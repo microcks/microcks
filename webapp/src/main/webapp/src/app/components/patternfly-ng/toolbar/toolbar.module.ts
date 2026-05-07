@@ -14,7 +14,7 @@ import { ToolbarComponent } from './toolbar.component';
 @NgModule({
   imports: [
     ActionModule,
-    BsDropdownModule,
+    BsDropdownModule.forRoot(),
     CommonModule,
     FilterModule,
     SortModule,

@@ -10,7 +10,6 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 
 import { clone, cloneDeep, defaults, isEqual } from 'lodash-es';
 
@@ -49,8 +48,7 @@ import { ActionConfig } from './action-config';
   selector: 'pfng-action',
   templateUrl: './action.component.html',
   imports: [
-    CommonModule,
-    BsDropdownModule
+    CommonModule
   ]
 })
 export class ActionComponent implements DoCheck, OnInit {
