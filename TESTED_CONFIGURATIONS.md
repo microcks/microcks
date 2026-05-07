@@ -11,6 +11,45 @@ There are other configurations that work well with Microcks. Look at [community 
 for more working configurations. If you have a running configuration, please consider sharing it with the community by opening
 a pull request against the community file 🙏
 
+## Microcks 1.15.x
+
+### Dependencies
+
+* **Microcks Postman Runtime**: 0.7.2
+* **MongoDB**: 4.4.29 - wire protocol version 8 as the minimum
+* **Keycloak**: 26.0.0
+
+### Runtime Environments
+
+* **Minikube**: v1.37.0 with Kubernetes v1.34.0
+* **Kind**: v0.25.0 with Kubernetes v1.28.3
+
+### Integrations
+
+* `microcks-cli`: 1.0.0
+* **Jenkins**: v2.462.3 with `microcks-jenkins-plugin` 0.6.0
+* **Backstage**: 1.43.0 with `microcks-backstage-provider` 0.0.7
+
+
+## Microcks 1.14.x
+
+### Dependencies
+
+* **Microcks Postman Runtime**: 0.7.1
+* **MongoDB**: 4.4.29 - wire protocol version 8 as the minimum
+* **Keycloak**: 26.0.0
+
+### Runtime Environments
+
+* **Minikube**: v1.37.0 with Kubernetes v1.34.0
+* **Kind**: v0.25.0 with Kubernetes v1.28.3
+
+### Integrations
+
+* `microcks-cli`: 1.0.0
+* **Jenkins**: v2.462.3 with `microcks-jenkins-plugin` 0.6.0
+* **Backstage**: 1.43.0 with `microcks-backstage-provider` 0.0.7
+
 
 ## Microcks 1.13.x
 
