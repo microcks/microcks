@@ -15,9 +15,6 @@
  */
 package io.github.microcks.repository;
 
-import static org.springframework.data.domain.Sort.Direction.ASC;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-
 import io.github.microcks.domain.DailyStatistic;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +32,9 @@ import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 /**
  * Implementation of CustomDailyStatisticRepository.
