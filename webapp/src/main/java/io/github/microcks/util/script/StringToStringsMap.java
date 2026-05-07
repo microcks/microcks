@@ -27,6 +27,11 @@ import java.util.Map;
 /**
  * A minimalist implementation of com.eviware.soapui.support.types.StringToStringsMap to ensure a compatibility layer
  * withe SoapUI scripting.
+ * <p>
+ * Behavioural parity with the SoapUI upstream class is the explicit goal of this port. Any apparent bug or fragility
+ * here (e.g. equals/hashCode contract violations flagged by Sonar) should first be checked against the SoapUI source -
+ * if the upstream behaves the same way, do not "fix" it here, since SoapUI scripts hosted by Microcks would then
+ * diverge from real SoapUI. Suppress the Sonar finding with a comment instead.
  * @author laurent
  */
 public class StringToStringsMap extends HashMap<String, List<String>> {
@@ -92,6 +97,10 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
       this.equalsOnThis = equalsOnThis;
    }
 
+   // hashCode is intentionally not overridden here to mirror the SoapUI upstream class this is ported from
+   // (see class Javadoc). Suppress the matching Sonar finding rather than diverging from SoapUI behaviour.
+   @SuppressWarnings("java:S1206")
+   @Override
    public boolean equals(Object o) {
       return this.equalsOnThis ? this == o : super.equals(o);
    }

@@ -146,6 +146,34 @@ operations:
               director: Irvin Kershner
               starCount: 434
               rating: 4.3
+    notAvailable:
+      request:
+        body:
+          query: |-
+            mutation AddStar($filmId: String) {
+              addStar(filmId: $filmId) {
+                id
+                title
+                episodeID
+                director
+                starCount
+                rating
+              }
+            }
+          variables:
+            filmId: notavailable
+      response:
+        mediaType: application/json
+        body:
+          errors:
+            - message: "The system is not available, due to maintenance, please try again later."
+              extensions:
+                code: "MAINTENANCE_MODE"
+          data:
+            addStar: null
+          extensions:
+            correlationId:
+              traceId: "{{guid()}}"
   addReview:
     addReview to ZmlsbXM6Mg==:
       request:
