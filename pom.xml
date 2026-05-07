@@ -71,11 +71,12 @@
   <dependencyManagement>
     <dependencies>
       <!-- Pin Jackson 2.x. Spring Boot 4 defaults to Jackson 3, but Quarkus 3 (used by
-           the async minion) and shared commons modules still rely on Jackson 2.x APIs. -->
+           the async minion) and shared commons modules still rely on Jackson 2.x APIs.
+           Keep this aligned with the jackson-annotations version expected by Jackson 3. -->
       <dependency>
         <groupId>com.fasterxml.jackson</groupId>
         <artifactId>jackson-bom</artifactId>
-        <version>2.18.2</version>
+        <version>2.21.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
