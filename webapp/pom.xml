@@ -102,18 +102,17 @@
       <artifactId>opentelemetry-exporter-otlp</artifactId>
     </dependency>
     <!-- @WithSpan annotation used in REST/gRPC invocation processors. Not pulled by
-         Spring's official starter; lives in the OTel instrumentation project. -->
+         Spring's official starter; lives in the OTel instrumentation project. The
+         starter does not provide a WithSpanAspect on Boot 4, so weaving is handled
+         by io.github.microcks.util.otel.WithSpanAspect via spring-boot-starter-aop. -->
     <dependency>
       <groupId>io.opentelemetry.instrumentation</groupId>
       <artifactId>opentelemetry-instrumentation-annotations</artifactId>
       <version>2.21.0</version>
     </dependency>
-    <!-- AutoConfigurationCustomizerProvider SPI used by OtelAutoConfigurationCustomizerProvider
-         to register the local span storage processor and X-Trace-Id propagator. Version
-         is managed by the opentelemetry-bom imported via spring-boot-dependencies. -->
     <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-sdk-extension-autoconfigure-spi</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aspectj</artifactId>
     </dependency>
 
     <!-- Provides KafkaProperties (moved out of spring-boot-autoconfigure in SB 4). -->
