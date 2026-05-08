@@ -281,6 +281,150 @@ class KafkaRequestReplyHandlerIT {
    }
 
    @Test
+   void testRequestReplyHandlerWithDynamicAddressLocation() throws Exception {
+      String DYNAMIC_REPLY_TOPIC = "UserAccountService-1.0.0-user-signup-dynamic-reply";
+
+      String asyncAPIContent = Files.readString(
+            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
+
+      EventMessage requestMessage = new EventMessage();
+      requestMessage.setName("UserSignupRequest");
+      requestMessage.setMediaType("application/json");
+      requestMessage.setContent("""
+            {"email": "john.doe@example.com", "username": "johndoe", "fullName": "John Doe"}""");
+
+      EventMessage replyMessage = new EventMessage();
+      replyMessage.setId("reply-msg-dynamic");
+      replyMessage.setName("UserSignupReply");
+      replyMessage.setMediaType("application/json");
+      replyMessage.setContent("""
+            {"userId": "usr-dynamic", "status": "success", "message": "Dynamic reply"}""");
+
+      requestMessage.setReplyId(replyMessage.getId());
+
+      Service service = new Service();
+      service.setId("user-account-service-dynamic");
+      service.setName("User Account Service");
+      service.setVersion("1.0.0");
+      service.setType(ServiceType.EVENT);
+
+      Operation signupOperation = new Operation();
+      signupOperation.setName("RECEIVE user/signup");
+      signupOperation.addResourcePath(REQUEST_TOPIC);
+
+      ReplyInfo replyInfo = new ReplyInfo();
+      replyInfo.setAddressLocation("$message.header#/replyTo");
+      signupOperation.setReply(replyInfo);
+
+      service.setOperations(List.of(signupOperation));
+
+      AsyncMockRepository mockRepository = new AsyncMockRepository();
+      AsyncMockDefinition mockDefinition = new AsyncMockDefinition(service, signupOperation,
+            List.of(requestMessage, replyMessage));
+      mockRepository.storeMockDefinition(mockDefinition);
+
+      MicrocksAPIConnector microcksAPIConnector = new FakeMicrocksAPIConnector("user-account-service-dynamic",
+            asyncAPIContent);
+      SchemaRegistry schemaRegistry = new SchemaRegistry(microcksAPIConnector);
+
+      kafkaProducerManager = createKafkaProducerManager();
+
+      Binding kafkaBinding = new Binding();
+      kafkaBinding.setType(BindingType.KAFKA);
+
+      KafkaRequestReplyHandlerFactory factory = createFactory(kafkaProducerManager, schemaRegistry);
+      handler = factory.createHandler(mockDefinition, kafkaBinding);
+
+      handler.start();
+      Thread.sleep(2000);
+
+      // Send request with replyTo header pointing to dynamic reply topic
+      sendRequestMessageWithHeader(REQUEST_TOPIC, """
+            {"email": "john.doe@example.com", "username": "johndoe", "fullName": "John Doe"}""", "replyTo",
+            DYNAMIC_REPLY_TOPIC);
+
+      Thread.sleep(1000);
+
+      List<String> replyMessages = consumeMessagesFromTopic(DYNAMIC_REPLY_TOPIC, 2000);
+
+      assertFalse(replyMessages.isEmpty(), "Should have received at least one reply message on dynamic topic");
+
+      String receivedReply = replyMessages.get(0);
+      assertTrue(receivedReply.contains("usr-dynamic"), "Reply should contain dynamic userId");
+   }
+
+   @Test
+   void testRequestReplyHandlerWithPayloadAddressLocation() throws Exception {
+      String PAYLOAD_REPLY_TOPIC = "UserAccountService-1.0.0-user-signup-payload-reply";
+
+      String asyncAPIContent = Files.readString(
+            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
+
+      EventMessage requestMessage = new EventMessage();
+      requestMessage.setName("UserSignupRequest");
+      requestMessage.setMediaType("application/json");
+      requestMessage.setContent("""
+            {"email": "jane@example.com", "username": "janedoe"}""");
+
+      EventMessage replyMessage = new EventMessage();
+      replyMessage.setId("reply-msg-payload");
+      replyMessage.setName("UserSignupReply");
+      replyMessage.setMediaType("application/json");
+      replyMessage.setContent("""
+            {"userId": "usr-payload", "status": "success"}""");
+
+      requestMessage.setReplyId(replyMessage.getId());
+
+      Service service = new Service();
+      service.setId("user-account-service-payload");
+      service.setName("User Account Service");
+      service.setVersion("1.0.0");
+      service.setType(ServiceType.EVENT);
+
+      Operation signupOperation = new Operation();
+      signupOperation.setName("RECEIVE user/signup");
+      signupOperation.addResourcePath(REQUEST_TOPIC);
+
+      ReplyInfo replyInfo = new ReplyInfo();
+      replyInfo.setAddressLocation("$message.payload#/replyChannel");
+      signupOperation.setReply(replyInfo);
+
+      service.setOperations(List.of(signupOperation));
+
+      AsyncMockDefinition mockDefinition = new AsyncMockDefinition(service, signupOperation,
+            List.of(requestMessage, replyMessage));
+
+      MicrocksAPIConnector microcksAPIConnector = new FakeMicrocksAPIConnector("user-account-service-payload",
+            asyncAPIContent);
+      SchemaRegistry schemaRegistry = new SchemaRegistry(microcksAPIConnector);
+
+      kafkaProducerManager = createKafkaProducerManager();
+
+      Binding kafkaBinding = new Binding();
+      kafkaBinding.setType(BindingType.KAFKA);
+
+      KafkaRequestReplyHandlerFactory factory = createFactory(kafkaProducerManager, schemaRegistry);
+      handler = factory.createHandler(mockDefinition, kafkaBinding);
+
+      handler.start();
+      Thread.sleep(2000);
+
+      // Send request with replyChannel in the payload
+      sendRequestMessage(REQUEST_TOPIC,
+            """
+                  {"email": "jane@example.com", "username": "janedoe", "replyChannel": "UserAccountService-1.0.0-user-signup-payload-reply"}""");
+
+      Thread.sleep(1000);
+
+      List<String> replyMessages = consumeMessagesFromTopic(PAYLOAD_REPLY_TOPIC, 2000);
+
+      assertFalse(replyMessages.isEmpty(), "Should have received at least one reply message on payload-derived topic");
+
+      String receivedReply = replyMessages.get(0);
+      assertTrue(receivedReply.contains("usr-payload"), "Reply should contain payload userId");
+   }
+
+   @Test
    void testHandlerStartStop() throws Exception {
       // Arrange.
       String asyncAPIContent = Files.readString(
@@ -344,6 +488,10 @@ class KafkaRequestReplyHandlerIT {
    }
 
    private void sendRequestMessage(String topic, String message) {
+      sendRequestMessageWithHeader(topic, message, null, null);
+   }
+
+   private void sendRequestMessageWithHeader(String topic, String message, String headerKey, String headerValue) {
       Properties props = new Properties();
       props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
       props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -351,6 +499,10 @@ class KafkaRequestReplyHandlerIT {
 
       try (KafkaProducer<String, byte[]> producer = new KafkaProducer<>(props)) {
          ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, message.getBytes(StandardCharsets.UTF_8));
+         if (headerKey != null && headerValue != null) {
+            record.headers().add(new org.apache.kafka.common.header.internals.RecordHeader(headerKey,
+                  headerValue.getBytes(StandardCharsets.UTF_8)));
+         }
          producer.send(record).get();
          producer.flush();
       } catch (Exception e) {
@@ -426,16 +578,8 @@ class KafkaRequestReplyHandlerIT {
 
    private KafkaRequestReplyHandlerFactory createFactory(KafkaProducerManager producerManager,
          SchemaRegistry schemaRegistry) {
-      KafkaRequestReplyHandlerFactory factory = new KafkaRequestReplyHandlerFactory(producerManager, schemaRegistry);
-      // Use reflection to set the config field
-      try {
-         java.lang.reflect.Field configField = KafkaRequestReplyHandlerFactory.class.getDeclaredField("config");
-         configField.setAccessible(true);
-         configField.set(factory, new FakeConfig(kafkaContainer.getBootstrapServers()));
-      } catch (Exception e) {
-         fail("Failed to initialize factory", e);
-      }
-      return factory;
+      FakeConfig config = new FakeConfig(kafkaContainer.getBootstrapServers());
+      return new KafkaRequestReplyHandlerFactory(producerManager, schemaRegistry, config);
    }
 
    private static class FakeConfig implements Config {
