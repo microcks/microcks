@@ -76,7 +76,7 @@ public abstract class AbstractBaseIT {
    public static void setDatasourceProperties(final DynamicPropertyRegistry registry) {
       String url = "mongodb://" + mongoDBContainer.getHost() + ":" + mongoDBContainer.getMappedPort(27017)
             + "/microcksIT";
-      registry.add("spring.data.mongodb.uri", () -> url);
+      registry.add("spring.mongodb.uri", () -> url);
    }
 
    public int getServerPort() {
