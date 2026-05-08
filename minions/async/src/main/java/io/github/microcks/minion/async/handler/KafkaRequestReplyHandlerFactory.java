@@ -16,6 +16,7 @@
 package io.github.microcks.minion.async.handler;
 
 import io.github.microcks.domain.Binding;
+import io.github.microcks.domain.BindingType;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.SchemaRegistry;
 import io.github.microcks.minion.async.producer.KafkaProducerManager;
@@ -24,7 +25,6 @@ import org.eclipse.microprofile.config.Config;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * Factory for creating Kafka request-reply handlers.
@@ -32,35 +32,30 @@ import jakarta.inject.Inject;
  * @author adamhicks
  */
 @ApplicationScoped
-public class KafkaRequestReplyHandlerFactory {
+@RequestReplyHandlerFactoryQualifier(BindingType.KAFKA)
+public class KafkaRequestReplyHandlerFactory implements RequestReplyHandlerFactory {
 
-   /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
-
-   @Inject
-   Config config;
 
    final KafkaProducerManager producerManager;
    final SchemaRegistry schemaRegistry;
+   final Config config;
 
    /**
     * Create a new factory with required dependencies.
     *
     * @param producerManager The Kafka producer manager for sending replies
     * @param schemaRegistry  The schema registry for message schemas
+    * @param config          The application configuration
     */
-   public KafkaRequestReplyHandlerFactory(KafkaProducerManager producerManager, SchemaRegistry schemaRegistry) {
+   public KafkaRequestReplyHandlerFactory(KafkaProducerManager producerManager, SchemaRegistry schemaRegistry,
+         Config config) {
       this.producerManager = producerManager;
       this.schemaRegistry = schemaRegistry;
+      this.config = config;
    }
 
-   /**
-    * Create a Kafka request-reply handler for the given mock definition.
-    *
-    * @param definition The mock definition to create a handler for
-    * @param binding    The Kafka binding information
-    * @return A new KafkaRequestReplyHandler
-    */
+   @Override
    public KafkaRequestReplyHandler createHandler(AsyncMockDefinition definition, Binding binding) {
       logger.debugf("Creating Kafka request-reply handler for %s - %s",
             definition.getOwnerService().getName() + ":" + definition.getOwnerService().getVersion(),
