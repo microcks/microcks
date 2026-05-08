@@ -16,6 +16,7 @@
 package io.github.microcks.minion.async.handler;
 
 import io.github.microcks.domain.Binding;
+import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ReplyInfo;
@@ -35,63 +36,48 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test case for RequestReplyHandlerManager class. Note: This is a simple test without actual Kafka integration. Full
  * integration tests require a running Kafka instance.
- * 
+ *
  * @author adamhicks
  */
 class RequestReplyHandlerManagerTest {
 
    private AsyncMockRepository mockRepository;
-   private KafkaRequestReplyHandlerFactory kafkaHandlerFactory;
    private RequestReplyHandlerManager handlerManager;
 
    @BeforeEach
-   void setUp() {
-      // Create simple in-memory implementations for testing
+   void setUp() throws Exception {
       mockRepository = new AsyncMockRepository();
-      kafkaHandlerFactory = new TestKafkaHandlerFactory();
-      handlerManager = new RequestReplyHandlerManager(mockRepository, kafkaHandlerFactory);
+      handlerManager = new RequestReplyHandlerManager(mockRepository);
 
-      // Inject supported bindings via reflection (since it's normally from
-      // ConfigProperty)
-      try {
-         var field = RequestReplyHandlerManager.class.getDeclaredField("supportedBindings");
-         field.setAccessible(true);
-         field.set(handlerManager, new String[] { "KAFKA" });
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
+      setField(handlerManager, "supportedBindings", new String[] { "KAFKA" });
+
+      TestKafkaHandlerFactory testFactory = new TestKafkaHandlerFactory();
+      setField(handlerManager, "resolvedFactories", List.of(testFactory));
    }
 
    @Test
    void testStartAllHandlers_NoDefinitions() {
-      // Execute
       handlerManager.startAllHandlers();
-
-      // Verify
       assertEquals(0, handlerManager.getHandlerCount());
    }
 
    @Test
    void testStartAllHandlers_WithKafkaDefinition() {
-      // Setup
-      AsyncMockDefinition definition = createRequestReplyMockDefinition("kafka");
+      AsyncMockDefinition definition = createRequestReplyMockDefinition("KAFKA");
       mockRepository.storeMockDefinition(definition);
 
-      // Execute
       handlerManager.startAllHandlers();
 
-      // Verify
       assertEquals(1, handlerManager.getHandlerCount());
    }
 
    @Test
    void testStopHandlersForService() {
-      // Setup
-      AsyncMockDefinition definition1 = createRequestReplyMockDefinition("kafka");
+      AsyncMockDefinition definition1 = createRequestReplyMockDefinition("KAFKA");
       definition1.getOwnerService().setId("service-1");
       mockRepository.storeMockDefinition(definition1);
 
-      AsyncMockDefinition definition2 = createRequestReplyMockDefinition("kafka");
+      AsyncMockDefinition definition2 = createRequestReplyMockDefinition("KAFKA");
       definition2.getOwnerService().setId("service-2");
       definition2.getOperation().setName("SUBSCRIBE test/request2");
       mockRepository.storeMockDefinition(definition2);
@@ -99,43 +85,58 @@ class RequestReplyHandlerManagerTest {
       handlerManager.startAllHandlers();
       assertEquals(2, handlerManager.getHandlerCount());
 
-      // Execute - stop handlers for service-1
       handlerManager.stopHandlersForService("service-1");
 
-      // Verify - only service-2 handler should remain
       assertEquals(1, handlerManager.getHandlerCount());
    }
 
    @Test
    void testStopAllHandlers() {
-      // Setup
-      AsyncMockDefinition definition = createRequestReplyMockDefinition("kafka");
+      AsyncMockDefinition definition = createRequestReplyMockDefinition("KAFKA");
       mockRepository.storeMockDefinition(definition);
 
       handlerManager.startAllHandlers();
       assertEquals(1, handlerManager.getHandlerCount());
 
-      // Execute
       handlerManager.stopAllHandlers();
 
-      // Verify
       assertEquals(0, handlerManager.getHandlerCount());
    }
 
    @Test
    void testStartHandlerForDefinition_DuplicatePrevented() {
-      // Setup
-      AsyncMockDefinition definition = createRequestReplyMockDefinition("kafka");
+      AsyncMockDefinition definition = createRequestReplyMockDefinition("KAFKA");
 
-      // Execute - start twice
       handlerManager.startHandlerForDefinition(definition);
       handlerManager.startHandlerForDefinition(definition);
 
-      // Verify - only one handler should be created
       assertEquals(1, handlerManager.getHandlerCount());
    }
 
-   // Helper methods and test implementations
+   @Test
+   void testResolveFactoryReturnsCorrectFactory() throws Exception {
+      RequestReplyHandlerFactory factory = invokeResolveFactory(handlerManager, BindingType.KAFKA);
+      assertNotNull(factory, "Should resolve KAFKA factory");
+      assertTrue(factory instanceof TestKafkaHandlerFactory, "Should be the test Kafka factory");
+   }
+
+   @Test
+   void testResolveFactoryReturnsNullForUnsupportedBinding() throws Exception {
+      RequestReplyHandlerFactory factory = invokeResolveFactory(handlerManager, BindingType.MQTT);
+      assertNull(factory, "Should not resolve MQTT factory when none is registered");
+   }
+
+   @Test
+   void testStartHandlerForDefinition_WarnsWhenNoFactoryFound() throws Exception {
+      AsyncMockDefinition definition = createRequestReplyMockDefinition("MQTT");
+      mockRepository.storeMockDefinition(definition);
+
+      setField(handlerManager, "supportedBindings", new String[] { "MQTT" });
+
+      handlerManager.startHandlerForDefinition(definition);
+
+      assertEquals(0, handlerManager.getHandlerCount());
+   }
 
    private AsyncMockDefinition createRequestReplyMockDefinition(String binding) {
       Service service = new Service();
@@ -146,18 +147,15 @@ class RequestReplyHandlerManagerTest {
       Operation operation = new Operation();
       operation.setName("SUBSCRIBE test/request");
 
-      // Add binding
       Binding bindingDef = new Binding();
       Map<String, Binding> bindings = new HashMap<>();
       bindings.put(binding.toUpperCase(), bindingDef);
       operation.setBindings(bindings);
 
-      // Add reply info to make it a request-reply operation
       ReplyInfo replyInfo = new ReplyInfo();
       replyInfo.setChannelAddress("test/reply");
       operation.setReply(replyInfo);
 
-      // Create event messages
       EventMessage requestMessage = new EventMessage();
       requestMessage.setName("request1");
       requestMessage.setContent("{\"action\": \"test\"}");
@@ -167,24 +165,27 @@ class RequestReplyHandlerManagerTest {
       return new AsyncMockDefinition(service, operation, eventMessages);
    }
 
-   /**
-    * Simple test implementation of KafkaRequestReplyHandlerFactory that creates test handlers.
-    */
-   private static class TestKafkaHandlerFactory extends KafkaRequestReplyHandlerFactory {
-      public TestKafkaHandlerFactory() {
-         super(null, null);
-      }
+   private static void setField(Object target, String fieldName, Object value) throws Exception {
+      var field = target.getClass().getDeclaredField(fieldName);
+      field.setAccessible(true);
+      field.set(target, value);
+   }
 
+   private static RequestReplyHandlerFactory invokeResolveFactory(RequestReplyHandlerManager manager,
+         BindingType bindingType) throws Exception {
+      var method = RequestReplyHandlerManager.class.getDeclaredMethod("resolveFactory", BindingType.class);
+      method.setAccessible(true);
+      return (RequestReplyHandlerFactory) method.invoke(manager, bindingType);
+   }
+
+   @RequestReplyHandlerFactoryQualifier(BindingType.KAFKA)
+   private static class TestKafkaHandlerFactory implements RequestReplyHandlerFactory {
       @Override
       public KafkaRequestReplyHandler createHandler(AsyncMockDefinition definition, Binding binding) {
-         // Return a test implementation that doesn't connect to Kafka
          return new TestKafkaRequestReplyHandler(definition, binding, null, null, null);
       }
    }
 
-   /**
-    * Simple test implementation that extends KafkaRequestReplyHandler but doesn't connect to Kafka.
-    */
    private static class TestKafkaRequestReplyHandler extends KafkaRequestReplyHandler {
       private boolean running = false;
 
@@ -196,7 +197,6 @@ class RequestReplyHandlerManagerTest {
 
       @Override
       public void start() {
-         // Don't actually start Kafka consumer in tests
          running = true;
       }
 
