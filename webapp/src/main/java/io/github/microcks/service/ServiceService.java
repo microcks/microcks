@@ -94,10 +94,10 @@ public class ServiceService {
    private final AuthorizationChecker authorizationChecker;
 
    @Value("${async-api.default-binding}")
-   private final String defaultAsyncBinding = null;
+   private String defaultAsyncBinding;
 
-   @Value("${async-api.default-frequency}")
-   private final Long defaultAsyncFrequency = 30L;
+   @Value("${async-api.default-frequency:30}")
+   private Long defaultAsyncFrequency;
 
 
    /**
@@ -202,120 +202,27 @@ public class ServiceService {
    public List<Service> importServiceDefinition(File repositoryFile, ReferenceResolver referenceResolver,
          ArtifactInfo artifactInfo) throws MockRepositoryImportException {
       // Retrieve the correct importer based on file path.
-      MockRepositoryImporter importer = null;
-      try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile, referenceResolver);
-      } catch (IOException ioe) {
-         throw new MockRepositoryImportException(ioe.getMessage(), ioe);
-      }
-
-      Service reference = null;
-      boolean serviceUpdate = false;
+      MockRepositoryImporter importer = getMockRepositoryImporter(repositoryFile, referenceResolver);
+      ServiceImportContext context = new ServiceImportContext();
 
       List<Service> services = importer.getServiceDefinitions();
       for (Service service : services) {
-         Service existingService = serviceRepository.findByNameAndVersion(service.getName(), service.getVersion());
-         log.debug("Service [{}, {}] exists ? {}", service.getName(), service.getVersion(), existingService != null);
-
-         // If it's the main artifact: retrieve previous id and props if update, save anyway.
-         if (artifactInfo.isMainArtifact()) {
-            if (existingService != null) {
-               // Retrieve its previous identifier and metadata
-               // (backup metadata that may have been imported with extensions).
-               Metadata backup = service.getMetadata();
-               service.setId(existingService.getId());
-               service.setMetadata(existingService.getMetadata());
-               // If there was metadata found through extensions, overwrite historical ones.
-               if (backup != null) {
-                  existingService.getMetadata().setLabels(backup.getLabels());
-                  existingService.getMetadata().setAnnotations(backup.getAnnotations());
-               }
-
-               // Keep its overriden operation properties.
-               copyOverridenOperations(existingService, service);
-               serviceUpdate = true;
-            }
-            if (service.getMetadata() == null) {
-               service.setMetadata(new Metadata());
-            }
-
-            // For services of type EVENT, we should put default values on frequency and bindings.
-            if (ServiceType.EVENT.equals(service.getType())) {
-               manageEventServiceDefaults(service);
-            }
-
-            service.getMetadata().objectUpdated();
-            service.setSourceArtifact(artifactInfo.getArtifactName());
-            service = serviceRepository.save(service);
-
-            // We're dealing with main artifact so reference is saved or updated one.
-            reference = service;
-         } else {
-            // It's a secondary artifact just for messages or metadata. We'll have problems if not having an existing service...
-            if (existingService == null) {
-               log.warn(
-                     "Trying to import {} as a secondary artifact but there's no existing [{}, {}] Service. Just skipping.",
-                     artifactInfo.getArtifactName(), service.getName(), service.getVersion());
-               break;
-            }
-
-            // If metadata and operation properties found through metadata import,
-            // update the existing service with them.
-            if (service.getMetadata() != null) {
-               existingService.getMetadata().setLabels(service.getMetadata().getLabels());
-               existingService.getMetadata().setAnnotations(service.getMetadata().getAnnotations());
-            }
-            for (Operation operation : service.getOperations()) {
-               Operation existingOp = existingService.getOperations().stream()
-                     .filter(op -> op.getName().equals(operation.getName())).findFirst().orElse(null);
-               if (existingOp != null) {
-                  if (operation.getDefaultDelay() != null) {
-                     existingOp.setDefaultDelay(operation.getDefaultDelay());
-                  }
-                  if (operation.getDefaultDelayStrategy() != null) {
-                     existingOp.setDefaultDelayStrategy(operation.getDefaultDelayStrategy());
-                  }
-                  if (operation.getDispatcher() != null) {
-                     existingOp.setDispatcher(operation.getDispatcher());
-                  }
-                  if (operation.getDispatcherRules() != null) {
-                     existingOp.setDispatcherRules(operation.getDispatcherRules());
-                  }
-                  if (operation.getParameterConstraints() != null) {
-                     if (existingOp.getParameterConstraints() == null) {
-                        existingOp.setParameterConstraints(operation.getParameterConstraints());
-                     } else {
-                        existingOp.getParameterConstraints().addAll(operation.getParameterConstraints());
-                     }
-                  }
-                  if (operation.getTriggerInfos() != null) {
-                     if (existingOp.getTriggerInfos() == null) {
-                        existingOp.setTriggerInfos(operation.getTriggerInfos());
-                     } else {
-                        existingOp.getTriggerInfos().addAll(operation.getTriggerInfos());
-                     }
-                  }
-               }
-            }
-
-            // We're dealing with secondary artifact so reference is the pre-existing one.
-            // Moreover, we should replace current imported service (unbound/unsaved)
-            // by reference in the results list.
-            reference = existingService;
-            services.remove(service);
-            services.add(reference);
+         Service existingService = findExistingService(service);
+         if (!prepareServiceForArtifactImport(service, existingService, services, artifactInfo, context)) {
+            break;
          }
 
          // Remove resources and messages previously attached to service.
-         updateArtifactResources(reference, importer, service, artifactInfo);
-         updateArtifactMessages(reference, importer, service, artifactInfo);
+         updateArtifactResources(context.reference(), importer, service, artifactInfo);
+         updateArtifactMessages(context.reference(), importer, artifactInfo);
 
          // When extracting message information, we may have modified Operation because discovered new resource paths
          // depending on variable URI parts. As a consequence, we got to update Service in repository.
-         serviceRepository.save(reference);
+         serviceRepository.save(context.reference());
 
          // Publish a Service update event before returning.
-         publishServiceChangeEvent(reference, serviceUpdate ? ChangeType.UPDATED : ChangeType.CREATED);
+         publishServiceChangeEvent(context.reference(),
+               context.serviceUpdate() ? ChangeType.UPDATED : ChangeType.CREATED);
       }
       log.info("Having imported {} services definitions into repository", services.size());
       return services;
@@ -393,7 +300,7 @@ public class ServiceService {
             Document document = Document.parse(referencePayload);
             genericResource.setPayload(document);
             genericResourceRepository.save(genericResource);
-         } catch (JsonParseException jpe) {
+         } catch (JsonParseException _) {
             log.error("Cannot parse the provided reference payload as JSON: {}", referencePayload);
             log.error("Reference is ignored, please provide JSON the next time");
          }
@@ -421,7 +328,7 @@ public class ServiceService {
       // Check if corresponding Service already exists.
       Service existingService = serviceRepository.findByNameAndVersion(name, version);
       if (existingService != null) {
-         log.warn("A Service '{}-{}' is already existing. Throwing an Exception", name, version);
+         log.warn("A Service '{}-{}' is already existing. Throwing an Exception", sanitize(name), sanitize(version));
          throw new EntityAlreadyExistsException(
                String.format("Service '%s-%s' is already present in store", name, version));
       }
@@ -448,7 +355,7 @@ public class ServiceService {
       service.addOperation(subscribeOp);
 
       serviceRepository.save(service);
-      log.info("Having created Service '{}' for generic event {}", service.getId(), event);
+      log.info("Having created Service '{}' for generic event {}", service.getId(), sanitize(event));
 
       // If reference payload is provided, record a first resource.
       if (referencePayload != null) {
@@ -486,7 +393,7 @@ public class ServiceService {
       Service service = getServiceById(id);
 
       if (service == null) {
-         log.warn("Service [{}] not found for deletion", id);
+         log.warn("Service [{}] not found for deletion", sanitize(id));
          return true;
       }
 
@@ -509,7 +416,7 @@ public class ServiceService {
          // Finally delete service and publish event.
          serviceRepository.delete(service);
          publishServiceChangeEvent(service, ChangeType.DELETED);
-         log.info("Service [{}] has been fully deleted", id);
+         log.info("Service [{}] has been fully deleted", sanitize(id));
          return true;
       }
       return false;
@@ -552,19 +459,18 @@ public class ServiceService {
     * @param userInfo        The current user information to check if authorized to do the update
     * @return True if operation has been found and updated, false otherwise.
     */
-   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules,
-         Long delay, String delayStrategy, Set<ParameterConstraint> constraints, UserInfo userInfo) {
+   public Boolean updateOperation(String id, String operationName, OperationUpdate operationUpdate, UserInfo userInfo) {
       // Get service to update.
       Service service = getServiceById(id);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
             if (operation.getName().equals(operationName)) {
-               operation.setDispatcher(dispatcher);
-               operation.setDispatcherRules(dispatcherRules);
-               operation.setParameterConstraints(constraints);
-               operation.setDefaultDelay(delay);
-               operation.setDefaultDelayStrategy(delayStrategy);
+               operation.setDispatcher(operationUpdate.dispatcher());
+               operation.setDispatcherRules(operationUpdate.dispatcherRules());
+               operation.setParameterConstraints(operationUpdate.constraints());
+               operation.setDefaultDelay(operationUpdate.delay());
+               operation.setDefaultDelayStrategy(operationUpdate.delayStrategy());
                operation.setOverride(true);
                serviceRepository.save(service);
 
@@ -587,53 +493,22 @@ public class ServiceService {
     */
    public Boolean addAICopilotExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,
          UserInfo userInfo) {
-      // Get service to update.
-      Service service = getServiceById(id);
-      if (service != null
-            && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
-         for (Operation operation : service.getOperations()) {
-            if (operation.getName().equals(operationName)) {
-               String operationId = IdBuilder.buildOperationId(service, operation);
-
-               for (Exchange exchange : exchanges) {
-                  if (exchange instanceof RequestResponsePair pair) {
-                     // Associate request and response with operation and artifact.
-                     pair.getRequest().setOperationId(operationId);
-                     pair.getResponse().setOperationId(operationId);
-                     pair.getRequest().setSourceArtifact(AI_COPILOT_SOURCE);
-                     pair.getResponse().setSourceArtifact(AI_COPILOT_SOURCE);
-
-                     // Save response and associate request with response before saving it.
-                     responseRepository.save(pair.getResponse());
-                     pair.getRequest().setResponseId(pair.getResponse().getId());
-                     requestRepository.save(pair.getRequest());
-
-                  } else if (exchange instanceof UnidirectionalEvent event) {
-                     // Associate event message with operation and artifact before saving it.
-                     event.getEventMessage().setOperationId(operationId);
-                     event.getEventMessage().setSourceArtifact(AI_COPILOT_SOURCE);
-                     eventMessageRepository.save(event.getEventMessage());
-
-                  } else if (exchange instanceof RequestReplyEvent event) {
-                     // Associate request and reply event messages with operation and artifact.
-                     event.getRequestMessage().setOperationId(operationId);
-                     event.getReplyMessage().setOperationId(operationId);
-                     event.getRequestMessage().setSourceArtifact(AI_COPILOT_SOURCE);
-                     event.getReplyMessage().setSourceArtifact(AI_COPILOT_SOURCE);
-
-                     // Save reply message and associate request with reply before saving it.
-                     eventMessageRepository.save(event.getReplyMessage());
-                     event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
-                     eventMessageRepository.save(event.getRequestMessage());
-                  }
-               }
-               // Publish a Service update event before returning.
-               publishServiceChangeEvent(service, ChangeType.UPDATED);
-               return true;
-            }
-         }
+      Service service = getAuthorizedService(id, userInfo);
+      if (service == null) {
+         return false;
       }
-      return false;
+
+      Operation operation = findOperation(service, operationName);
+      if (operation == null) {
+         return false;
+      }
+      String operationId = IdBuilder.buildOperationId(service, operation);
+      for (Exchange exchange : exchanges) {
+         saveAICopilotExchange(operationId, exchange);
+      }
+      // Publish a Service update event before returning.
+      publishServiceChangeEvent(service, ChangeType.UPDATED);
+      return true;
    }
 
    /**
@@ -735,8 +610,8 @@ public class ServiceService {
    }
 
    /** Manage the update of previous artifact messages with new imported ones. */
-   private void updateArtifactMessages(Service reference, MockRepositoryImporter importer, Service service,
-         ArtifactInfo artifactInfo) throws MockRepositoryImportException {
+   private void updateArtifactMessages(Service reference, MockRepositoryImporter importer, ArtifactInfo artifactInfo)
+         throws MockRepositoryImportException {
 
       for (Operation operation : reference.getOperations()) {
          String operationId = IdBuilder.buildOperationId(reference, operation);
@@ -825,5 +700,188 @@ public class ServiceService {
       ServiceChangeEvent event = new ServiceChangeEvent(this, service.getId(), changeType);
       applicationContext.publishEvent(event);
       log.debug("Service change event has been published");
+   }
+
+   private MockRepositoryImporter getMockRepositoryImporter(File repositoryFile, ReferenceResolver referenceResolver)
+         throws MockRepositoryImportException {
+      try {
+         return MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile, referenceResolver);
+      } catch (IOException ioe) {
+         throw new MockRepositoryImportException(ioe.getMessage(), ioe);
+      }
+   }
+
+   private Service findExistingService(Service service) {
+      Service existingService = serviceRepository.findByNameAndVersion(service.getName(), service.getVersion());
+      log.debug("Service [{}, {}] exists ? {}", service.getName(), service.getVersion(), existingService != null);
+      return existingService;
+   }
+
+   private boolean prepareServiceForArtifactImport(Service service, Service existingService, List<Service> services,
+         ArtifactInfo artifactInfo, ServiceImportContext context) {
+      if (artifactInfo.isMainArtifact()) {
+         importMainArtifact(service, existingService, artifactInfo, context);
+         return true;
+      }
+      return importSecondaryArtifact(service, existingService, services, artifactInfo, context);
+   }
+
+   private void importMainArtifact(Service service, Service existingService, ArtifactInfo artifactInfo,
+         ServiceImportContext context) {
+      if (existingService != null) {
+         // Retrieve previous identifier and metadata while keeping extension-imported labels/annotations.
+         Metadata backup = service.getMetadata();
+         service.setId(existingService.getId());
+         service.setMetadata(existingService.getMetadata());
+         if (backup != null) {
+            existingService.getMetadata().setLabels(backup.getLabels());
+            existingService.getMetadata().setAnnotations(backup.getAnnotations());
+         }
+         copyOverridenOperations(existingService, service);
+         context.markAsUpdate();
+      }
+      if (service.getMetadata() == null) {
+         service.setMetadata(new Metadata());
+      }
+      // For services of type EVENT, put default values on frequency and bindings.
+      if (ServiceType.EVENT.equals(service.getType())) {
+         manageEventServiceDefaults(service);
+      }
+      service.getMetadata().objectUpdated();
+      service.setSourceArtifact(artifactInfo.getArtifactName());
+      context.setReference(serviceRepository.save(service));
+   }
+
+   private boolean importSecondaryArtifact(Service service, Service existingService, List<Service> services,
+         ArtifactInfo artifactInfo, ServiceImportContext context) {
+      // Secondary artifacts can only enrich an already-existing service.
+      if (existingService == null) {
+         log.warn(
+               "Trying to import {} as a secondary artifact but there's no existing [{}, {}] Service. Just skipping.",
+               sanitize(artifactInfo.getArtifactName()), sanitize(service.getName()), sanitize(service.getVersion()));
+         return false;
+      }
+      applySecondaryArtifactMetadataAndOverrides(service, existingService);
+      context.setReference(existingService);
+      services.remove(service);
+      services.add(existingService);
+      return true;
+   }
+
+   private void applySecondaryArtifactMetadataAndOverrides(Service service, Service existingService) {
+      // Metadata and operation mutable properties found through secondary import update the existing service.
+      if (service.getMetadata() != null) {
+         existingService.getMetadata().setLabels(service.getMetadata().getLabels());
+         existingService.getMetadata().setAnnotations(service.getMetadata().getAnnotations());
+      }
+      for (Operation operation : service.getOperations()) {
+         Operation existingOp = existingService.getOperations().stream()
+               .filter(op -> op.getName().equals(operation.getName())).findFirst().orElse(null);
+         if (existingOp != null) {
+            updateSecondaryArtifactOperation(existingOp, operation);
+         }
+      }
+   }
+
+   private void updateSecondaryArtifactOperation(Operation existingOp, Operation operation) {
+      if (operation.getDefaultDelay() != null) {
+         existingOp.setDefaultDelay(operation.getDefaultDelay());
+      }
+      if (operation.getDefaultDelayStrategy() != null) {
+         existingOp.setDefaultDelayStrategy(operation.getDefaultDelayStrategy());
+      }
+      if (operation.getDispatcher() != null) {
+         existingOp.setDispatcher(operation.getDispatcher());
+      }
+      if (operation.getDispatcherRules() != null) {
+         existingOp.setDispatcherRules(operation.getDispatcherRules());
+      }
+      if (operation.getParameterConstraints() != null) {
+         if (existingOp.getParameterConstraints() == null) {
+            existingOp.setParameterConstraints(operation.getParameterConstraints());
+         } else {
+            existingOp.getParameterConstraints().addAll(operation.getParameterConstraints());
+         }
+      }
+      if (operation.getTriggerInfos() != null) {
+         if (existingOp.getTriggerInfos() == null) {
+            existingOp.setTriggerInfos(operation.getTriggerInfos());
+         } else {
+            existingOp.getTriggerInfos().addAll(operation.getTriggerInfos());
+         }
+      }
+   }
+
+   private Service getAuthorizedService(String id, UserInfo userInfo) {
+      Service service = getServiceById(id);
+      if (service != null
+            && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+         return service;
+      }
+      return null;
+   }
+
+   private Operation findOperation(Service service, String operationName) {
+      for (Operation operation : service.getOperations()) {
+         if (operation.getName().equals(operationName)) {
+            return operation;
+         }
+      }
+      return null;
+   }
+
+   private void saveAICopilotExchange(String operationId, Exchange exchange) {
+      if (exchange instanceof RequestResponsePair pair) {
+         pair.getRequest().setOperationId(operationId);
+         pair.getResponse().setOperationId(operationId);
+         pair.getRequest().setSourceArtifact(AI_COPILOT_SOURCE);
+         pair.getResponse().setSourceArtifact(AI_COPILOT_SOURCE);
+         responseRepository.save(pair.getResponse());
+         pair.getRequest().setResponseId(pair.getResponse().getId());
+         requestRepository.save(pair.getRequest());
+      } else if (exchange instanceof UnidirectionalEvent event) {
+         event.getEventMessage().setOperationId(operationId);
+         event.getEventMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+         eventMessageRepository.save(event.getEventMessage());
+      } else if (exchange instanceof RequestReplyEvent event) {
+         event.getRequestMessage().setOperationId(operationId);
+         event.getReplyMessage().setOperationId(operationId);
+         event.getRequestMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+         event.getReplyMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+         eventMessageRepository.save(event.getReplyMessage());
+         event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
+         eventMessageRepository.save(event.getRequestMessage());
+      }
+   }
+
+   private static String sanitize(String value) {
+      if (value == null)
+         return null;
+      return value.replaceAll("[\\n\\r\\t]", "_");
+   }
+
+   public record OperationUpdate(String dispatcher, String dispatcherRules, Long delay, String delayStrategy,
+         Set<ParameterConstraint> constraints) {
+   }
+
+   private static final class ServiceImportContext {
+      private Service reference;
+      private boolean serviceUpdate;
+
+      private Service reference() {
+         return reference;
+      }
+
+      private void setReference(Service reference) {
+         this.reference = reference;
+      }
+
+      private boolean serviceUpdate() {
+         return serviceUpdate;
+      }
+
+      private void markAsUpdate() {
+         this.serviceUpdate = true;
+      }
    }
 }

@@ -119,7 +119,8 @@ public class TestService {
     * @return A completed TestCaseResult object
     */
    public TestCaseResult reportTestCaseResult(String testResultId, String operationName, List<TestReturn> testReturns) {
-      log.info("Reporting a TestCaseResult for testResult {} on operation '{}'", testResultId, operationName);
+      log.info("Reporting a TestCaseResult for testResult {} on operation '{}'", sanitize(testResultId),
+            sanitize(operationName));
       TestResult testResult = testResultRepository.findById(testResultId).orElse(null);
       AtomicReference<TestCaseResult> updatedTestCaseResult = new AtomicReference<>();
 
@@ -171,7 +172,7 @@ public class TestService {
             if (!testResult.isInProgress()) {
                publishTestCompletionEvent(testResult);
             }
-         } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
+         } catch (org.springframework.dao.OptimisticLockingFailureException _) {
             // Update counter and refresh domain object.
             log.warn("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
             saved = false;
@@ -250,10 +251,8 @@ public class TestService {
          // Deal with elapsed time and success flag.
          if (sumElapsedTimes) {
             caseElapsedTime += testReturn.getElapsedTime();
-         } else if (findMaxElapsedTime) {
-            if (testReturn.getElapsedTime() > caseElapsedTime) {
-               caseElapsedTime = testReturn.getElapsedTime();
-            }
+         } else if (findMaxElapsedTime && testReturn.getElapsedTime() > caseElapsedTime) {
+            caseElapsedTime = testReturn.getElapsedTime();
          }
          TestStepResult testStepResult = testReturn.buildTestStepResult();
          if (!testStepResult.isSuccess()) {
@@ -311,9 +310,15 @@ public class TestService {
       long timeout = ThreadLocalRandom.current().nextInt(min, max + 1);
       try {
          Thread.sleep(Duration.ofMillis(timeout));
-      } catch (Exception e) {
+      } catch (Exception _) {
          log.debug("waitSomeRandomMS semaphore was interrupted");
       }
+   }
+
+   private static String sanitize(String value) {
+      if (value == null)
+         return null;
+      return value.replaceAll("[\\n\\r\\t]", "_");
    }
 
    /** Publish a TestCompletionEvent towards asynchronous consumers. */

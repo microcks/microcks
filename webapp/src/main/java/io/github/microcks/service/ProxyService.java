@@ -25,6 +25,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -47,17 +48,18 @@ public class ProxyService {
     * @return The response entity returned by external service as is
     */
    public ResponseEntity<byte[]> callExternal(URI externalUrl, HttpMethod method, HttpHeaders headers, String body) {
-      headers.put("Host", List.of(externalUrl.getHost()));
+      URI safeExternalUrl = validateExternalUrl(externalUrl);
+      headers.put("Host", List.of(safeExternalUrl.getHost()));
 
       if (log.isDebugEnabled()) {
-         log.debug("Proxy request url: {}", externalUrl);
+         log.debug("Proxy request url: {}", safeExternalUrl);
          log.debug("Proxy request headers: {}", headers);
          log.debug("Proxy request body: {}", body);
       }
 
       try {
-         ResponseEntity<byte[]> response = restTemplate.exchange(externalUrl, method, new HttpEntity<>(body, headers),
-               byte[].class);
+         ResponseEntity<byte[]> response = restTemplate.exchange(safeExternalUrl, method,
+               new HttpEntity<>(body, headers), byte[].class);
 
          if (log.isDebugEnabled()) {
             log.debug("Proxy returned: {}", response.getStatusCode());
@@ -71,6 +73,33 @@ public class ProxyService {
             log.debug("Proxy exception body: {}", ex.getResponseBodyAsString());
          }
          return new ResponseEntity<>(ex.getResponseBodyAsByteArray(), ex.getResponseHeaders(), ex.getStatusCode());
+      }
+   }
+
+   private static URI validateExternalUrl(URI externalUrl) {
+      if (externalUrl == null) {
+         throw new IllegalArgumentException("External URL cannot be null");
+      }
+      String scheme = externalUrl.getScheme();
+      if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+         throw new IllegalArgumentException("Only HTTP(S) URLs are allowed");
+      }
+      if (externalUrl.getHost() == null || externalUrl.getHost().isBlank()) {
+         throw new IllegalArgumentException("External URL host is required");
+      }
+      if (externalUrl.getUserInfo() != null || externalUrl.getFragment() != null) {
+         throw new IllegalArgumentException("External URL contains unsupported components");
+      }
+      String rawPath = externalUrl.getRawPath();
+      String normalizedPath = rawPath == null || rawPath.isBlank() ? "/" : URI.create(rawPath).normalize().getPath();
+      if (!normalizedPath.startsWith("/") || normalizedPath.contains("..")) {
+         throw new IllegalArgumentException("External URL path is invalid");
+      }
+      try {
+         return new URI(scheme, null, externalUrl.getHost(), externalUrl.getPort(), normalizedPath,
+               externalUrl.getRawQuery(), null);
+      } catch (URISyntaxException e) {
+         throw new IllegalArgumentException("External URL is invalid", e);
       }
    }
 }
