@@ -409,7 +409,6 @@ class AsyncAPISchemaValidatorTest {
             "/channels/smartylighting~1streetlights~1event~1lighting~1measured/subscribe/message");
       assertFalse(errors.isEmpty());
       assertEquals(2, errors.size());
-      System.out.println(errors);
       // First error is because payload does not have any ref to components.
       assertEquals(
             "property 'location' is not defined in the schema and the schema does not allow additional properties",
@@ -569,9 +568,7 @@ class AsyncAPISchemaValidatorTest {
       List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
             "/channels/user~1signedup/subscribe/message",
             "https://raw.githubusercontent.com/microcks/microcks/1.7.x/commons/util/src/test/resources/io/github/microcks/util/asyncapi/");
-      for (String error : errors) {
-         System.out.println("Validation error: " + error);
-      }
+
       assertTrue(errors.isEmpty());
    }
 
