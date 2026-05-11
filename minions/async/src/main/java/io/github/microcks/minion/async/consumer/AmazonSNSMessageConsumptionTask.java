@@ -31,6 +31,7 @@ import software.amazon.awssdk.services.sns.model.ListTopicsResponse;
 import software.amazon.awssdk.services.sns.model.SubscribeRequest;
 import software.amazon.awssdk.services.sns.model.Topic;
 import software.amazon.awssdk.services.sns.model.UnsubscribeRequest;
+import software.amazon.awssdk.services.sns.paginators.ListTopicsIterable;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
@@ -75,7 +76,7 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
 
    private static final String SUBSCRIPTION_PREFIX = "-microcks-test";
 
-   private AsyncTestSpecification specification;
+   private final AsyncTestSpecification specification;
 
    protected String topic;
 
@@ -144,12 +145,8 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
       snsClient.unsubscribe(UnsubscribeRequest.builder().subscriptionArn(subscriptionArn).build());
       sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queue.url()).build());
       // Close both clients.
-      if (snsClient != null) {
-         snsClient.close();
-      }
-      if (sqsClient != null) {
-         sqsClient.close();
-      }
+      snsClient.close();
+      sqsClient.close();
    }
 
    /** Initialize Amazon SNS/SQS clients and SQS subscription from test properties. */
@@ -200,6 +197,10 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
 
       // Ensure connection is possible and subscription of SQS endpoint exists.
       String topicArn = retrieveTopicArn();
+      if (topicArn == null) {
+         logger.errorf("Unable to find the SNS topic ARN for topic named '%s'", topic);
+         throw new IOException("Unable to find the SNS topic ARN for topic " + topic);
+      }
 
       // Create a temporary subscription Queue and get its ARN.
       String subscriptionQueueName = topic + SUBSCRIPTION_PREFIX + "-" + specification.getTestResultId();
@@ -228,14 +229,14 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
     * @return The topic ARN or null if not found.
     */
    private String retrieveTopicArn() {
-      ListTopicsRequest listRequest = ListTopicsRequest.builder().build();
-      ListTopicsResponse listResponse = snsClient.listTopics(listRequest);
-
-      if (listResponse.hasTopics() && listResponse.topics().size() > 0) {
-         for (Topic topicTopic : listResponse.topics()) {
-            logger.infof("Found AWS SNS topic: %s", topicTopic.toString());
-            if (topicTopic.topicArn().endsWith(":" + topic)) {
-               return topicTopic.topicArn();
+      ListTopicsIterable pages = snsClient.listTopicsPaginator(ListTopicsRequest.builder().build());
+      for (ListTopicsResponse page : pages) {
+         if (page.hasTopics()) {
+            for (Topic t : page.topics()) {
+               logger.infof("Found AWS SNS topic: %s", t.toString());
+               if (t.topicArn().endsWith(":" + topic)) {
+                  return t.topicArn();
+               }
             }
          }
       }
