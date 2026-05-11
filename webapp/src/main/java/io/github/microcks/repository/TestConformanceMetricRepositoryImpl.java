@@ -18,7 +18,6 @@ package io.github.microcks.repository;
 import io.github.microcks.domain.TestConformanceMetric;
 import io.github.microcks.domain.WeightedMetricValue;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -34,15 +33,23 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
  */
 public class TestConformanceMetricRepositoryImpl implements CustomTestConformanceMetricRepository {
 
-   @Autowired
+   private static final String VALUE_FIELD = "value";
+
    private MongoTemplate template;
+
+   /**
+    * @param template The MongoTemplate
+    */
+   public TestConformanceMetricRepositoryImpl(MongoTemplate template) {
+      this.template = template;
+   }
 
    @Override
    public List<WeightedMetricValue> aggregateTestConformanceMetric() {
       // Match all but group by label (domain) and compute average and weight.
       Aggregation aggregation = newAggregation(
-            group("aggregationLabelValue").avg("currentScore").as("value").count().as("weight"),
-            project("value", "weight").and("_id").as("name"), sort(Sort.Direction.DESC, "value"));
+            group("aggregationLabelValue").avg("currentScore").as(VALUE_FIELD).count().as("weight"),
+            project(VALUE_FIELD, "weight").and("_id").as("name"), sort(Sort.Direction.DESC, VALUE_FIELD));
       AggregationResults<WeightedMetricValue> results = template.aggregate(aggregation, TestConformanceMetric.class,
             WeightedMetricValue.class);
       return results.getMappedResults();
