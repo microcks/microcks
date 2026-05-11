@@ -169,6 +169,11 @@ public class JobController {
    public ResponseEntity<ImportJob> startJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Starting job with id {}", jobId);
       ImportJob job = jobRepository.findById(jobId).orElse(null);
+
+      if (job == null) {
+         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
+
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(true);
@@ -184,6 +189,11 @@ public class JobController {
    public ResponseEntity<ImportJob> stopJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Stopping job with id {}", jobId);
       ImportJob job = jobRepository.findById(jobId).orElse(null);
+
+      if (job == null) {
+         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
+
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(false);
