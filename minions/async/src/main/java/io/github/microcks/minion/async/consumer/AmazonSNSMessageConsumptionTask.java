@@ -73,6 +73,8 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
 
    /** The endpoint URL option representing AWS endpoint override URL. */
    public static final String OVERRIDE_URL_OPTION = "overrideUrl";
+   /** The topic name suffix representing a FIFO topic. */
+   private static final String FIFO_SUFFIX = ".fifo";
 
    private static final String SUBSCRIPTION_PREFIX = "-microcks-test";
 
@@ -203,7 +205,12 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
       }
 
       // Create a temporary subscription Queue and get its ARN.
-      String subscriptionQueueName = topic + SUBSCRIPTION_PREFIX + "-" + specification.getTestResultId();
+      boolean isFifoTopic = topic.endsWith(FIFO_SUFFIX);
+      String topicBase = isFifoTopic ? topic.substring(0, topic.length() - FIFO_SUFFIX.length()) : topic;
+      String subscriptionQueueName = topicBase + SUBSCRIPTION_PREFIX + "-" + specification.getTestResultId();
+      if (isFifoTopic) {
+         subscriptionQueueName += FIFO_SUFFIX;
+      }
       queue = createQueue(subscriptionQueueName, topicArn);
 
       SubscribeRequest subscribeRequest = SubscribeRequest.builder().protocol("sqs").endpoint(queue.arn())
@@ -250,8 +257,12 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
     */
    private QueueCoordinates createQueue(String queueName, String topicArn) {
       // 3 steps operation: 1st create a queue.
-      CreateQueueRequest createQueueRequest = CreateQueueRequest.builder().queueName(queueName).build();
-      String queueURL = sqsClient.createQueue(createQueueRequest).queueUrl();
+      CreateQueueRequest.Builder builder = CreateQueueRequest.builder().queueName(queueName);
+      if (queueName.endsWith(FIFO_SUFFIX)) {
+         builder.attributes(
+               Map.of(QueueAttributeName.FIFO_QUEUE, "true", QueueAttributeName.CONTENT_BASED_DEDUPLICATION, "true"));
+      }
+      String queueURL = sqsClient.createQueue(builder.build()).queueUrl();
 
       // Now read its attributes, requesting the ARN only.
       GetQueueAttributesResponse queueAttributes = sqsClient.getQueueAttributes(GetQueueAttributesRequest.builder()
