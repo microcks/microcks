@@ -8,6 +8,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 
 import { Action } from '../../action/action';
 import { Notification } from '../notification';
@@ -33,7 +34,7 @@ import { NotificationEvent } from '../notification-event';
  * import { BsDropdownConfig, BsDropdownModule } from 'ngx-bootstrap/dropdown';
  *
  * &#64;NgModule({
- *   imports: [ToastNotificationModule, BsDropdownModule.forRoot(),...],
+ *   imports: [ToastNotificationModule, BsDropdownModule,...],
  *   providers: [BsDropdownConfig]
  * })
  * export class AppModule(){}
@@ -50,6 +51,7 @@ import { NotificationEvent } from '../notification-event';
   templateUrl: './toast-notification.component.html',
   imports: [
     CommonModule,
+    BsDropdownModule,
   ]
 })
 export class ToastNotificationComponent implements DoCheck, OnInit {

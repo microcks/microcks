@@ -18,7 +18,7 @@ export {
  */
 @NgModule({
   imports: [
-    BsDropdownModule.forRoot(),
+    BsDropdownModule,
     CommonModule,
     FormsModule,
     PaginationComponent

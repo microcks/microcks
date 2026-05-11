@@ -50,7 +50,7 @@ public class PostmanUtil {
       }
       // Then we may have an OpenAPI template we should convert to Postman and check again.
       if (operationNameRef.contains("/{")) {
-         String transformedName = operationNameRef.replaceAll("/\\{", "/:").replace("}", "");
+         String transformedName = operationNameRef.replace("/{", "/:").replace("}", "");
          if (transformedName.equalsIgnoreCase(operationNameCandidate)) {
             return true;
          }

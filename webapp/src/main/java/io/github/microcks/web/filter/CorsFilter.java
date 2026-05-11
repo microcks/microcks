@@ -32,10 +32,12 @@ public class CorsFilter implements Filter {
 
    @Override
    public void init(FilterConfig filterConfig) throws ServletException {
+      // No initialization required for CORS filter.
    }
 
    @Override
    public void destroy() {
+      // No cleanup required for CORS filter.
    }
 
    @Override

@@ -346,7 +346,7 @@ public class OpenAICopilot implements AICopilot {
 
    private Map<String, Object> buildChatCompletionPayload(List<ChatMessage> messages) {
       Map<String, Object> payload = new HashMap<>();
-      payload.put("model", model);
+      payload.put(MODEL_KEY_CONFIG, model);
       payload.put("messages", messages);
       payload.put("n", 1);
 

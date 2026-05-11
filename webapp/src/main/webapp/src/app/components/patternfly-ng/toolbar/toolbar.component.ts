@@ -39,7 +39,7 @@ import { FilterResultsComponent } from '../filter';
  * import { BsDropdownConfig, BsDropdownModule } from 'ngx-bootstrap/dropdown';
  *
  * &#64;NgModule({
- *   imports: [BsDropdownModule.forRoot(), ToolbarModule,...],
+ *   imports: [BsDropdownModule, ToolbarModule,...],
  *   providers: [BsDropdownConfig]
  * })
  * export class AppModule(){}

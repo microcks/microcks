@@ -27,6 +27,7 @@ public class GenericResourceServiceDTO {
    private String referencePayload;
 
    public GenericResourceServiceDTO() {
+      // Default constructor required for JSON deserialization.
    }
 
    public String getName() {
