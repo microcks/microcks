@@ -11,7 +11,7 @@ import { ToastNotificationComponent } from './toast-notification.component';
  */
 @NgModule({
   imports: [
-    BsDropdownModule.forRoot(),
+    BsDropdownModule,
     CommonModule,
     FormsModule,
     ToastNotificationComponent

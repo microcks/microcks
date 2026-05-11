@@ -249,6 +249,7 @@ public class AvroUtil {
                }
                return true;
             }
+            return GenericData.get().validate(schema, datum);
          default:
             return GenericData.get().validate(schema, datum);
       }

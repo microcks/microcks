@@ -28,7 +28,7 @@ import { AboutModalEvent } from './about-modal-event';
  * import { ModalModule } from 'ngx-bootstrap/modal';
  *
  * &#64;NgModule({
- *   imports: [AboutModalModule, ModalModule.forRoot(),...]
+ *   imports: [AboutModalModule, ModalModule,...]
  * })
  * export class AppModule(){}
  * </pre></code>

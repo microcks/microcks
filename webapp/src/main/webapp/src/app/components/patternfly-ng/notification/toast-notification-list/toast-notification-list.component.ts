@@ -26,7 +26,7 @@ import { ToastNotificationComponent } from '../toast-notification/toast-notifica
  * import { BsDropdownConfig, BsDropdownModule } from 'ngx-bootstrap/dropdown';
  *
  * &#64;NgModule({
- *   imports: [ToastNotificationListModule, BsDropdownModule.forRoot(),...],
+ *   imports: [ToastNotificationListModule, BsDropdownModule,...],
  *   providers: [BsDropdownConfig]
  * })
  * export class AppModule(){}

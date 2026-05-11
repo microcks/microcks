@@ -40,10 +40,12 @@ public class StaticResourcesFilter implements Filter {
 
    @Override
    public void init(FilterConfig filterConfig) throws ServletException {
+      // No initialization required for static resources filter.
    }
 
    @Override
    public void destroy() {
+      // No cleanup required for static resources filter.
    }
 
    @Override

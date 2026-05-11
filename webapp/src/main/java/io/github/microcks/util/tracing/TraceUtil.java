@@ -20,12 +20,18 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Utility class for managing tracing functionality. This class provides constants and methods to enable explain tracing
  * in the current context.
  * @author Apoorva Srinivas Appadoo
  */
 public final class TraceUtil {
+
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(TraceUtil.class);
 
    /**
     * The attribute key used to mark spans for explain tracing. When this attribute is set to true on a span, the span
@@ -60,9 +66,8 @@ public final class TraceUtil {
          currentSpan.setAttribute(EXPLAIN_TRACE_ATTRIBUTE, true);
          return true;
       } catch (Exception e) {
-         // Log the error but don't throw to avoid disrupting application flow
-         // In a real application, you might want to use a proper logger here
-         System.err.println("Failed to enable explain tracing: " + e.getMessage());
+         // Log the error but don't throw to avoid disrupting application flow.
+         log.error("Failed to enable explain tracing", e);
          return false;
       }
    }

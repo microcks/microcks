@@ -19,13 +19,13 @@
         </li>
       </ul>
     </div>
-    <div *ngIf="!currentField?.type || currentField.type === 'text' || currentField.type === 'default'">
+    <div *ngIf="!currentField.type || currentField.type === 'text' || currentField.type === 'default'">
       <input class="form-control" type="{{currentField.type}}" [(ngModel)]="currentValue"
              placeholder="{{currentField.placeholder}}"
              [disabled]="config?.disabled === true"
              (keypress)="fieldInputKeyPress($event)"/>
     </div>
-    <div *ngIf="currentField?.type === 'select'">
+    <div *ngIf="currentField.type === 'select'">
       <div class="btn-group bootstrap-select form-control filter-select" dropdown>
         <button type="button" class="btn btn-default dropdown-toggle" dropdownToggle
                 [disabled]="config?.disabled === true">
@@ -36,7 +36,7 @@
           <span aria-hidden="true" class="caret"></span>
         </button>
         <ul class="dropdown-menu" role="menu" *dropdownMenu>
-          <li role="menuitem" *ngFor="let query of currentField?.queries"
+          <li role="menuitem" *ngFor="let query of currentField.queries"
               [ngClass]="{'selected': query?.value === currentValue, 'divider dropdown-divider': query?.separator}">
             <a class="dropdown-item" href="javascript:void(0);" tabindex="-1"
                (click)="selectQuery(query)"
@@ -49,7 +49,7 @@
         </ul>
       </div>
     </div>
-    <div *ngIf="currentField?.type === 'typeahead'">
+    <div *ngIf="currentField.type === 'typeahead'">
       <div class="btn-group bootstrap-select form-control filter-select"
            *ngIf="config?.disabled === true">
         <div class="pull-left typeahead-input-container disabled">
@@ -68,7 +68,7 @@
           <span (click)="queryInput.focus()" class="caret"></span>
         </div>
         <ul class="dropdown-menu" role="menu" *dropdownMenu>
-          <li role="menuitem" *ngFor="let query of currentField?.queries"
+          <li role="menuitem" *ngFor="let query of currentField.queries"
               [ngClass]="{'selected': query.value === currentValue,
                           'divider dropdown-divider': query?.separator,
                           'pfng-filter-delete-wrapper': query?.showDelete}">

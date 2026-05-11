@@ -41,6 +41,7 @@ public class WebSocketClient extends Endpoint {
     * Create a new WebSocket Client endpoint.
     */
    public WebSocketClient() {
+      // Default constructor for WebSocket client endpoint registration.
    }
 
    @Override
