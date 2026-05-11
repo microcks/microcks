@@ -30,7 +30,7 @@
     <span class="fa fa-ellipsis-v"></span>
   </button>
   <ul class="dropdown-menu-right dropdown-menu" aria-labelledby="dropdownKebab" *dropdownMenu>
-    <li *ngFor="let action of config?.moreActions" class="{{action.styleClass}}"
+    <li *ngFor="let action of config.moreActions" class="{{action.styleClass}}"
         [attr.role]="action.separator === true ? 'separator' : 'menuitem'"
         [ngClass]="{'divider': action.separator === true, 'disabled': action.disabled === true, 'hidden': action.visible === false}">
       <a *ngIf="action.disabled !== true && action.separator !== true"

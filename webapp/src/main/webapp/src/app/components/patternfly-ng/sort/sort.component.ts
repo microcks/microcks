@@ -8,6 +8,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 
 import { cloneDeep, defaults, isEqual } from 'lodash-es';
 
@@ -42,7 +43,8 @@ import { SortEvent } from './sort-event';
   selector: 'pfng-sort',
   templateUrl: './sort.component.html',
   imports: [
-    CommonModule
+    CommonModule,
+    BsDropdownModule
   ]
 })
 export class SortComponent implements DoCheck, OnInit {

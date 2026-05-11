@@ -14,8 +14,8 @@ describe('AppComponent', () => {
       imports: [
         AppComponent,
         BrowserAnimationsModule,
-        ModalModule.forRoot(),
-        BsDropdownModule.forRoot()
+        ModalModule,
+        BsDropdownModule
       ],
       providers: [
         provideRouter([]), // Empty routes for testing

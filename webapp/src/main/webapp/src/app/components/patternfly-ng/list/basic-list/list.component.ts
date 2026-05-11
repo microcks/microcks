@@ -46,7 +46,7 @@ import { SortArrayPipe } from '../../pipe';
  * import { TooltipConfig, TooltipModule } from 'ngx-bootstrap/tooltip';
  *
  * &#64;NgModule({
- *   imports: [ListModule, BsDropdownModule.forRoot(), TooltipModule.forRoot(),...],
+ *   imports: [ListModule, BsDropdownModule, TooltipModule,...],
  *   providers: [BsDropdownConfig, TooltipConfig]
  * })
  * export class AppModule(){}
