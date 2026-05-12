@@ -213,6 +213,98 @@
   },
   {
     "condition": {
+      "typeReachable": "io.netty.buffer.AbstractByteBufAllocator"
+    },
+    "name": "io.netty.buffer.AbstractByteBufAllocator",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.buffer.ByteBufAllocator"
+    },
+    "name": "io.netty.buffer.ByteBufAllocator",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.buffer.ByteBufUtil"
+    },
+    "name": "io.netty.buffer.ByteBufUtil",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.channel.socket.nio.NioServerSocketChannel"
+    },
+    "name": "io.netty.channel.socket.nio.NioServerSocketChannel",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.channel.socket.nio.NioSocketChannel"
+    },
+    "name": "io.netty.channel.socket.nio.NioSocketChannel",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "condition": {
       "typeReachable": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueue"
     },
     "name": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueue",
@@ -354,5 +446,15 @@
     "name": "graphql.ExecutionResult",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
+  },
+  {
+    "name": "ch.qos.logback.core.status.NopStatusListener",
+    "allDeclaredConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
+    "name": "ch.qos.logback.classic.BasicConfigurator",
+    "allDeclaredConstructors": true,
+    "queryAllDeclaredMethods": true
   }
 ]

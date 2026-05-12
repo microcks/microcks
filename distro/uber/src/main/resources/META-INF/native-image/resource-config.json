@@ -8,6 +8,8 @@
       "pattern":"\\Qproto3/include/google/protobuf/compiler/plugin.proto\\E"
     }, {
       "pattern":"leap_second_dates.csv"
+    }, {
+      "pattern":"\\Qlogback.xml\\E"
     }]
   }
 }
