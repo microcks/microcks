@@ -113,32 +113,27 @@ public class OpenAPIOverlayExporter implements MockRepositoryExporter {
    }
 
    private void exportRequest(ArrayNode actions, Operation operation, Request request) {
+      String[] operationParts = operation.getName().split(" ");
+      String pathPart = operationParts[1];
+      String methodPart = operationParts[0].toLowerCase();
+
       // Export the parameters part of the exchange if present.
       if (request.getQueryParameters() != null && !request.getQueryParameters().isEmpty()) {
          for (Parameter parameter : request.getQueryParameters()) {
             // Export the query parameter part of the exchange.
             ObjectNode parameterNode = actions.addObject();
-
-            String[] operationParts = operation.getName().split(" ");
-
-            parameterNode.put("target", "$.paths['" + operationParts[1] + "']." + operationParts[0].toLowerCase()
-                  + ".parameters[?@.name=='" + parameter.getName() + "'].examples");
-            ObjectNode updateNode = parameterNode.putObject("update");
-            ObjectNode exampleNode = updateNode.putObject(request.getName());
-            exampleNode.put("value", parameter.getValue());
+            parameterNode.put("target",
+                  "$.paths['" + pathPart + "']." + methodPart + ".parameters[?@.name=='" + parameter.getName() + "']");
+            createExampleUpdate(parameterNode, request.getName(), parameter.getValue());
          }
       }
 
       // Export the requestBody part of the exchange if present.
       if (request.getContent() != null) {
          ObjectNode requestNode = actions.addObject();
-         String[] operationParts = operation.getName().split(" ");
-
-         requestNode.put("target", "$.paths['" + operationParts[1] + "']." + operationParts[0].toLowerCase()
-               + ".requestBody.content['" + getContentType(request) + "'].examples");
-         ObjectNode updateNode = requestNode.putObject("update");
-         ObjectNode exampleNode = updateNode.putObject(request.getName());
-         exampleNode.put("value", request.getContent());
+         requestNode.put("target",
+               "$.paths['" + pathPart + "']." + methodPart + ".requestBody.content['" + getContentType(request) + "']");
+         createExampleUpdate(requestNode, request.getName(), request.getContent());
       }
    }
 
@@ -154,15 +149,34 @@ public class OpenAPIOverlayExporter implements MockRepositoryExporter {
    }
 
    private void exportResponse(ArrayNode actions, Operation operation, Response response) {
+      String[] operationParts = operation.getName().split(" ");
+      String pathPart = operationParts[1];
+      String methodPart = operationParts[0].toLowerCase();
+
       // Export the response part of the exchange.
       ObjectNode responseNode = actions.addObject();
+      responseNode.put("target", "$.paths['" + pathPart + "']." + methodPart + ".responses['" + response.getStatus()
+            + "'].content['" + response.getMediaType() + "']");
+      createExampleUpdate(responseNode, response.getName(), response.getContent());
+   }
 
-      String[] operationParts = operation.getName().split(" ");
+   /**
+    * Build the {@code update} block for an overlay action targeting a parameter, requestBody or response. The shape
+    * matches what standard OpenAPI overlay mergers (e.g. github.com/speakeasy-api/openapi/overlay/loader) deep-merge
+    * cleanly into the target node, regardless of whether an {@code examples} sub-node already exists there.
+    * @param actionNode The overlay action root, into which an {@code update} object will be added.
+    * @param name       The example's human-readable name, used both as the slugified key and as the {@code summary}.
+    * @param value      The example's value payload.
+    */
+   private void createExampleUpdate(ObjectNode actionNode, String name, String value) {
+      ObjectNode updateNode = actionNode.putObject("update");
+      ObjectNode examplesNode = updateNode.putObject("examples");
+      ObjectNode exampleNode = examplesNode.putObject(toExampleKey(name));
+      exampleNode.put("value", value);
+      exampleNode.put("summary", name);
+   }
 
-      responseNode.put("target", "$.paths['" + operationParts[1] + "']." + operationParts[0].toLowerCase()
-            + ".responses." + response.getStatus() + ".content['" + response.getMediaType() + "'].examples");
-      ObjectNode updateNode = responseNode.putObject("update");
-      ObjectNode exampleNode = updateNode.putObject(response.getName());
-      exampleNode.put("value", response.getContent());
+   private String toExampleKey(String name) {
+      return name.toLowerCase().replace(" ", "-");
    }
 }
