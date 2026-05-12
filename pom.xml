@@ -80,6 +80,20 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <!-- Pin Groovy 4.x. Spring Boot 4 BOM manages Groovy 5.0.5, but GraalVM's
+         polyglot Groovy substitution still targets v7.IndyInterface
+         (see oracle/graal#13096, fix in #12986 not yet released). Once a GraalVM
+         release containing the Groovy 5 substitution lands in the Paketo
+         native-image buildpack, this can be removed. -->
+      <dependency>
+        <groupId>org.apache.groovy</groupId>
+        <artifactId>groovy-bom</artifactId>
+        <version>4.0.28</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
