@@ -26,8 +26,8 @@
 
     <apache-httpclient.version>5.3</apache-httpclient.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
-    <nats.version>2.21.0</nats.version>
-    <rabbitmq.version>5.19.0</rabbitmq.version>
+    <nats.version>2.25.3</nats.version>
+    <rabbitmq.version>5.30.0</rabbitmq.version>
     <apicurio-registry.version>2.6.13.Final</apicurio-registry.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>

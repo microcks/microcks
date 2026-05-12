@@ -17,15 +17,15 @@
     <docker.image.name>microcks</docker.image.name>
     <java.version>25</java.version>
     <bouncycastle.version>1.84</bouncycastle.version>
-    <snakeyaml.version>2.2</snakeyaml.version>
+    <snakeyaml.version>2.5</snakeyaml.version>
     <mongo-java-server.version>1.47.0</mongo-java-server.version>
-    <apache-httpclient.version>5.5</apache-httpclient.version>
-    <commons-lang3.version>3.18.0</commons-lang3.version>
-    <commons-io.version>2.16.1</commons-io.version>
-    <commons-codec.version>1.17.1</commons-codec.version>
-    <quickjs4j.version>0.0.8</quickjs4j.version>
-    <protobuf.version>4.32.0</protobuf.version>
-    <grpc.version>1.70.0</grpc.version>
+    <apache-httpclient.version>5.5.2</apache-httpclient.version>
+    <commons-lang3.version>3.20.0</commons-lang3.version>
+    <commons-io.version>2.22.0</commons-io.version>
+    <commons-codec.version>1.22.0</commons-codec.version>
+    <quickjs4j.version>0.0.18</quickjs4j.version>
+    <protobuf.version>4.34.1</protobuf.version>
+    <grpc.version>1.81.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
     <testcontainers.version>2.0.3</testcontainers.version>
