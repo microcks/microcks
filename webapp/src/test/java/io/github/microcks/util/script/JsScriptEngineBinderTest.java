@@ -19,22 +19,90 @@ import io.github.microcks.service.StateStore;
 import io.roastedroot.quickjs4j.core.Engine;
 import jakarta.servlet.http.Cookie;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.github.microcks.web.AbstractBaseIT;
-
 /**
  * This is a test case for class JsScriptEngineBinder class.
  */
-class JsScriptEngineBinderTest extends AbstractBaseIT {
+class JsScriptEngineBinderTest {
+
+   private static HttpServer testServer;
+   private static int testServerPort;
+
+   @BeforeAll
+   static void startTestServer() throws IOException {
+      testServer = HttpServer.create(new InetSocketAddress(0), 0);
+      testServer.createContext("/api/test-fetch", JsScriptEngineBinderTest::handleTestFetch);
+      testServer.createContext("/api/test-fetch-headers", JsScriptEngineBinderTest::handleTestFetchHeaders);
+      testServer.createContext("/api/test-fetch-json", JsScriptEngineBinderTest::handleTestFetchJson);
+      testServer.start();
+      testServerPort = testServer.getAddress().getPort();
+   }
+
+   @AfterAll
+   static void stopTestServer() {
+      if (testServer != null) {
+         testServer.stop(0);
+      }
+   }
+
+   private String getServerUrl() {
+      return "http://localhost:" + testServerPort;
+   }
+
+   private static void handleTestFetch(HttpExchange exchange) throws IOException {
+      String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+      String response = switch (exchange.getRequestMethod()) {
+         case "GET" -> "Hello from test-fetch endpoint!";
+         case "POST" -> "POST received with body: " + (body.isEmpty() ? "empty" : body);
+         case "PUT" -> "PUT received with body: " + (body.isEmpty() ? "empty" : body);
+         case "DELETE" -> "DELETE received";
+         case "PATCH" -> "PATCH received with body: " + (body.isEmpty() ? "empty" : body);
+         default -> null;
+      };
+
+      if (response == null) {
+         sendResponse(exchange, 405, "Method not allowed");
+         return;
+      }
+      sendResponse(exchange, 200, response);
+   }
+
+   private static void handleTestFetchHeaders(HttpExchange exchange) throws IOException {
+      String customHeader = exchange.getRequestHeaders().getFirst("X-Custom-Header");
+      String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+      sendResponse(exchange, 200, "Headers received - Custom: " + customHeader + ", Auth: " + authHeader);
+   }
+
+   private static void handleTestFetchJson(HttpExchange exchange) throws IOException {
+      exchange.getResponseHeaders().add("Content-Type", "application/json");
+      sendResponse(exchange, 200, "{\"message\":\"Hello from test-fetch-json endpoint!\",\"status\":200}");
+   }
+
+   private static void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
+      byte[] payload = response.getBytes(StandardCharsets.UTF_8);
+      exchange.sendResponseHeaders(status, payload.length);
+      try (OutputStream responseBody = exchange.getResponseBody()) {
+         responseBody.write(payload);
+      }
+   }
 
    @Test
    void testRequestContentIsBound() {

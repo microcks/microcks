@@ -233,8 +233,8 @@ public class GraphQLController {
             }
          }
       }
-      if (!responseHeaders.containsKey("Content-Type") && !responseHeaders.containsKey("content-type")) {
-         responseHeaders.put("Content-Type", List.of("application/json"));
+      if (!responseHeaders.containsHeader("Content-Type") && !responseHeaders.containsHeader("content-type")) {
+         responseHeaders.addAll("Content-Type", List.of("application/json"));
       }
 
       // Waiting for delay if any.
@@ -353,7 +353,7 @@ public class GraphQLController {
          // Create an invocation context for the invocation processor.
          MockInvocationContext ic = new MockInvocationContext(service, rOperation, null);
          ResponseResult responseResult = invocationProcessor.processInvocation(ic, System.currentTimeMillis(),
-               queryParams, body, graphqlHttpReq, headers, request);
+               queryParams, body, graphqlHttpReq, headers.asMultiValueMap(), request);
 
          // Complete GraphQLQueryResponse result.
          result.setOperationDelay(rOperation.getDefaultDelay());

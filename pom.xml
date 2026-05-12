@@ -61,16 +61,25 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>${project.basedir}</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>3.5.14</spring-boot.version>
+    <spring-boot.version>4.0.6</spring-boot.version>
     <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
-    <junit.version>5.12.2</junit.version>
     <sonar.organization>microcks</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- Pin Jackson 2.x. Spring Boot 4 defaults to Jackson 3, but Quarkus 3 (used by
+           the async minion) and shared commons modules still rely on Jackson 2.x APIs.
+           Keep this aligned with the jackson-annotations version expected by Jackson 3. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>2.21.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>

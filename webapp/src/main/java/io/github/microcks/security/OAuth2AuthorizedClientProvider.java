@@ -18,15 +18,15 @@ package io.github.microcks.security;
 import io.github.microcks.domain.OAuth2AuthorizedClient;
 import io.github.microcks.domain.OAuth2ClientContext;
 import io.github.microcks.domain.OAuth2GrantType;
+import io.github.microcks.security.oauth2.DefaultPasswordTokenResponseClient;
+import io.github.microcks.security.oauth2.OAuth2PasswordGrantRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.oauth2.client.endpoint.DefaultClientCredentialsTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.DefaultPasswordTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.DefaultRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2ClientCredentialsGrantRequest;
-import org.springframework.security.oauth2.client.endpoint.OAuth2PasswordGrantRequest;
 import org.springframework.security.oauth2.client.endpoint.OAuth2RefreshTokenGrantRequest;
+import org.springframework.security.oauth2.client.endpoint.RestClientClientCredentialsTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.RestClientRefreshTokenTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -77,10 +77,12 @@ public class OAuth2AuthorizedClientProvider {
             oAuth2ClientContext.getTokenUri(), String.join(" ", accessToken.getScopes()), accessToken.getTokenValue());
    }
 
+   @SuppressWarnings("removal")
    private OAuth2AccessToken getResourceOwnerPasswordAccessToken(OAuth2ClientContext oAuth2ClientContext) {
-      // Build a ClientRegistration with PASSWORD grant type.
+      // Build a ClientRegistration with PASSWORD grant type using the vendored constant
+      // (AuthorizationGrantType.PASSWORD was removed in Spring Security 7).
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
-            .authorizationGrantType(AuthorizationGrantType.PASSWORD).build();
+            .authorizationGrantType(OAuth2PasswordGrantRequest.PASSWORD).build();
 
       DefaultPasswordTokenResponseClient client = new DefaultPasswordTokenResponseClient();
       OAuth2PasswordGrantRequest request = new OAuth2PasswordGrantRequest(registration,
@@ -95,7 +97,7 @@ public class OAuth2AuthorizedClientProvider {
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
             .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS).build();
 
-      DefaultClientCredentialsTokenResponseClient client = new DefaultClientCredentialsTokenResponseClient();
+      RestClientClientCredentialsTokenResponseClient client = new RestClientClientCredentialsTokenResponseClient();
       OAuth2ClientCredentialsGrantRequest request = new OAuth2ClientCredentialsGrantRequest(registration);
       OAuth2AccessTokenResponse response = client.getTokenResponse(request);
 
@@ -107,7 +109,7 @@ public class OAuth2AuthorizedClientProvider {
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN).build();
 
-      DefaultRefreshTokenTokenResponseClient clientRT = new DefaultRefreshTokenTokenResponseClient();
+      RestClientRefreshTokenTokenResponseClient clientRT = new RestClientRefreshTokenTokenResponseClient();
       OAuth2RefreshTokenGrantRequest requestRT = new OAuth2RefreshTokenGrantRequest(registration,
             new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, "fake-one", null, null),
             new OAuth2RefreshToken(oAuth2ClientContext.getRefreshToken(), null));

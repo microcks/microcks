@@ -15,20 +15,16 @@
  */
 package io.github.microcks.config;
 
-import io.github.microcks.service.SpanStorageService;
-import io.github.microcks.util.otel.CustomExplainTraceProcessor;
-
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * OpenTelemetry auto-configuration customizer that adds a custom span processor for local trace storage. This processor
- * runs alongside the default OpenTelemetry export flow to external systems.
+ * OpenTelemetry tracing wiring for Spring Boot 4. The local span storage processor
+ * ({@link io.github.microcks.util.otel.CustomExplainTraceProcessor}) is registered automatically as a
+ * {@code @Component} and picked up by Spring's {@code OpenTelemetryTracingAutoConfiguration} via its
+ * {@code ObjectProvider<SpanProcessor>} aggregation. The {@link XTraceIdTextMapPropagator} is exposed here as a Spring
+ * bean so it composes alongside the W3C / Baggage propagators that Spring's tracing autoconfig provides.
  *
  * <pre>
  * Trace Flow:
@@ -64,37 +60,13 @@ import org.springframework.context.annotation.Configuration;
  *                                           │         External Systems        │
  *                                           │  (Jaeger, Tempo, OTLP, etc.)    │
  *                                           └─────────────────────────────────┘
- *
- * The CustomExplainTraceProcessor adds local storage capability without interfering
- * with the standard OpenTelemetry export pipeline to external tracing systems.
  * </pre>
- *
- * @see CustomExplainTraceProcessor
- * @see SpanStorageService
- * @author Apoorva Srinivas Appadoo
  */
 @Configuration
 public class OtelAutoConfigurationCustomizerProvider {
 
-   private final SpanStorageService spanStorageService;
-
-   @Autowired
-   public OtelAutoConfigurationCustomizerProvider(SpanStorageService spanStorageService) {
-      this.spanStorageService = spanStorageService;
-   }
-
    @Bean
-   public AutoConfigurationCustomizerProvider otelCustomizer() {
-      return p -> p.addTracerProviderCustomizer(this::configureSdkTracerProvider)
-            .addPropagatorCustomizer(this::configurePropagator);
-   }
-
-   private SdkTracerProviderBuilder configureSdkTracerProvider(SdkTracerProviderBuilder tracerProvider,
-         ConfigProperties config) {
-      return tracerProvider.addSpanProcessor(new CustomExplainTraceProcessor(spanStorageService));
-   }
-
-   private TextMapPropagator configurePropagator(TextMapPropagator propagator, ConfigProperties config) {
-      return TextMapPropagator.composite(propagator, new XTraceIdTextMapPropagator());
+   public TextMapPropagator xTraceIdTextMapPropagator() {
+      return new XTraceIdTextMapPropagator();
    }
 }

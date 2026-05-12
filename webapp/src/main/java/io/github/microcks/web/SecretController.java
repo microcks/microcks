@@ -105,10 +105,10 @@ public class SecretController {
          if (secret != null) {
             return new ResponseEntity<>(filterSensitiveData(secret), HttpStatus.OK);
          }
-         return new ResponseEntity<>(null, HttpStatus.OK);
+         return new ResponseEntity<Secret>((Secret) null, HttpStatus.OK);
       }
       // We're admin, so we can return all secrets with sensitive data.
-      return new ResponseEntity<>(secretRepository.findById(secretId).orElse(null), HttpStatus.OK);
+      return new ResponseEntity<Secret>(secretRepository.findById(secretId).orElse(null), HttpStatus.OK);
    }
 
    @PutMapping(value = "/secrets/{id}")

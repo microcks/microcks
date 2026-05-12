@@ -33,7 +33,7 @@ import com.theokanning.openai.completion.chat.ChatMessageRole;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -128,7 +128,7 @@ public class OpenAICopilot implements AICopilot {
 
       // Initialize a Rest template for interacting with OpenAI API.
       // We need to register a custom Jackson converter to handle serialization of name and function_call of messages.
-      restTemplate = new RestTemplateBuilder().setReadTimeout(timeout)
+      restTemplate = new RestTemplateBuilder().readTimeout(timeout)
             .additionalMessageConverters(mappingJacksonHttpMessageConverter()).build();
    }
 

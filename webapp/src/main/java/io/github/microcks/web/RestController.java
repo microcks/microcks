@@ -285,7 +285,8 @@ public class RestController {
                HttpStatus.BAD_REQUEST);
       }
 
-      ResponseResult response = invocationProcessor.processInvocation(ic, startTime, delay, body, headers, request);
+      ResponseResult response = invocationProcessor.processInvocation(ic, startTime, delay, body,
+            headers.asMultiValueMap(), request);
       return new ResponseEntity<>(response.content(), response.headers(), response.status());
    }
 

@@ -309,7 +309,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
       Set<Header> headers = new HashSet<>();
       if (!httpResponse.getHeaders().isEmpty()) {
          HttpHeaders responseHeaders = httpResponse.getHeaders();
-         for (Entry<String, List<String>> responseHeader : responseHeaders.entrySet()) {
+         for (Entry<String, List<String>> responseHeader : responseHeaders.headerSet()) {
             Header header = new Header();
             header.setName(responseHeader.getKey());
             header.setValues(new HashSet<>(responseHeader.getValue()));

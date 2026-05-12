@@ -25,11 +25,10 @@
     <commons-codec.version>1.17.1</commons-codec.version>
     <groovy.version>4.0.26</groovy.version>
     <quickjs4j.version>0.0.8</quickjs4j.version>
-    <protobuf.version>3.25.5</protobuf.version>
+    <protobuf.version>4.32.0</protobuf.version>
     <grpc.version>1.70.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
-    <opentelemetry.version>2.21.0</opentelemetry.version>
     <testcontainers.version>2.0.3</testcontainers.version>
   </properties>
 
@@ -47,13 +46,6 @@
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.opentelemetry.instrumentation</groupId>
-        <artifactId>opentelemetry-instrumentation-bom</artifactId>
-        <version>${opentelemetry.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -97,46 +89,46 @@
       <artifactId>micrometer-tracing-bridge-otel</artifactId>
     </dependency>
 
-    <!-- Core OpenTelemetry dependencies -->
+    <!-- Core OpenTelemetry dependencies. Spring Boot 4 ships its own official starter
+         (spring-boot-starter-opentelemetry), distinct from the community
+         io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter we used
+         on Spring Boot 3.5. The two should not be mixed. -->
     <dependency>
-      <groupId>io.opentelemetry.instrumentation</groupId>
-      <artifactId>opentelemetry-spring-boot-starter</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>io.opentelemetry.instrumentation</groupId>
-          <artifactId>opentelemetry-jdbc</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.opentelemetry.instrumentation</groupId>
-          <artifactId>opentelemetry-spring-webflux-5.3</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.opentelemetry.instrumentation</groupId>
-          <artifactId>opentelemetry-reactor-3.1</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.opentelemetry.instrumentation</groupId>
-          <artifactId>opentelemetry-log4j-appender-2.17</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.opentelemetry.instrumentation</groupId>
-          <artifactId>opentelemetry-log4j-context-data-2.17-autoconfigure</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-opentelemetry</artifactId>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-otlp</artifactId>
     </dependency>
-
+    <!-- @WithSpan annotation used in REST/gRPC invocation processors. Not pulled by
+         Spring's official starter; lives in the OTel instrumentation project. The
+         starter does not provide a WithSpanAspect on Boot 4, so weaving is handled
+         by io.github.microcks.util.otel.WithSpanAspect via spring-boot-starter-aop. -->
+    <dependency>
+      <groupId>io.opentelemetry.instrumentation</groupId>
+      <artifactId>opentelemetry-instrumentation-annotations</artifactId>
+      <version>2.21.0</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-aop</artifactId>
+      <artifactId>spring-boot-starter-aspectj</artifactId>
     </dependency>
 
+    <!-- Provides KafkaProperties (moved out of spring-boot-autoconfigure in SB 4). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-kafka</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
+    </dependency>
+
+    <!-- Provides RestTemplateBuilder (moved out of spring-boot in SB 4). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-restclient</artifactId>
     </dependency>
 
     <dependency>
@@ -239,6 +231,11 @@
 
     <dependency>
       <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java-util</artifactId>
       <version>${protobuf.version}</version>
     </dependency>
@@ -258,6 +255,21 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <version>${spring-boot.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- SB4 split MockMvc / @AutoConfigureMockMvc out of spring-boot-test-autoconfigure. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <version>${spring-boot.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- SB4 moved TestRestTemplate to its own module. @SpringBootTest no longer
+         auto-provides a bean — test classes need @AutoConfigureTestRestTemplate. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-resttestclient</artifactId>
       <version>${spring-boot.version}</version>
       <scope>test</scope>
     </dependency>
