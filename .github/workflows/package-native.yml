@@ -16,12 +16,12 @@ jobs:
     environment: Build
     strategy:
       matrix:
-        os: [ ubuntu-latest-8-cores, cncf-ubuntu-8-32-arm ]
+        os: [ ubuntu-latest-8-cores, ubuntu-24.04-arm ]
         arch: [ amd64, arm64 ]
         exclude:
           - os: ubuntu-latest-8-cores
             arch: arm64
-          - os: cncf-ubuntu-8-32-arm
+          - os: ubuntu-24.04-arm
             arch: amd64
     runs-on: ${{ matrix.os }}
     permissions:
@@ -122,14 +122,14 @@ jobs:
           docker push docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
 
   build-async-minion-images:
-    if: github.repository_owner == 'microcks' && ${{ inputs.image-tag }} != ''
+    if: github.repository_owner == 'microcks' && inputs.image-tag != ''
     environment: Build
     strategy:
       matrix:
-        os: [ ubuntu-latest-4-cores, ubuntu-24.04-arm ]
+        os: [ ubuntu-latest-8-cores, ubuntu-24.04-arm ]
         arch: [ amd64, arm64 ]
         exclude:
-          - os: ubuntu-latest-4-cores
+          - os: ubuntu-latest-8-cores
             arch: arm64
           - os: ubuntu-24.04-arm
             arch: amd64
