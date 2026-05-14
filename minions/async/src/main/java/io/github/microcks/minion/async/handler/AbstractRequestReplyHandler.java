@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * reply destination resolution. Protocol-specific subclasses must implement the consumer loop and reply publishing
  * logic.
  *
- * @author adamhicks
+ * @author rootp1
  */
 public abstract class AbstractRequestReplyHandler implements RequestReplyHandler {
 

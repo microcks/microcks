@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
  * <li>{@code $message.payload#/jsonPointer} - extract value from request message JSON payload</li>
  * </ul>
  *
- * @author adamhicks
+ * @author rootp1
  */
 public class ReplyAddressResolver {
 

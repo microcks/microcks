@@ -31,7 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * CDI qualifier annotation for RequestReplyHandlerFactory implementations, parameterized by the BindingType they
  * support. Allows the RequestReplyHandlerManager to look up the correct factory for each protocol binding type via CDI.
  *
- * @author adamhicks
+ * @author rootp1
  */
 @Qualifier
 @Retention(RUNTIME)

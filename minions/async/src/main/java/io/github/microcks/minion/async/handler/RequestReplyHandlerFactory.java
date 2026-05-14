@@ -23,7 +23,7 @@ import io.github.microcks.minion.async.AsyncMockDefinition;
  * a CDI bean implementing this interface, annotated with the appropriate qualifier to indicate its supported binding
  * type.
  *
- * @author adamhicks
+ * @author rootp1
  */
 public interface RequestReplyHandlerFactory {
 
