@@ -139,13 +139,12 @@ public abstract class AbstractRequestReplyHandler implements RequestReplyHandler
    }
 
    /**
-    * Get the reply destination name. Resolves the destination from the operation's ReplyInfo, supporting both static
-    * channel addresses and dynamic runtime expressions (addressLocation).
+    * Get the reply destination name. Resolves the destination from the operation's ReplyInfo.
     *
-    * @param evaluableRequest The incoming request, used for resolving dynamic addressLocation expressions
+    * @param evaluableRequest The incoming request (unused in current implementation)
     * @return the reply destination name
     * @throws IllegalStateException         if no reply information is configured
-    * @throws UnsupportedOperationException if the addressLocation expression cannot be resolved
+    * @throws UnsupportedOperationException if the addressLocation expression is used
     */
    protected String getReplyDestination(EvaluableRequest evaluableRequest) {
       ReplyInfo replyInfo = mockDefinition.getOperation().getReply();
@@ -155,14 +154,15 @@ public abstract class AbstractRequestReplyHandler implements RequestReplyHandler
                      + mockDefinition.getOperation().getName());
       }
 
-      if (replyInfo.getAddressLocation() != null) {
-         return ReplyAddressResolver.resolve(replyInfo.getAddressLocation(), evaluableRequest);
-      }
-
       if (replyInfo.getChannelAddress() != null) {
          return replyInfo.getChannelAddress();
       }
 
-      throw new IllegalStateException("Reply information must specify either channelAddress or addressLocation");
+      if (replyInfo.getAddressLocation() != null) {
+         throw new UnsupportedOperationException(
+               "Reply addressLocation expressions are not supported in this implementation");
+      }
+
+      throw new IllegalStateException("Reply information must specify a channelAddress");
    }
 }

@@ -27,9 +27,7 @@ import io.github.microcks.util.el.EvaluableRequest;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -129,29 +127,14 @@ class AbstractRequestReplyHandlerTest {
    }
 
    @Test
-   void getReplyDestinationFromAddressLocationHeader() {
+   void getReplyDestinationFromAddressLocationThrowsUnsupportedOperation() {
       TestableHandler handler = createHandlerWithReplyInfo(null, "$message.header#/replyTo");
 
-      Map<String, String> headers = new HashMap<>();
-      headers.put("replyTo", "dynamic-reply-topic");
       EvaluableRequest request = new EvaluableRequest("{}", null);
-      request.setHeaders(headers);
 
-      String destination = handler.getReplyDestination(request);
-
-      assertEquals("dynamic-reply-topic", destination);
-   }
-
-   @Test
-   void getReplyDestinationFromAddressLocationPayload() {
-      TestableHandler handler = createHandlerWithReplyInfo(null, "$message.payload#/replyChannel");
-
-      EvaluableRequest request = new EvaluableRequest("""
-            {"replyChannel": "payload-reply-topic", "action": "signup"}""", null);
-
-      String destination = handler.getReplyDestination(request);
-
-      assertEquals("payload-reply-topic", destination);
+      UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class,
+            () -> handler.getReplyDestination(request));
+      assertTrue(ex.getMessage().contains("addressLocation expressions are not supported"));
    }
 
    @Test
@@ -182,7 +165,7 @@ class AbstractRequestReplyHandlerTest {
       EvaluableRequest request = new EvaluableRequest("{}", null);
 
       IllegalStateException ex = assertThrows(IllegalStateException.class, () -> handler.getReplyDestination(request));
-      assertTrue(ex.getMessage().contains("must specify either channelAddress or addressLocation"));
+      assertTrue(ex.getMessage().contains("must specify a channelAddress"));
    }
 
    @Test
