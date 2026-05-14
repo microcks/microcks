@@ -23,11 +23,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.logging.Logger;
 
 /**
- * Resolves AsyncAPI v3 runtime expressions for reply address locations. Supports the following expression patterns:
+ * Resolves AsyncAPI v3 runtime expressions for reply address locations.
+ * <p>
+ * Supports the following expression patterns:
  * <ul>
  * <li>{@code $message.header#/headerName} - extract value from request message headers</li>
  * <li>{@code $message.payload#/jsonPointer} - extract value from request message JSON payload</li>
  * </ul>
+ * <p>
+ * Current scope: payload-based resolution is intentionally JSON-scoped in this implementation. Binary encodings and
+ * non-JSON serialization formats (for example Avro/Protobuf with or without schema registry integration) are out of
+ * scope for this class and should be introduced via a dedicated serializer-aware extension.
  *
  * @author rootp1
  */
@@ -45,6 +51,8 @@ public class ReplyAddressResolver {
    /**
     * Resolve a runtime expression to a reply destination address. The expression is evaluated against the incoming
     * request message's headers and payload.
+    * <p>
+    * Note: payload expressions ({@code $message.payload#...}) currently require a JSON request body.
     *
     * @param addressLocation  The runtime expression (e.g. "$message.header#/replyTo" or "$message.payload#/replyTopic")
     * @param evaluableRequest The incoming request message with body and headers
