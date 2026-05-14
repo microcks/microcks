@@ -203,17 +203,21 @@ public class KafkaRequestReplyHandler extends AbstractRequestReplyHandler {
    private KafkaConsumer<String, byte[]> createConsumer() {
       Properties props = new Properties();
 
+      // Get bootstrap servers from config
       String bootstrapServers = config.getValue("kafka.bootstrap.servers", String.class);
       props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
+      // Generate unique group ID for this handler
       String groupId = "microcks-request-reply-" + mockDefinition.getOwnerService().getId() + "-"
             + mockDefinition.getOperation().getName();
       props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
       props.put(ConsumerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-request-reply");
 
+      // Use byte array deserializer for flexibility
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
       props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
 
+      // Start from latest messages
       props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
       props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
 
@@ -221,6 +225,7 @@ public class KafkaRequestReplyHandler extends AbstractRequestReplyHandler {
 
       KafkaConsumer<String, byte[]> kafkaConsumer = new KafkaConsumer<>(props);
 
+      // Subscribe to request topic
       String requestTopic = getRequestTopic();
       kafkaConsumer.subscribe(Collections.singletonList(requestTopic));
 
