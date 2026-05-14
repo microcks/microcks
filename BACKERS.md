@@ -1,6 +1,6 @@
 # Sponsors &amp; Backers
 
-[Microcks](https://microcks.io/) is a [Cloud Native Computing Foundation Sandbox](https://landscape.cncf.io/?selected=microcks) project 🚀 with its ongoing development made possible entirely by the support of the awesome sponsors and backers listed in this file. If you'd like to join them, please consider [sponsoring](https://opencollective.com/microcks) Microcks's development.
+[Microcks](https://microcks.io/) is a [Cloud Native Computing Foundation Incubating](https://landscape.cncf.io/?item=app-definition-and-development--application-definition-image-build--microcks) project 🚀 with its ongoing development made possible entirely by the support of the awesome sponsors and backers listed in this file. If you'd like to join them, please consider [sponsoring](https://opencollective.com/microcks) Microcks's development.
 
 **BTW 📢 _If you're using Microcks in your organization, please add your company name to the adopters list. 🙏 It really helps the project to gain momentum and credibility. It's a small contribution back to the project with a big impact._**
 https://github.com/microcks/.github/blob/main/ADOPTERS.md
