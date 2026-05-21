@@ -126,8 +126,8 @@ class AmazonSQSProducerManagerIT {
       System.setProperty("aws.secretAccessKey", localStackContainer.getSecretKey());
       sqsProducerManager.create();
 
-      ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry, null, null, null, null,
-            null, sqsProducerManager, null);
+      ProducerManager producerManager = new ProducerManager(mockRepository, null,
+            new ProducerManager.ProducerDependencies(null, null, null, null, null, sqsProducerManager, null), null);
 
       // Act.
       producerManager.produceSQSMockMessages(mockDefinition);

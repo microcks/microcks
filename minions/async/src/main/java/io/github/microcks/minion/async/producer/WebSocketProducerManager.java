@@ -41,20 +41,13 @@ public class WebSocketProducerManager {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
+   @Inject
+   @SuppressWarnings("java:S6813")
    AsyncMockRepository asyncMockRepository;
 
-   WebSocketSessionRegistry sessionRegistry;
-
-   /**
-    * Create a new WebSocketProducerManager.
-    * @param asyncMockRepository The async mock repository
-    * @param sessionRegistry     The WebSocket session registry
-    */
    @Inject
-   public WebSocketProducerManager(AsyncMockRepository asyncMockRepository, WebSocketSessionRegistry sessionRegistry) {
-      this.asyncMockRepository = asyncMockRepository;
-      this.sessionRegistry = sessionRegistry;
-   }
+   @SuppressWarnings("java:S6813")
+   WebSocketSessionRegistry sessionRegistry;
 
    /** No-arg constructor required for JAX-RS WebSocket endpoint lifecycle. */
    public WebSocketProducerManager() {

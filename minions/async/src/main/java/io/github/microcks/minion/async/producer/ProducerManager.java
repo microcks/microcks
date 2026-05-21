@@ -81,6 +81,7 @@ public class ProducerManager {
    final AmazonSQSProducerManager amazonSQSProducerManager;
    final AmazonSNSProducerManager amazonSNSProducerManager;
 
+   @SuppressWarnings("java:S6813")
    final WebSocketProducerManager wsProducerManager;
 
    @ConfigProperty(name = "minion.supported-bindings")
@@ -134,27 +135,6 @@ public class ProducerManager {
       this.amazonSQSProducerManager = dependencies.amazonSQSProducerManager;
       this.amazonSNSProducerManager = dependencies.amazonSNSProducerManager;
       this.wsProducerManager = wsProducerManager;
-   }
-
-   /**
-    * Constructor for backward compatibility and tests.
-    */
-   @SuppressWarnings("java:S107")
-   public ProducerManager(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry,
-         KafkaProducerManager kafkaProducerManager, MQTTProducerManager mqttProducerManager,
-         NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
-         GooglePubSubProducerManager googlePubSubProducerManager, AmazonSQSProducerManager amazonSQSProducerManager,
-         AmazonSNSProducerManager amazonSNSProducerManager) {
-      this.mockRepository = mockRepository;
-      this.schemaRegistry = schemaRegistry;
-      this.kafkaProducerManager = kafkaProducerManager;
-      this.mqttProducerManager = mqttProducerManager;
-      this.natsProducerManager = natsProducerManager;
-      this.amqpProducerManager = amqpProducerManager;
-      this.googlePubSubProducerManager = googlePubSubProducerManager;
-      this.amazonSQSProducerManager = amazonSQSProducerManager;
-      this.amazonSNSProducerManager = amazonSNSProducerManager;
-      this.wsProducerManager = new WebSocketProducerManager();
    }
 
    /**

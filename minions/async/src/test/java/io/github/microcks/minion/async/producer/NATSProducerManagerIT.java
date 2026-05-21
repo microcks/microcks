@@ -165,8 +165,8 @@ class NATSProducerManagerIT {
       subscriberConnection.flush(Duration.ofSeconds(1));
 
       // Act - Publish messages using ProducerManager.
-      ProducerManager producerManager = new ProducerManager(mockRepository, null, null, null, natsProducerManager, null,
-            null, null, null);
+      ProducerManager producerManager = new ProducerManager(mockRepository, null,
+            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null), null);
       producerManager.produceNatsMockMessages(mockDefinition);
 
       // Assert - Consume messages from NATS.
