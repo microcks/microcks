@@ -32,9 +32,6 @@ jobs:
           architecture: x64
           cache: maven
 
-      - name: Build Java components
-        run: mvn -B clean install
-
       - name: Cache Maven dependencies
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
@@ -42,6 +39,9 @@ jobs:
           key: maven-repo-${{ github.run_id }}
           restore-keys: |
             maven-repo-
+
+      - name: Build Java components
+        run: mvn -B clean install
 
   package-webapp:
     runs-on: ubuntu-latest
@@ -70,7 +70,6 @@ jobs:
 
       - name: Build Angular app
         run: |
-          mvn -B -DskipTests install
           cd ${{github.workspace}}/webapp
           mvn -B -Pprod -DskipTests install
           
@@ -129,7 +128,6 @@ jobs:
 
       - name: Run Integration tests
         run: |
-          mvn -B -DskipTests install
           cd ${{github.workspace}}/webapp
           mvn -Pit test
           cd ${{github.workspace}}/minions/async
@@ -162,7 +160,6 @@ jobs:
 
       - name: Run Fuzzing tests
         run: |
-          mvn -B -DskipTests install
           cd ${{github.workspace}}/webapp
           mvn -Pfuzz test
 
@@ -193,7 +190,6 @@ jobs:
 
       - name: Verify Javadoc completion
         run: |
-          mvn -B -DskipTests install
           mvn -B javadoc:javadoc
 
   container-images-build:
