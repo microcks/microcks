@@ -36,7 +36,7 @@
     "ngx-vflow": "^1.16.1",
     "patternfly": "^3.59.5",
     "rxjs": "~7.8.0",
-    "sanitize-html": "^2.15.0",
+    "sanitize-html": "^2.17.4",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
