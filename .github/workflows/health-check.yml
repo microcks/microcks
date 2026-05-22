@@ -100,7 +100,7 @@ jobs:
 
       - name: Start Minikube
         run: |
-          minikube start --driver=docker
+          minikube start --driver=docker --cpus='4'
 
       - name: Install Helm
         uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0

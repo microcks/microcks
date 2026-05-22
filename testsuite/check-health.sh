@@ -107,7 +107,7 @@ else
 
   for dep in "${deployments[@]}"; do
     echo "Waiting for deployment '$dep' to roll out (timeout: 60s)..."
-    retries=5
+    retries=3
     attempt=1
     success=false
     while [[ $attempt -le $retries ]]; do
