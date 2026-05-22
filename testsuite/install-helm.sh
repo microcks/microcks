@@ -54,13 +54,15 @@ if $ASYNC; then
       --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \
       --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
       --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
+      --set keycloak.resources.limits.memory=640Mi \
       --set features.async.kafka.url=kafka.${MINIKUBE_IP}.nip.io
 else
   echo "[INFO] Installing Microcks..."
   helm install microcks ./microcks --namespace microcks \
      --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \
      --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
-     --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080
+     --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
+     --set keycloak.resources.limits.memory=640Mi
 fi
 
 
