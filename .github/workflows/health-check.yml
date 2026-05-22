@@ -81,7 +81,7 @@ jobs:
   check-helm:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-8-cores
     timeout-minutes: 20
     strategy:
       matrix:
@@ -118,7 +118,7 @@ jobs:
       - name: Health-check containers
         run: |
           # Wait a bit for everything to be really up
-          sleep 25
+          sleep 30
           # We're already cd'ed into install/<method>-compose by the installer
           ./testsuite/check-health.sh --method helm
 
