@@ -17,7 +17,7 @@ Don't forget to indicate your Java, Maven and/or Docker version.
 
 ### Build the whole project
 
-You need to have [Apache Maven](https://maven.apache.org) (version >= 3.5) up and running as well as a valid Java Development Kit (version >= 21) install to build the project.
+You need to have [Apache Maven](https://maven.apache.org) (version >= 3.5) up and running as well as a valid Java Development Kit (version >= 25) install to build the project.
 
 ```
 $ git clone https://github.com/microcks/microcks.git

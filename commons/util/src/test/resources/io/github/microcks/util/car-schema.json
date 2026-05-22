@@ -1,5 +1,4 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Car",
   "description": "A description of a Car",
   "type": "object",

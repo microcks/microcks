@@ -41,7 +41,7 @@ class JsonSchemaValidatorTest {
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is valid.
@@ -61,7 +61,7 @@ class JsonSchemaValidatorTest {
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is not valid.
@@ -72,7 +72,7 @@ class JsonSchemaValidatorTest {
       try {
          errors = JsonSchemaValidator.validateJson(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
       assertEquals(1, errors.size());
       assertEquals("required property 'name' not found", errors.get(0));
@@ -91,7 +91,7 @@ class JsonSchemaValidatorTest {
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is not valid.
@@ -102,7 +102,7 @@ class JsonSchemaValidatorTest {
       try {
          errors = JsonSchemaValidator.validateJson(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
       assertEquals(1, errors.size());
       assertEquals("property 'energy' is not defined in the schema and the schema does not allow additional properties",
