@@ -49,7 +49,7 @@ spec:
           - name: SPRING_PROFILES_ACTIVE
             value: prod{{ if .Values.microcks.extraProperties }},extra{{ end }}
           - name: SPRING_MONGODB_URI
-            value: {{ .Values.mongodb.uri | default (print "mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@" .Values.appName "-mongodb:27017") }}/${SPRING_DATA_MONGODB_DATABASE}{{ .Values.mongodb.uriParameters }}
+            value: {{ .Values.mongodb.uri | default (print "mongodb://${SPRING_MONGODB_USER}:${SPRING_MONGODB_PASSWORD}@" .Values.appName "-mongodb:27017") }}/${SPRING_MONGODB_DATABASE}{{ .Values.mongodb.uriParameters }}
           - name: SPRING_MONGODB_USER
             valueFrom:
               secretKeyRef:
