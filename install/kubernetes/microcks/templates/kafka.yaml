@@ -106,5 +106,75 @@ spec:
     resources:
       {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
   {{- end }}
+{{- else if .Capabilities.APIVersions.Has "kafka.strimzi.io/v1/Kafka" }}
+{{- if .Values.features.async.kafka.enableKraft }}
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: "{{ .Values.appName }}-kafka-nodes"
+  labels:
+    strimzi.io/cluster: "{{ .Values.appName }}-kafka"
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: ephemeral
+  resources:
+    {{- toYaml .Values.features.async.kafka.resources | nindent 4 }}
+---
+{{- end }}
+kind: Kafka
+apiVersion: kafka.strimzi.io/v1
+metadata:
+  name: "{{ .Values.appName }}-kafka"
+  {{- if .Values.features.async.kafka.enableKraft }}
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+  {{- end }}
+spec:
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+  kafka:
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+      - name: external
+        port: 9094
+        tls: true
+        type: ingress
+        configuration:
+          class: "{{ .Values.features.async.kafka.ingressClassName }}"
+          bootstrap:
+            host: "{{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}"
+          brokers:
+            - broker: 0
+              host: "{{ .Values.appName }}-kafka-0.{{ .Values.features.async.kafka.url }}"
+    {{- if not .Values.features.async.kafka.enableKraft }}
+    replicas: 1
+    storage:
+      type: ephemeral
+    {{- end }}
+  {{- if not .Values.features.async.kafka.enableKraft }}
+  zookeeper:
+    replicas: 1
+    storage:
+      type: ephemeral
+    resources:
+      {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
+  {{- end }}
 {{- end }}
 {{- end }}
