@@ -55,9 +55,9 @@ if $ASYNC; then
       --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
       --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
       --set keycloak.resources.requests.cpu=800m \
-      --set keycloak.resources.requests.memory=1Gi \
+      --set keycloak.resources.requests.memory=1280Mi \
       --set keycloak.resources.limits.cpu=800m \
-      --set keycloak.resources.limits.memory=1Gi \
+      --set keycloak.resources.limits.memory=1280Mi \
       --set features.async.kafka.url=kafka.${MINIKUBE_IP}.nip.io
 else
   echo "[INFO] Installing Microcks..."
@@ -66,9 +66,9 @@ else
      --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
      --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
      --set keycloak.resources.requests.cpu=800m \
-     --set keycloak.resources.requests.memory=1Gi \
+     --set keycloak.resources.requests.memory=1280Mi \
      --set keycloak.resources.limits.cpu=800m \
-     --set keycloak.resources.limits.memory=1Gi
+     --set keycloak.resources.limits.memory=1280Mi
 fi
 
 
