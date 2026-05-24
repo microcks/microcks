@@ -87,6 +87,10 @@ microcks:
     #- name: CORS_REST_ALLOW_CREDENTIALS
     #  value: 'true'
 
+    #- name: MCP_SSE_TIMEOUT
+    #  value: "900000"
+    #- name: MOCKS_SERVICE_STATE_STORE_DEFAULT_TTL
+    #  value: "30"
   #logLevel: TRACE | DEBUG | INFO | WARN
   logLevel: INFO
 
