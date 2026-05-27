@@ -39,7 +39,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -79,7 +78,9 @@ public class ProtobufImporter implements MockRepositoryImporter {
    public ProtobufImporter(String protoFilePath, ReferenceResolver referenceResolver) throws IOException {
       this.referenceResolver = referenceResolver;
 
-      String fileSeparator = FileSystems.getDefault().getSeparator();
+      // Use forward slashes throughout: protoc requires '/' for the file argument so it can be
+      // made relative to --proto_path, and Java's Path API on Windows also accepts '/'.
+      String fileSeparator = "/";
 
       // Move proto file to a unique subdir that matches its package name (to avoid conflicts)
       // This will allow protoc to find the relative imports we will download later on.
@@ -102,7 +103,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
          // Prepare file, path and name for easier process.
          File protoFile = new File(protoFilePath);
-         protoDirectory = protoPath.getParent().resolve(uuid + fileSeparator).toFile().getAbsolutePath();
+         protoDirectory = protoPath.getParent().resolve(uuid).toFile().getAbsolutePath();
          protoFileName = packagePath + fileSeparator + protoFile.getName();
 
          // Now switch the proto and file paths.
