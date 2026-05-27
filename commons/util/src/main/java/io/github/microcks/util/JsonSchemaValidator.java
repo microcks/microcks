@@ -37,7 +37,7 @@ import java.util.Set;
 
 /**
  * Helper class for validating Json objects against their Json schema. Supported version of Json schema is
- * http://json-schema.org/draft-07/schema.
+ * http://json-schema.org/draft/2020-12/schema.
  * @author laurent
  */
 public class JsonSchemaValidator {
@@ -45,8 +45,6 @@ public class JsonSchemaValidator {
    /** A commons logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(JsonSchemaValidator.class);
 
-   public static final String JSON_V4_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-04/schema#";
-   public static final String JSON_V7_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-07/schema#";
    public static final String JSON_V12_SCHEMA_IDENTIFIER = "http://json-schema.org/draft/2020-12/schema#";
    public static final String JSON_SCHEMA_IDENTIFIER_ELEMENT = "$schema";
 
@@ -153,9 +151,26 @@ public class JsonSchemaValidator {
     * @return The list of validation failure messages. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
+      return validateJson(schemaNode, jsonNode, namespace, SpecVersion.VersionFlag.V202012);
+   }
+
+   /**
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of Json schema spec
+    * semantics regarding additional or unknown attributes: schema must explicitly set <code>additionalProperties</code>
+    * to false if you want to consider unknown attributes as validation errors. It returns a list of validation error
+    * messages.
+    * @param schemaNode  The Json schema specification as a Jackson node
+    * @param jsonNode    The Json object as a Jackson node
+    * @param namespace   Namespace definition to resolve relative dependencies in Json schema
+    * @param versionFlag The Json schema draft version to use for validation (e.g. V4 for OAS 3.0, V202012 for OAS 3.1)
+    * @return The list of validation failure messages. If empty, json object is valid !
+    */
+   public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace,
+         SpecVersion.VersionFlag versionFlag) {
       List<String> errors = new ArrayList<>();
 
-      final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode, namespace);
+      final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode, namespace, versionFlag);
 
       Set<ValidationMessage> messages = jsonSchemaNode.validate(jsonNode, executionContext -> {
          executionContext.getExecutionConfig().setFormatAssertionsEnabled(true);
@@ -180,20 +195,10 @@ public class JsonSchemaValidator {
       return mapper.readTree(jsonText);
    }
 
-   /**
-    * Get a Jackson JsonNode representation for Json schema.
-    * @param schemaText The Json schema specification as a string
-    * @return The Jackson JsonSchema corresponding to json schema string
-    * @throws IOException if json string representation cannot be parsed
-    */
-   public static JsonSchema getSchemaNode(String schemaText) throws IOException {
-      final JsonNode schemaNode = getJsonNode(schemaText);
-      return extractJsonSchemaNode(schemaNode, null);
-   }
-
-   private static JsonSchema extractJsonSchemaNode(JsonNode jsonNode, String namespace) {
-      JsonMetaSchema jsonMetaSchema = JsonMetaSchema.builder(JsonMetaSchema.getV202012()).build();
-      JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012,
+   private static JsonSchema extractJsonSchemaNode(JsonNode jsonNode, String namespace,
+         SpecVersion.VersionFlag versionFlag) {
+      JsonMetaSchema jsonMetaSchema = JsonMetaSchema.builder(metaSchemaFor(versionFlag)).build();
+      JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(versionFlag,
             builder -> builder.metaSchema(jsonMetaSchema));
 
       if (namespace != null) {
@@ -202,5 +207,15 @@ public class JsonSchemaValidator {
       }
 
       return jsonSchemaFactory.getSchema(jsonNode);
+   }
+
+   private static JsonMetaSchema metaSchemaFor(SpecVersion.VersionFlag versionFlag) {
+      return switch (versionFlag) {
+         case V4 -> JsonMetaSchema.getV4();
+         case V6 -> JsonMetaSchema.getV6();
+         case V7 -> JsonMetaSchema.getV7();
+         case V201909 -> JsonMetaSchema.getV201909();
+         case V202012 -> JsonMetaSchema.getV202012();
+      };
    }
 }

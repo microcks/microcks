@@ -46,7 +46,7 @@ class OpenAPISchemaValidatorTest {
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is valid.
@@ -66,7 +66,7 @@ class OpenAPISchemaValidatorTest {
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is valid.
@@ -86,7 +86,7 @@ class OpenAPISchemaValidatorTest {
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is not valid.
@@ -97,7 +97,7 @@ class OpenAPISchemaValidatorTest {
       try {
          errors = OpenAPISchemaValidator.validateJson(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
       assertEquals(1, errors.size());
       assertEquals("required property 'name' not found", errors.get(0));
@@ -117,7 +117,7 @@ class OpenAPISchemaValidatorTest {
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is not valid.
@@ -128,7 +128,7 @@ class OpenAPISchemaValidatorTest {
       try {
          errors = OpenAPISchemaValidator.validateJson(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
       assertEquals(1, errors.size());
       assertEquals("property 'energy' is not defined in the schema and the schema does not allow additional properties",
@@ -150,8 +150,7 @@ class OpenAPISchemaValidatorTest {
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         e.printStackTrace();
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is valid.
@@ -174,7 +173,7 @@ class OpenAPISchemaValidatorTest {
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText,
                "https://raw.githubusercontent.com/microcks/microcks/1.6.x/commons/util/src/test/resources/io/github/microcks/util/openapi/");
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is valid.
@@ -196,8 +195,7 @@ class OpenAPISchemaValidatorTest {
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
-         e.printStackTrace();
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Assert Json object is not valid.
@@ -207,7 +205,7 @@ class OpenAPISchemaValidatorTest {
       try {
          errors = OpenAPISchemaValidator.validateJson(schemaText, jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
       // Don't know why but when a failure occurs, validator also complains
       // about components reference not being found.
@@ -236,7 +234,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -251,7 +249,7 @@ class OpenAPISchemaValidatorTest {
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts/{accountId} response message.
@@ -281,7 +279,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -296,7 +294,7 @@ class OpenAPISchemaValidatorTest {
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts/{accountId} response message.
@@ -311,7 +309,7 @@ class OpenAPISchemaValidatorTest {
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts/{accountId} response message.
@@ -350,7 +348,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /forecast/{region} response message.
@@ -369,7 +367,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /forecast/{region} response message.
@@ -389,7 +387,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /forecast/{region} response message but without specifying a namespace.
@@ -426,7 +424,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /forecast response message but without specifying a namespace.
@@ -458,7 +456,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -474,7 +472,7 @@ class OpenAPISchemaValidatorTest {
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts/{accountId} response message.
@@ -511,7 +509,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -539,7 +537,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -548,7 +546,6 @@ class OpenAPISchemaValidatorTest {
 
       assertEquals(expected, errors.isEmpty());
    }
-
 
    @ParameterizedTest()
    @CsvSource(value = { "null | {\"seasonData\":null} | true",
@@ -570,7 +567,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -600,7 +597,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -649,7 +646,7 @@ class OpenAPISchemaValidatorTest {
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
 
       // Validate the content for Get /accounts response message.
@@ -657,4 +654,97 @@ class OpenAPISchemaValidatorTest {
             "/paths/~1queen~1members/get/responses/200", "application/json");
       assertTrue(errors.isEmpty());
    }
+
+   @Test
+   void testValidateOpenAPI30BooleanExclusiveBoundsValid() {
+      String openAPIText = null;
+      String jsonText = """
+            {
+              "name": "307",
+              "year": 2003
+            }
+            """;
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/car-exclusive-bounds-openapi-3.0.yaml"),
+               StandardCharsets.UTF_8);
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown", e);
+      }
+
+      // Validate the content for Post /cars response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1cars/post/requestBody", "application/json");
+      assertTrue(errors.isEmpty(), () -> "Expected no validation errors but got: " + errors);
+   }
+
+   @Test
+   void testValidateOpenAPI30BooleanExclusiveMinimumViolated() {
+      String openAPIText = null;
+      String jsonText = """
+            {
+              "name": "307",
+              "year": 1950
+            }
+            """;
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/car-exclusive-bounds-openapi-3.0.yaml"),
+               StandardCharsets.UTF_8);
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown", e);
+      }
+
+      // Validate the content for Post /cars response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1cars/post/requestBody", "application/json");
+      assertAll(() -> assertFalse(errors.isEmpty()),
+            () -> assertEquals("must have a minimum value of 1950", errors.getFirst()));
+   }
+
+   @Test
+   void testValidateOpenAPI30BooleanExclusiveMaximumViolated() {
+      String openAPIText = null;
+      String jsonText = """
+            {
+              "name": "307",
+              "year": 2100
+            }
+            """;
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/car-exclusive-bounds-openapi-3.0.yaml"),
+               StandardCharsets.UTF_8);
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown", e);
+      }
+
+      // Validate the content for Post /cars response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1cars/post/requestBody", "application/json");
+      assertAll(() -> assertFalse(errors.isEmpty()),
+            () -> assertEquals("must have a maximum value of 2100", errors.getFirst()));
+   }
+
 }
