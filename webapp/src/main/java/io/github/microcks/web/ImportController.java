@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * A Controller for importing new definitions into microcks repository.
  * @author laurent
@@ -50,18 +52,26 @@ public class ImportController {
    @PostMapping(value = "/import")
    public ResponseEntity<byte[]> importRepository(@RequestParam(value = "file") MultipartFile file) {
       log.debug("Importing new services and resources definitions");
-      if (!file.isEmpty()) {
-         log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
-         if (MediaType.APPLICATION_JSON_VALUE.equals(file.getContentType())) {
-            try {
-               byte[] bytes = file.getBytes();
-               String json = new String(bytes);
-               importExportService.importRepository(json);
-            } catch (Exception e) {
-               log.error(e.getMessage());
-            }
-         }
+
+      if (file.isEmpty()) {
+         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
       }
-      return new ResponseEntity<>(HttpStatus.CREATED);
+
+      log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
+
+      if (!MediaType.APPLICATION_JSON_VALUE.equals(file.getContentType())) {
+         return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+      }
+
+      try {
+         byte[] bytes = file.getBytes();
+         String json = new String(bytes, StandardCharsets.UTF_8);
+         importExportService.importRepository(json);
+
+         return new ResponseEntity<>(HttpStatus.CREATED);
+      } catch (Exception e) {
+         log.error("Exception while importing repository", e);
+         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
    }
 }
