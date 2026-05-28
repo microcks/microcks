@@ -151,7 +151,7 @@ public class JsonSchemaValidator {
     * @return The list of validation failure messages. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
-      return validateJson(schemaNode, jsonNode, namespace, SpecVersion.VersionFlag.V202012);
+      return validateJson(schemaNode, jsonNode, namespace, JsonSchemaDialect.DRAFT_2020_12);
    }
 
    /**
@@ -160,17 +160,17 @@ public class JsonSchemaValidator {
     * semantics regarding additional or unknown attributes: schema must explicitly set <code>additionalProperties</code>
     * to false if you want to consider unknown attributes as validation errors. It returns a list of validation error
     * messages.
-    * @param schemaNode  The Json schema specification as a Jackson node
-    * @param jsonNode    The Json object as a Jackson node
-    * @param namespace   Namespace definition to resolve relative dependencies in Json schema
-    * @param versionFlag The Json schema draft version to use for validation (e.g. V4 for OAS 3.0, V202012 for OAS 3.1)
+    * @param schemaNode The Json schema specification as a Jackson node
+    * @param jsonNode   The Json object as a Jackson node
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
+    * @param dialect    The JSON Schema dialect to validate against (DRAFT_4 for OAS 3.0, DRAFT_2020_12 for OAS 3.1)
     * @return The list of validation failure messages. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace,
-         SpecVersion.VersionFlag versionFlag) {
+         JsonSchemaDialect dialect) {
       List<String> errors = new ArrayList<>();
 
-      final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode, namespace, versionFlag);
+      final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode, namespace, toVersionFlag(dialect));
 
       Set<ValidationMessage> messages = jsonSchemaNode.validate(jsonNode, executionContext -> {
          executionContext.getExecutionConfig().setFormatAssertionsEnabled(true);
@@ -216,6 +216,13 @@ public class JsonSchemaValidator {
          case V7 -> JsonMetaSchema.getV7();
          case V201909 -> JsonMetaSchema.getV201909();
          case V202012 -> JsonMetaSchema.getV202012();
+      };
+   }
+
+   private static SpecVersion.VersionFlag toVersionFlag(JsonSchemaDialect dialect) {
+      return switch (dialect) {
+         case DRAFT_4 -> SpecVersion.VersionFlag.V4;
+         case DRAFT_2020_12 -> SpecVersion.VersionFlag.V202012;
       };
    }
 }

@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.networknt.schema.SpecVersion;
+import io.github.microcks.util.JsonSchemaDialect;
 import io.github.microcks.util.JsonSchemaValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,7 +146,7 @@ public class OpenAPISchemaValidator {
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
-      return validateJson(schemaNode, jsonNode, namespace, SpecVersion.VersionFlag.V202012);
+      return validateJson(schemaNode, jsonNode, namespace, JsonSchemaDialect.DRAFT_2020_12);
    }
 
    /**
@@ -155,16 +155,16 @@ public class OpenAPISchemaValidator {
     * spec semantics regarding additional or unknown attributes: schema must explicitly set
     * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
     * returns a list of validation error messages.
-    * @param schemaNode  The OpenAPI schema specification as a Jackson node
-    * @param jsonNode    The Json object as a Jackson node
-    * @param namespace   Namespace definition to resolve relative dependencies in Json schema
-    * @param versionFlag The Json schema draft version to validate against (V4 for OAS 3.0, V202012 for OAS 3.1)
+    * @param schemaNode The OpenAPI schema specification as a Jackson node
+    * @param jsonNode   The Json object as a Jackson node
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
+    * @param dialect    The JSON Schema dialect to validate against (DRAFT_4 for OAS 3.0, DRAFT_2020_12 for OAS 3.1)
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace,
-         SpecVersion.VersionFlag versionFlag) {
+         JsonSchemaDialect dialect) {
       var convertedSchemaNode = convertOpenAPISchemaToJsonSchema(schemaNode);
-      return JsonSchemaValidator.validateJson(convertedSchemaNode, jsonNode, namespace, versionFlag);
+      return JsonSchemaValidator.validateJson(convertedSchemaNode, jsonNode, namespace, dialect);
    }
 
    /**
@@ -231,23 +231,22 @@ public class OpenAPISchemaValidator {
       ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT,
             specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
-      return validateJson(schemaNode, jsonNode, namespace, resolveSpecVersion(specificationNode));
+      return validateJson(schemaNode, jsonNode, namespace, resolveDialect(specificationNode));
    }
 
    /**
-    * Resolve the JSON schema draft version to use when validating a message against the given OpenAPI specification.
-    * OpenAPI 3.0.x relies on a schema dialect derived from JSON Schema draft-04 (boolean
-    * <code>exclusiveMinimum</code>/<code>exclusiveMaximum</code>) — V4 is the only networknt
-    * <code>SpecVersion.VersionFlag</code> that accepts that form. For OpenAPI 3.1.x and any other / missing version, we
-    * keep the default V202012.
+    * Resolve the JSON Schema dialect to use when validating a message against the given OpenAPI specification. OpenAPI
+    * 3.0.x relies on a schema dialect derived from JSON Schema draft-04 (boolean
+    * <code>exclusiveMinimum</code>/<code>exclusiveMaximum</code>). For OpenAPI 3.1.x and any other / missing version,
+    * we keep the default draft 2020-12.
     */
-   private static SpecVersion.VersionFlag resolveSpecVersion(JsonNode specificationNode) {
+   private static JsonSchemaDialect resolveDialect(JsonNode specificationNode) {
       String openApiVersion = specificationNode.path("openapi").asText("");
       if (openApiVersion.startsWith("3.0.")) {
-         log.info("Detected OpenAPI specification version {}, parsing it using schema V4", openApiVersion);
-         return SpecVersion.VersionFlag.V4;
+         log.debug("Detected OpenAPI specification version {}, parsing it using JSON Schema draft-04", openApiVersion);
+         return JsonSchemaDialect.DRAFT_4;
       }
-      return SpecVersion.VersionFlag.V202012;
+      return JsonSchemaDialect.DRAFT_2020_12;
    }
 
    /**
