@@ -97,7 +97,7 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
          if (operationDefinition != null) {
             // #1 Look for a description in the operation definition.
             if (operationDefinition.getDescription() != null) {
-               return operationDefinition.getDescription().content;
+               return operationDefinition.getDescription().content.trim();
             } else if (operationDefinition.getComments() != null && !operationDefinition.getComments().isEmpty()) {
                // #2 Look for comments in the operation definition.
                StringBuilder result = new StringBuilder();
