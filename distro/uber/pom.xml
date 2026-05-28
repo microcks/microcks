@@ -15,7 +15,7 @@
     <multi-project.rootdir>../..</multi-project.rootdir>
     <java.version>25</java.version>
     <mongo-java-server.version>1.47.0</mongo-java-server.version>
-    <opentelemetry.version>2.21.0</opentelemetry.version>
+    <opentelemetry.version>2.23.0</opentelemetry.version>
   </properties>
 
   <dependencyManagement>
