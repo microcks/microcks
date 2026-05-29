@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -97,10 +97,10 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
+      EntityExchangeResult<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatus().value());
 
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -109,10 +109,10 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatus().value());
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertTrue(testResult.isSuccess());
@@ -144,10 +144,10 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
+      EntityExchangeResult<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatus().value());
 
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -161,10 +161,10 @@ class TestControllerIT extends AbstractBaseIT {
          System.err.println(postmanRunner.getLogs());
       }
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatus().value());
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertTrue(testResult.isSuccess());
@@ -186,10 +186,10 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
+      EntityExchangeResult<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatus().value());
 
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -198,10 +198,10 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatus().value());
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       // 2 tests steps are ok, 1 is failing.
@@ -248,10 +248,10 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
+      EntityExchangeResult<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatus().value());
 
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -260,10 +260,10 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatus().value());
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertTrue(testResult.isSuccess());
@@ -296,10 +296,10 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
+      EntityExchangeResult<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatus().value());
 
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -308,9 +308,9 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
-      testResult = response.getBody();
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatus().value());
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertFalse(testResult.isSuccess());
@@ -319,10 +319,10 @@ class TestControllerIT extends AbstractBaseIT {
    private void waitForTestCompletion(TestResult testResult, int seconds) {
       await().atMost(seconds, TimeUnit.SECONDS).pollDelay(500, TimeUnit.MILLISECONDS)
             .pollInterval(250, TimeUnit.MILLISECONDS).until(() -> {
-               ResponseEntity<TestResult> resp = restTemplate.getForEntity("/api/tests/" + testResult.getId(),
+               EntityExchangeResult<TestResult> resp = getForEntity("/api/tests/" + testResult.getId(),
                      TestResult.class);
-               if (resp.getStatusCode().value() == 200) {
-                  TestResult tr = resp.getBody();
+               if (resp.getStatus().value() == 200) {
+                  TestResult tr = resp.getResponseBody();
                   return tr != null && !tr.isInProgress();
                }
                return false;
