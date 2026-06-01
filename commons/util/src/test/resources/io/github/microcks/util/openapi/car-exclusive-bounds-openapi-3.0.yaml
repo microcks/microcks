@@ -1,0 +1,36 @@
+openapi: 3.0.3
+info:
+  title: Cars API
+  version: '1.0'
+paths:
+  /cars:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Car'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+
+components:
+  schemas:
+    Car:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        year:
+          type: integer
+          minimum: 1950
+          exclusiveMinimum: true
+          maximum: 2100
+          exclusiveMaximum: true

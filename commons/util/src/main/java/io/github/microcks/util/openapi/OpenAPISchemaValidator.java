@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.github.microcks.util.JsonSchemaDialect;
 import io.github.microcks.util.JsonSchemaValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,8 +146,25 @@ public class OpenAPISchemaValidator {
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
-      schemaNode = convertOpenAPISchemaToJsonSchema(schemaNode);
-      return JsonSchemaValidator.validateJson(schemaNode, jsonNode, namespace);
+      return validateJson(schemaNode, jsonNode, namespace, JsonSchemaDialect.DRAFT_2020_12);
+   }
+
+   /**
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of OpenAPI schema
+    * spec semantics regarding additional or unknown attributes: schema must explicitly set
+    * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
+    * returns a list of validation error messages.
+    * @param schemaNode The OpenAPI schema specification as a Jackson node
+    * @param jsonNode   The Json object as a Jackson node
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
+    * @param dialect    The JSON Schema dialect to validate against (DRAFT_4 for OAS 3.0, DRAFT_2020_12 for OAS 3.1)
+    * @return The list of validation failures. If empty, json object is valid !
+    */
+   public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace,
+         JsonSchemaDialect dialect) {
+      var convertedSchemaNode = convertOpenAPISchemaToJsonSchema(schemaNode);
+      return JsonSchemaValidator.validateJson(convertedSchemaNode, jsonNode, namespace, dialect);
    }
 
    /**
@@ -213,7 +231,22 @@ public class OpenAPISchemaValidator {
       ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT,
             specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
-      return validateJson(schemaNode, jsonNode, namespace);
+      return validateJson(schemaNode, jsonNode, namespace, resolveDialect(specificationNode));
+   }
+
+   /**
+    * Resolve the JSON Schema dialect to use when validating a message against the given OpenAPI specification. OpenAPI
+    * 3.0.x relies on a schema dialect derived from JSON Schema draft-04 (boolean
+    * <code>exclusiveMinimum</code>/<code>exclusiveMaximum</code>). For OpenAPI 3.1.x and any other / missing version,
+    * we keep the default draft 2020-12.
+    */
+   private static JsonSchemaDialect resolveDialect(JsonNode specificationNode) {
+      String openApiVersion = specificationNode.path("openapi").asText("");
+      if (openApiVersion.startsWith("3.0.")) {
+         log.debug("Detected OpenAPI specification version {}, parsing it using JSON Schema draft-04", openApiVersion);
+         return JsonSchemaDialect.DRAFT_4;
+      }
+      return JsonSchemaDialect.DRAFT_2020_12;
    }
 
    /**
