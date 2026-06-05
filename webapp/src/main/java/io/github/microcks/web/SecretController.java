@@ -77,9 +77,14 @@ public class SecretController {
    }
 
    @GetMapping(value = "/secrets/search")
-   public List<Secret> searchSecrets(@RequestParam(value = "name") String name) {
+   public List<Secret> searchSecrets(@RequestParam(value = "name") String name, UserInfo userInfo) {
       log.debug("Searching secrets corresponding to {}", name);
-      return secretRepository.findByNameLike(name);
+      List<Secret> secrets = secretRepository.findByNameLike(name);
+      if (!authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)) {
+         return secrets.stream().map(this::filterSensitiveData).toList();
+      }
+      // We're admin, so we can return all secrets with sensitive data.
+      return secrets;
    }
 
    @GetMapping(value = "/secrets/count")
