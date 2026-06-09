@@ -384,7 +384,11 @@ public class HARImporter implements MockRepositoryImporter {
    private List<JsonNode> filterValidEntries(Iterator<JsonNode> entries) {
       return Stream.generate(() -> null).takeWhile(x -> entries.hasNext()).map(next -> entries.next()).filter(entry -> {
          String url = entry.path(REQUEST_NODE).path("url").asText();
-         String extension = url.substring(url.lastIndexOf("."));
+         int dotIndex = url.lastIndexOf(".");
+         if (dotIndex == -1) {
+            return true;
+         }
+         String extension = url.substring(dotIndex);
          return !INVALID_ENTRY_EXTENSIONS.contains(extension);
       }).filter(entry -> {
          if (apiPrefix != null) {
