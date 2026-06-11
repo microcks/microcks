@@ -121,8 +121,12 @@ public class ResourceController {
          if (genericResources != null && !genericResources.isEmpty()) {
             try {
                Document reference = genericResources.get(0).getPayload();
-               reference.append(ID_FIELD, genericResources.get(0).getId());
-               referenceSchema = OpenAPISchemaBuilder.buildTypeSchemaFromJson(reference.toJson());
+               if (reference != null) {
+                  reference.append(ID_FIELD, genericResources.get(0).getId());
+                  referenceSchema = OpenAPISchemaBuilder.buildTypeSchemaFromJson(reference.toJson());
+               } else {
+                  log.warn("Reference payload is null for serviceId: {}", serviceId);
+               }
             } catch (Exception e) {
                log.warn("Exception while building reference schema", e);
             }
