@@ -19,6 +19,7 @@ import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
 import io.github.microcks.domain.Header;
+import io.github.microcks.domain.TestCasePhase;
 import io.github.microcks.minion.async.AsyncTestSpecification;
 
 import org.apache.avro.generic.GenericRecord;
@@ -38,6 +39,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,6 +84,8 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    protected Long startOffset;
    protected Long endOffset;
 
+   private Consumer<TestCasePhase> phaseListener;
+
 
    /**
     * Create a new consumption task from an Async test specification.
@@ -89,6 +93,11 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
     */
    public KafkaMessageConsumptionTask(AsyncTestSpecification testSpecification) {
       this.specification = testSpecification;
+   }
+
+   @Override
+   public void setPhaseListener(Consumer<TestCasePhase> phaseListener) {
+      this.phaseListener = phaseListener;
    }
 
    /**
@@ -329,6 +338,10 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
                   avroConsumer.seek(p, startOffset);
                }
             });
+         }
+         // Partitions are now assigned: the consumer is connected and ready to receive messages.
+         if (phaseListener != null && !partitions.isEmpty()) {
+            phaseListener.accept(TestCasePhase.WAITING_FOR_MESSAGE);
          }
       }
    }
