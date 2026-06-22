@@ -20,32 +20,42 @@ import io.github.microcks.domain.BindingType;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Manager responsible for lifecycle management of request-reply handlers. Creates, starts, and stops handlers for
- * request-reply operations based on their protocol bindings.
+ * request-reply operations based on their protocol bindings. Uses CDI-injected RequestReplyHandlerFactory instances to
+ * create protocol-specific handlers.
  *
  * @author adamhicks
  */
 @ApplicationScoped
 public class RequestReplyHandlerManager {
 
-   /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
    private final Map<String, RequestReplyHandler> handlers = new ConcurrentHashMap<>();
 
    final AsyncMockRepository mockRepository;
-   final KafkaRequestReplyHandlerFactory kafkaHandlerFactory;
+
+   @Inject
+   Instance<RequestReplyHandlerFactory> factoryInstances;
+
+   private List<RequestReplyHandlerFactory> resolvedFactories;
 
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
@@ -53,13 +63,20 @@ public class RequestReplyHandlerManager {
    /**
     * Create a new RequestReplyHandlerManager with required dependencies.
     *
-    * @param mockRepository      The repository for mock definitions
-    * @param kafkaHandlerFactory Factory for creating Kafka handlers
+    * @param mockRepository The repository for mock definitions
     */
-   public RequestReplyHandlerManager(AsyncMockRepository mockRepository,
-         KafkaRequestReplyHandlerFactory kafkaHandlerFactory) {
+   public RequestReplyHandlerManager(AsyncMockRepository mockRepository) {
       this.mockRepository = mockRepository;
-      this.kafkaHandlerFactory = kafkaHandlerFactory;
+   }
+
+   /**
+    * Initialize the resolved factories list from CDI-injected instances after construction.
+    */
+   @PostConstruct
+   void init() {
+      if (factoryInstances != null) {
+         resolvedFactories = StreamSupport.stream(factoryInstances.spliterator(), false).collect(Collectors.toList());
+      }
    }
 
    /**
@@ -84,13 +101,12 @@ public class RequestReplyHandlerManager {
    public void startHandlerForDefinition(AsyncMockDefinition definition) {
       String handlerKey = buildHandlerKey(definition);
 
-      // Check if handler already exists
       if (handlers.containsKey(handlerKey)) {
          logger.debugf("Handler for %s already exists, skipping", handlerKey);
          return;
       }
 
-      // Determine which binding to use (first supported binding)
+      boolean handlerStarted = false;
       for (String binding : definition.getOperation().getBindings().keySet()) {
          if (Arrays.asList(supportedBindings).contains(binding)) {
             RequestReplyHandler handler = createHandlerForBinding(definition, binding);
@@ -102,12 +118,19 @@ public class RequestReplyHandlerManager {
                         definition.getOwnerService().getName() + ":" + definition.getOwnerService().getVersion() + " - "
                               + definition.getOperation().getName(),
                         binding);
-                  break; // Only start one handler per definition
+                  handlerStarted = true;
+                  break;
                } catch (Exception e) {
                   logger.errorf(e, "Failed to start request-reply handler for %s", handlerKey);
                }
             }
          }
+      }
+
+      if (!handlerStarted) {
+         logger.warnf("Could not start any request-reply handler for %s - no supported binding factory found",
+               definition.getOwnerService().getName() + ":" + definition.getOwnerService().getVersion() + " - "
+                     + definition.getOperation().getName());
       }
    }
 
@@ -157,26 +180,46 @@ public class RequestReplyHandlerManager {
       return handlers.size();
    }
 
-   /** Create a handler for a specific binding type. */
+   /** Create a handler for a specific binding type by resolving the appropriate factory. */
    private RequestReplyHandler createHandlerForBinding(AsyncMockDefinition definition, String binding) {
+      BindingType bindingType;
       try {
-         BindingType bindingType = BindingType.valueOf(binding);
-         Binding bindingDef = definition.getOperation().getBindings().get(binding);
-
-         return switch (bindingType) {
-            case KAFKA -> kafkaHandlerFactory.createHandler(definition, bindingDef);
-            // TODO: Add other binding types as they are implemented
-            // case MQTT -> mqttHandlerFactory.createHandler(definition, bindingDef);
-            // case AMQP -> amqpHandlerFactory.createHandler(definition, bindingDef);
-            default -> {
-               logger.warnf("Request-reply handler not implemented for binding type: %s", binding);
-               yield null;
-            }
-         };
-      } catch (Exception e) {
-         logger.errorf(e, "Error creating handler for binding %s", binding);
+         bindingType = BindingType.valueOf(binding.toUpperCase());
+      } catch (IllegalArgumentException e) {
+         logger.warnf("Unknown binding type '%s', skipping handler creation", binding);
          return null;
       }
+
+      Binding bindingDef = definition.getOperation().getBindings().get(binding);
+      RequestReplyHandlerFactory factory = resolveFactory(bindingType);
+      if (factory != null) {
+         try {
+            return factory.createHandler(definition, bindingDef);
+         } catch (Exception e) {
+            logger.errorf(e, "Error creating handler for binding %s", binding);
+            return null;
+         }
+      }
+
+      logger.warnf("Request-reply handler factory not found for binding type: %s", binding);
+      return null;
+   }
+
+   /** Resolve the RequestReplyHandlerFactory for the given binding type. */
+   private RequestReplyHandlerFactory resolveFactory(BindingType bindingType) {
+      if (resolvedFactories == null) {
+         return null;
+      }
+
+      for (RequestReplyHandlerFactory factory : resolvedFactories) {
+         RequestReplyHandlerFactoryQualifier qualifier = factory.getClass()
+               .getAnnotation(RequestReplyHandlerFactoryQualifier.class);
+         if (qualifier != null && qualifier.value() == bindingType) {
+            return factory;
+         }
+      }
+
+      return null;
    }
 
    /** Build a unique key for a handler. */
