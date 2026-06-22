@@ -45,7 +45,7 @@ services:
       - mongo
       - keycloak
       - postman
-    image: quay.io/microcks/microcks:1.15.0-rc1
+    image: quay.io/microcks/microcks:nightly-rc1
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
@@ -78,7 +78,7 @@ services:
       - app
     ports:
       - "8081:8081"
-    image: quay.io/microcks/microcks-async-minion:1.15.0-rc1
+    image: quay.io/microcks/microcks-async-minion:nightly-rc1
     container_name: microcks-async-minion
     restart: on-failure
     volumes:
