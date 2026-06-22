@@ -23,21 +23,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -57,7 +55,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * @author laurent
  */
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@AutoConfigureTestRestTemplate
 @SpringBootTest(classes = MicrocksApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("fuzz")
 @TestPropertySource(locations = { "classpath:/config/fuzz.properties" })
@@ -87,14 +84,14 @@ public class MicrocksApplicationFuzz {
    @Autowired
    protected MockMvc mockMvc;
 
-   @Autowired
-   protected TestRestTemplate restTemplate;
+   protected RestTestClient restClient;
 
    private boolean beforeCalled = false;
 
    @BeforeEach
    void beforeEach() {
       beforeCalled = true;
+      restClient = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
 
       // Upload PetStore reference artifact.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
@@ -142,17 +139,18 @@ public class MicrocksApplicationFuzz {
       MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
       body.add("file", new FileSystemResource(new File(artifactFilePath)));
 
-      HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-      ResponseEntity<String> response;
+      EntityExchangeResult<String> response;
       if (isMainArtifact) {
-         response = restTemplate.postForEntity("/api/artifact/upload", requestEntity, String.class);
+         response = restClient.post().uri("/api/artifact/upload").headers(httpHeaders -> httpHeaders.addAll(headers))
+               .body(body).exchange().expectBody(String.class).returnResult();
       } else {
-         response = restTemplate.postForEntity("/api/artifact/upload?mainArtifact=false", requestEntity, String.class);
+         response = restClient.post().uri("/api/artifact/upload?mainArtifact=false")
+               .headers(httpHeaders -> httpHeaders.addAll(headers)).body(body).exchange().expectBody(String.class)
+               .returnResult();
       }
 
-      assertEquals(201, response.getStatusCode().value());
-      log.info("Just uploaded: {}", response.getBody());
+      assertEquals(201, response.getStatus().value());
+      log.info("Just uploaded: {}", response.getResponseBody());
    }
 
    protected static ResultActions apiTest(MockMvc mockMvc, MockHttpServletRequestBuilder requestBuilder)

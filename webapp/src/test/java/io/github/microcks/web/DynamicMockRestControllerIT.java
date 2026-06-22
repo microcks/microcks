@@ -26,7 +26,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -57,8 +57,8 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
          headers.setContentType(MediaType.APPLICATION_JSON);
 
          HttpEntity<GenericResourceServiceDTO> request = new HttpEntity<>(dto, headers);
-         ResponseEntity<String> response = restTemplate.postForEntity("/api/services/generic", request, String.class);
-         assertEquals(201, response.getStatusCode().value(), "Generic REST service should be created");
+         EntityExchangeResult<String> response = postForEntity("/api/services/generic", request, String.class);
+         assertEquals(201, response.getStatus().value(), "Generic REST service should be created");
       }
    }
 
@@ -66,13 +66,13 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
    void testCreateResource() throws Exception {
       String body = "{\"productId\": \"ABC123\", \"quantity\": 2, \"price\": 19.99}";
 
-      ResponseEntity<String> response = restTemplate.postForEntity(
+      EntityExchangeResult<String> response = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
 
-      assertEquals(201, response.getStatusCode().value());
-      assertNotNull(response.getBody());
+      assertEquals(201, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
 
-      JsonNode node = mapper.readTree(response.getBody());
+      JsonNode node = mapper.readTree(response.getResponseBody());
       assertTrue(node.has("id"), "Created resource should contain an 'id' field");
       assertEquals("ABC123", node.get("productId").asText());
       assertEquals(2, node.get("quantity").asInt());
@@ -82,20 +82,20 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
    void testCreateResourceWithInvalidJson() {
       String invalidBody = "this is not json";
 
-      ResponseEntity<String> response = restTemplate.postForEntity(
+      EntityExchangeResult<String> response = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, invalidBody, String.class);
 
-      assertEquals(422, response.getStatusCode().value());
+      assertEquals(422, response.getStatus().value());
    }
 
    @Test
    void testCreateResourceForUnknownService() {
       String body = "{\"foo\": \"bar\"}";
 
-      ResponseEntity<String> response = restTemplate
-            .postForEntity("/dynarest/UnknownService/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
+      EntityExchangeResult<String> response = postForEntity(
+            "/dynarest/UnknownService/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
 
-      assertEquals(400, response.getStatusCode().value());
+      assertEquals(400, response.getStatus().value());
    }
 
    @Test
@@ -103,19 +103,17 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       // First, create two resources.
       String body1 = "{\"productId\": \"FIND1\", \"quantity\": 1}";
       String body2 = "{\"productId\": \"FIND2\", \"quantity\": 5}";
-      restTemplate.postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body1,
-            String.class);
-      restTemplate.postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body2,
-            String.class);
+      postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body1, String.class);
+      postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body2, String.class);
 
       // Now list resources.
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, String.class);
+      EntityExchangeResult<String> response = getForEntity(
+            "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, String.class);
 
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
+      assertEquals(200, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
 
-      JsonNode array = mapper.readTree(response.getBody());
+      JsonNode array = mapper.readTree(response.getResponseBody());
       assertTrue(array.isArray(), "Response should be a JSON array");
       assertTrue(array.size() >= 2, "Should have at least 2 resources");
    }
@@ -125,19 +123,19 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       // Create a few resources for pagination.
       for (int i = 0; i < 3; i++) {
          String body = "{\"productId\": \"PAGE" + i + "\"}";
-         restTemplate.postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body,
+         postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body,
                String.class);
       }
 
       // Request with small page size.
-      ResponseEntity<String> response = restTemplate.getForEntity(
+      EntityExchangeResult<String> response = getForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "?page=0&size=2",
             String.class);
 
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
+      assertEquals(200, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
 
-      JsonNode array = mapper.readTree(response.getBody());
+      JsonNode array = mapper.readTree(response.getResponseBody());
       assertTrue(array.isArray());
       assertTrue(array.size() <= 2, "Page size should be respected");
    }
@@ -146,22 +144,22 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
    void testGetResourceById() throws Exception {
       // Create a resource first.
       String body = "{\"productId\": \"GET1\", \"quantity\": 10}";
-      ResponseEntity<String> createResponse = restTemplate.postForEntity(
+      EntityExchangeResult<String> createResponse = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
-      assertEquals(201, createResponse.getStatusCode().value());
+      assertEquals(201, createResponse.getStatus().value());
 
-      JsonNode created = mapper.readTree(createResponse.getBody());
+      JsonNode created = mapper.readTree(createResponse.getResponseBody());
       String resourceId = created.get("id").asText();
 
       // Now get the resource by id.
-      ResponseEntity<String> response = restTemplate.getForEntity(
+      EntityExchangeResult<String> response = getForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             String.class);
 
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
+      assertEquals(200, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
 
-      JsonNode node = mapper.readTree(response.getBody());
+      JsonNode node = mapper.readTree(response.getResponseBody());
       assertEquals("GET1", node.get("productId").asText());
       assertEquals(10, node.get("quantity").asInt());
       assertEquals(resourceId, node.get("id").asText());
@@ -169,22 +167,22 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
 
    @Test
    void testGetResourceByIdNotFound() {
-      ResponseEntity<String> response = restTemplate.getForEntity(
+      EntityExchangeResult<String> response = getForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/nonexistent-id-12345",
             String.class);
 
-      assertEquals(404, response.getStatusCode().value());
+      assertEquals(404, response.getStatus().value());
    }
 
    @Test
    void testUpdateResource() throws Exception {
       // Create a resource.
       String body = "{\"productId\": \"UPD1\", \"quantity\": 3}";
-      ResponseEntity<String> createResponse = restTemplate.postForEntity(
+      EntityExchangeResult<String> createResponse = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
-      assertEquals(201, createResponse.getStatusCode().value());
+      assertEquals(201, createResponse.getStatus().value());
 
-      JsonNode created = mapper.readTree(createResponse.getBody());
+      JsonNode created = mapper.readTree(createResponse.getResponseBody());
       String resourceId = created.get("id").asText();
 
       // Update the resource.
@@ -193,22 +191,22 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> requestEntity = new HttpEntity<>(updatedBody, headers);
 
-      ResponseEntity<String> response = restTemplate.exchange(
+      EntityExchangeResult<String> response = exchange(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             HttpMethod.PUT, requestEntity, String.class);
 
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
+      assertEquals(200, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
 
-      JsonNode node = mapper.readTree(response.getBody());
+      JsonNode node = mapper.readTree(response.getResponseBody());
       assertEquals(42, node.get("quantity").asInt());
 
       // Verify the update by retrieving the resource.
-      ResponseEntity<String> getResponse = restTemplate.getForEntity(
+      EntityExchangeResult<String> getResponse = getForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             String.class);
-      assertEquals(200, getResponse.getStatusCode().value());
-      JsonNode retrieved = mapper.readTree(getResponse.getBody());
+      assertEquals(200, getResponse.getStatus().value());
+      JsonNode retrieved = mapper.readTree(getResponse.getResponseBody());
       assertEquals(42, retrieved.get("quantity").asInt());
    }
 
@@ -216,11 +214,11 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
    void testUpdateResourceWithInvalidJson() throws Exception {
       // Create a resource first.
       String body = "{\"productId\": \"UPD_INV\", \"quantity\": 1}";
-      ResponseEntity<String> createResponse = restTemplate.postForEntity(
+      EntityExchangeResult<String> createResponse = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
-      assertEquals(201, createResponse.getStatusCode().value());
+      assertEquals(201, createResponse.getStatus().value());
 
-      JsonNode created = mapper.readTree(createResponse.getBody());
+      JsonNode created = mapper.readTree(createResponse.getResponseBody());
       String resourceId = created.get("id").asText();
 
       // Try to update with invalid JSON.
@@ -228,11 +226,11 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> requestEntity = new HttpEntity<>("this is not json", headers);
 
-      ResponseEntity<String> response = restTemplate.exchange(
+      EntityExchangeResult<String> response = exchange(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             HttpMethod.PUT, requestEntity, String.class);
 
-      assertEquals(422, response.getStatusCode().value());
+      assertEquals(422, response.getStatus().value());
    }
 
    @Test
@@ -242,64 +240,64 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> requestEntity = new HttpEntity<>(updatedBody, headers);
 
-      ResponseEntity<String> response = restTemplate.exchange(
+      EntityExchangeResult<String> response = exchange(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/nonexistent-id-12345",
             HttpMethod.PUT, requestEntity, String.class);
 
-      assertEquals(404, response.getStatusCode().value());
+      assertEquals(404, response.getStatus().value());
    }
 
    @Test
    void testDeleteResource() throws Exception {
       // Create a resource.
       String body = "{\"productId\": \"DEL1\", \"quantity\": 7}";
-      ResponseEntity<String> createResponse = restTemplate.postForEntity(
+      EntityExchangeResult<String> createResponse = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
-      assertEquals(201, createResponse.getStatusCode().value());
+      assertEquals(201, createResponse.getStatus().value());
 
-      JsonNode created = mapper.readTree(createResponse.getBody());
+      JsonNode created = mapper.readTree(createResponse.getResponseBody());
       String resourceId = created.get("id").asText();
 
       // Delete the resource.
-      ResponseEntity<String> response = restTemplate.exchange(
+      EntityExchangeResult<String> response = exchange(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             HttpMethod.DELETE, null, String.class);
 
-      assertEquals(204, response.getStatusCode().value());
+      assertEquals(204, response.getStatus().value());
 
       // Verify it's deleted.
-      ResponseEntity<String> getResponse = restTemplate.getForEntity(
+      EntityExchangeResult<String> getResponse = getForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             String.class);
-      assertEquals(404, getResponse.getStatusCode().value());
+      assertEquals(404, getResponse.getStatus().value());
    }
 
    @Test
    void testDeleteResourceForUnknownService() {
-      ResponseEntity<String> response = restTemplate.exchange(
+      EntityExchangeResult<String> response = exchange(
             "/dynarest/UnknownService/" + SERVICE_VERSION + "/" + RESOURCE + "/some-id", HttpMethod.DELETE, null,
             String.class);
 
-      assertEquals(400, response.getStatusCode().value());
+      assertEquals(400, response.getStatus().value());
    }
 
    @Test
    void testFullCrudLifecycle() throws Exception {
       // CREATE
       String body = "{\"name\": \"Widget\", \"status\": \"new\"}";
-      ResponseEntity<String> createResponse = restTemplate.postForEntity(
+      EntityExchangeResult<String> createResponse = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
-      assertEquals(201, createResponse.getStatusCode().value());
-      JsonNode created = mapper.readTree(createResponse.getBody());
+      assertEquals(201, createResponse.getStatus().value());
+      JsonNode created = mapper.readTree(createResponse.getResponseBody());
       String resourceId = created.get("id").asText();
       assertNotNull(resourceId);
 
       // READ
-      ResponseEntity<String> getResponse = restTemplate.getForEntity(
+      EntityExchangeResult<String> getResponse = getForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             String.class);
-      assertEquals(200, getResponse.getStatusCode().value());
-      JsonNode retrieved = mapper.readTree(getResponse.getBody());
+      assertEquals(200, getResponse.getStatus().value());
+      JsonNode retrieved = mapper.readTree(getResponse.getResponseBody());
       assertEquals("Widget", retrieved.get("name").asText());
       assertEquals("new", retrieved.get("status").asText());
 
@@ -309,32 +307,32 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> updateEntity = new HttpEntity<>(updatedBody, headers);
 
-      ResponseEntity<String> updateResponse = restTemplate.exchange(
+      EntityExchangeResult<String> updateResponse = exchange(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             HttpMethod.PUT, updateEntity, String.class);
-      assertEquals(200, updateResponse.getStatusCode().value());
-      JsonNode updated = mapper.readTree(updateResponse.getBody());
+      assertEquals(200, updateResponse.getStatus().value());
+      JsonNode updated = mapper.readTree(updateResponse.getResponseBody());
       assertEquals("shipped", updated.get("status").asText());
 
       // LIST - should contain the resource
-      ResponseEntity<String> listResponse = restTemplate
-            .getForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, String.class);
-      assertEquals(200, listResponse.getStatusCode().value());
-      JsonNode list = mapper.readTree(listResponse.getBody());
+      EntityExchangeResult<String> listResponse = getForEntity(
+            "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, String.class);
+      assertEquals(200, listResponse.getStatus().value());
+      JsonNode list = mapper.readTree(listResponse.getResponseBody());
       assertTrue(list.isArray());
       assertFalse(list.isEmpty());
 
       // DELETE
-      ResponseEntity<String> deleteResponse = restTemplate.exchange(
+      EntityExchangeResult<String> deleteResponse = exchange(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             HttpMethod.DELETE, null, String.class);
-      assertEquals(204, deleteResponse.getStatusCode().value());
+      assertEquals(204, deleteResponse.getStatus().value());
 
       // VERIFY DELETED
-      ResponseEntity<String> deletedGetResponse = restTemplate.getForEntity(
+      EntityExchangeResult<String> deletedGetResponse = getForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "/" + resourceId,
             String.class);
-      assertEquals(404, deletedGetResponse.getStatusCode().value());
+      assertEquals(404, deletedGetResponse.getStatus().value());
    }
 
    @Test
@@ -343,12 +341,12 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       long delay = 200L;
 
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate.postForEntity(
+      EntityExchangeResult<String> response = postForEntity(
             "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE + "?delay=" + delay, body,
             String.class);
       long elapsed = System.currentTimeMillis() - startTime;
 
-      assertEquals(201, response.getStatusCode().value());
+      assertEquals(201, response.getStatus().value());
       assertTrue(elapsed >= delay, "Response should be delayed by at least " + delay + "ms, was " + elapsed + "ms");
    }
 
@@ -356,11 +354,11 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
    void testServiceNameWithEncodedSpaces() {
       // The service name contains spaces, test with '+' encoding.
       String body = "{\"productId\": \"ENC1\"}";
-      ResponseEntity<String> response = restTemplate
-            .postForEntity("/dynarest/DynaMock+API/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
+      EntityExchangeResult<String> response = postForEntity(
+            "/dynarest/DynaMock+API/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
 
-      assertEquals(201, response.getStatusCode().value());
-      assertNotNull(response.getBody());
+      assertEquals(201, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
    }
 
    /** Encode service name for URL path (spaces as +). */
