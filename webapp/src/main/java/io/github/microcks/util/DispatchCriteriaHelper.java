@@ -389,7 +389,7 @@ public class DispatchCriteriaHelper {
                (m, e) -> m.put(e.getKey(), e.getValue()), Multimap::putAll);
          return buildFromPartsMap(partsRule, multimap);
       }
-      return "";
+      return buildFromPartsMap(partsRule, (Multimap<String, String>) null);
    }
 
    /**
@@ -400,8 +400,17 @@ public class DispatchCriteriaHelper {
     */
    public static String buildFromPartsMap(String partsRule, Multimap<String, String> partsMap) {
       // We may have a partsRule for URI_ELEMENT with params parts, ignore this part.
-      if (partsRule.contains("??")) {
+      if (partsRule != null && partsRule.contains("??")) {
          partsRule = partsRule.split("\\?\\?")[0];
+      }
+
+      if (partsRule != null && !partsRule.trim().isEmpty()) {
+         String[] ruleParts = partsRule.split("&&");
+         for (String rulePart : ruleParts) {
+            if (partsMap == null || !partsMap.containsKey(rulePart.trim())) {
+               return null;
+            }
+         }
       }
 
       if (partsMap != null && !partsMap.isEmpty()) {
@@ -417,7 +426,7 @@ public class DispatchCriteriaHelper {
              * the criteria we're looking for (see
              * https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
              */
-            if (partsRule.matches(".*(^|[^-])\\b" + criteria.getKey() + "\\b([^-]|$).*")) {
+            if (partsRule != null && partsRule.matches(".*(^|[^-])\\b" + criteria.getKey() + "\\b([^-]|$).*")) {
                result.append("/").append(criteria.getKey()).append("=").append(criteria.getValue());
             }
          }
@@ -434,8 +443,9 @@ public class DispatchCriteriaHelper {
     */
    public static String buildFromParamsMap(String paramsRule, Multimap<String, String> paramsMap) {
       // We may have a paramsRule for URI_ELEMENT with path parts, ignore this part.
-      if (paramsRule.contains("??")) {
-         paramsRule = paramsRule.split("\\?\\?")[1];
+      if (paramsRule != null && paramsRule.contains("??")) {
+         String[] rules = paramsRule.split("\\?\\?");
+         paramsRule = rules.length > 1 ? rules[1] : "";
       }
 
       if (paramsMap != null && !paramsMap.isEmpty()) {
@@ -451,7 +461,7 @@ public class DispatchCriteriaHelper {
              * the criteria we're looking for (see
              * https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
              */
-            if (paramsRule.matches(".*(^|[^-])\\b" + criteria.getKey() + "\\b([^-]|$).*")) {
+            if (paramsRule != null && paramsRule.matches(".*(^|[^-])\\b" + criteria.getKey() + "\\b([^-]|$).*")) {
                result.append("?").append(criteria.getKey()).append("=").append(criteria.getValue());
             }
          }
