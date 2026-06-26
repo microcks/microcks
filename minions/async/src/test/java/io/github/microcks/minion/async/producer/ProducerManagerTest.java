@@ -368,6 +368,29 @@ class ProducerManagerTest {
       verifyNoInteractions(natsProducerManager);
    }
 
+   @Test
+   void testProduceAsyncMockMessagesAt_ignoresNullContentMessages() {
+      Service service = new Service();
+      service.setId("svc-null");
+      service.setName("TestService");
+      service.setVersion("1.0.0");
+
+      Operation operation = new Operation();
+      operation.setName("event-op");
+      operation.setBindings(Map.of("KAFKA", new Binding(BindingType.KAFKA)));
+      service.addOperation(operation);
+
+      EventMessage nullContentMessage = new EventMessage();
+      nullContentMessage.setName("NullContent");
+      nullContentMessage.setMediaType("application/json");
+
+      AsyncMockDefinition definition = new AsyncMockDefinition(service, operation, List.of(nullContentMessage));
+      when(mockRepository.getMockDefinitionsByFrequency(10L)).thenReturn(Set.of(definition));
+
+      assertDoesNotThrow(() -> producerManager.produceAsyncMockMessagesAt(10L));
+      verifyNoInteractions(kafkaProducerManager);
+   }
+
    // -----------------------------------------------------------------------
    // Tests for template rendering (renderEventMessageContent)
    // -----------------------------------------------------------------------

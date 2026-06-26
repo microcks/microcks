@@ -452,20 +452,24 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
       Iterator<JsonNode> examples = examplesNode.elements();
       while (examples.hasNext()) {
          JsonNode exampleNode = examples.next();
+         String keyedExampleName = getKeyedExampleName(exampleNode);
+         JsonNode example = getExampleNode(exampleNode);
 
          EventMessage eventMessage = new EventMessage();
          // Use name attribute if present, otherwise generate from message name.
-         if (exampleNode.has("name")) {
-            eventMessage.setName(exampleNode.get("name").asText());
+         if (example.has("name")) {
+            eventMessage.setName(example.get("name").asText());
+         } else if (keyedExampleName != null) {
+            eventMessage.setName(keyedExampleName);
          } else {
             eventMessage.setName(messageName + "-" + (exchanges.size() + 1));
          }
 
          eventMessage.setMediaType(contentType);
-         eventMessage.setContent(getExamplePayload(exampleNode));
+         eventMessage.setContent(getExamplePayload(example));
 
          // Now complete with specified headers.
-         List<Header> headers = AsyncAPICommons.getExampleHeaders(exampleNode);
+         List<Header> headers = AsyncAPICommons.getExampleHeaders(example);
          for (Header header : headers) {
             eventMessage.addHeader(header);
          }
@@ -473,6 +477,28 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
          exchanges.add(eventMessage);
       }
       return exchanges;
+   }
+
+   /** Get the example key when using the map-style examples notation. */
+   private String getKeyedExampleName(JsonNode example) {
+      if (!isKeyedExample(example)) {
+         return null;
+      }
+      return example.fieldNames().next();
+   }
+
+   /** Get the actual example node, unwrapping the map-style examples notation if necessary. */
+   private JsonNode getExampleNode(JsonNode example) {
+      if (!isKeyedExample(example)) {
+         return example;
+      }
+      return example.fields().next().getValue();
+   }
+
+   /** Check if an example uses the map-style notation: {@code - exampleName: { payload: ... }}. */
+   private boolean isKeyedExample(JsonNode example) {
+      return example.isObject() && example.size() == 1 && !example.has("name") && !example.has(EXAMPLE_PAYLOAD_NODE)
+            && !example.has("$payloadRef");
    }
 
    /**

@@ -81,6 +81,33 @@ class AsyncAPI3ImporterTest {
    }
 
    @Test
+   void testKeyedExamplesAsyncAPI3ImportYAML() {
+      AsyncAPI3Importer importer = null;
+      try {
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-keyed-examples.yaml",
+               null);
+      } catch (IOException ioe) {
+         Assertions.fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         Assertions.fail("Exception should not be thrown");
+      }
+
+      Assertions.assertEquals(1, services.size());
+      Service service = services.get(0);
+      Assertions.assertEquals("User signed-up API", service.getName());
+      Assertions.assertEquals(ServiceType.EVENT, service.getType());
+      Assertions.assertEquals("0.3.0", service.getVersion());
+
+      importAndAssertOnSimpleAsyncAPI(service, importer, "application/json");
+   }
+
+   @Test
    void testSimpleNamelessAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {

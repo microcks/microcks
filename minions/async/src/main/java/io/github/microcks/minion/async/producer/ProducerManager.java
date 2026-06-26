@@ -479,7 +479,7 @@ public class ProducerManager {
 
    /** Get the event messages that are not contextualized with request or response part. */
    private List<EventMessage> getPureEventMessages(AsyncMockDefinition definition) {
-      return definition.getEventMessages().stream()
+      return definition.getEventMessages().stream().filter(eventMessage -> eventMessage.getContent() != null)
             .filter(eventMessage -> !eventMessage.getContent().contains("request.")
                   && !eventMessage.getContent().contains("response."))
             .toList();
@@ -487,7 +487,7 @@ public class ProducerManager {
 
    /** Get the event messages that are contextualized with request or response part. */
    private List<EventMessage> getContextualizedMessages(AsyncMockDefinition definition) {
-      return definition.getEventMessages().stream()
+      return definition.getEventMessages().stream().filter(eventMessage -> eventMessage.getContent() != null)
             .filter(eventMessage -> eventMessage.getContent().contains("request.")
                   || eventMessage.getContent().contains("response."))
             .toList();
@@ -496,7 +496,7 @@ public class ProducerManager {
    /** Render event message content from definition applying template rendering if required. */
    private String renderEventMessageContent(EventMessage eventMessage) {
       String content = eventMessage.getContent();
-      if (content.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+      if (content != null && content.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          logger.debug("EventMessage contains dynamic EL expression, rendering it...");
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
@@ -512,7 +512,7 @@ public class ProducerManager {
    private String renderEventMessageContent(EventMessage eventMessage, RequestSnapshot request,
          ResponseSnapshot response) {
       String content = eventMessage.getContent();
-      if (content.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+      if (content != null && content.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          logger.debug("EventMessage contains dynamic EL expression, rendering it...");
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
