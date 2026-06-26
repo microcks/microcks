@@ -285,7 +285,7 @@ export function parseReadableSpan(raw: any): ReadableSpan {
       message: statusMessage,
     },
     events,
-    links: (Array.isArray(raw.links) ? [] : []) as Link[],
+    links: (Array.isArray(raw.links) ? raw.links : []) as Link[],
     resource: {
       attributes: resourceAttrs,
     } as any, // Keep minimal shape compatible with our consumer
