@@ -737,7 +737,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                      || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
                   // We must have at least one path parameters but none!
                   // Do not register this request / response pair.
-                  break;
+                  continue;
                }
 
                // We should have everything at hand to build response here.
