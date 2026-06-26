@@ -147,6 +147,15 @@ data:
     grpc.server.privateKeyFilePath=/deployments/config/grpc/tls.key
     {{- end }}
 
+    {{- if .Values.microcks.httpEnableTLS }}
+
+    # HTTP server TLS properties
+    server.port=8443
+    server.ssl.enabled=true
+    server.ssl.certificate=/deployments/config/https/tls.crt
+    server.ssl.certificate-private-key=/deployments/config/https/tls.key
+    {{- end }}
+
     # AI Copilot configuration properties
     ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
     ai-copilot.implementation={{ .Values.features.aiCopilot.implementation }}

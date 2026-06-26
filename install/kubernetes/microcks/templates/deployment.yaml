@@ -41,6 +41,11 @@ spec:
         - name: grpc
           containerPort: 9090
           protocol: TCP
+        {{- if .Values.microcks.httpEnableTLS }}
+        - name: https
+          containerPort: 8443
+          protocol: TCP
+        {{- end }}
         env:
           - name: JAVA_OPTIONS
             value: "-XX:+TieredCompilation -XX:TieredStopAtLevel=2"
@@ -121,8 +126,8 @@ spec:
         livenessProbe:
           httpGet:
             path: "/api/health"
-            port: 8080
-            scheme: HTTP
+            port: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
+            scheme: {{ if .Values.microcks.httpEnableTLS }}HTTPS{{ else }}HTTP{{ end }}
           initialDelaySeconds: 25
           timeoutSeconds: 3
           periodSeconds: 10
@@ -131,8 +136,8 @@ spec:
         readinessProbe:
           httpGet:
             path: "/api/health"
-            port: 8080
-            scheme: HTTP
+            port: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
+            scheme: {{ if .Values.microcks.httpEnableTLS }}HTTPS{{ else }}HTTP{{ end }}
           initialDelaySeconds: 35
           timeoutSeconds: 3
           periodSeconds: 10
@@ -141,8 +146,8 @@ spec:
         startupProbe:
           httpGet:
             path: "/api/health"
-            port: 8080
-            scheme: HTTP
+            port: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
+            scheme: {{ if .Values.microcks.httpEnableTLS }}HTTPS{{ else }}HTTP{{ end }}
           initialDelaySeconds: 10
           timeoutSeconds: 3
           periodSeconds: 10
@@ -154,6 +159,10 @@ spec:
           {{- if (.Values.microcks.grpcEnableTLS) }}
           - name: "{{ .Values.appName }}-grpc-certs"
             mountPath: "/deployments/config/grpc"
+          {{- end }}
+          {{- if .Values.microcks.httpEnableTLS }}
+          - name: "{{ .Values.appName }}-http-certs"
+            mountPath: "/deployments/config/https"
           {{- end }}
           {{- if eq .Values.features.async.kafka.install false }}
             {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
@@ -180,6 +189,11 @@ spec:
         - name: "{{ .Values.appName }}-grpc-certs"
           secret:
             secretName: "{{ .Values.microcks.grpcSecretRef | default (print .Values.appName "-microcks-grpc-secret") }}"
+        {{- end }}
+        {{- if .Values.microcks.httpEnableTLS }}
+        - name: "{{ .Values.appName }}-http-certs"
+          secret:
+            secretName: "{{ .Values.microcks.httpSecretRef | default (print .Values.appName "-microcks-http-secret") }}"
         {{- end }}
         {{- if eq .Values.features.async.kafka.install false }}
           {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}

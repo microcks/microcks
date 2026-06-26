@@ -13,8 +13,8 @@ metadata:
 spec:
   ports:
   - protocol: TCP
-    port: 8080
-    targetPort: 8080
+    port: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
+    targetPort: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
     name: spring
   type: {{ .Values.microcks.serviceType | default "ClusterIP" | quote }}
   sessionAffinity: None
