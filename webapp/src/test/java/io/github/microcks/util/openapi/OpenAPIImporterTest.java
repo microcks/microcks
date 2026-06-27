@@ -809,28 +809,7 @@ class OpenAPIImporterTest {
                fail("No exception should be thrown when importing message definitions.");
             }
 
-            // TODO: below should be a failure. We currently detect 1 message as we should have 0
-            // cause car path parameters is missing. We should add a test into URIBuilder.buildFromParamsMap()
-            // to check that we have at least the number of params what we have into uri pattern.
-            //assertEquals(0, messages.size());
-
-            for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
-                  Request request = entry.getRequest();
-                  Response response = entry.getResponse();
-                  assertNotNull(request);
-                  assertNotNull(response);
-                  assertEquals("laurent_307_passengers", request.getName());
-                  assertEquals("laurent_307_passengers", response.getName());
-                  assertEquals("/owner=laurent", response.getDispatchCriteria());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
-               } else {
-                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
-               }
-            }
+            assertEquals(0, exchanges.size());
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
