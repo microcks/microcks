@@ -140,7 +140,8 @@ components:
             status: 'SUCCESS'
             confirmedAt: '{{backInTime(0d)}}'
 ```
-​> [!NOTE]> The `{{randomEmail()}}` and `{{backInTime(0d)}}` notations are powerful built-in Templating functions that allow Microcks to evaluate and distribute dynamic mock text payloads on the fly! 😉
+​> [!NOTE]
+> The `{{randomEmail()}}` and `{{backInTime(0d)}}` notations are powerful built-in Templating functions that allow Microcks to evaluate and distribute dynamic mock text payloads on the fly! 😉
 ## 3. Validate your mocks
 
 To verify that Microcks is successfully simulating the request/reply lifecycle, you can run a quick simulation client. In a real-world scenario, your application publishes a message to the request channel, and Microcks instantly answers back on the designated reply destination.
