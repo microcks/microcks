@@ -249,17 +249,50 @@ public class GraphQLController {
       // ensures that aliasing applies consistently for both multi and single queries, matching actual
       // GraphQL behavior.
       ObjectNode aggregated = mapper.createObjectNode();
-      ObjectNode dataNode = aggregated.putObject("data");
-      for (GraphQLQueryResponse response : graphqlResponses) {
-         dataNode.set(StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
-               response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy());
+
+      boolean hasDataKey = true;
+      boolean isDataNull = false;
+
+      if (graphqlResponses.size() == 1) {
+         JsonNode responseJson = graphqlResponses.get(0).getJsonResponse();
+         if (responseJson == null) {
+            hasDataKey = false;
+         } else if (!responseJson.has("data")) {
+            hasDataKey = false;
+         } else if (responseJson.get("data").isNull()) {
+            isDataNull = true;
+         }
+      }
+
+      if (hasDataKey) {
+         if (isDataNull) {
+            aggregated.set("data", mapper.nullNode());
+         } else {
+            ObjectNode dataNode = aggregated.putObject("data");
+            for (GraphQLQueryResponse response : graphqlResponses) {
+               JsonNode responseJson = response.getJsonResponse();
+               String key = StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName());
+               if (responseJson == null) {
+                  dataNode.set(key, mapper.nullNode());
+               } else {
+                  JsonNode responseData = responseJson.path("data");
+                  if (responseData.isNull() || responseData.isMissingNode()) {
+                     dataNode.set(key, mapper.nullNode());
+                  } else {
+                     dataNode.set(key, responseData.path(response.getOperationName()).deepCopy());
+                  }
+               }
+            }
+         }
       }
       // Aggregate errors
       ArrayNode errorsNode = mapper.createArrayNode();
       for (GraphQLQueryResponse response : graphqlResponses) {
-         JsonNode errors = response.getJsonResponse().path("errors");
-         if (errors.isArray()) {
-            errors.forEach(errorsNode::add);
+         if (response.getJsonResponse() != null) {
+            JsonNode errors = response.getJsonResponse().path("errors");
+            if (errors.isArray()) {
+               errors.forEach(errorsNode::add);
+            }
          }
       }
       if (!errorsNode.isEmpty()) {
@@ -269,9 +302,11 @@ public class GraphQLController {
       // Aggregate extensions
       ObjectNode extensionsNode = mapper.createObjectNode();
       for (GraphQLQueryResponse response : graphqlResponses) {
-         JsonNode extensions = response.getJsonResponse().path("extensions");
-         if (extensions.isObject()) {
-            extensions.properties().forEach(e -> extensionsNode.set(e.getKey(), e.getValue().deepCopy()));
+         if (response.getJsonResponse() != null) {
+            JsonNode extensions = response.getJsonResponse().path("extensions");
+            if (extensions.isObject()) {
+               extensions.properties().forEach(e -> extensionsNode.set(e.getKey(), e.getValue().deepCopy()));
+            }
          }
       }
       if (!extensionsNode.isEmpty()) {
@@ -362,8 +397,11 @@ public class GraphQLController {
          if (responseResult.content() != null) {
             try {
                JsonNode responseJson = mapper.readTree(responseResult.content());
-               filterFieldSelection(graphqlField.getSelectionSet(), fragmentDefinitions,
-                     responseJson.get("data").get(operationName));
+               JsonNode dataNode = responseJson.get("data");
+               if (dataNode != null && !dataNode.isNull()) {
+                  filterFieldSelection(graphqlField.getSelectionSet(), fragmentDefinitions,
+                        dataNode.get(operationName));
+               }
                result.setJsonResponse(responseJson);
             } catch (Exception pe) {
                log.error("Exception while filtering response according GraphQL field selection", pe);
@@ -404,6 +442,9 @@ public class GraphQLController {
     */
    protected void filterFieldSelection(SelectionSet selectionSet, List<FragmentDefinition> fragmentDefinitions,
          JsonNode node) {
+      if (node == null || node.isNull() || node.isMissingNode()) {
+         return;
+      }
       // Stop condition: no more selection to apply.
       if (selectionSet == null || selectionSet.getSelections() == null || selectionSet.getSelections().isEmpty()) {
          return;

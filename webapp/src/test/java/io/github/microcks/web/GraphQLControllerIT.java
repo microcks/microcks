@@ -18,6 +18,8 @@ package io.github.microcks.web;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -249,5 +251,67 @@ class GraphQLControllerIT extends AbstractBaseIT {
             {"query": "query film($id: String) {film(id: \\"ZmlsbXM6MA==\\") {id title episodeID starCount comment}}"}""";
       response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertResponseIsOkAndContains(response, "\"comment\":\"Original!!!\"");
+   }
+
+   @Test
+   void testGraphQLErrorAPIMocking() {
+      // Upload the 2 required reference artifacts.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+
+      ObjectMapper mapper = new ObjectMapper();
+
+      // 1. Check mock response with "data": null and "errors" array
+      String query = "{\"query\": \"query film($id: String) {\\n  film(id: \\\"ZmlsbXM6OTk=\\\") {\\n    id\\n    title\\n  }\\n}\"}";
+      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JsonNode responseJson = mapper.readTree(response.getBody());
+         assertTrue(responseJson.has("data"), "Response should contain 'data' key");
+         assertTrue(responseJson.get("data").isNull(), "Response 'data' should be null");
+         assertTrue(responseJson.has("errors"), "Response should contain 'errors' key");
+
+         JSONAssert.assertEquals("{\n" + "  \"data\": null,\n" + "  \"errors\": [\n" + "    {\n"
+               + "      \"message\": \"Film not found\",\n" + "      \"path\": [\"film\"]\n" + "    }\n" + "  ]\n"
+               + "}", response.getBody(), JSONCompareMode.STRICT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // 2. Check mock response with absent "data" key and "errors" array
+      query = "{\"query\": \"query film($id: String) {\\n  film(id: \\\"ZmlsbXM6OTg=\\\") {\\n    id\\n    title\\n  }\\n}\"}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JsonNode responseJson = mapper.readTree(response.getBody());
+         assertFalse(responseJson.has("data"), "Response should not contain 'data' key");
+         assertTrue(responseJson.has("errors"), "Response should contain 'errors' key");
+
+         JSONAssert.assertEquals(
+               "{\n" + "  \"errors\": [\n" + "    {\n" + "      \"message\": \"Access Denied\",\n"
+                     + "      \"path\": [\"film\"]\n" + "    }\n" + "  ]\n" + "}",
+               response.getBody(), JSONCompareMode.STRICT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // 3. Check mock response with "data": {"film": null} and "errors" array
+      query = "{\"query\": \"query film($id: String) {\\n  film(id: \\\"ZmlsbXM6OTc=\\\") {\\n    id\\n    title\\n  }\\n}\"}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JsonNode responseJson = mapper.readTree(response.getBody());
+         assertTrue(responseJson.has("data"), "Response should contain 'data' key");
+         assertFalse(responseJson.get("data").isNull(), "Response 'data' should not be null");
+         assertTrue(responseJson.get("data").has("film"), "Response 'data' should contain 'film' key");
+         assertTrue(responseJson.get("data").get("film").isNull(), "Response 'data.film' should be null");
+         assertTrue(responseJson.has("errors"), "Response should contain 'errors' key");
+
+         JSONAssert.assertEquals("{\n" + "  \"data\": {\n" + "    \"film\": null\n" + "  },\n" + "  \"errors\": [\n"
+               + "    {\n" + "      \"message\": \"Partial error\",\n" + "      \"path\": [\"film\"]\n" + "    }\n"
+               + "  ]\n" + "}", response.getBody(), JSONCompareMode.STRICT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
    }
 }

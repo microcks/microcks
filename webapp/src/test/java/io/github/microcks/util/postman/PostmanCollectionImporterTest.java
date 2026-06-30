@@ -651,7 +651,7 @@ class PostmanCollectionImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, exchanges.size());
+            assertEquals(5, exchanges.size());
 
             for (Exchange exchange : exchanges) {
                assertTrue(exchange instanceof RequestResponsePair);
@@ -659,7 +659,10 @@ class PostmanCollectionImporterTest {
 
                assertNotNull(pair.getRequest().getContent());
                assertTrue(pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6MQ==\"")
-                     || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6Mg==\""));
+                     || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6Mg==\"")
+                     || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6OTk=\"")
+                     || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6OTg=\"")
+                     || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6OTc=\""));
                assertNotNull(pair.getResponse().getContent());
                assertEquals("200", pair.getResponse().getStatus());
             }
