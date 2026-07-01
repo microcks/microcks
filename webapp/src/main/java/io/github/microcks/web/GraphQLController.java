@@ -242,7 +242,7 @@ public class GraphQLController {
       MockControllerCommons.waitForDelay(startTime, waitMaxDelay);
 
       String responseContent = null;
-      JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
+      JsonNode responseNode = null;
 
       // Aggregate GraphQL query responses into a unified response object.
       // Setting each response under its alias (or operation name if no alias is provided),
@@ -452,21 +452,16 @@ public class GraphQLController {
       switch (node.getNodeType()) {
          case OBJECT:
             // We must retain properties corresponding to field selection
-            // and recurse on each retrained object property.
+            // and recurse on each retained object property.
+            // Fragment spreads (possibly nested) are flattened first so that all the fields to retain are
+            // collected before applying a single retain(). Applying retain() incrementally while resolving
+            // fragments would drop fields that are selected after a fragment spread (nested fragments bug).
+            List<Field> fields = collectFields(selectionSet, fragmentDefinitions);
             List<String> properties = new ArrayList<>();
-            for (Selection<?> selection : selectionSet.getSelections()) {
-               if (selection instanceof Field fieldSelection) {
-                  filterFieldSelection(fieldSelection.getSelectionSet(), fragmentDefinitions,
-                        node.get(fieldSelection.getName()));
-                  properties.add(fieldSelection.getName());
-               } else if (selection instanceof FragmentSpread fragmentSpread) {
-                  // FragmentSpread is an indirection to selection find in definitions.
-                  FragmentDefinition fragmentDef = fragmentDefinitions.stream()
-                        .filter(def -> def.getName().equals(fragmentSpread.getName())).findFirst().orElse(null);
-                  if (fragmentDef != null) {
-                     filterFieldSelection(fragmentDef.getSelectionSet(), fragmentDefinitions, node);
-                  }
-               }
+            for (Field fieldSelection : fields) {
+               filterFieldSelection(fieldSelection.getSelectionSet(), fragmentDefinitions,
+                     node.get(fieldSelection.getName()));
+               properties.add(fieldSelection.getName());
             }
             // Only filter if properties to retain.
             if (!properties.isEmpty()) {
@@ -483,6 +478,34 @@ public class GraphQLController {
          default:
             break;
       }
+   }
+
+   /**
+    * Recursively collect the {@link Field} selections of a selection set, flattening any (possibly nested) fragment
+    * spread into the list of fields it references.
+    * @param selectionSet        The selection set to collect fields from
+    * @param fragmentDefinitions A list of fragment definitions used to resolve fragment spreads
+    * @return The flattened list of Field selections
+    */
+   private List<Field> collectFields(SelectionSet selectionSet, List<FragmentDefinition> fragmentDefinitions) {
+      List<Field> fields = new ArrayList<>();
+      if (selectionSet == null || selectionSet.getSelections() == null) {
+         return fields;
+      }
+      for (Selection<?> selection : selectionSet.getSelections()) {
+         if (selection instanceof Field fieldSelection) {
+            fields.add(fieldSelection);
+         } else if (selection instanceof FragmentSpread fragmentSpread) {
+            // FragmentSpread is an indirection to selections found in definitions. Resolve it recursively
+            // so that nested fragments are flattened into the referenced fields.
+            FragmentDefinition fragmentDef = fragmentDefinitions.stream()
+                  .filter(def -> def.getName().equals(fragmentSpread.getName())).findFirst().orElse(null);
+            if (fragmentDef != null) {
+               fields.addAll(collectFields(fragmentDef.getSelectionSet(), fragmentDefinitions));
+            }
+         }
+      }
+      return fields;
    }
 
    /** Simple wrapper around a GraphQL query response. */
