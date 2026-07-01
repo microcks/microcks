@@ -145,6 +145,8 @@ public class GrpcServerStarter {
                } catch (InterruptedException e) {
                   log.error("GRPC Server shutdown interrupted", e);
                   Thread.currentThread().interrupt();
+               } finally {
+                  latch.countDown();
                }
             }
          });
