@@ -206,6 +206,38 @@ class GraphQLControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
 
+      // Check query with fragment definitions declared before the operation (Apollo/urql/Relay ordering, #2199).
+      subQuery = """
+            fragment filmFields on Film {
+              id
+              title
+              episodeID
+              starCount
+            }
+            query film($id: String) {
+              film(id: "ZmlsbXM6MQ==") {
+                ...filmFields
+              }
+            }""";
+      query = mapper.createObjectNode().put("query", subQuery).toString();
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("""
+               {
+                 "data": {
+                   "film": {
+                     "id": "ZmlsbXM6MQ==",
+                     "title": "A New Hope",
+                     "episodeID": 4,
+                     "starCount": 432
+                   }
+                 }
+               }""", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
       // Check query with multiple selection and aliases
       subQuery = """
             {
