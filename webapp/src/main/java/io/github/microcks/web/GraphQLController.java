@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.language.Argument;
-import graphql.language.Definition;
 import graphql.language.Document;
 import graphql.language.Field;
 import graphql.language.FragmentDefinition;
@@ -149,17 +148,31 @@ public class GraphQLController {
          return new ResponseEntity<>("Error parsing GraphQL request: " + e.getMessage(), HttpStatus.BAD_REQUEST);
       }
 
-      Definition<?> graphqlDef = graphqlRequest.getDefinitions().get(0);
-      OperationDefinition graphqlOperation = (OperationDefinition) graphqlDef;
+      // GraphQL clients (Apollo, urql, Relay...) emit fragment definitions before the operation, so the
+      // operation cannot be assumed to be the first definition of the document. Select it explicitly -
+      // by name when the request carries an operationName, otherwise the first operation found.
+      List<OperationDefinition> operationDefinitions = graphqlRequest.getDefinitionsOfType(OperationDefinition.class);
+      String requestedOperationName = graphqlHttpReq.getOperationName();
+      OperationDefinition graphqlOperation = operationDefinitions.stream().filter(op -> requestedOperationName == null
+            || requestedOperationName.isEmpty() || requestedOperationName.equals(op.getName())).findFirst()
+            .orElse(null);
+
+      if (graphqlOperation == null) {
+         log.error("No matching operation definition found in GraphQL request");
+         return new ResponseEntity<>("No matching operation definition found in GraphQL request",
+               HttpStatus.BAD_REQUEST);
+      }
 
       log.debug("Got this graphqlOperation: {}", graphqlOperation);
 
       // Operation type is direct but name depends on syntax (it can be a composite one). Better to use the names of selections...
       String operationType = graphqlOperation.getOperation().toString();
 
-      // Check is it's an introspection query to handle first.
-      if ("QUERY".equals(operationType) && INTROSPECTION_SELECTION
-            .equals(((Field) graphqlOperation.getSelectionSet().getSelections().get(0)).getName())) {
+      // Check is it's an introspection query to handle first. The first selection may be a fragment spread
+      // rather than a Field, so guard the cast.
+      Selection<?> firstSelection = graphqlOperation.getSelectionSet().getSelections().get(0);
+      if ("QUERY".equals(operationType) && firstSelection instanceof Field firstField
+            && INTROSPECTION_SELECTION.equals(firstField.getName())) {
          log.info("Handling GraphQL schema introspection query...");
          Resource graphqlSchema = resourceRepository
                .findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA).get(0);
@@ -188,11 +201,13 @@ public class GraphQLController {
       Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay.baseValue();
       String maxDelayStrategy = specifiedDelay == null ? null : specifiedDelay.strategyName();
 
-      for (Selection<?> selection : graphqlOperation.getSelectionSet().getSelections()) {
+      // A top-level selection may itself be a fragment spread, so flatten spreads into their fields before
+      // processing each queried field.
+      List<FragmentDefinition> fragmentDefinitions = graphqlRequest.getDefinitionsOfType(FragmentDefinition.class);
+      for (Field selection : collectFields(graphqlOperation.getSelectionSet(), fragmentDefinitions)) {
          try {
-            GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
-                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, headers,
-                  request);
+            GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, selection,
+                  fragmentDefinitions, body, graphqlHttpReq, headers, request);
 
             //            if (graphqlResponse.getProxyUrl() != null) {
             //               // If we've got a proxyUrl, that's the moment!
