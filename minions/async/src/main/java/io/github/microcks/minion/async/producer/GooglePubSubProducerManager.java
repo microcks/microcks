@@ -112,7 +112,15 @@ public class GooglePubSubProducerManager {
             credentialsProvider = FixedCredentialsProvider
                   .create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
          } else {
-            credentialsProvider = NoCredentialsProvider.create();
+            // No explicit JSON key provided: try Application Default Credentials so that
+            // GKE Workload Identity (or any other ADC source) can be used transparently.
+            try {
+               credentialsProvider = FixedCredentialsProvider
+                     .create(GoogleCredentials.getApplicationDefault().createScoped(CLOUD_OAUTH_SCOPE));
+            } catch (IOException ioe) {
+               logger.debug("No Application Default Credentials found, falling back to no credentials", ioe);
+               credentialsProvider = NoCredentialsProvider.create();
+            }
          }
       } catch (Exception e) {
          logger.errorf("Cannot read Google Cloud credentials %s", serviceAccountLocation);
