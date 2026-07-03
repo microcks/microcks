@@ -53,6 +53,17 @@ We use Github to host code, to track issues and feature requests, as well as acc
 
 Please use our issues templates that provide you with hints on what information we need from you to help you out.
 
+## AI Contribution Policy
+
+As AI coding assistants and autonomous agents become more prevalent, we want to ensure that the quality of contributions remains high and the maintainer review burden is kept manageable. We welcome AI-assisted contributions, provided they adhere to the following rules:
+
+1. **Disclosure:** Contributors must explicitly disclose AI usage in their PR descriptions.
+2. **Quality over Quantity:** Large, entirely AI-generated PRs or AI-generated commit messages are discouraged. Keep your changes focused and logically separated.
+3. **Understand Your Code:** Contributors must understand the code they submit. If a reviewer asks a question about an implementation and you cannot explain why it was written that way, the PR may be closed.
+4. **No AI Auto-Replies:** The use of AI tools to auto-reply to maintainer review comments is strictly prohibited. Reviewers are volunteers; please respect their time with thoughtful responses.
+
+Please see [AGENTS.md](AGENTS.md) for more details on how autonomous agents should interact with this repository.
+
 ## Pull Requests
 
 **Please, make sure you open an issue before starting with a Pull Request, unless it's a typo or a really obvious error.** Pull requests are the best way to propose changes to the specification. Take time to check the current working branch for the repository you want to contribute on before working :wink:
