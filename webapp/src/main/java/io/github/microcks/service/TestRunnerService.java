@@ -179,6 +179,7 @@ public class TestRunnerService {
             testResult.setSuccess(false);
             testResult.setInProgress(false);
             testResult.setElapsedTime(0);
+            testResult.setRunnerMessage("OAuth2 token flow failed: " + authorizationException.getMessage());
             testResultRepository.save(testResult);
             return CompletableFuture.completedFuture(testResult);
          }
@@ -192,6 +193,7 @@ public class TestRunnerService {
          testResult.setSuccess(false);
          testResult.setInProgress(false);
          testResult.setElapsedTime(0);
+         testResult.setRunnerMessage("Could not retrieve runner for " + runnerType);
          testResultRepository.save(testResult);
          return CompletableFuture.completedFuture(testResult);
       }
@@ -222,6 +224,7 @@ public class TestRunnerService {
             // Set flags and add to results before exiting loop.
             testCaseResult.setSuccess(false);
             testCaseResult.setElapsedTime(0);
+            testResult.setRunnerMessage("URISyntaxException on endpoint: " + testResult.getTestedEndpoint());
             testResultRepository.save(testResult);
             break;
          } catch (Throwable t) {
