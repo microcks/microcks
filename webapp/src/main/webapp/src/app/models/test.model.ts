@@ -63,6 +63,7 @@ export type TestResult = {
   testCaseResults: TestCaseResult[];
   secretRef: SecretRef;
   authorizedClient: OAuth2AuthorizedClient;
+  runnerMessage?: string;
 }
 
 export type TestCaseResult = {

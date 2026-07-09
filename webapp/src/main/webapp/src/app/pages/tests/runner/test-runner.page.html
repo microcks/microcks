@@ -19,6 +19,15 @@
     <h1>Test {{ test.id }}</h1>
     <small>Created {{ test.testDate.toString() | timeAgo }}</small>
 
+    <div class="row" *ngIf="test.runnerMessage" style="margin-top: 20px;">
+      <div class="col-md-12">
+        <div class="alert alert-danger">
+          <span class="pficon pficon-error-circle-o"></span>
+          <strong>Test failed:</strong> {{ test.runnerMessage }}
+        </div>
+      </div>
+    </div>
+
     <h3 class="section-label">Properties</h3>
 
     <div class="row">
