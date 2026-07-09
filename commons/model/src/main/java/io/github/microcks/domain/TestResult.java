@@ -47,6 +47,7 @@ public class TestResult {
    private TestRunnerType runnerType;
    private OperationsHeaders operationsHeaders;
    private OAuth2AuthorizedClient authorizedClient;
+   private String runnerMessage;
 
    private List<TestCaseResult> testCaseResults = new ArrayList<>();
 
@@ -168,5 +169,13 @@ public class TestResult {
 
    public void setAuthorizedClient(OAuth2AuthorizedClient authorizedClient) {
       this.authorizedClient = authorizedClient;
+   }
+
+   public String getRunnerMessage() {
+      return runnerMessage;
+   }
+
+   public void setRunnerMessage(String runnerMessage) {
+      this.runnerMessage = runnerMessage;
    }
 }
