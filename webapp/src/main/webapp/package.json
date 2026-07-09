@@ -21,7 +21,7 @@
     "@angular/platform-browser-dynamic": "21.2.17",
     "@angular/router": "21.2.17",
     "@opentelemetry/api": "1.9.0",
-    "@opentelemetry/sdk-trace-base": "2.0.1",
+    "@opentelemetry/sdk-trace-base": "2.8.0",
     "bootstrap": "5.3.3",
     "c3": "0.7.20",
     "d3": "7.9.0",
