@@ -66,7 +66,7 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
    private final ResourceRepository resourceRepository;
 
    private JsonNode schemaNode;
-   private final Map<Resource, JsonNode> externalResourcesContent = new HashMap<>();
+   private final Map<String, JsonNode> externalResourcesContent = new HashMap<>();
    private ObjectMapper yamlMapper;
 
    /**
@@ -273,59 +273,90 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
       return getNodeForExternalRef(reference);
    }
 
-   /** Get the JsonNode for reference that is localed in external resource. */
-   private JsonNode getNodeForExternalRef(String externalReference) {
-      String attachedResourceName = externalReference;
+   /** Hold the parts of an external reference after parsing. */
+   private record ExternalRefParts(String resourceName, String pointerInFile) {
+   }
 
-      // We may have a Json pointer to a specific place in external reference.
-      String pointerInFile = null;
-      if (externalReference.contains("#/")) {
-         attachedResourceName = externalReference.substring(0, externalReference.indexOf("#/"));
-         pointerInFile = externalReference.substring(externalReference.indexOf("#/"));
-      }
+   /** Get the JsonNode for reference that is located in external resource. */
+   private JsonNode getNodeForExternalRef(String externalReference) {
+      ExternalRefParts refParts = parseExternalReference(externalReference);
 
       if (resourceRepository != null) {
-         List<Resource> attachedResources = resourceRepository.findByServiceIdAndType(service.getId(),
-               ResourceType.OPEN_API_SPEC);
-         for (Resource attachedResource : attachedResources) {
-            // Skip the main resource
-            if (attachedResource.getId() != null && attachedResource.getId().equals(resource.getId())) {
-               continue;
-            }
-            // Path direct equality is for absolute ref ("http://raw.githubusercontent.com/...")
-            // Path equality with resource name if for relative refs that have been re-normalized ("Service name+Service version+...))
-            if (attachedResourceName.equals(attachedResource.getPath()) || attachedResourceName
-                  .equals(URLEncoder.encode(attachedResource.getName(), StandardCharsets.UTF_8))) {
-               JsonNode resourceNode = externalResourcesContent.computeIfAbsent(attachedResource, k -> {
-                  try {
-                     // We have to guess if content is JSON or YAML.
-                     if (attachedResource.getContent().startsWith("{")
-                           || attachedResource.getContent().startsWith("[")) {
-                        return mapper.readTree(attachedResource.getContent());
-                     } else {
-                        // yamlMapper is lazily initialized.
-                        if (yamlMapper == null) {
-                           yamlMapper = ObjectMapperFactory.getYamlObjectMapper();
-                        }
-                        return yamlMapper.readTree(attachedResource.getContent());
-                     }
-                  } catch (JsonProcessingException e) {
-                     log.error("Get a JSON processing exception on {}", externalReference, e);
-                     return null;
-                  }
-               });
-               if (resourceNode != null) {
-                  if (pointerInFile != null) {
-                     return resourceNode.at(pointerInFile.substring(1));
-                  }
-                  return resourceNode;
+         Resource attachedResource = findMatchingResource(refParts.resourceName());
+         if (attachedResource != null) {
+            JsonNode resourceNode = parseAndCacheResource(attachedResource, externalReference);
+            if (resourceNode != null) {
+               if (refParts.pointerInFile() != null) {
+                  return resourceNode.at(refParts.pointerInFile().substring(1));
                }
+               return resourceNode;
             }
          }
       }
 
       log.warn("Found no resource for reference '{}'", externalReference);
       return null;
+   }
+
+   /**
+    * Parse an external reference into the resource name and optional JSON pointer. For example,
+    * "models.yaml#/components/schemas/TestModel" becomes ExternalRefParts["models.yaml",
+    * "#/components/schemas/TestModel"].
+    */
+   private ExternalRefParts parseExternalReference(String externalReference) {
+      if (externalReference.contains("#/")) {
+         String resourceName = externalReference.substring(0, externalReference.indexOf("#/"));
+         String pointerInFile = externalReference.substring(externalReference.indexOf("#/"));
+         return new ExternalRefParts(resourceName, pointerInFile);
+      }
+      return new ExternalRefParts(externalReference, null);
+   }
+
+   /**
+    * Find a matching resource from the repository for the given resource name. Skips the main resource and matches by
+    * path or encoded name.
+    */
+   private Resource findMatchingResource(String resourceName) {
+      List<Resource> attachedResources = resourceRepository.findByServiceIdAndType(service.getId(),
+            ResourceType.OPEN_API_SPEC);
+      for (Resource attachedResource : attachedResources) {
+         // Skip the main resource.
+         if (attachedResource.getId() != null && attachedResource.getId().equals(resource.getId())) {
+            continue;
+         }
+         // Path direct equality is for absolute ref ("http://raw.githubusercontent.com/...").
+         // Path equality with resource name is for relative refs that have been re-normalized
+         // ("Service name+Service version+...").
+         if (resourceName.equals(attachedResource.getPath())
+               || resourceName.equals(URLEncoder.encode(attachedResource.getName(), StandardCharsets.UTF_8))) {
+            return attachedResource;
+         }
+      }
+      return null;
+   }
+
+   /**
+    * Parse and cache the content of a resource (JSON or YAML detection). Uses the resource ID as the cache key for
+    * stable lookup.
+    */
+   private JsonNode parseAndCacheResource(Resource resource, String externalReference) {
+      return externalResourcesContent.computeIfAbsent(resource.getId(), k -> {
+         try {
+            // We have to guess if content is JSON or YAML.
+            if (resource.getContent().startsWith("{") || resource.getContent().startsWith("[")) {
+               return mapper.readTree(resource.getContent());
+            } else {
+               // yamlMapper is lazily initialized.
+               if (yamlMapper == null) {
+                  yamlMapper = ObjectMapperFactory.getYamlObjectMapper();
+               }
+               return yamlMapper.readTree(resource.getContent());
+            }
+         } catch (JsonProcessingException e) {
+            log.error("Get a JSON processing exception on {}", externalReference, e);
+            return null;
+         }
+      });
    }
 
    /** Visit a node and extract its properties. */
