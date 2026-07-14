@@ -20,6 +20,7 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestCasePhase;
 import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.domain.TestOptionals;
 import io.github.microcks.domain.TestResult;
@@ -159,6 +160,7 @@ public class TestService {
                      updateTestCaseResultWithReturns(tcr, testReturns,
                            TestRunnerType.ASYNC_API_SCHEMA != finalTestResult1.getRunnerType(),
                            TestRunnerType.ASYNC_API_SCHEMA == finalTestResult1.getRunnerType());
+                     tcr.setPhase(TestCasePhase.DONE);
                   }
                });
 
@@ -177,6 +179,53 @@ public class TestService {
             saved = false;
             waitSomeRandomMS(5, 50);
             testResult = testResultRepository.findById(testResult.getId()).orElse(null);
+            times++;
+         }
+      }
+      return updatedTestCaseResult.get();
+   }
+
+   /**
+    * Endpoint for reporting the current progress phase of a test case while a test is still in progress. This only
+    * updates the {@code phase} of the matching TestCaseResult and never touches its elapsedTime, success or the global
+    * inProgress flag, so the legacy completion logic is left untouched.
+    * @param testResultId  Unique identifier of test results we report a phase for
+    * @param operationName Name of operation to report a phase for
+    * @param phase         The current progress phase of the test case
+    * @return The updated TestCaseResult object, or null if not found
+    */
+   public TestCaseResult reportTestCasePhase(String testResultId, String operationName, TestCasePhase phase) {
+      log.info("Reporting a TestCasePhase '{}' for testResult {} on operation '{}'", phase, testResultId,
+            operationName);
+      TestResult testResult = testResultRepository.findById(testResultId).orElse(null);
+      if (testResult == null) {
+         return null;
+      }
+      AtomicReference<TestCaseResult> updatedTestCaseResult = new AtomicReference<>();
+
+      // There may be a race condition while updating testResult concurrently with testCaseResult reports.
+      // So be prepared to catch a org.springframework.dao.OptimisticLockingFailureException and retry a few times.
+      int times = 0;
+      boolean saved = false;
+
+      while (!saved && times < 5) {
+         testResult.getTestCaseResults().stream().filter(tcr -> tcr.getOperationName().equals(operationName))
+               .findFirst().ifPresent(tcr -> {
+                  updatedTestCaseResult.set(tcr);
+                  tcr.setPhase(phase);
+               });
+
+         try {
+            testResultRepository.save(testResult);
+            saved = true;
+         } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
+            log.warn("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
+            saved = false;
+            waitSomeRandomMS(5, 50);
+            testResult = testResultRepository.findById(testResult.getId()).orElse(null);
+            if (testResult == null) {
+               return null;
+            }
             times++;
          }
       }
