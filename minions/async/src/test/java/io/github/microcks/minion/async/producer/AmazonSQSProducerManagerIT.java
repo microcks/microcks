@@ -127,7 +127,8 @@ class AmazonSQSProducerManagerIT {
       sqsProducerManager.create();
 
       ProducerManager producerManager = new ProducerManager(mockRepository, null,
-            new ProducerManager.ProducerDependencies(null, null, null, null, null, sqsProducerManager, null), null);
+            new ProducerManager.ProducerDependencies(null, null, null, null, null, sqsProducerManager, null, null),
+            null);
 
       // Act.
       producerManager.produceSQSMockMessages(mockDefinition);
