@@ -81,6 +81,9 @@ public class GraphQLInvocationProcessor {
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
 
+   @Value("${mocks.service-state-store.default-ttl:10}")
+   private int defaultTtl;
+
    /**
     * Build a GraphQLInvocationProcessor with required dependencies.
     * @param serviceStateRepository The repository to access service state
@@ -248,7 +251,8 @@ public class GraphQLInvocationProcessor {
                try {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
-                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request);
+                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl),
+                        request);
                   dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
@@ -256,7 +260,7 @@ public class GraphQLInvocationProcessor {
                break;
             case DispatchStyles.JS:
                Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
-                     new ServiceStateStore(serviceStateRepository, service.getId()), request);
+                     new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl), request);
                String result = JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext);
                if (result != null) {
                   dispatchCriteria = result;
