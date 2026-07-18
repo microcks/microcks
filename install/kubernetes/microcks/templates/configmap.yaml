@@ -54,6 +54,7 @@ data:
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
+    tests-runner.connect-timeout=${TESTS_RUNNER_CONNECT_TIMEOUT:5000}
     postman-runner.url=${POSTMAN_RUNNER_URL}
     async-minion.url=${ASYNC_MINION_URL|http://localhost:8081}
 
