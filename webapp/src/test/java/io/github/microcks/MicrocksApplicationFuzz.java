@@ -107,8 +107,9 @@ public class MicrocksApplicationFuzz {
       }
 
       // Allow connection to MongoDB container.
-      try (var unused = BugDetectors.allowNetworkConnections(
-            (host, portD) -> host.equals("localhost") && portD.equals(mongoDBContainer.getMappedPort(27017)))) {
+      try (var unused = BugDetectors.allowNetworkConnections((host,
+            portD) -> (host.equals("localhost") || host.equals("127.0.0.1") || host.equals(mongoDBContainer.getHost()))
+                  && portD.equals(mongoDBContainer.getMappedPort(27017)))) {
 
          String name = data.consumeRemainingAsString();
          apiTest(mockMvc, get("/api/version/info").param("name", name));

@@ -1,0 +1,59 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "API Pastry Query Path",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pastry/{name}?api-version=2024-06-01": {
+      "get": {
+        "operationId": "getPastryV1",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "Eclair": {
+                "value": "Eclair"
+              }
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "Eclair": {
+                "value": "2024-06-01"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Eclair": {
+                    "value": {
+                      "name": "Eclair",
+                      "description": "Eclair au Cafe"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -310,37 +310,40 @@ public class RestController {
       }
 
       // Find matching operation.
-      Operation operation = findOperation(service, method, resourcePath);
+      Operation operation = findOperation(service, method, resourcePath, request.getQueryString());
       return new MockInvocationContext(service, operation, resourcePath);
    }
 
    @CheckForNull
-   private Operation findOperation(Service service, HttpMethod method, String resourcePath) {
+   private Operation findOperation(Service service, HttpMethod method, String resourcePath, String queryString) {
       // Remove trailing '/' if any.
       String trimmedResourcePath = trimResourcePath(resourcePath);
 
-      Operation result = findOperationByResourcePath(service, method, resourcePath, trimmedResourcePath);
+      Operation result = findOperationByResourcePath(service, method, resourcePath, trimmedResourcePath, queryString);
 
       if (result == null) {
          // We may not have found an Operation because of not exact resource path matching with an operation
          // using a Fallback dispatcher. Try again, just considering the verb and path pattern of operation.
-         result = findOperationByPathPattern(service, method, resourcePath);
+         result = findOperationByPathPattern(service, method, resourcePath, queryString);
       }
       return result;
    }
 
    @CheckForNull
-   private Operation findOperationByPathPattern(Service service, HttpMethod method, String resourcePath) {
+   private Operation findOperationByPathPattern(Service service, HttpMethod method, String resourcePath,
+         String queryString) {
+      String pathWithQuery = queryString != null ? resourcePath + "?" + queryString : resourcePath;
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          // ... then check is current resource path matches operation path pattern.
-         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null) {
-            // Produce a matching regexp removing {part} and :part from pattern.
+         if (operation.getMethod().equals(method.name())) {
             String operationPattern = getURIPattern(operation.getName());
+            operationPattern = operationPattern.replace("?", "\\?").replace(".", "\\.");
             //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
             operationPattern = operationPattern.replaceAll("\\{[\\w-]+\\}", "([^/])+");
             operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
-            if (resourcePath.matches(operationPattern)) {
+            if (resourcePath.matches(operationPattern)
+                  || (pathWithQuery != null && pathWithQuery.matches(operationPattern))) {
                return operation;
             }
          }
@@ -350,14 +353,21 @@ public class RestController {
 
    @CheckForNull
    private Operation findOperationByResourcePath(Service service, HttpMethod method, String resourcePath,
-         String trimmedResourcePath) {
+         String trimmedResourcePath, String queryString) {
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          // ... then check is we have a matching resource path.
-         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null
-               && (operation.getResourcePaths().contains(resourcePath)
-                     || operation.getResourcePaths().contains(trimmedResourcePath))) {
-            return operation;
+         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null) {
+            String pathWithQuery = queryString != null ? resourcePath + "?" + queryString : resourcePath;
+            String trimmedPathWithQuery = queryString != null ? trimmedResourcePath + "?" + queryString
+                  : trimmedResourcePath;
+
+            if (operation.getResourcePaths().contains(resourcePath)
+                  || operation.getResourcePaths().contains(trimmedResourcePath)
+                  || operation.getResourcePaths().contains(pathWithQuery)
+                  || operation.getResourcePaths().contains(trimmedPathWithQuery)) {
+               return operation;
+            }
          }
          // Check by simple name comparison if no resource path is defined.
          if (operation.getName().equals(method.name().toUpperCase() + " " + resourcePath)) {
