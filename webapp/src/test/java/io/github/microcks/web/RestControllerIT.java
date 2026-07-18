@@ -524,4 +524,39 @@ class RestControllerIT extends AbstractBaseIT {
       assertEquals(200, response.getStatusCode().value());
    }
 
+   @Test
+   void testQueryStringInPathMatching() {
+      // Upload custom pastry spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-query-path-openapi.json", true);
+
+      Service service = serviceRepository.findByNameAndVersion("API Pastry Query Path", "1.0.0");
+      System.out.println("DEBUG: Service operations: ");
+      for (Operation op : service.getOperations()) {
+         System.out.println("  " + op.getName() + " -> " + op.getResourcePaths());
+      }
+
+      // Verify that exact match with query string works
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/API+Pastry+Query+Path/1.0.0/pastry/Eclair?api-version=2024-06-01", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Eclair\",\"description\":\"Eclair au Cafe\"}", response.getBody(),
+               JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // Verify that a bad regex match (the ? issue) is no longer occurring and returns 404 (or 400 dispatch criteria error if operation found but not match rules)
+      // Actually, if operation is not found it returns 404. Let's just verify it's not 200/400.
+      response = restTemplate.getForEntity(
+            "/rest/API+Pastry+Query+Path/1.0.0/pastry/Eclairapi-version=2024-06-01?api-version=2024-06-01",
+            String.class);
+      assertEquals(400, response.getStatusCode().value());
+
+      // Verify that an actual path that shouldn't match returns 404
+      response = restTemplate.getForEntity(
+            "/rest/API+Pastry+Query+Path/1.0.0/pastry/Eclair/SomethingElse?api-version=2024-06-01", String.class);
+      assertEquals(404, response.getStatusCode().value());
+   }
+
 }
