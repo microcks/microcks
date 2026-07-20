@@ -20,7 +20,6 @@ import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
@@ -38,7 +37,6 @@ import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryExportException;
 import io.github.microcks.util.MockRepositoryExporter;
 import io.github.microcks.util.MockRepositoryExporterFactory;
-import io.github.microcks.util.metadata.ExamplesExporter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -283,7 +281,14 @@ public class ImportExportService {
          }
          return exporter.exportAsString();
       }
-      log.warn("Didn't find any service with id {} to export or unauthorized, returning empty content", serviceId);
+      log.warn("Didn't find any service with id {} to export or unauthorized, returning empty content",
+            sanitize(serviceId));
       return "";
+   }
+
+   private static String sanitize(String value) {
+      if (value == null)
+         return null;
+      return value.replaceAll("[\\n\\r\\t]", "_");
    }
 }
