@@ -1536,6 +1536,10 @@ components:
         operationsHeaders:
           $ref: '#/components/schemas/OperationHeaders'
           description: This test operations headers override
+        responseExampleComparison:
+          $ref: '#/components/schemas/ResponseExampleComparisonMode'
+          description: Optional JSON response example comparison for OPEN_API_SCHEMA
+            tests
     Resource:
       description: "Resource represents a Service or API artifacts such as specification,\
         \ contract"
@@ -1581,6 +1585,15 @@ components:
       - ASYNC_API_SCHEMA
       - GRPC_PROTOBUF
       - GRAPHQL_SCHEMA
+      type: string
+    ResponseExampleComparisonMode:
+      description: "JSON response example comparison mode. STRICT requires the same\
+        \ structure and values while ignoring array ordering. LENIENT requires the\
+        \ example structure and values while allowing additional object fields and\
+        \ array elements."
+      enum:
+      - STRICT
+      - LENIENT
       type: string
     ArtifactUpload:
       description: |-
