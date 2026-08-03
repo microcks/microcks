@@ -119,6 +119,10 @@ public class AMQPProducerManager {
     */
    public void publishMessage(String destinationType, String destinationName, String routingKey, String value,
          Set<Header> headers) {
+      if (amqpConnection == null) {
+        logger.warn("Skipping AMQP publish because broker is not connected");
+        return;
+      }
       logger.infof("Publishing on destination {%s}, message: %s ", destinationName, value);
       try (Channel channel = amqpConnection.createChannel()) {
          channel.exchangeDeclare(destinationName, destinationType);
