@@ -65,7 +65,7 @@ public class AMQPProducerManager {
 
    /**
     * Initialize the AMQP connection post construction.
-    * 
+    *
     * @throws Exception If connection to AMQP Broker cannot be done.
     */
    @PostConstruct
@@ -79,13 +79,25 @@ public class AMQPProducerManager {
       }
    }
 
+  private String buildAmqpUri() {
+    if (amqpServer.contains("://")) {
+      return amqpServer;
+    }
+
+    if (amqpServer.endsWith(":5671")) {
+      return "amqps://" + amqpServer;
+    }
+
+    return "amqp://" + amqpServer;
+  }
+
    /**
     * @return A newly created connection to configured broker
     * @throws Exception in case of connection failure
     */
    protected Connection createConnection() throws Exception {
       ConnectionFactory factory = new ConnectionFactory();
-      factory.setUri("amqp://" + amqpServer);
+      factory.setUri(buildAmqpUri());
 
       if (amqpUsername != null && !amqpUsername.isEmpty() && amqpPassword != null && !amqpPassword.isEmpty()) {
          logger.infof("Connecting to AMQP broker with user '%s'", amqpUsername);
@@ -98,7 +110,7 @@ public class AMQPProducerManager {
 
    /**
     * Publish a message on specified destination.
-    * 
+    *
     * @param destinationType The type of destination (queue, topic, fanout, ...)
     * @param destinationName The name of destination
     * @param routingKey      The routing key to use when publishing (may be null or empty)
@@ -144,7 +156,7 @@ public class AMQPProducerManager {
 
    /**
     * Render Microcks headers using the template engine.
-    * 
+    *
     * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
     *                KafkaProducerManager level.)
     * @param headers The Microcks event message headers definition.
