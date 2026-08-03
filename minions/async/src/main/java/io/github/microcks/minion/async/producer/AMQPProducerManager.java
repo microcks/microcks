@@ -69,27 +69,26 @@ public class AMQPProducerManager {
     * @throws Exception If connection to AMQP Broker cannot be done.
     */
    @PostConstruct
-   public void create() throws Exception {
+   public void create() {
       try {
          amqpConnection = createConnection();
       } catch (Exception e) {
-         logger.errorf("Cannot connect to AMQP broker %s", amqpServer);
-         logger.errorf("Connection exception: %s", e.getMessage());
+         logger.errorf(e, "Cannot connect to AMQP broker %s", amqpServer);
          amqpConnection = null;
       }
    }
 
-  private String buildAmqpUri() {
-    if (amqpServer.contains("://")) {
-      return amqpServer;
-    }
+   static String buildAmqpUri() {
+      if (amqpServer.startsWith("amqp://") || amqpServer.startsWith("amqps://")) {
+         return amqpServer;
+      }
 
-    if (amqpServer.endsWith(":5671")) {
-      return "amqps://" + amqpServer;
-    }
+      if (amqpServer.endsWith(":5671")) {
+         return "amqps://" + amqpServer;
+      }
 
-    return "amqp://" + amqpServer;
-  }
+      return "amqp://" + amqpServer;
+   }
 
    /**
     * @return A newly created connection to configured broker
@@ -120,8 +119,8 @@ public class AMQPProducerManager {
    public void publishMessage(String destinationType, String destinationName, String routingKey, String value,
          Set<Header> headers) {
       if (amqpConnection == null) {
-        logger.warn("Skipping AMQP publish because broker is not connected");
-        return;
+         logger.warnf("Skipping AMQP publish to {%s}: broker is not connected", destinationName);
+         return;
       }
       logger.infof("Publishing on destination {%s}, message: %s ", destinationName, value);
       try (Channel channel = amqpConnection.createChannel()) {
