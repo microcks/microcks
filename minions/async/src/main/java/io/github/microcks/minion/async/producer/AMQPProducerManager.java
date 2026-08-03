@@ -75,7 +75,7 @@ public class AMQPProducerManager {
       } catch (Exception e) {
          logger.errorf("Cannot connect to AMQP broker %s", amqpServer);
          logger.errorf("Connection exception: %s", e.getMessage());
-         throw e;
+         amqpConnection = null;
       }
    }
 
