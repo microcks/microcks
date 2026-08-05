@@ -42,7 +42,7 @@ public class Operation implements Serializable, BindingsHolder {
    private Map<String, Binding> bindings;
    private Map<String, CallbackInfo> callbackInfos;
    private List<TriggerInfo> triggerInfos;
-   private ReplyInfo reply;
+   private transient ReplyInfo reply;
 
    private boolean override = false;
    private String dispatcher;
