@@ -34,6 +34,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,6 +75,9 @@ public class McpController {
    private final ExecutorService sseMvcExecutor = Executors.newSingleThreadExecutor();
    private final ObjectMapper mapper = new ObjectMapper();
 
+   @Value("${mcp.sse.timeout:600}")
+   private long sseTimeoutSeconds;
+
    /**
     * Build a McpController with required dependencies.
     * @param serviceRepository          The repository to access services definitions
@@ -105,7 +109,7 @@ public class McpController {
       String sessionId = UUID.randomUUID().toString();
       log.debug("Creating new SSE connection for session: {}", sessionId);
 
-      SseEmitter emitter = new SseEmitter(Duration.ofSeconds(600).toMillis());
+      SseEmitter emitter = new SseEmitter(Duration.ofSeconds(sseTimeoutSeconds).toMillis());
       emitter.onCompletion(() -> {
          log.debug("SSE connection completed for session: {}", sessionId);
          channelsBySessionId.remove(sessionId);
