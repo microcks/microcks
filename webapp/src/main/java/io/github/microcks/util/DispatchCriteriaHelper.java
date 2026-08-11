@@ -389,7 +389,7 @@ public class DispatchCriteriaHelper {
                (m, e) -> m.put(e.getKey(), e.getValue()), Multimap::putAll);
          return buildFromPartsMap(partsRule, multimap);
       }
-      return "";
+      return hasRequiredCriteria(partsRule, partsMap) ? "" : null;
    }
 
    /**
@@ -399,9 +399,17 @@ public class DispatchCriteriaHelper {
     * @return A string representing dispatch criteria for the corresponding incoming request.
     */
    public static String buildFromPartsMap(String partsRule, Multimap<String, String> partsMap) {
+      if (partsRule == null || partsRule.isBlank()) {
+         return "";
+      }
+
       // We may have a partsRule for URI_ELEMENT with params parts, ignore this part.
       if (partsRule.contains("??")) {
          partsRule = partsRule.split("\\?\\?")[0];
+      }
+
+      if (!hasRequiredCriteria(partsRule, partsMap)) {
+         return null;
       }
 
       if (partsMap != null && !partsMap.isEmpty()) {
@@ -433,9 +441,17 @@ public class DispatchCriteriaHelper {
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
    public static String buildFromParamsMap(String paramsRule, Multimap<String, String> paramsMap) {
+      if (paramsRule == null || paramsRule.isBlank()) {
+         return "";
+      }
+
       // We may have a paramsRule for URI_ELEMENT with path parts, ignore this part.
       if (paramsRule.contains("??")) {
          paramsRule = paramsRule.split("\\?\\?")[1];
+      }
+
+      if (!hasRequiredCriteria(paramsRule, paramsMap)) {
+         return null;
       }
 
       if (paramsMap != null && !paramsMap.isEmpty()) {
@@ -458,6 +474,32 @@ public class DispatchCriteriaHelper {
          return result.toString();
       }
       return "";
+   }
+
+   private static boolean hasRequiredCriteria(String criteriaRule, Map<String, String> criteriaMap) {
+      if (criteriaMap != null && !criteriaMap.isEmpty()) {
+         return hasRequiredCriteria(criteriaRule, criteriaMap.keySet());
+      }
+      return extractRequiredCriteriaNames(criteriaRule).isEmpty();
+   }
+
+   private static boolean hasRequiredCriteria(String criteriaRule, Multimap<String, String> criteriaMap) {
+      if (criteriaMap != null && !criteriaMap.isEmpty()) {
+         return hasRequiredCriteria(criteriaRule, criteriaMap.keySet());
+      }
+      return extractRequiredCriteriaNames(criteriaRule).isEmpty();
+   }
+
+   private static boolean hasRequiredCriteria(String criteriaRule, Set<String> criteriaNames) {
+      return criteriaNames.containsAll(extractRequiredCriteriaNames(criteriaRule));
+   }
+
+   private static Set<String> extractRequiredCriteriaNames(String criteriaRule) {
+      if (criteriaRule == null || criteriaRule.isBlank()) {
+         return Set.of();
+      }
+      return Arrays.stream(criteriaRule.split("&&")).map(String::trim).filter(criteria -> !criteria.isEmpty())
+            .collect(Collectors.toSet());
    }
 
    /**
