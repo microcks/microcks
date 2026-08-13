@@ -58,6 +58,7 @@ class ProducerManagerTest {
    private GooglePubSubProducerManager googlePubSubProducerManager;
    private AmazonSQSProducerManager amazonSQSProducerManager;
    private AmazonSNSProducerManager amazonSNSProducerManager;
+   private IBMMQProducerManager ibmMQProducerManager;
 
    private ProducerManager producerManager;
 
@@ -73,10 +74,12 @@ class ProducerManagerTest {
       googlePubSubProducerManager = mock(GooglePubSubProducerManager.class);
       amazonSQSProducerManager = mock(AmazonSQSProducerManager.class);
       amazonSNSProducerManager = mock(AmazonSNSProducerManager.class);
+      ibmMQProducerManager = mock(IBMMQProducerManager.class);
 
       producerManager = new ProducerManager(mockRepository, schemaRegistry,
             new ProducerManager.ProducerDependencies(kafkaProducerManager, mqttProducerManager, natsProducerManager,
-                  amqpProducerManager, googlePubSubProducerManager, amazonSQSProducerManager, amazonSNSProducerManager),
+                  amqpProducerManager, googlePubSubProducerManager, amazonSQSProducerManager, amazonSNSProducerManager,
+                  null),
             null);
 
       // Set the supportedBindings field via reflection (normally injected by Quarkus).

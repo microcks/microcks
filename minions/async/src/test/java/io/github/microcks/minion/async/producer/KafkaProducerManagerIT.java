@@ -148,7 +148,8 @@ class KafkaProducerManagerIT {
       kafkaProducerManager.create();
 
       ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry,
-            new ProducerManager.ProducerDependencies(kafkaProducerManager, null, null, null, null, null, null), null);
+            new ProducerManager.ProducerDependencies(kafkaProducerManager, null, null, null, null, null, null, null),
+            null);
 
       // Act.
       producerManager.produceKafkaMockMessages(mockDefinition);
@@ -235,7 +236,8 @@ class KafkaProducerManagerIT {
       kafkaProducerManager.create();
 
       ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry,
-            new ProducerManager.ProducerDependencies(kafkaProducerManager, null, null, null, null, null, null), null);
+            new ProducerManager.ProducerDependencies(kafkaProducerManager, null, null, null, null, null, null, null),
+            null);
       producerManager.defaultAvroEncoding = "REGISTRY";
 
       // Act.

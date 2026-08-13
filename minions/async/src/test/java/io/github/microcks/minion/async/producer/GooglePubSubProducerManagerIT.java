@@ -139,7 +139,8 @@ class GooglePubSubProducerManagerIT {
       pubSubProducerManager.create();
 
       ProducerManager producerManager = new ProducerManager(mockRepository, null,
-            new ProducerManager.ProducerDependencies(null, null, null, null, pubSubProducerManager, null, null), null);
+            new ProducerManager.ProducerDependencies(null, null, null, null, pubSubProducerManager, null, null, null),
+            null);
 
       // Act a 1st time to ensure topic creation before starting subscriber.
       producerManager.produceGooglePubSubMockMessages(mockDefinition);
