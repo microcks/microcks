@@ -24,7 +24,7 @@
     <commons-io.version>2.22.0</commons-io.version>
     <commons-codec.version>1.22.0</commons-codec.version>
     <quickjs4j.version>0.0.18</quickjs4j.version>
-    <protobuf.version>4.34.1</protobuf.version>
+    <protobuf.version>4.35.1</protobuf.version>
     <grpc.version>1.81.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
