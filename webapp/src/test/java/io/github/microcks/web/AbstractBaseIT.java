@@ -136,7 +136,8 @@ public abstract class AbstractBaseIT {
       return responseEntity(result);
    }
 
-   protected <T> ResponseEntity<T> exchange(String uri, HttpMethod method, HttpEntity<?> request, Class<T> responseType) {
+   protected <T> ResponseEntity<T> exchange(String uri, HttpMethod method, HttpEntity<?> request,
+         Class<T> responseType) {
       var requestSpec = restTestClient.method(method).uri(uri);
       configureRequest(requestSpec, request);
       var result = requestSpec.exchange().returnResult(responseType);
@@ -152,16 +153,15 @@ public abstract class AbstractBaseIT {
    }
 
    protected void executeSse(String uri, Consumer<InputStream> responseConsumer) {
-      RestClient.builder().baseUrl(getServerUrl()).build().get().uri(uri)
-            .exchange((request, response) -> {
-               responseConsumer.accept(response.getBody());
-               return null;
-            });
+      RestClient.builder().baseUrl(getServerUrl()).build().get().uri(uri).exchange((request, response) -> {
+         responseConsumer.accept(response.getBody());
+         return null;
+      });
    }
 
    protected <T> ResponseEntity<T> getForEntityWithoutRedirects(String uri, Class<T> responseType) {
-      var requestFactory = new JdkClientHttpRequestFactory(HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NEVER).build());
+      var requestFactory = new JdkClientHttpRequestFactory(
+            HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build());
       var client = RestTestClient.bindToServer(requestFactory).baseUrl(getServerUrl()).build();
       var result = client.get().uri(uri).exchange().returnResult(responseType);
       return responseEntity(result);

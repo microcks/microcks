@@ -147,8 +147,7 @@ class SoapControllerIT extends AbstractBaseIT {
 
       // Execute and assert.
       for (int i = 0; i < 10; ++i) {
-         ResponseEntity<String> response = postForEntity("/soap/HelloService+Mock/0.9", entity,
-               String.class);
+         ResponseEntity<String> response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
          switch (response.getStatusCode().value()) {
             case 200:
                assertTrue(okResponses.contains(response.getBody()));

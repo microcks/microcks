@@ -319,8 +319,7 @@ class TestControllerIT extends AbstractBaseIT {
    private void waitForTestCompletion(TestResult testResult, int seconds) {
       await().atMost(seconds, TimeUnit.SECONDS).pollDelay(500, TimeUnit.MILLISECONDS)
             .pollInterval(250, TimeUnit.MILLISECONDS).until(() -> {
-               ResponseEntity<TestResult> resp = getForEntity("/api/tests/" + testResult.getId(),
-                     TestResult.class);
+               ResponseEntity<TestResult> resp = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
                if (resp.getStatusCode().value() == 200) {
                   TestResult tr = resp.getBody();
                   return tr != null && !tr.isInProgress();

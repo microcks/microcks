@@ -97,8 +97,8 @@ class TracingControllerIT extends AbstractBaseIT {
       if (traceIdsResponse.getBody() != null && !traceIdsResponse.getBody().isEmpty()) {
          // Get spans for the first trace ID
          String firstTraceId = traceIdsResponse.getBody().iterator().next();
-         ResponseEntity<List<Object>> spansResponse = exchange("/api/traces/" + firstTraceId + "/spans",
-               HttpMethod.GET, null, new ParameterizedTypeReference<>() {
+         ResponseEntity<List<Object>> spansResponse = exchange("/api/traces/" + firstTraceId + "/spans", HttpMethod.GET,
+               null, new ParameterizedTypeReference<>() {
                });
 
          // Then
@@ -119,8 +119,8 @@ class TracingControllerIT extends AbstractBaseIT {
    @DisplayName("Should return 404 for non-existent trace ID")
    void shouldReturn404ForNonExistentTraceId() {
       // When
-      ResponseEntity<List<SpanData>> response = exchange("/api/traces/non-existent-trace-id/spans",
-            HttpMethod.GET, null, new ParameterizedTypeReference<>() {
+      ResponseEntity<List<SpanData>> response = exchange("/api/traces/non-existent-trace-id/spans", HttpMethod.GET,
+            null, new ParameterizedTypeReference<>() {
             });
 
       // Then
@@ -157,8 +157,7 @@ class TracingControllerIT extends AbstractBaseIT {
       });
 
       // When - Clear all traces
-      ResponseEntity<String> clearResponse = exchange("/api/traces", HttpMethod.DELETE, null,
-            String.class);
+      ResponseEntity<String> clearResponse = exchange("/api/traces", HttpMethod.DELETE, null, String.class);
 
       // Then
       assertThat(clearResponse.getStatusCode()).isEqualTo(HttpStatus.OK);

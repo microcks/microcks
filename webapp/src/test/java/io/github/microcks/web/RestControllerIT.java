@@ -102,8 +102,8 @@ class RestControllerIT extends AbstractBaseIT {
       // Check its validation endpoint with invalid payload
       patchedPastry = "{\"price\":\"2.6\"}";
       requestEntity = new HttpEntity<>(patchedPastry, headers);
-      response = exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe", HttpMethod.PATCH,
-            requestEntity, String.class);
+      response = exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe", HttpMethod.PATCH, requestEntity,
+            String.class);
       assertEquals(400, response.getStatusCode().value());
       assertEquals("[string found, number expected]", response.getBody());
    }
@@ -115,8 +115,7 @@ class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-collection.json", false);
 
       // Check its different mocked operations.
-      ResponseEntity<String> response = getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0",
-            String.class);
+      ResponseEntity<String> response = getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("[3]", response.getBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
@@ -183,8 +182,8 @@ class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
 
       ResponseEntity<String> response = getForEntityWithoutRedirects("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
-                  + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
-                  String.class);
+            + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
+            String.class);
       assertEquals(302, response.getStatusCode().value());
 
       String content = response.getBody();
@@ -211,8 +210,7 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // If we have the mock, we should get the response from the mock.
-      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
-            String.class);
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getBody(), JSONCompareMode.LENIENT);
@@ -246,8 +244,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we have the mock, we should get the response from the mock.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
-            String.class);
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut", String.class);
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -321,8 +318,7 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // Check that we don't fall into infinite loop and that we can't locally handle the call (error 400)
-      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
-            String.class);
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut", String.class);
       assertEquals(400, response.getStatusCode().value());
       verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any(), any());
    }
@@ -342,8 +338,7 @@ class RestControllerIT extends AbstractBaseIT {
             .replaceFirst("pastry-real", "not-found"));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
-            String.class);
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut", String.class);
       assertEquals(404, response.getStatusCode().value());
    }
 
@@ -361,8 +356,7 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // Event if `donut` is defined on our mock, we should always have the response coming for real backend.
-      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
-            String.class);
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
@@ -402,8 +396,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check a delayed mocked operations.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200",
-            String.class);
+      ResponseEntity<String> response = getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200", String.class);
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTime >= 200, "mocked response time delayed: " + mockedResponseTime + "ms");
@@ -415,8 +408,7 @@ class RestControllerIT extends AbstractBaseIT {
       HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
       startTime = System.currentTimeMillis();
-      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity,
-            String.class);
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity, String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTime >= 400, "mocked response time delayed: " + mockedResponseTime + "ms");
@@ -446,8 +438,8 @@ class RestControllerIT extends AbstractBaseIT {
 
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set random here).
-      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", HttpMethod.GET,
-            requestEntity, String.class);
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", HttpMethod.GET, requestEntity,
+            String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTime >= 400, "mocked response time delayed: " + mockedResponseTime + "ms");
@@ -479,8 +471,8 @@ class RestControllerIT extends AbstractBaseIT {
 
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
-      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
-            requestEntity, String.class);
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET, requestEntity,
+            String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 0 and the delay.
       // Note: we can't be sure that the delay is <= 400 because of JVM scheduling but it's very likely.
@@ -512,8 +504,8 @@ class RestControllerIT extends AbstractBaseIT {
       HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
-      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
-            requestEntity, String.class);
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET, requestEntity,
+            String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 320 and 480 (400 + or - 20%).
       // Note: we can't be sure that the delay is <= 480 because of JVM scheduling but it's very likely.

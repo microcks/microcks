@@ -103,10 +103,8 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
       // First, create two resources.
       String body1 = "{\"productId\": \"FIND1\", \"quantity\": 1}";
       String body2 = "{\"productId\": \"FIND2\", \"quantity\": 5}";
-      postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body1,
-            String.class);
-      postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body2,
-            String.class);
+      postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body1, String.class);
+      postForEntity("/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body2, String.class);
 
       // Now list resources.
       ResponseEntity<String> response = restTemplate
