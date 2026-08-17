@@ -24,7 +24,6 @@ import io.github.microcks.domain.Service;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
-import org.springframework.boot.http.client.HttpRedirects;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -56,7 +55,7 @@ class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
 
       // Check its different mocked operations.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets", String.class);
+      ResponseEntity<String> response = getForEntity("/rest/PetStore+API/1.0.0/pets", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("[4]", response.getBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
@@ -67,7 +66,7 @@ class RestControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
 
-      response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets/1", String.class);
+      response = getForEntity("/rest/PetStore+API/1.0.0/pets/1", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"}", response.getBody(),
@@ -89,7 +88,7 @@ class RestControllerIT extends AbstractBaseIT {
       // Check its validation endpoint with correct payload
       String patchedPastry = "{\"price\":2.6}";
       HttpEntity<String> requestEntity = new HttpEntity<>(patchedPastry, headers);
-      ResponseEntity<String> response = restTemplate.exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe",
+      ResponseEntity<String> response = exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe",
             HttpMethod.PATCH, requestEntity, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -103,7 +102,7 @@ class RestControllerIT extends AbstractBaseIT {
       // Check its validation endpoint with invalid payload
       patchedPastry = "{\"price\":\"2.6\"}";
       requestEntity = new HttpEntity<>(patchedPastry, headers);
-      response = restTemplate.exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe", HttpMethod.PATCH,
+      response = exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe", HttpMethod.PATCH,
             requestEntity, String.class);
       assertEquals(400, response.getStatusCode().value());
       assertEquals("[string found, number expected]", response.getBody());
@@ -116,7 +115,7 @@ class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-collection.json", false);
 
       // Check its different mocked operations.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0",
+      ResponseEntity<String> response = getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0",
             String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -125,7 +124,7 @@ class RestControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
 
-      response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer/Weissbier", String.class);
+      response = getForEntity("/rest/Beer+Catalog+API/0.9/beer/Weissbier", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\n" + "    \"name\": \"Weissbier\",\n" + "    \"country\": \"Germany\",\n"
@@ -157,7 +156,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check operation with an undefined defined mock (name: 'Dummy'), should now return a 400 error as
       // per issue #819 and #1132 to have a consistent behaviour, allow proxying support and this kind of stuff.
-      response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
+      response = getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
       assertEquals(400, response.getStatusCode().value());
    }
 
@@ -166,14 +165,14 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload modified pastry-with-headers-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry", String.class);
+      ResponseEntity<String> response = getForEntity("/rest/pastry-headers/1.0.0/pastry", String.class);
       assertEquals(200, response.getStatusCode().value());
       assertEquals("some-static-header", response.getHeaders().getFirst("x-some-static-header"));
 
       String someGenericHeader = response.getHeaders().getFirst("x-some-generic-header");
       assertDoesNotThrow(() -> UUID.fromString(someGenericHeader));
 
-      response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry?size=XL", String.class);
+      response = getForEntity("/rest/pastry-headers/1.0.0/pastry?size=XL", String.class);
       String requestBasedHeader = response.getHeaders().getFirst("x-request-based-header");
       assertEquals("XL size", requestBasedHeader);
    }
@@ -183,8 +182,7 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload simple-oidc-redirect-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate.withRedirects(HttpRedirects.DONT_FOLLOW)
-            .getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
+      ResponseEntity<String> response = getForEntityWithoutRedirects("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
                   + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
                   String.class);
       assertEquals(302, response.getStatusCode().value());
@@ -213,7 +211,7 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // If we have the mock, we should get the response from the mock.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
             String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -223,7 +221,7 @@ class RestControllerIT extends AbstractBaseIT {
       }
 
       // If we don't have the mock, we should get the response from real backend.
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
+      response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
@@ -248,7 +246,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we have the mock, we should get the response from the mock.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
             String.class);
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       assertEquals(200, response.getStatusCode().value());
@@ -260,7 +258,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we don't have the mock, we should get the response from real backend.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
+      response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
       long realResponseTime = System.currentTimeMillis() - startTime;
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -277,7 +275,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we have the mock, we should get the response from the mock.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut", String.class);
+      response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut", String.class);
       long mockedResponseTimeDelayed = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTimeDelayed >= delay,
@@ -293,7 +291,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we don't have the mock, we should get the response from real backend.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
+      response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
       long realResponseTimeDelayed = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(realResponseTimeDelayed >= delay, "real response time delayed: " + realResponseTimeDelayed + "ms");
@@ -323,7 +321,7 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // Check that we don't fall into infinite loop and that we can't locally handle the call (error 400)
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
       assertEquals(400, response.getStatusCode().value());
       verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any(), any());
@@ -344,7 +342,7 @@ class RestControllerIT extends AbstractBaseIT {
             .replaceFirst("pastry-real", "not-found"));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
       assertEquals(404, response.getStatusCode().value());
    }
@@ -363,7 +361,7 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // Event if `donut` is defined on our mock, we should always have the response coming for real backend.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
+      ResponseEntity<String> response = getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
             String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -381,18 +379,18 @@ class RestControllerIT extends AbstractBaseIT {
       ObjectMapper mapper = new ObjectMapper();
 
       // Check operation with a defined mock (name: 'Eclair Cafe')
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Eclair Cafe/taste",
+      ResponseEntity<String> response = getForEntity("/rest/pastry-script/1.0.0/pastry/Eclair Cafe/taste",
             String.class);
       assertEquals(200, response.getStatusCode().value());
       assertEquals("Delicious", response.getBody());
 
       // Check operation with a defined mock (name: 'Millefeuille')
-      response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Millefeuille/taste", String.class);
+      response = getForEntity("/rest/pastry-script/1.0.0/pastry/Millefeuille/taste", String.class);
       assertEquals(200, response.getStatusCode().value());
       assertEquals("Awesome", response.getBody());
 
       // Check operation with an undefined mock (name: 'Dummy')
-      response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Dummy/taste", String.class);
+      response = getForEntity("/rest/pastry-script/1.0.0/pastry/Dummy/taste", String.class);
       assertEquals(200, response.getStatusCode().value());
       assertEquals("Ok", response.getBody());
    }
@@ -404,7 +402,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check a delayed mocked operations.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200",
+      ResponseEntity<String> response = getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200",
             String.class);
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
@@ -417,7 +415,7 @@ class RestControllerIT extends AbstractBaseIT {
       HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
       startTime = System.currentTimeMillis();
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity,
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity,
             String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
@@ -448,7 +446,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set random here).
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", HttpMethod.GET,
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", HttpMethod.GET,
             requestEntity, String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
@@ -481,7 +479,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
             requestEntity, String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 0 and the delay.
@@ -514,7 +512,7 @@ class RestControllerIT extends AbstractBaseIT {
       HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
+      response = exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
             requestEntity, String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 320 and 480 (400 + or - 20%).

@@ -97,7 +97,7 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      ResponseEntity<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
       assertEquals(201, response.getStatusCode().value());
 
       TestResult testResult = response.getBody();
@@ -109,7 +109,7 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
 
       testResult = response.getBody();
@@ -144,7 +144,7 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      ResponseEntity<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
       assertEquals(201, response.getStatusCode().value());
 
       TestResult testResult = response.getBody();
@@ -161,7 +161,7 @@ class TestControllerIT extends AbstractBaseIT {
          System.err.println(postmanRunner.getLogs());
       }
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
 
       testResult = response.getBody();
@@ -186,7 +186,7 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      ResponseEntity<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
       assertEquals(201, response.getStatusCode().value());
 
       TestResult testResult = response.getBody();
@@ -198,7 +198,7 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
 
       testResult = response.getBody();
@@ -248,7 +248,7 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      ResponseEntity<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
       assertEquals(201, response.getStatusCode().value());
 
       TestResult testResult = response.getBody();
@@ -260,7 +260,7 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
 
       testResult = response.getBody();
@@ -296,7 +296,7 @@ class TestControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      ResponseEntity<TestResult> response = postForEntity("/api/tests", entity, TestResult.class);
       assertEquals(201, response.getStatusCode().value());
 
       TestResult testResult = response.getBody();
@@ -308,7 +308,7 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 3);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      response = getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
       testResult = response.getBody();
       assertNotNull(testResult);
@@ -319,7 +319,7 @@ class TestControllerIT extends AbstractBaseIT {
    private void waitForTestCompletion(TestResult testResult, int seconds) {
       await().atMost(seconds, TimeUnit.SECONDS).pollDelay(500, TimeUnit.MILLISECONDS)
             .pollInterval(250, TimeUnit.MILLISECONDS).until(() -> {
-               ResponseEntity<TestResult> resp = restTemplate.getForEntity("/api/tests/" + testResult.getId(),
+               ResponseEntity<TestResult> resp = getForEntity("/api/tests/" + testResult.getId(),
                      TestResult.class);
                if (resp.getStatusCode().value() == 200) {
                   TestResult tr = resp.getBody();
