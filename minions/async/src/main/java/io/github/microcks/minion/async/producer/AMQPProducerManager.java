@@ -49,7 +49,7 @@ public class AMQPProducerManager {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   private Connection amqpConnection;
+   private volatile Connection amqpConnection;
 
    @ConfigProperty(name = "amqp.server")
    String amqpServer;
@@ -63,22 +63,31 @@ public class AMQPProducerManager {
    @ConfigProperty(name = "amqp.password")
    String amqpPassword;
 
+
    /**
     * Initialize the AMQP connection post construction.
-    *
-    * @throws Exception If connection to AMQP Broker cannot be done.
     */
    @PostConstruct
    public void create() {
+      ensureConnection();
+   }
+
+   private synchronized boolean ensureConnection() {
+      if (amqpConnection != null && amqpConnection.isOpen()) {
+         return true;
+      }
+
       try {
          amqpConnection = createConnection();
+         return true;
       } catch (Exception e) {
-         logger.errorf(e, "Cannot connect to AMQP broker %s", amqpServer);
+         logger.warnf(e, "Cannot connect to AMQP broker %s", amqpServer);
          amqpConnection = null;
+         return false;
       }
    }
 
-   static String buildAmqpUri() {
+   String buildAmqpUri() {
       if (amqpServer.startsWith("amqp://") || amqpServer.startsWith("amqps://")) {
          return amqpServer;
       }
@@ -118,7 +127,7 @@ public class AMQPProducerManager {
     */
    public void publishMessage(String destinationType, String destinationName, String routingKey, String value,
          Set<Header> headers) {
-      if (amqpConnection == null) {
+      if (!ensureConnection()) {
          logger.warnf("Skipping AMQP publish to {%s}: broker is not connected", destinationName);
          return;
       }
@@ -138,7 +147,8 @@ public class AMQPProducerManager {
          String effectiveRoutingKey = (routingKey != null) ? routingKey : "";
          channel.basicPublish(destinationName, effectiveRoutingKey, properties, value.getBytes(StandardCharsets.UTF_8));
       } catch (IOException | TimeoutException ioe) {
-         logger.warnf("Message %s sending has thrown an exception", ioe);
+         logger.warnf(ioe, "Message %s sending has thrown an exception", value);
+         amqpConnection = null;
       }
    }
 
