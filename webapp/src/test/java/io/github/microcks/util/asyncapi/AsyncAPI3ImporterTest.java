@@ -553,6 +553,65 @@ class AsyncAPI3ImporterTest {
    }
 
    @Test
+   void testMultiMessagesAsyncAPI3ImportYAML() {
+      AsyncAPI3Importer importer = null;
+      try {
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-lifecycle-asyncapi-3.0-multi-messages.yaml",
+               null);
+      } catch (IOException ioe) {
+         Assertions.fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         Assertions.fail("Exception should not be thrown");
+      }
+
+      Assertions.assertEquals(1, services.size());
+      Service service = services.get(0);
+      Assertions.assertEquals("User lifecycle API", service.getName());
+      Assertions.assertEquals(ServiceType.EVENT, service.getType());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().get(0);
+      assertEquals("SEND publishUserLifecycleEvents", operation.getName());
+
+      // Check that examples from all the operation messages have been found.
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(3, exchanges.size());
+
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof UnidirectionalEvent) {
+            UnidirectionalEvent event = (UnidirectionalEvent) exchange;
+            EventMessage eventMessage = event.getEventMessage();
+            assertNotNull(eventMessage);
+
+            if ("laurent".equals(eventMessage.getName())) {
+               assertTrue(eventMessage.getContent().contains("laurent@microcks.io"));
+            } else if ("john".equals(eventMessage.getName())) {
+               assertTrue(eventMessage.getContent().contains("John Doe"));
+            } else if ("laurentDeleted".equals(eventMessage.getName())) {
+               assertTrue(eventMessage.getContent().contains("Asked for account removal"));
+            } else {
+               fail("Unknown message name: " + eventMessage.getName());
+            }
+         } else {
+            fail("Exchange has the wrong type. Expecting UnidirectionalEvent");
+         }
+      }
+   }
+
+   @Test
    void testReplyInfoAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {

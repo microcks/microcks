@@ -421,7 +421,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
 
    /** Build a list of EventMessages from a "messages" Json node. */
    private List<EventMessage> buildEventMessages(JsonNode messagesNode, String defaultContentType) {
-      List<EventMessage> eventMessages = null;
+      List<EventMessage> eventMessages = new ArrayList<>();
       for (JsonNode messageRefNode : messagesNode) {
          JsonNode messageInChannelNode = followRefIfAny(messageRefNode);
          JsonNode msgNode = followRefIfAny(messageInChannelNode);
@@ -438,7 +438,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
          if (messageName != null && msgNode.has(EXAMPLES_NODE)) {
             // Compute a short message name if examples have no name attribute.
             messageName = messageName.substring(messageName.lastIndexOf("/") + 1);
-            eventMessages = buildEventMessageFromExamples(messageName, contentType, msgNode.get(EXAMPLES_NODE));
+            eventMessages.addAll(buildEventMessageFromExamples(messageName, contentType, msgNode.get(EXAMPLES_NODE)));
          }
       }
       return eventMessages;
