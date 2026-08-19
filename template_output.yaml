@@ -1,0 +1,424 @@
+---
+# Source: microcks/templates/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "microcks-config"
+  labels:
+    app: "microcks"
+    container: spring
+    group: microcks
+    
+  annotations:
+    
+data:
+  features.properties: |-
+    features.feature.microcks-hub.enabled=true
+    features.feature.microcks-hub.endpoint=https://hub.microcks.io/api
+    features.feature.microcks-hub.allowed-roles=admin,manager,manager-any
+
+    features.feature.repository-filter.enabled=false
+    features.feature.repository-filter.label-key=app
+    features.feature.repository-filter.label-label=Application
+    features.feature.repository-filter.label-list=app,status
+
+    features.feature.repository-tenancy.enabled=false
+    features.feature.repository-tenancy.artifact-import-allowed-roles=admin,manager,manager-any
+
+    features.feature.async-api.enabled=true
+    features.feature.async-api.default-binding=KAFKA
+    features.feature.async-api.endpoint-WS=microcks-ws-microcks.192.168.99.100.nip.io
+    features.feature.async-api.endpoint-KAFKA=microcks-kafka.192.168.99.100.nip.io:443
+    features.feature.async-api.endpoint-IBMMQ=localhost:1414
+
+    features.feature.ai-copilot.enabled=false
+  application.properties: |-
+    # Application configuration properties
+    tests-callback.url=${TEST_CALLBACK_URL}
+    postman-runner.url=${POSTMAN_RUNNER_URL}
+    async-minion.url=${ASYNC_MINION_URL|http://localhost:8081}
+
+    network.username=
+    network.password=
+
+    validation.resourceUrl=https://microcks-microcks.192.168.99.100.nip.io/api/resources/
+    services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
+    mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
+
+    # Logging configuration properties
+    logging.config=/deployments/config/logback.xml
+
+    # Spring Security adapter configuration properties
+    spring.security.oauth2.client.registration.keycloak.client-id=microcks-app
+    spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
+    spring.security.oauth2.client.registration.keycloak.scope=openid,profile
+    spring.security.oauth2.client.provider.keycloak.issuer-uri=${KEYCLOAK_URL}/realms/${keycloak.realm}
+    spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
+    spring.security.oauth2.resourceserver.jwt.issuer-uri=${sso.public-url}/realms/${keycloak.realm}
+
+    # Keycloak configuration properties
+    keycloak.auth-server-url=${KEYCLOAK_URL}
+    keycloak.realm=microcks
+    keycloak.resource=microcks-app
+    keycloak.use-resource-role-mappings=true
+    keycloak.bearer-only=true
+    keycloak.ssl-required=external
+    keycloak.disable-trust-manager=true
+
+    # Keycloak access configuration properties
+    sso.public-url=${KEYCLOAK_PUBLIC_URL:${keycloak.auth-server-url}}
+
+    # Async mocking support.
+    async-api.enabled=true
+    async-api.default-binding=KAFKA
+    async-api.default-frequency=10
+
+    # Kafka configuration properties
+    kafka.bootstrap-servers=${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+    
+    # Grpc server properties
+    grpc.server.certChainFilePath=/deployments/config/grpc/tls.crt
+    grpc.server.privateKeyFilePath=/deployments/config/grpc/tls.key
+
+    # AI Copilot configuration properties
+    ai-copilot.enabled=false
+    ai-copilot.implementation=openai
+    ai-copilot.openai.api-key=sk-my-openai-api-token
+    ai-copilot.openai.timeout=20
+  logback.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+
+    <configuration scan="true">
+      <!-- Stop output INFO at start -->
+      <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    
+      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+          <charset>utf-8</charset>
+          <Pattern>%d{HH:mm:ss.SSS} [%p] %c - %m%n</Pattern>
+        </encoder>
+      </appender>
+
+      <logger name="io.github.microcks" level="INFO"/>
+      <!-- Change com.mongodb to org.mongodb so that com.mongodb.FongoDBCollection is ignored, set to debug and tests do not fail... -->
+      <logger name="org.mongodb" level="INFO"/>
+      <logger name="org.springframework.data.mongodb" level="INFO"/>
+      <logger name="org.reflections" level="WARN"/>
+      <logger name="sun.net.www.protocol.http" level="INFO"/>
+
+      <logger name="jdk.event.security" level="WARN"/>
+      <logger name="javax.activation" level="WARN"/>
+      <logger name="javax.mail" level="WARN"/>
+      <logger name="javax.xml.bind" level="WARN"/>
+      <logger name="ch.qos.logback" level="WARN"/>
+      <logger name="com.sun.xml.internal.bind" level="WARN"/>
+      <logger name="org.apache" level="WARN"/>
+      <logger name="org.apache.catalina.startup.DigesterFactory" level="OFF"/>
+      <logger name="org.bson" level="WARN"/>
+      <logger name="org.springframework" level="WARN"/>
+      <logger name="org.springframework.aop" level="WARN"/>
+      <logger name="org.springframework.web" level="WARN"/>
+      <logger name="org.springframework.security" level="WARN"/>
+      <logger name="org.springframework.cache" level="WARN"/>
+      <logger name="org.springframework.scheduling" level="WARN"/>
+      <logger name="org.thymeleaf" level="WARN"/>
+      <logger name="org.xnio" level="WARN"/>
+      <logger name="com.mangofactory.swagger" level="WARN"/>
+      <logger name="sun.rmi.transport" level="WARN"/>
+
+      <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+      </contextListener>
+
+      <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+      </root>
+    </configuration>
+---
+# Source: microcks/templates/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "microcks-mongodb-init"
+  labels:
+    app: "microcks"
+    container: mongodb
+    group: microcks
+    
+  annotations:
+    
+data:
+  create-user.sh: |-
+    #!/bin/bash
+    echo "Started Adding the Users..."
+    mongo admin --eval "db.getSiblingDB('${MONGO_INITDB_DATABASE}').createUser({user: '${MONGODB_USER}', pwd: '${MONGODB_PASSWORD}', roles: [{role: 'readWrite', db: '${MONGO_INITDB_DATABASE}'}]})"
+    echo "End Adding the User Roles."
+---
+# Source: microcks/templates/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "microcks-keycloak-config"
+  labels:
+    app: "microcks"
+    container: keycloak
+    group: microcks
+    
+  annotations:
+    
+data:
+  microcks-realm.json: |-
+    {
+      "id": "microcks",
+      "realm": "microcks",
+      "displayName": "Microcks",
+      "notBefore": 0,
+      "revokeRefreshToken": false,
+      "refreshTokenMaxReuse": 0,
+      "accessTokenLifespan": 300,
+      "accessTokenLifespanForImplicitFlow": 900,
+      "ssoSessionIdleTimeout": 1800,
+      "ssoSessionMaxLifespan": 36000,
+      "offlineSessionIdleTimeout": 2592000,
+      "accessCodeLifespan": 60,
+      "accessCodeLifespanUserAction": 300,
+      "accessCodeLifespanLogin": 1800,
+      "actionTokenGeneratedByAdminLifespan": 43200,
+      "actionTokenGeneratedByUserLifespan": 300,
+      "enabled": true,
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "registrationEmailAsUsername": false,
+      "rememberMe": false,
+      "verifyEmail": false,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "resetPasswordAllowed": false,
+      "editUsernameAllowed": false,
+      "bruteForceProtected": false,
+      "permanentLockout": false,
+      "maxFailureWaitSeconds": 900,
+      "minimumQuickLoginWaitSeconds": 60,
+      "waitIncrementSeconds": 60,
+      "quickLoginCheckMilliSeconds": 1000,
+      "maxDeltaTimeSeconds": 43200,
+      "failureFactor": 30,
+      "users" : [
+        {
+          "username" : "user",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "microcks123" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "microcks-app": [ "user" ]
+          }
+        },
+        {
+          "username" : "manager",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "microcks123" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "microcks-app": [ "user", "manager" ]
+          }
+        },
+        {
+          "username" : "admin",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "microcks123" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "realm-management": [ "manage-users", "manage-clients" ],
+            "account": [ "manage-account" ],
+            "microcks-app": [ "user", "manager", "admin" ]
+          }
+        }
+      ],
+      "roles": {
+        "realm": [],
+        "client": {
+          "microcks-app": [
+            {
+              "name": "user",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "microcks"
+            },
+            {
+              "name": "admin",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "microcks"
+            },
+            {
+              "name": "manager",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "microcks"
+            }
+          ]
+        }
+      },
+      "groups": [
+        {
+          "name": "microcks",
+          "path": "/microcks",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": [
+            {
+              "name": "manager",
+              "path": "/microcks/manager",
+              "attributes": {},
+              "realmRoles": [],
+              "clientRoles": {},
+              "subGroups": []
+            }
+          ]
+        }
+      ],
+      "defaultRoles": [ ],
+      "requiredCredentials": [ "password" ],
+      "scopeMappings": [],
+      "clientScopeMappings": {
+        "microcks-app": [
+          {
+            "client": "microcks-app-js",
+            "roles": [
+              "manager",
+              "admin",
+              "user"
+            ]
+          }
+        ],
+        "realm-management": [
+          {
+            "client": "microcks-app-js",
+            "roles": [
+              "manage-users",
+              "manage-clients"
+            ]
+          }
+        ]
+      },
+      "clients": [
+        {
+          "clientId": "microcks-app-js",
+          "enabled": true,
+          "publicClient": true,
+          "redirectUris": [
+            "https://microcks-microcks.192.168.99.100.nip.io/*",
+            "http://localhost:58085/*"
+          ],
+          "webOrigins": [
+            "+"
+          ],
+          "fullScopeAllowed": false,
+          "protocolMappers": [
+            {
+              "name": "microcks-group-mapper",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "consentRequired": false,
+              "config": {
+                "full.path": "true",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "claim.name": "microcks-groups",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        }
+      ],
+      "applications": [
+        {
+          "name": "microcks-app",
+          "enabled": true,
+          "bearerOnly": true,
+          "defaultRoles": [
+            "user"
+          ]
+        },
+        {
+          "name": "microcks-serviceaccount",
+          "secret": "ab54d329-e435-41ae-a900-ec6b3fe15c54",
+          "enabled": true,
+          "bearerOnly": false,
+          "publicClient": false,
+          "standardFlowEnabled": false,
+          "directAccessGrantsEnabled": true,
+          "serviceAccountsEnabled": true,
+          "clientAuthenticatorType": "client-secret"
+        }
+      ],
+      "identityProviders": [
+      ],
+      "requiredActions": [
+        {
+          "alias": "VERIFY_PROFILE",
+          "name": "Verify Profile",
+          "providerId": "VERIFY_PROFILE",
+          "enabled": false,
+          "defaultAction": false,
+          "priority": 90,
+          "config": {}
+        }
+      ],
+      "keycloakVersion": "10.0.1"
+    }
+---
+# Source: microcks/templates/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "microcks-async-minion-config"
+  labels:
+    app: "microcks"
+    container: async-minion
+    group: microcks
+    
+  annotations:
+    
+data:
+  application.properties: |-
+    # Configuration file.
+    %kube.quarkus.http.port=8080
+
+    # Configure the log level.
+    %kube.quarkus.log.level=INFO
+    %kube.quarkus.log.console.level=INFO
+
+    # Access to Microcks API server.
+    %kube.io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url=http://microcks:8080
+    %kube.microcks.serviceaccount=microcks-serviceaccount
+    %kube.microcks.serviceaccount.credentials=ab54d329-e435-41ae-a900-ec6b3fe15c54
+
+    
+
+    # Access to Kafka broker.
+    %kube.kafka.bootstrap.servers=microcks-kafka-kafka-bootstrap:9092
+    %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers=microcks-kafka-kafka-bootstrap:9092
+    %kube.mp.messaging.incoming.microcks-asyncapi-triggers.bootstrap.servers=microcks-kafka-kafka-bootstrap:9092
+    
+    # Access to IBM MQ broker.
+    %kube.ibmmq.server=localhost:1414
+    %kube.ibmmq.queue-manager=QM1
+    %kube.ibmmq.channel=DEV.APP.SVRCONN
+    %kube.ibmmq.username=microcks
+    %kube.ibmmq.password=microcks
+
+    # Configure the minion own behavioral properties.
+    %kube.minion.supported-bindings=KAFKA,WS,IBMMQ
+    %kube.minion.restricted-frequencies=3,10,30
+    %kube.minion.default-avro-encoding=RAW

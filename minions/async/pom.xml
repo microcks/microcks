@@ -28,6 +28,7 @@
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.25.3</nats.version>
     <rabbitmq.version>5.30.0</rabbitmq.version>
+    <ibmmq.version>9.3.4.1</ibmmq.version>
     <apicurio-registry.version>2.6.13.Final</apicurio-registry.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
@@ -118,6 +119,13 @@
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
       <version>${rabbitmq.version}</version>
+    </dependency>
+
+    <!-- IBM MQ related dependencies -->
+    <dependency>
+      <groupId>com.ibm.mq</groupId>
+      <artifactId>com.ibm.mq.allclient</artifactId>
+      <version>${ibmmq.version}</version>
     </dependency>
 
     <!-- NATS related dependencies -->
