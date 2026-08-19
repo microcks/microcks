@@ -326,6 +326,11 @@ public class DispatchCriteriaHelper {
          realURI = realURI.substring(0, realURI.indexOf('?'));
       }
 
+      // Ensure pattern does not contain query string.
+      if (pattern.contains("?")) {
+         pattern = pattern.substring(0, pattern.indexOf('?'));
+      }
+
       // Filter the extracted parameter map by the referenced parameters in paramsRule
       return extractMapFromURIPattern(pattern, realURI).entrySet().stream()
             .filter(entry -> paramsRule.contains(entry.getKey()))
