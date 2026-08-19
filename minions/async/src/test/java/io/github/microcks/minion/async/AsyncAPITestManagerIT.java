@@ -19,11 +19,13 @@ import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceView;
+import io.github.microcks.domain.TestCasePhase;
 import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.domain.TestRunnerType;
 import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.github.microcks.minion.async.client.dto.TestCasePhaseDTO;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -86,6 +88,7 @@ class AsyncAPITestManagerIT {
       String asyncAPIContent = Files
             .readString(Paths.get("target/test-classes/io/github/microcks/minion/async", config.specificationFile));
       Map<String, TestCaseReturnDTO> reportedTestCases = new HashMap<>();
+      List<TestCasePhase> reportedPhases = new java.util.ArrayList<>();
       MicrocksAPIConnector microcksAPIConnector = new MicrocksAPIConnector() {
          @Override
          public KeycloakConfig getKeycloakConfig() {
@@ -118,6 +121,11 @@ class AsyncAPITestManagerIT {
          public TestCaseResult reportTestCaseResult(String testResultId, TestCaseReturnDTO testCaseReturn) {
             reportedTestCases.put(testResultId, testCaseReturn);
             return null;
+         }
+
+         @Override
+         public void reportTestCasePhase(String testResultId, TestCasePhaseDTO testCasePhase) {
+            reportedPhases.add(testCasePhase.getPhase());
          }
       };
       SchemaRegistry schemaRegistry = new SchemaRegistry(microcksAPIConnector);
@@ -156,6 +164,9 @@ class AsyncAPITestManagerIT {
       for (TestReturn testReturn : testCaseReturn.getTestReturns()) {
          Assertions.assertEquals(TestReturn.SUCCESS_CODE, testReturn.getCode());
       }
+      // The minion should have reported the progress phases while the consumer was connecting and then ready.
+      Assertions.assertTrue(reportedPhases.contains(TestCasePhase.CONNECTING));
+      Assertions.assertTrue(reportedPhases.contains(TestCasePhase.WAITING_FOR_MESSAGE));
    }
 
    private static void sendTextMessagesOnTopic(int number, String message) {

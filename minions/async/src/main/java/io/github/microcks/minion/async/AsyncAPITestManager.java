@@ -16,8 +16,10 @@
 package io.github.microcks.minion.async;
 
 import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.TestCasePhase;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.github.microcks.minion.async.client.dto.TestCasePhaseDTO;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 import io.github.microcks.minion.async.consumer.AMQPMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.AmazonSNSMessageConsumptionTask;
@@ -115,6 +117,12 @@ public class AsyncAPITestManager {
          TestCaseReturnDTO testCaseReturn = new TestCaseReturnDTO(specification.getOperationName());
          MessageConsumptionTask messageConsumptionTask = buildMessageConsumptionTask(specification);
 
+         // Report that we are now connecting to the tested endpoint and forward later readiness phases (best-effort).
+         reportTestCasePhase(TestCasePhase.CONNECTING);
+         if (messageConsumptionTask != null) {
+            messageConsumptionTask.setPhaseListener(this::reportTestCasePhase);
+         }
+
          // Actually start test counter.
          startTime = System.currentTimeMillis();
          List<ConsumedMessage> outputs = null;
@@ -170,6 +178,20 @@ public class AsyncAPITestManager {
 
          // Finally, report the testCase results using Microcks API.
          microcksAPIConnector.reportTestCaseResult(specification.getTestResultId(), testCaseReturn);
+      }
+
+      /**
+       * Report a test case progress phase back to Microcks in a best-effort fashion. Any failure (for example an older
+       * Microcks server that does not expose the phase endpoint) is swallowed so it never impacts the running test.
+       * @param phase The progress phase to report for the current operation.
+       */
+      private void reportTestCasePhase(TestCasePhase phase) {
+         try {
+            microcksAPIConnector.reportTestCasePhase(specification.getTestResultId(),
+                  new TestCasePhaseDTO(specification.getOperationName(), phase));
+         } catch (Exception e) {
+            logger.debugf("Best-effort reporting of test case phase {%s} failed: {%s}", phase, e.getMessage());
+         }
       }
 
       /**

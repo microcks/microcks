@@ -40,6 +40,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -105,10 +106,12 @@ class GooglePubSubMessageConsumptionTaskIT {
             + emulatorContainer.getEmulatorEndpoint());
 
       List<ConsumedMessage> messages = null;
+      List<io.github.microcks.domain.TestCasePhase> reportedPhases = Collections.synchronizedList(new ArrayList<>());
 
       // Act.
       try (GooglePubSubMessageConsumptionTask pubsubConsumptionTask = new GooglePubSubMessageConsumptionTask(
             asyncTestSpecification); ExecutorService executorService = Executors.newFixedThreadPool(2);) {
+         pubsubConsumptionTask.setPhaseListener(reportedPhases::add);
          List<Future<List<ConsumedMessage>>> outputs = executorService
                .invokeAll(List.of(new Callable<List<ConsumedMessage>>() {
                   @Override
@@ -130,6 +133,9 @@ class GooglePubSubMessageConsumptionTaskIT {
       ConsumedMessage message = messages.get(0);
       Assertions.assertEquals(TEXT_MESSAGE_TEMPLATE.formatted(0),
             new String(message.getPayload(), StandardCharsets.UTF_8));
+      // The real consumer should have reported it was connected and waiting for messages.
+      Assertions.assertTrue(reportedPhases.contains(io.github.microcks.domain.TestCasePhase.WAITING_FOR_MESSAGE),
+            "The Google PubSub consumer should have reported the WAITING_FOR_MESSAGE phase.");
    }
 
    private void sendTextMessagesOnTopic(int numberOfMessages) {
