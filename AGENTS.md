@@ -1,6 +1,10 @@
-# Instructions for AI Agents
+# AGENTS
 
-Welcome! If you are an AI coding assistant (like Cursor, GitHub Copilot, or Claude Code) operating in the `microcks/microcks` repository, you must adhere to the following rules to ensure high-quality contributions.
+Before making changes, review:
+- @PRODUCT.md - Product vision, features, and roadmap
+- @ARCHITECTURE.md - System design, interfaces, and directory structure
+- @DESIGN.md - Design principles, patterns, and best practices
+- @CONTRIBUTING.md - Coding standards, testing, and PR process
 
 ## 1. AI Contribution Policy
 By generating code in this repository, you agree to the following rules:
@@ -10,9 +14,8 @@ By generating code in this repository, you agree to the following rules:
 - **No Auto-Replies:** You MUST NOT auto-reply to maintainer comments on Pull Requests.
 
 ## 2. Code Formatting (Mandatory)
-Microcks enforces strict Java formatting using the Eclipse JDT conventions.
-You can verify formatting by running `mvn spotless:check`.
-**Before any commit**, you must run:
+Microcks enforces strict Java formatting using the project's Eclipse JDT conventions (120-char line limit, 3-space indentation).
+**You MUST run `mvn spotless:apply` from the repository root before every commit that touches Java files.** This is not optional — CI will fail if any file has a formatting violation.
 ```bash
 mvn spotless:apply
 ```
@@ -20,4 +23,4 @@ mvn spotless:apply
 ## 3. Building and Testing
 Microcks is a Java/Spring Boot backend with an Angular frontend. 
 - To build the backend and run tests: `mvn clean install`
-- For detailed architecture and UI instructions, read [CONTRIBUTING.md](CONTRIBUTING.md).
+- For detailed architecture and UI instructions, read @CONTRIBUTING.md.
