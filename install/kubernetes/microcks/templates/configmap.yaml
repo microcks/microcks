@@ -49,6 +49,9 @@ data:
     {{- if .Values.features.async.sns.region }}
     features.feature.async-api.endpoint-SNS={{ .Values.features.async.sns.region }}{{ if .Values.features.async.sns.endpointOverride }} at {{ .Values.features.async.sns.endpointOverride }}{{ end }}
     {{- end }}
+    {{- if .Values.features.async.ibmmq.server }}
+    features.feature.async-api.endpoint-IBMMQ={{ .Values.features.async.ibmmq.server }}
+    {{- end }}
 
     features.feature.ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
   application.properties: |-
@@ -643,9 +646,21 @@ data:
     %kube.amazonsns.endpoint-override={{ .Values.features.async.sns.endpointOverride }}
     {{- end }}
     {{- end }}
+    {{- if .Values.features.async.ibmmq.server }}
+    # Access to IBM MQ broker.
+    %kube.ibmmq.server={{ .Values.features.async.ibmmq.server }}
+    {{- if .Values.features.async.ibmmq.queueManager }}
+    %kube.ibmmq.queue-manager={{ .Values.features.async.ibmmq.queueManager }}
+    {{- end }}
+    {{- if .Values.features.async.ibmmq.channel }}
+    %kube.ibmmq.channel={{ .Values.features.async.ibmmq.channel }}
+    {{- end }}
+    %kube.ibmmq.username={{ .Values.features.async.ibmmq.username }}
+    %kube.ibmmq.password={{ .Values.features.async.ibmmq.password }}
+    {{- end }}
 
     # Configure the minion own behavioral properties.
-    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}{{ if .Values.features.async.nats.url }},NATS{{ end }}{{ if .Values.features.async.googlepubsub.project }},GOOGLEPUBSUB{{ end }}{{ if .Values.features.async.sqs.region }},SQS{{ end }}{{ if .Values.features.async.sns.region }},SNS{{ end }}
+    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}{{ if .Values.features.async.nats.url }},NATS{{ end }}{{ if .Values.features.async.googlepubsub.project }},GOOGLEPUBSUB{{ end }}{{ if .Values.features.async.sqs.region }},SQS{{ end }}{{ if .Values.features.async.sns.region }},SNS{{ end }}{{ if .Values.features.async.ibmmq.server }},IBMMQ{{ end }}
     %kube.minion.restricted-frequencies=3,10,30
     %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
 {{- end -}}
