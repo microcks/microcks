@@ -79,15 +79,15 @@ class OpenAPIMcpToolConverterTest {
       servicev1 = services.getFirst();
       List<Resource> resources = resourceRepository.findByServiceIdAndType(servicev1.getId(),
             ResourceType.OPEN_API_SPEC);
-      toolConverterv1 = new OpenAPIMcpToolConverter(servicev1, resources.getFirst(), restInvocationProcessor,
-            new ObjectMapper());
+      toolConverterv1 = new OpenAPIMcpToolConverter(servicev1, resources.getFirst(), resourceRepository,
+            restInvocationProcessor, new ObjectMapper());
       // For v2.
       services = serviceService.importServiceDefinition(artifactFilev2, null,
             new ArtifactInfo("petstore-2.0.0-openapi.yaml", true));
       servicev2 = services.getFirst();
       resources = resourceRepository.findByServiceIdAndType(servicev2.getId(), ResourceType.OPEN_API_SPEC);
-      toolConverterv2 = new OpenAPIMcpToolConverter(servicev2, resources.getFirst(), restInvocationProcessor,
-            new ObjectMapper());
+      toolConverterv2 = new OpenAPIMcpToolConverter(servicev2, resources.getFirst(), resourceRepository,
+            restInvocationProcessor, new ObjectMapper());
    }
 
    @Test
@@ -190,6 +190,76 @@ class OpenAPIMcpToolConverterTest {
             }
          }
       }
+   }
+
+   @Test
+   void testExternalReferenceResolution() {
+      // 1. Create a dummy Service
+      Service externalRefService = new Service();
+      externalRefService.setId("test-ext-ref");
+      externalRefService.setName("External Ref API");
+      externalRefService.setVersion("1.0.0");
+      externalRefService.setType(io.github.microcks.domain.ServiceType.REST);
+
+      // 2. Create the main Resource
+      Resource mainResource = new Resource();
+      mainResource.setId("main-res-id");
+      mainResource.setServiceId(externalRefService.getId());
+      mainResource.setType(ResourceType.OPEN_API_SPEC);
+      mainResource.setName("main.yaml");
+      mainResource.setContent("""
+            openapi: 3.0.0
+            info:
+              title: External Ref API
+              version: 1.0.0
+            paths:
+              /test:
+                post:
+                  operationId: postTest
+                  requestBody:
+                    content:
+                      application/json:
+                        schema:
+                          $ref: 'models.yaml#/components/schemas/TestModel'
+            """);
+      resourceRepository.save(mainResource);
+
+      // 3. Create the external Resource
+      Resource extResource = new Resource();
+      extResource.setId("ext-res-id");
+      extResource.setServiceId(externalRefService.getId());
+      extResource.setType(ResourceType.OPEN_API_SPEC);
+      extResource.setName("models.yaml");
+      extResource.setPath("models.yaml");
+      extResource.setContent("""
+            components:
+              schemas:
+                TestModel:
+                  type: object
+                  properties:
+                    testField:
+                      type: string
+                  required:
+                    - testField
+            """);
+      resourceRepository.save(extResource);
+
+      // 4. Create the Operation
+      Operation operation = new Operation();
+      operation.setName("POST /test");
+      operation.setMethod("POST");
+
+      // 5. Instantiate converter
+      OpenAPIMcpToolConverter converter = new OpenAPIMcpToolConverter(externalRefService, mainResource,
+            resourceRepository, restInvocationProcessor, new ObjectMapper());
+
+      // 6. Assert input schema
+      McpSchema.JsonSchema inputSchema = converter.getInputSchema(operation);
+      assertNotNull(inputSchema, "Input schema should not be null");
+      assertEquals("object", inputSchema.type());
+      assertFalse(inputSchema.properties().isEmpty(), "Properties should not be empty");
+      assertTrue(inputSchema.properties().containsKey("testField"),
+            "Properties should contain 'testField' from external ref");
    }
 }
 

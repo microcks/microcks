@@ -334,7 +334,8 @@ public class McpController {
       switch (service.getType()) {
          case GRPC -> converter = new GrpcMcpToolConverter(service, resource, grpcInvocationProcessor, mapper);
          case GRAPHQL -> converter = new GraphQLMcpToolConverter(service, resource, graphQLInvocationProcessor, mapper);
-         default -> converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
+         default -> converter = new OpenAPIMcpToolConverter(service, resource, resourceRepository,
+               restInvocationProcessor, mapper);
       }
       return converter;
    }
