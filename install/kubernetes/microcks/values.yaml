@@ -338,6 +338,8 @@ features:
         #saslMechanism: OAUTHBEARER
         #saslJaasConfig: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;
         #saslLoginCallbackHandlerClass: io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler
+        # For Amazon MSK IAM authentication (AWS_MSK_IAM), you'll also need a Client Callback Handler.
+        #saslClientCallbackHandlerClass: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 
     # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
     mqtt:
