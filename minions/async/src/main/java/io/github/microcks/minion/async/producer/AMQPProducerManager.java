@@ -49,7 +49,7 @@ public class AMQPProducerManager {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   private Connection amqpConnection;
+   private volatile Connection amqpConnection;
 
    @ConfigProperty(name = "amqp.server")
    String amqpServer;
@@ -63,20 +63,40 @@ public class AMQPProducerManager {
    @ConfigProperty(name = "amqp.password")
    String amqpPassword;
 
+
    /**
     * Initialize the AMQP connection post construction.
-    * 
-    * @throws Exception If connection to AMQP Broker cannot be done.
     */
    @PostConstruct
-   public void create() throws Exception {
+   public void create() {
+      ensureConnection();
+   }
+
+   private synchronized boolean ensureConnection() {
+      if (amqpConnection != null && amqpConnection.isOpen()) {
+         return true;
+      }
+
       try {
          amqpConnection = createConnection();
+         return true;
       } catch (Exception e) {
-         logger.errorf("Cannot connect to AMQP broker %s", amqpServer);
-         logger.errorf("Connection exception: %s", e.getMessage());
-         throw e;
+         logger.warnf(e, "Cannot connect to AMQP broker %s", amqpServer);
+         amqpConnection = null;
+         return false;
       }
+   }
+
+   String buildAmqpUri() {
+      if (amqpServer.startsWith("amqp://") || amqpServer.startsWith("amqps://")) {
+         return amqpServer;
+      }
+
+      if (amqpServer.endsWith(":5671")) {
+         return "amqps://" + amqpServer;
+      }
+
+      return "amqp://" + amqpServer;
    }
 
    /**
@@ -85,7 +105,7 @@ public class AMQPProducerManager {
     */
    protected Connection createConnection() throws Exception {
       ConnectionFactory factory = new ConnectionFactory();
-      factory.setUri("amqp://" + amqpServer);
+      factory.setUri(buildAmqpUri());
 
       if (amqpUsername != null && !amqpUsername.isEmpty() && amqpPassword != null && !amqpPassword.isEmpty()) {
          logger.infof("Connecting to AMQP broker with user '%s'", amqpUsername);
@@ -98,7 +118,7 @@ public class AMQPProducerManager {
 
    /**
     * Publish a message on specified destination.
-    * 
+    *
     * @param destinationType The type of destination (queue, topic, fanout, ...)
     * @param destinationName The name of destination
     * @param routingKey      The routing key to use when publishing (may be null or empty)
@@ -107,6 +127,10 @@ public class AMQPProducerManager {
     */
    public void publishMessage(String destinationType, String destinationName, String routingKey, String value,
          Set<Header> headers) {
+      if (!ensureConnection()) {
+         logger.warnf("Skipping AMQP publish to {%s}: broker is not connected", destinationName);
+         return;
+      }
       logger.infof("Publishing on destination {%s}, message: %s ", destinationName, value);
       try (Channel channel = amqpConnection.createChannel()) {
          channel.exchangeDeclare(destinationName, destinationType);
@@ -123,7 +147,8 @@ public class AMQPProducerManager {
          String effectiveRoutingKey = (routingKey != null) ? routingKey : "";
          channel.basicPublish(destinationName, effectiveRoutingKey, properties, value.getBytes(StandardCharsets.UTF_8));
       } catch (IOException | TimeoutException ioe) {
-         logger.warnf("Message %s sending has thrown an exception", ioe);
+         logger.warnf(ioe, "Message %s sending has thrown an exception", value);
+         amqpConnection = null;
       }
    }
 
@@ -144,7 +169,7 @@ public class AMQPProducerManager {
 
    /**
     * Render Microcks headers using the template engine.
-    * 
+    *
     * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
     *                KafkaProducerManager level.)
     * @param headers The Microcks event message headers definition.
