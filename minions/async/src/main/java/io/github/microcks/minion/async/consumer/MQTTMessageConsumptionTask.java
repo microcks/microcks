@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * <code>mqtt://{brokerhost[:port]}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
-public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
+public class MQTTMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -90,6 +90,9 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
          message.setPayload(mqttMessage.getPayload());
          messages.add(message);
       });
+
+      // Subscription is active: the consumer is connected and ready to receive messages.
+      notifyWaitingForMessage();
 
       Thread.sleep(specification.getTimeoutMS());
 

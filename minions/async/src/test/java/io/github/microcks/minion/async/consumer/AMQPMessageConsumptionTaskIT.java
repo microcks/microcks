@@ -63,6 +63,8 @@ class AMQPMessageConsumptionTaskIT {
       asyncTestSpecification.setEndpointUrl("amqp://localhost:%s/q/%s".formatted(RABBIT_MQ_PORT, QUEUE_NAME));
 
       AMQPMessageConsumptionTask amqpMessageConsumptionTask = new AMQPMessageConsumptionTask(asyncTestSpecification);
+      List<io.github.microcks.domain.TestCasePhase> reportedPhases = new java.util.ArrayList<>();
+      amqpMessageConsumptionTask.setPhaseListener(reportedPhases::add);
 
       sendMessageIntoQueue();
 
@@ -71,6 +73,8 @@ class AMQPMessageConsumptionTaskIT {
 
       // assert
       Assertions.assertFalse(messages.isEmpty());
+      Assertions.assertTrue(reportedPhases.contains(io.github.microcks.domain.TestCasePhase.WAITING_FOR_MESSAGE),
+            "The consumer should have reported it was waiting for messages.");
    }
 
    @Test

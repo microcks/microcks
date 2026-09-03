@@ -22,6 +22,7 @@ import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.github.microcks.minion.async.client.dto.TestCasePhaseDTO;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 
 import java.util.Collections;
@@ -72,5 +73,10 @@ public class FakeMicrocksAPIConnector implements MicrocksAPIConnector {
    @Override
    public TestCaseResult reportTestCaseResult(String testResultId, TestCaseReturnDTO testCaseReturn) {
       return null;
+   }
+
+   @Override
+   public void reportTestCasePhase(String testResultId, TestCasePhaseDTO testCasePhase) {
+      // No-op for testing purposes.
    }
 }
