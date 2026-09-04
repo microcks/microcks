@@ -653,8 +653,10 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          completeRequestWithHeaderParameters(request, headerParametersByExample.get(exampleName));
 
          // Finally, take care about dispatchCriteria and complete operation resourcePaths.
-         completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
-               pathParametersByExample, queryParametersByExample, headerParametersByExample, exampleName, response);
+         if (!completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
+               pathParametersByExample, queryParametersByExample, headerParametersByExample, exampleName, response)) {
+            continue;
+         }
 
          results.put(request, response);
       }
@@ -758,9 +760,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                completeRequestWithHeaderParameters(request, headerParametersByExample.get(exampleName));
 
                // Finally, take care about dispatchCriteria and complete operation resourcePaths.
-               completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
+               if (!completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
                      pathParametersByExample, queryParametersByExample, headerParametersByExample, exampleName,
-                     response);
+                     response)) {
+                  continue;
+               }
 
                results.put(request, response);
             }
@@ -803,7 +807,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       }
    }
 
-   private void completeDispatchCriteriaAndResourcePaths(Operation operation, String rootDispatcher,
+   private boolean completeDispatchCriteriaAndResourcePaths(Operation operation, String rootDispatcher,
          String rootDispatcherRules, Map<String, Multimap<String, String>> pathParametersByExample,
          Map<String, Multimap<String, String>> queryParametersByExample,
          Map<String, Multimap<String, String>> headerParametersByExample, String exampleName, Response response) {
@@ -813,11 +817,17 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
          Multimap<String, String> queryParams = queryParametersByExample.get(exampleName);
          dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParams);
+         if (dispatchCriteria == null) {
+            return false;
+         }
          // We only need the pattern here.
          operation.addResourcePath(resourcePathPattern);
       } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
          Multimap<String, String> parts = pathParametersByExample.get(exampleName);
          dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
+         if (dispatchCriteria == null) {
+            return false;
+         }
          // We should complete resourcePath here.
          String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
          operation.addResourcePath(resourcePath);
@@ -825,17 +835,25 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          Multimap<String, String> parts = pathParametersByExample.get(exampleName);
          Multimap<String, String> queryParams = queryParametersByExample.get(exampleName);
          dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
-         dispatchCriteria += DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParams);
+         String queryDispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParams);
+         if (dispatchCriteria == null || queryDispatchCriteria == null) {
+            return false;
+         }
+         dispatchCriteria += queryDispatchCriteria;
          // We should complete resourcePath here.
          String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
          operation.addResourcePath(resourcePath);
       } else if (DispatchStyles.QUERY_HEADER.equals(rootDispatcher)) {
          Multimap<String, String> headerParams = headerParametersByExample.get(exampleName);
          dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, headerParams);
+         if (dispatchCriteria == null) {
+            return false;
+         }
          // We only need the pattern here.
          operation.addResourcePath(resourcePathPattern);
       }
       response.setDispatchCriteria(dispatchCriteria);
+      return true;
    }
 
    /**

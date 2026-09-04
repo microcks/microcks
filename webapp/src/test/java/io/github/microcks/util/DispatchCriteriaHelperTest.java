@@ -285,6 +285,10 @@ class DispatchCriteriaHelperTest {
          // 2 parameters should be taken into account according to rules with no inclusion of year.
          dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap("month && year-summary", partsMap);
          assertEquals("/month=05/year-summary=true", dispatchCriteria);
+
+         // Missing required parameters should invalidate the dispatch criteria.
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap("month && year && day", partsMap);
+         assertNull(dispatchCriteria);
       }
    }
 
@@ -309,6 +313,10 @@ class DispatchCriteriaHelperTest {
          // 2 parameters should be considered and sorted according to rules with no inclusion of limit.
          dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && limitation", paramsMap);
          assertEquals("?limitation=20?page=1", dispatchCriteria);
+
+         // Missing required parameters should invalidate the dispatch criteria.
+         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && size", paramsMap);
+         assertNull(dispatchCriteria);
       }
 
       @Test
