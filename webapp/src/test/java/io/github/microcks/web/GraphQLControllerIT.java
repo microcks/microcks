@@ -57,7 +57,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       String query = mapper.createObjectNode().put("query", subQuery).toString();
-      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      ResponseEntity<String> response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -90,7 +90,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -121,7 +121,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
       var requestBody = mapper.createObjectNode().put("query", subQuery);
       requestBody.putObject("variables").put("id", "ZmlsbXM6MQ==");
       query = requestBody.toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -153,7 +153,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               starCount
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -188,7 +188,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
             }
             """;
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -220,7 +220,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -256,7 +256,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -298,7 +298,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -338,7 +338,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("""
@@ -379,9 +379,9 @@ class GraphQLControllerIT extends AbstractBaseIT {
       requestBody.putObject("variables").put("filmId", "notavailable");
       String query = requestBody.toString();
 
-      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      ResponseEntity<String> response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertNotNull(response.getBody(), "Response body should not be null");
       assertTrue(response.getBody().contains("\"errors\""));
       assertTrue(response.getBody().contains("\"extensions\""));
@@ -432,7 +432,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
       // Execute and assert that it was proxy.
       String query = """
             {"query": "query film($id: String) {film(id: \\"ZmlsbXM6Mg==\\") {id title episodeID starCount comment}}"}""";
-      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      ResponseEntity<String> response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertResponseIsOkAndContains(response, "\"comment\":\"Original!!!\"");
    }
 
@@ -459,7 +459,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
       // Execute and assert that it wasn't proxy.
       String query = """
             {"query": "query film($id: String) {film(id: \\"ZmlsbXM6Mg==\\") {id title episodeID starCount comment}}"}""";
-      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      ResponseEntity<String> response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       assertNotNull(response.getBody());
       assertFalse(response.getBody().contains("\"comment\":\"Original!!!\""));
@@ -467,7 +467,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
       // Execute and assert that it was proxy.
       query = """
             {"query": "query film($id: String) {film(id: \\"ZmlsbXM6MA==\\") {id title episodeID starCount comment}}"}""";
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertResponseIsOkAndContains(response, "\"comment\":\"Original!!!\"");
    }
 
@@ -488,7 +488,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       String query = mapper.createObjectNode().put("query", subQuery).toString();
-      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      ResponseEntity<String> response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JsonNode responseJson = mapper.readTree(response.getBody());
@@ -519,7 +519,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JsonNode responseJson = mapper.readTree(response.getBody());
@@ -548,7 +548,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
               }
             }""";
       query = mapper.createObjectNode().put("query", subQuery).toString();
-      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      response = postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JsonNode responseJson = mapper.readTree(response.getBody());
