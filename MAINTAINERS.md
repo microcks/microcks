@@ -2,6 +2,7 @@
 > Microcks governance, roles and policies are defined in the [GOVERNANCE](https://github.com/microcks/.github/blob/main/GOVERNANCE.md) file.
 > This MAINTAINERS file applies to every sub-project, repository and file existing within the [Microcks GitHub organization](https://github.com/microcks/).
 > Please keep the lists sorted in ascending alphabetical order.
+> Maintainer affiliations determine organization-balanced governance votes and must be kept current. Any affiliation change must be recorded before a formal vote begins.
 
 ## Overview
 
@@ -9,7 +10,7 @@ This document provides an alphabetical list of Microcks' maintainers and code ow
 
 ## Maintainers
 
-The following members are Top-level [maintainers](https://github.com/microcks/.github/blob/main/GOVERNANCE.md#maintainers-code-owners-contributors-and-adopters) of the Microcks Parent Org, Parent Project, all repos, sub-repos, projects, sub-projects and forks contained within and under the entire Microcks parent org; with Full Binding Vote status.
+The following members are Top-level [maintainers](https://github.com/microcks/.github/blob/main/GOVERNANCE.md#maintainers-code-owners-contributors-and-adopters) of the Microcks Parent Org, Parent Project, all repos, sub-repos, projects, sub-projects and forks contained within and under the entire Microcks parent org. They participate in binding votes according to the [organization-balanced voting rules](https://github.com/microcks/.github/blob/main/GOVERNANCE.md#decision-making-and-voting).
 
 | Name | GitHub ID | Affiliation |
 |----------------------------------------------------------|--------------------------------------------------------------|-------------------|
