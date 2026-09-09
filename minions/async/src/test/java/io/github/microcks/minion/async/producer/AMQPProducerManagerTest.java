@@ -26,41 +26,27 @@ class AMQPProducerManagerTest {
 
    @Test
    void shouldBuildDefaultAmqpUri() {
-      AMQPProducerManager manager = new AMQPProducerManager();
-      manager.amqpServer = "rabbitmq";
-
-      assertEquals("amqp://rabbitmq", manager.buildAmqpUri());
+      assertEquals("amqp://rabbitmq", AMQPProducerManager.resolveAmqpUri("rabbitmq"));
    }
 
    @Test
    void shouldBuildAmqpUriForStandardPort() {
-      AMQPProducerManager manager = new AMQPProducerManager();
-      manager.amqpServer = "rabbitmq:5672";
-
-      assertEquals("amqp://rabbitmq:5672", manager.buildAmqpUri());
+      assertEquals("amqp://rabbitmq:5672", AMQPProducerManager.resolveAmqpUri("rabbitmq:5672"));
    }
 
    @Test
    void shouldBuildAmqpsUriForTlsPort() {
-      AMQPProducerManager manager = new AMQPProducerManager();
-      manager.amqpServer = "broker.example.com:5671";
-
-      assertEquals("amqps://broker.example.com:5671", manager.buildAmqpUri());
+      assertEquals("amqps://broker.example.com:5671", AMQPProducerManager.resolveAmqpUri("broker.example.com:5671"));
    }
 
    @Test
    void shouldKeepExplicitAmqpUri() {
-      AMQPProducerManager manager = new AMQPProducerManager();
-      manager.amqpServer = "amqp://rabbitmq:5672";
-
-      assertEquals("amqp://rabbitmq:5672", manager.buildAmqpUri());
+      assertEquals("amqp://rabbitmq:5672", AMQPProducerManager.resolveAmqpUri("amqp://rabbitmq:5672"));
    }
 
    @Test
    void shouldKeepExplicitAmqpsUri() {
-      AMQPProducerManager manager = new AMQPProducerManager();
-      manager.amqpServer = "amqps://broker.example.com:5671";
-
-      assertEquals("amqps://broker.example.com:5671", manager.buildAmqpUri());
+      assertEquals("amqps://broker.example.com:5671",
+            AMQPProducerManager.resolveAmqpUri("amqps://broker.example.com:5671"));
    }
 }
