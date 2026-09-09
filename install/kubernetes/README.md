@@ -277,6 +277,7 @@ Here are below the configuration properties of the Kafka support feature:
 | `features.async.kafka.authentication` | `saslMechanism`                 | **Optional**. For SASL authentication, you'll have to specify an additional authentication mechanism such as `SCRAM-SHA-512` or `OAUTHBEARER`                                                                          |
 | `features.async.kafka.authentication` | `saslJaasConfig`                | **Optional**. For SASL authentication, you'll have to specify a JAAS configuration line with login module, username and password.                                                                                      |
 | `features.async.kafka.authentication` | `saslLoginCallbackHandlerClass` | **Optional**. For SASL authentication, you may want to provide a Login Callback Handler implementations. This implementation may be provided by extending the main and `async-minion` images and adding your own libs. |
+| `features.async.kafka.authentication` | `saslClientCallbackHandlerClass` | **Optional**. For SASL authentication, you may want to provide a Client Callback Handler implementation (required for Amazon MSK IAM with `AWS_MSK_IAM`). This implementation may be provided by extending the main and `async-minion` images and adding your own libs. |
 
 #### MQTT feature details
 

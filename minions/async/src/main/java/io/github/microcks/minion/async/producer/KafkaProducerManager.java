@@ -323,6 +323,10 @@ public class KafkaProducerManager {
                   props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS,
                         config.getValue("kafka.sasl.login.callback.handler.class", String.class));
                }
+               if (config.getOptionalValue("kafka.sasl.client.callback.handler.class", String.class).isPresent()) {
+                  props.put(SaslConfigs.SASL_CLIENT_CALLBACK_HANDLER_CLASS,
+                        config.getValue("kafka.sasl.client.callback.handler.class", String.class));
+               }
                break;
             case "SSL":
                logger.debug("Adding SSL specific connection properties");
