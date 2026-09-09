@@ -62,7 +62,7 @@
     <multi-project.rootdir>${project.basedir}</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
     <spring-boot.version>4.0.7</spring-boot.version>
-    <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
     <sonar.organization>microcks</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
