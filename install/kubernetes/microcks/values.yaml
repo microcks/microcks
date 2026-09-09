@@ -349,7 +349,12 @@ features:
 
     # Uncomment the amqp.url and put a valid endpoint address below to enable AMQP support.
     amqp:
+      # Plain AMQP (dev/local):
       #url: rabbitmq:5672
+      # Amazon MQ for RabbitMQ (TLS on port 5671):
+      #url: amqps://xxxx.mq.eu-west-3.amazonaws.com:5671
+      # Or host:port form (amqps:// auto-detected for :5671):
+      #url: xxxx.mq.eu-west-3.amazonaws.com:5671
       username: microcks
       password: microcks
 
