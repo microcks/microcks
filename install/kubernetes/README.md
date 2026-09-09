@@ -308,7 +308,7 @@ Here are below the configuration properties of the AMQP support feature:
 
 | Section               | Property   | Description                                                                                                                              |
 | --------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `features.async.amqp` | `url`      | **Optional**. The URL of AMQP broker (eg: `my-amqp-broker.example.com:5672`). Default is undefined which means that feature is disabled. |
+| `features.async.amqp` | `url`      | **Optional**. The URL of AMQP broker. Supports `host:5672` (plain AMQP), `host:5671` (auto `amqps://` for TLS), or explicit `amqps://host:5671` (e.g. Amazon MQ). Default is undefined which means that feature is disabled. |
 | `features.async.amqp` | `username` | **Optional**. The username to use for connecting to secured AMQP broker. Default to `microcks`.                                          |
 | `features.async.amqp` | `password` | **Optional**. The password to use for connecting to secured AMQP broker. Default to `microcks`.                                          |
 
