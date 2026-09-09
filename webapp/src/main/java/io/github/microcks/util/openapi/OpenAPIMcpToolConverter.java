@@ -19,6 +19,9 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.util.ObjectMapperFactory;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.ai.McpToolConverter;
@@ -28,6 +31,7 @@ import io.github.microcks.web.MockInvocationContext;
 import io.github.microcks.web.ResponseResult;
 import io.github.microcks.web.RestInvocationProcessor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -35,6 +39,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -57,8 +63,11 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
    private final RestInvocationProcessor invocationProcessor;
    private final ObjectMapper mapper;
+   private final ResourceRepository resourceRepository;
 
    private JsonNode schemaNode;
+   private final Map<String, JsonNode> externalResourcesContent = new HashMap<>();
+   private ObjectMapper yamlMapper;
 
    /**
     * Build a new instance of OpenAPIMcpToolConverter.
@@ -67,9 +76,10 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
     * @param invocationProcessor The invocation processor to use for processing the call
     * @param mapper              The ObjectMapper to use for JSON serialization
     */
-   public OpenAPIMcpToolConverter(Service service, Resource resource, RestInvocationProcessor invocationProcessor,
-         ObjectMapper mapper) {
+   public OpenAPIMcpToolConverter(Service service, Resource resource, ResourceRepository resourceRepository,
+         RestInvocationProcessor invocationProcessor, ObjectMapper mapper) {
       super(service, resource);
+      this.resourceRepository = resourceRepository;
       this.invocationProcessor = invocationProcessor;
       this.mapper = mapper;
    }
@@ -260,8 +270,93 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
       if (reference.startsWith("#/")) {
          return schemaNode.at(reference.substring(1));
       }
-      // TODO: handle external references reusing imported resources?
+      return getNodeForExternalRef(reference);
+   }
+
+   /** Hold the parts of an external reference after parsing. */
+   private record ExternalRefParts(String resourceName, String pointerInFile) {
+   }
+
+   /** Get the JsonNode for reference that is located in external resource. */
+   private JsonNode getNodeForExternalRef(String externalReference) {
+      ExternalRefParts refParts = parseExternalReference(externalReference);
+
+      if (resourceRepository != null) {
+         Resource attachedResource = findMatchingResource(refParts.resourceName());
+         if (attachedResource != null) {
+            JsonNode resourceNode = parseAndCacheResource(attachedResource, externalReference);
+            if (resourceNode != null) {
+               if (refParts.pointerInFile() != null) {
+                  return resourceNode.at(refParts.pointerInFile().substring(1));
+               }
+               return resourceNode;
+            }
+         }
+      }
+
+      log.warn("Found no resource for reference '{}'", externalReference);
       return null;
+   }
+
+   /**
+    * Parse an external reference into the resource name and optional JSON pointer. For example,
+    * "models.yaml#/components/schemas/TestModel" becomes ExternalRefParts["models.yaml",
+    * "#/components/schemas/TestModel"].
+    */
+   private ExternalRefParts parseExternalReference(String externalReference) {
+      if (externalReference.contains("#/")) {
+         String resourceName = externalReference.substring(0, externalReference.indexOf("#/"));
+         String pointerInFile = externalReference.substring(externalReference.indexOf("#/"));
+         return new ExternalRefParts(resourceName, pointerInFile);
+      }
+      return new ExternalRefParts(externalReference, null);
+   }
+
+   /**
+    * Find a matching resource from the repository for the given resource name. Skips the main resource and matches by
+    * path or encoded name.
+    */
+   private Resource findMatchingResource(String resourceName) {
+      List<Resource> attachedResources = resourceRepository.findByServiceIdAndType(service.getId(),
+            ResourceType.OPEN_API_SPEC);
+      for (Resource attachedResource : attachedResources) {
+         // Skip the main resource.
+         if (attachedResource.getId() != null && attachedResource.getId().equals(resource.getId())) {
+            continue;
+         }
+         // Path direct equality is for absolute ref ("http://raw.githubusercontent.com/...").
+         // Path equality with resource name is for relative refs that have been re-normalized
+         // ("Service name+Service version+...").
+         if (resourceName.equals(attachedResource.getPath())
+               || resourceName.equals(URLEncoder.encode(attachedResource.getName(), StandardCharsets.UTF_8))) {
+            return attachedResource;
+         }
+      }
+      return null;
+   }
+
+   /**
+    * Parse and cache the content of a resource (JSON or YAML detection). Uses the resource ID as the cache key for
+    * stable lookup.
+    */
+   private JsonNode parseAndCacheResource(Resource resource, String externalReference) {
+      return externalResourcesContent.computeIfAbsent(resource.getId(), k -> {
+         try {
+            // We have to guess if content is JSON or YAML.
+            if (resource.getContent().startsWith("{") || resource.getContent().startsWith("[")) {
+               return mapper.readTree(resource.getContent());
+            } else {
+               // yamlMapper is lazily initialized.
+               if (yamlMapper == null) {
+                  yamlMapper = ObjectMapperFactory.getYamlObjectMapper();
+               }
+               return yamlMapper.readTree(resource.getContent());
+            }
+         } catch (JsonProcessingException e) {
+            log.error("Get a JSON processing exception on {}", externalReference, e);
+            return null;
+         }
+      });
    }
 
    /** Visit a node and extract its properties. */

@@ -57,6 +57,10 @@ Please use our issues templates that provide you with hints on what information 
 
 **Please, make sure you open an issue before starting with a Pull Request, unless it's a typo or a really obvious error.** Pull requests are the best way to propose changes to the specification. Take time to check the current working branch for the repository you want to contribute on before working :wink:
 
+### AI Contribution Policy
+
+If you use Generative AI tools (like GitHub Copilot, Cursor, etc.) to assist in your contributions, you must adhere to our [AI Contribution Policy](AI-POLICY.md). You are 100% accountable for your code, must explicitly disclose AI usage in your PR, and must not use AI tools to auto-reply to maintainers.
+
 ## Conventional commits
 
 Our repositories follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification. Releasing to GitHub and NPM is done with the support of [semantic-release](https://semantic-release.gitbook.io/semantic-release/).

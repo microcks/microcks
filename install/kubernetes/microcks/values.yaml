@@ -91,6 +91,10 @@ microcks:
     #- name: CORS_REST_ALLOW_CREDENTIALS
     #  value: 'true'
 
+    #- name: MCP_SSE_TIMEOUT
+    #  value: "900000"
+    #- name: MOCKS_SERVICE_STATE_STORE_DEFAULT_TTL
+    #  value: "30"
   #logLevel: TRACE | DEBUG | INFO | WARN
   logLevel: INFO
 
@@ -334,6 +338,8 @@ features:
         #saslMechanism: OAUTHBEARER
         #saslJaasConfig: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;
         #saslLoginCallbackHandlerClass: io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler
+        # For Amazon MSK IAM authentication (AWS_MSK_IAM), you'll also need a Client Callback Handler.
+        #saslClientCallbackHandlerClass: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 
     # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
     mqtt:
@@ -343,7 +349,12 @@ features:
 
     # Uncomment the amqp.url and put a valid endpoint address below to enable AMQP support.
     amqp:
+      # Plain AMQP (dev/local):
       #url: rabbitmq:5672
+      # Amazon MQ for RabbitMQ (TLS on port 5671):
+      #url: amqps://xxxx.mq.eu-west-3.amazonaws.com:5671
+      # Or host:port form (amqps:// auto-detected for :5671):
+      #url: xxxx.mq.eu-west-3.amazonaws.com:5671
       username: microcks
       password: microcks
 

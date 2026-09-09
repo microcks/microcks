@@ -1144,6 +1144,123 @@ paths:
       operationId: uploadArtifact
       summary: Upload an artifact
       description: Uploads an artifact to be imported by Microcks.
+  /webhooks:
+    summary: This path operations deal with Webhook registrations
+    post:
+      tags:
+      - webhook
+      requestBody:
+        description: Webhook registration request payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRegistrationRequest'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookRegistration'
+          description: The newly created Webhook registration
+        "404":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: Referenced Service or Operation was not found (or operationId
+            is invalid)
+      security:
+      - jwt-bearer:
+        - user
+      operationId: RegisterWebhook
+      summary: Register a new Webhook
+      description: Register a new Webhook subscription for a given Service Operation.
+  /webhooks/{id}:
+    delete:
+      tags:
+      - webhook
+      responses:
+        "200":
+          description: Webhook registration was successfully deleted
+        "404":
+          description: No Webhook registration found for the given identifier
+      security:
+      - jwt-bearer:
+        - user
+      operationId: UnregisterWebhook
+      summary: Unregister an existing Webhook
+      description: Remove the Webhook registration having the specified identifier.
+    parameters:
+    - name: id
+      description: Unique identifier of the Webhook registration to remove
+      schema:
+        type: string
+      in: path
+      required: true
+  /webhooks/operation/{operationId}:
+    get:
+      tags:
+      - webhook
+      parameters:
+      - name: page
+        description: Page of Webhook registrations to retrieve (starts at and defaults
+          to 0)
+        schema:
+          type: integer
+        in: query
+      - name: size
+        description: Size of a page. Maximum number of Webhook registrations to include
+          in a response (defaults to 20)
+        schema:
+          type: integer
+        in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebhookRegistration'
+          description: List of Webhook registrations for the requested Operation
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ListWebhookRegistrationsForOperation
+      summary: List Webhook registrations for an Operation
+    parameters:
+    - name: operationId
+      description: Unique identifier of the Operation to list Webhook registrations
+        for (formatted as {serviceId}-{operationName})
+      schema:
+        type: string
+      in: path
+      required: true
+  /webhooks/operation/{operationId}/count:
+    get:
+      tags:
+      - webhook
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Counter'
+          description: Number of Webhook registrations for this Operation in datastore
+      security:
+      - jwt-bearer:
+        - user
+      operationId: CountWebhookRegistrationsForOperation
+      summary: Count Webhook registrations for an Operation
+    parameters:
+    - name: operationId
+      description: Unique identifier of the Operation to count Webhook registrations
+        for (formatted as {serviceId}-{operationName})
+      schema:
+        type: string
+      in: path
+      required: true
 components:
   schemas:
     TestCaseResult:
@@ -2332,6 +2449,69 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/CallbackInfo'
+    WebhookRegistration:
+      description: A Webhook registration for a Service Operation. It represents a
+        subscription to be notified of any change on the referenced Operation.
+      required:
+      - operationId
+      - targetUrl
+      properties:
+        id:
+          description: Unique identifier of the Webhook registration
+          type: string
+        createdOn:
+          format: date-time
+          description: Creation date of this Webhook registration
+          type: string
+        expiresAt:
+          format: date-time
+          description: Expiration date of this Webhook registration
+          type: string
+        operationId:
+          description: Identifier of the subscribed Operation, formatted as {serviceId}-{operationName}
+          type: string
+        operationMethod:
+          description: HTTP method of the subscribed Operation
+          type: string
+        targetUrl:
+          description: Target URL where Microcks will invoke the Webhook
+          type: string
+        frequency:
+          format: int64
+          description: Invocation frequency in milliseconds (defaults to 3000)
+          type: integer
+        errorCount:
+          description: Current number of consecutive invocation errors
+          type: integer
+        errorCountThreshold:
+          description: Maximum number of consecutive errors before the Webhook is
+            considered failed (defaults to 5)
+          type: integer
+    WebhookRegistrationRequest:
+      description: Request payload used to register a new Webhook subscription
+      required:
+      - operationId
+      - targetUrl
+      properties:
+        operationId:
+          description: Identifier of the Operation to subscribe to, formatted as {serviceId}-{operationName}
+          type: string
+        targetUrl:
+          description: Target URL where Microcks should invoke the Webhook
+          type: string
+        frequency:
+          format: int64
+          description: Invocation frequency in milliseconds (defaults to 3000)
+          type: integer
+        expiresAt:
+          format: date-time
+          description: Expiration date of this Webhook registration (defaults to 2
+            days from now)
+          type: string
+        errorCountThreshold:
+          description: Maximum number of consecutive errors before the Webhook is
+            considered failed (defaults to 5)
+          type: integer
   responses:
     ServiceResponse:
       content:
@@ -2367,3 +2547,5 @@ tags:
   description: Operations related to configuration
 - name: metrics
   description: Operations related to metrics
+- name: webhook
+  description: Operations related to Webhook registrations for Service Operations

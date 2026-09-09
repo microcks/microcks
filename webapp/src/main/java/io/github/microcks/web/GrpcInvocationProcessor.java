@@ -94,6 +94,9 @@ public class GrpcInvocationProcessor {
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
 
+   @Value("${mocks.service-state-store.default-ttl:10}")
+   private int defaultTtl;
+
    /**
     * Build a GrpcInvocationProcessor with required dependencies.
     * @param serviceStateRepository       The repository to access service state
@@ -257,8 +260,8 @@ public class GrpcInvocationProcessor {
                      StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
                      // Evaluating request with script coming from operation dispatcher rules.
                      ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, jsonBody,
-                           requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), headers,
-                           null);
+                           requestContext, new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl),
+                           headers, null);
                      dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
                   } catch (Exception e) {
                      // Get current span and record failure
@@ -279,7 +282,7 @@ public class GrpcInvocationProcessor {
                      StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
                      // Evaluating request with script coming from operation dispatcher rules.
                      Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(jsonBody, requestContext,
-                           new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
+                           new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl), headers, null);
                      dispatchCriteria = JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext);
                   } catch (Exception e) {
                      log.error(SCRIPT_EVALUATION_ERROR, e);

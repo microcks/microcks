@@ -1,0 +1,71 @@
+asyncapi: 3.0.0
+id: 'urn:io.microcks.example.user-lifecycle'
+info:
+  title: User lifecycle API
+  version: 0.1.0
+  description: Sample AsyncAPI with one operation referencing multiple messages
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent@microcks.io
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json
+channels:
+  user-lifecycle:
+    description: The topic on which user lifecycle events may be consumed
+    messages:
+      userSignedUp:
+        $ref: '#/components/messages/userSignedUp'
+      userDeleted:
+        $ref: '#/components/messages/userDeleted'
+operations:
+  publishUserLifecycleEvents:
+    action: 'send'
+    channel:
+      $ref: '#/channels/user-lifecycle'
+    summary: Receive information about user lifecycle
+    messages:
+      - $ref: '#/channels/user-lifecycle/messages/userSignedUp'
+      - $ref: '#/channels/user-lifecycle/messages/userDeleted'
+components:
+  messages:
+    userSignedUp:
+      description: An event describing that a user just signed up
+      payload:
+        type: object
+        additionalProperties: false
+        properties:
+          fullName:
+            type: string
+          email:
+            type: string
+            format: email
+      examples:
+        - name: laurent
+          summary: Example for Laurent user
+          payload:
+            fullName: Laurent Broudoux
+            email: laurent@microcks.io
+        - name: john
+          summary: Example for John Doe user
+          payload:
+            fullName: John Doe
+            email: john@microcks.io
+    userDeleted:
+      description: An event describing that a user was deleted
+      payload:
+        type: object
+        additionalProperties: false
+        properties:
+          fullName:
+            type: string
+          reason:
+            type: string
+      examples:
+        - name: laurentDeleted
+          summary: Example for Laurent user deletion
+          payload:
+            fullName: Laurent Broudoux
+            reason: Asked for account removal

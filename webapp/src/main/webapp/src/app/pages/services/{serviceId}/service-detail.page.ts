@@ -936,7 +936,8 @@ export class ServiceDetailPageComponent implements OnInit {
         && exchange.request.content != undefined
          && exchange.request.content != '') {
       const normalizedRequestContent = normalizeLineEndings(exchange.request.content);
-      cmd += ' -d \'' + normalizedRequestContent.replace(/\n/g, '') + '\'';
+      const escapedRequestContent = normalizedRequestContent.replace(/'/g, "'\\''").replace(/\n/g, '');
+      cmd += " -d '" + escapedRequestContent + "'";
     }
 
     if (this.resolvedServiceView.service.type === ServiceType.GRPC) {
