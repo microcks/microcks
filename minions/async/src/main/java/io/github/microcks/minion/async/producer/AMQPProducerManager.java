@@ -85,7 +85,9 @@ public class AMQPProducerManager {
     */
    protected Connection createConnection() throws Exception {
       ConnectionFactory factory = new ConnectionFactory();
-      factory.setUri("amqp://" + amqpServer);
+      factory.setUri(buildAmqpUri());
+      factory.setConnectionTimeout(15000);
+      factory.setHandshakeTimeout(15000);
 
       if (amqpUsername != null && !amqpUsername.isEmpty() && amqpPassword != null && !amqpPassword.isEmpty()) {
          logger.infof("Connecting to AMQP broker with user '%s'", amqpUsername);
@@ -94,6 +96,22 @@ public class AMQPProducerManager {
       }
       factory.setAutomaticRecoveryEnabled(true);
       return factory.newConnection(amqpClientId);
+   }
+
+   /**
+    * Build the AMQP connection URI from configured server address. Honors explicit {@code amqp://} or {@code amqps://}
+    * schemes; auto-detects TLS for port 5671.
+    *
+    * @return The connection URI for the RabbitMQ Java client
+    */
+   String buildAmqpUri() {
+      if (amqpServer.contains("://")) {
+         return amqpServer;
+      }
+      if (amqpServer.contains(":5671")) {
+         return "amqps://" + amqpServer;
+      }
+      return "amqp://" + amqpServer;
    }
 
    /**
