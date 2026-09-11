@@ -86,6 +86,8 @@ If a maintainer or code owner can no longer fulfill their commitments, they shou
 ## Adding or Removing Sub Projects
 Microcks maintainers have the authority to add or remove sub-projects or repositories as needed. We follow a careful approach when making these changes: any new sub-project must serve a long-term purpose that is clearly distinct from existing ones, while sub-projects slated for removal must be shown to have either outlived their usefulness, become deprecated or unmaintainable.
 
+The canonical inventory of Microcks projects and repositories, including their lifecycle status and responsible ownership, is maintained in [SUBPROJECTS.md](https://github.com/microcks/.github/blob/main/SUBPROJECTS.md).
+
 When a sub-project is removed, it will be archived as-is within the Microcks-archive organization, along with its associated repositories, ensuring transparency and historical reference.
 
 ## Conflict Resolutions
@@ -101,7 +103,7 @@ Typically, disputes are resolved amicably by those involved through open discuss
 
 Here’s how to join and participate: https://github.com/microcks/community/blob/main/JOIN-OUR-MEETINGS.md
 
-The maintainers will also have closed meetings to discuss security reports or Code of Conduct violations. Any maintainer in charge should schedule such meetings upon receiving a security issue or CoC report. All current Maintainers must be invited to such closed meetings, except for any maintainer accused of a CoC violation.
+Maintainers may hold closed meetings when needed to handle security reports or Code of Conduct incidents. Participation is limited to people needed to respond who do not have a material conflict of interest. Any Maintainer who is accused, directly involved or otherwise conflicted must recuse themselves and must not receive confidential information about the incident except as required for a fair investigation. Code of Conduct reports are handled or transferred according to the reporting and escalation process in the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Steering Committee
 To support sustainable growth and ensure the project remains responsive to high-scale users, Microcks features a **Steering Committee (SC)**. The SC acts as a functional component of governance, focusing on strategic project orientation and incorporating the "adopter's voice" into the long-term roadmap.
@@ -115,7 +117,7 @@ Changes to governance policy and any supporting governance documents require a f
 This Project Governance is a living document. As the Microcks community and project continue to evolve, maintainers are **committed** to improving and openly sharing our governance model, ensuring transparency and collaboration every step of the way.
 
 ## Code of Conduct
-Microcks follow the [Code of Conduct](CODE_OF_CONDUCT.md), which is aligned with the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md).
+Microcks follows the [Code of Conduct](CODE_OF_CONDUCT.md), which is aligned with the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md).
 
 ## Credits
 Thanks to [Dawn Foster](https://github.com/geekygirldawn) for the inspiring talk and valuable insights at KubeCon Europe 2022: "Good Governance Practices for CNCF Projects":
