@@ -28,5 +28,6 @@ public enum BindingType {
    NATS,
    GOOGLEPUBSUB,
    SQS,
-   SNS
+   SNS,
+   IBMMQ
 }
