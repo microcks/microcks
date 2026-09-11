@@ -29,6 +29,7 @@ public class TestCaseResult {
    private boolean success = false;
    private long elapsedTime = -1;
    private String operationName;
+   private TestCasePhase phase;
 
    private List<TestStepResult> testStepResults = new ArrayList<>();
 
@@ -38,6 +39,14 @@ public class TestCaseResult {
 
    public void setSuccess(boolean success) {
       this.success = success;
+   }
+
+   public TestCasePhase getPhase() {
+      return phase;
+   }
+
+   public void setPhase(TestCasePhase phase) {
+      this.phase = phase;
    }
 
    public long getElapsedTime() {

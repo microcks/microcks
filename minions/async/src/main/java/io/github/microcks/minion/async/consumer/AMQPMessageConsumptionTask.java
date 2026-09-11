@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
  * <code>amqp://{brokerhost[:port]}[/{virtualHost}]/{type}/{destination}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
-public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
+public class AMQPMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -174,6 +174,9 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
                channel.basicAck(envelope.getDeliveryTag(), false);
             }
          });
+
+         // Consumer is now bound and ready to receive messages.
+         notifyWaitingForMessage();
 
          Thread.sleep(specification.getTimeoutMS());
 
