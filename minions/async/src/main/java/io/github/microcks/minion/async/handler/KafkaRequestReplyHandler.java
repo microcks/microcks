@@ -25,6 +25,9 @@ import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -66,6 +69,9 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
    private KafkaConsumer<String, byte[]> consumer;
    private Thread consumerThread;
    private final AtomicBoolean running = new AtomicBoolean(false);
+
+   /** Holds the current request record so reply-topic resolution can access headers/payload. */
+   private ConsumerRecord<String, byte[]> currentRequestRecord;
 
    /**
     * Create a new Kafka request-reply handler.
@@ -172,6 +178,7 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
    /** Handle a single request message and send the corresponding reply. */
    private void handleRequest(ConsumerRecord<String, byte[]> record) {
       logger.debugf("Received request message on %s", getRequestTopic());
+      currentRequestRecord = record;
 
       // Build an EvaluableRequest from the incoming Kafka request record.
       String requestBody = new String(record.value(), StandardCharsets.UTF_8);
@@ -283,15 +290,20 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
                      + mockDefinition.getOperation().getName());
       }
 
-      // Check if we have an addressLocation (runtime expression)
+      // Check if we have an addressLocation (runtime expression).
+      // Supports AsyncAPI Runtime Expression syntax:
+      //   $message.header#/<headerName>  - reads from a Kafka request header
+      //   $message.payload#/<jsonPointer> - reads from the JSON request body
       if (mockDefinition.getOperation().getReply().getAddressLocation() != null) {
-         // TODO: Implement runtime expression resolution for addressLocation
-         // This would parse expressions like "$message.header#/replyTo" or
-         // "$message.payload#/topicName"
-         // and extract the value from the request message headers or payload
-         throw new UnsupportedOperationException(
-               "Runtime expression resolution for addressLocation is not yet supported: "
-                     + mockDefinition.getOperation().getReply().getAddressLocation());
+         String resolved = resolveAddressLocation(mockDefinition.getOperation().getReply().getAddressLocation(),
+               currentRequestRecord);
+         if (resolved != null && !resolved.isBlank()) {
+            logger.debugf("Resolved dynamic reply topic '%s' from addressLocation expression '%s'", resolved,
+                  mockDefinition.getOperation().getReply().getAddressLocation());
+            return resolved;
+         }
+         throw new IllegalStateException("Could not resolve reply topic from addressLocation expression: "
+               + mockDefinition.getOperation().getReply().getAddressLocation());
       }
 
       // Use the channelAddress as the raw topic name
@@ -299,7 +311,59 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
          return mockDefinition.getOperation().getReply().getChannelAddress();
       }
 
-      throw new IllegalStateException("Reply information must specify either channelAddress or addressLocation");
+      throw new IllegalStateException("Reply information must specify either channelAddress or addressLocation.");
+   }
+
+   /**
+    * Resolves an AsyncAPI Runtime Expression for an addressLocation field against the incoming Kafka request record.
+    * <p>
+    * Supported expression prefixes:
+    * <ul>
+    * <li>{@code $message.header#/<name>} - reads the named header from the Kafka request.</li>
+    * <li>{@code $message.payload#/<jsonPointer>} - applies a JSON Pointer to the request body.</li>
+    * </ul>
+    *
+    * @param expression The runtime expression string (e.g. {@code $message.header#/replyTo}).
+    * @param record     The incoming Kafka {@link ConsumerRecord} providing headers and payload.
+    * @return The resolved string value, or {@code null} if the expression could not be resolved.
+    */
+   private String resolveAddressLocation(String expression, ConsumerRecord<String, byte[]> record) {
+      if (expression == null || record == null) {
+         return null;
+      }
+
+      if (expression.startsWith("$message.header#/")) {
+         String headerName = expression.substring("$message.header#/".length());
+         for (org.apache.kafka.common.header.Header h : record.headers()) {
+            if (h.key().equals(headerName)) {
+               return new String(h.value(), StandardCharsets.UTF_8);
+            }
+         }
+         logger.warnf("Header '%s' not found in request message for addressLocation expression '%s'", headerName,
+               expression);
+         return null;
+      }
+
+      if (expression.startsWith("$message.payload#/")) {
+         String jsonPointer = expression.substring("$message.payload#".length());
+         try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(record.value());
+            JsonNode node = root.at(jsonPointer);
+            if (!node.isMissingNode() && !node.isNull()) {
+               return node.asText();
+            }
+            logger.warnf("JSON Pointer '%s' yielded no value in request payload for expression '%s'", jsonPointer,
+                  expression);
+         } catch (Exception e) {
+            logger.errorf(e, "Failed to parse request payload as JSON for addressLocation expression '%s'", expression);
+         }
+         return null;
+      }
+
+      logger.warnf("Unsupported addressLocation expression format (expected $message.header or $message.payload): '%s'",
+            expression);
+      return null;
    }
 
    /** Create and configure the Kafka consumer. */
