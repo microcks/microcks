@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * Channel may be empty if connecting to the root context of the WebSocket server.
  * @author laurent
  */
-public class WebSocketMessageConsumptionTask implements MessageConsumptionTask {
+public class WebSocketMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -98,6 +98,9 @@ public class WebSocketMessageConsumptionTask implements MessageConsumptionTask {
          logger.errorf("Connection error while try to reach {%s}", specification.getEndpointUrl());
          throw e;
       }
+
+      // Session is established: the consumer is connected and ready to receive messages.
+      notifyWaitingForMessage();
 
       Thread.sleep(specification.getTimeoutMS());
       if (session != null) {

@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
  * <code>sqs://{region}/{queue}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
-public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
+public class AmazonSQSMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -104,6 +104,9 @@ public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
          logger.errorf("Unable to find the SQS queue URL for queue named '%s'", queue);
          throw new IOException("Unable to find the SQS queue URL for queue " + queue);
       }
+
+      // Queue is resolved: the consumer is connected and ready to receive messages.
+      notifyWaitingForMessage();
 
       long timeoutTime = startTime + specification.getTimeoutMS();
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
