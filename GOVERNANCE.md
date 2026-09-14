@@ -2,6 +2,8 @@
 
 This document defines governance policies for the Microcks project.
 
+**Last reviewed:** September 11, 2026
+
 ## Principles
 The Microcks project community adheres to the following principles:
 
@@ -57,12 +59,22 @@ A formal vote must:
 Maintainers must disclose material conflicts of interest and recuse themselves when appropriate. Recused Maintainers do not participate in determining their organization's position. If every Maintainer from an organization is recused, that organization is not eligible for that vote. A Maintainer whose removal is under consideration must recuse themselves from that vote.
 
 ## Contributor ladder
-To become a maintainer, you need to get involved with the Microcks project on GitHub and demonstrate commitment and qualities:
 
-   * Participation: For three months or more. Examples include participation in discussions, contributions and code or documentation reviews.
-   * Collaboration: Demonstrate the ability to work with others, take on new ideas and help others succeed.
-   * Availability (ideally full-time): Be available on Slack, Discord, GitHub, and email so you can help move the project forward in a timely way.
-   * Respect: Alignment with Microcks and CNCF code of conduct and guiding principles.
+Promotion is based on sustained, public contributions and demonstrated trust, regardless of employment status. Meeting the minimum eligibility criteria does not guarantee promotion. Maintainers also consider the quality and impact of contributions, collaboration, judgment and the project's current needs.
+
+### Becoming a Maintainer
+
+A Maintainer candidate must provide public evidence of all the following:
+
+- At least six months of sustained participation in the Microcks community, including at least three months as a Code Owner or in an equivalent position of scoped project responsibility,
+- At least five significant contributions accepted during the previous twelve months. Contributions may include code, tests, documentation, design proposals, release work or community operations,
+- At least five substantive pull request reviews or issue-triage decisions during the previous twelve months,
+- Participation in at least three public project-wide discussions, decisions or community meetings during the previous twelve months. Synchronous meeting attendance is not required when equivalent participation is recorded asynchronously,
+- Demonstrated collaboration, including incorporating feedback, helping other contributors and working constructively across project areas,
+- Consistent alignment with the Microcks and CNCF Codes of Conduct and vendor-neutrality principles, and
+- Reliable availability through at least one documented public project channel. Full-time availability and presence on every communication channel are not required.
+
+The nominating Maintainer must link the evidence for these criteria in the nomination pull request so that the community and voting Maintainers can evaluate the candidate consistently.
      
 ### Voting in and voting out maintainers
 
@@ -76,6 +88,8 @@ The candidate being nominated does not participate in the vote. A Maintainer who
 
 ### Becoming a Code Owner 
 A Code Owner (alias Domain Maintainers) is appointed by the maintainers to recognize a contributor with expertise and authority in a specific domain. Code Owners are appointed to have elevated privileges, authority and specific responsibilities. The code owner role is part of the Microcks contributor ladder and is the primary path from contributor to maintainer. The roles and responsibilities of code owners are scoped. A person can have one or more code owner responsibilities.
+
+A Code Owner candidate must have participated in the relevant domain for at least three months, with at least three accepted contributions and three substantive reviews or issue-triage decisions in that domain. The appointment must identify the domain and link this public evidence.
 
 Code owners are enabled to act independently. They do not have responsibilities or voting rights over the entire project or organization. They are expected to participate with the community, but they are not expected to participate in maintainer meetings unless requested.
 
@@ -115,6 +129,8 @@ Detailed guidelines regarding the SC's composition, election process, and operat
 Changes to governance policy and any supporting governance documents require a formal organization-balanced vote as defined in this document.
 
 This Project Governance is a living document. As the Microcks community and project continue to evolve, maintainers are **committed** to improving and openly sharing our governance model, ensuring transparency and collaboration every step of the way.
+
+Maintainers review this document at least once every twelve months and after any material change to project structure, roles, decision-making or repository scope. Each review is recorded in a public GitHub issue or pull request. A review that concludes no policy change is needed may update only the **Last reviewed** date through lazy consensus; any substantive change requires a formal organization-balanced vote.
 
 ## Code of Conduct
 Microcks follows the [Code of Conduct](CODE_OF_CONDUCT.md), which is aligned with the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md).
