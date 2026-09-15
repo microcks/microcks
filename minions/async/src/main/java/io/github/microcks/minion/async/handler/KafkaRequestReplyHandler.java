@@ -36,6 +36,7 @@ import org.eclipse.microprofile.config.Config;
 import org.jboss.logging.Logger;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,6 +57,9 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
+
+   /** Standard header name for message correlation ID, as per AsyncAPI spec. */
+   static final String CORRELATION_ID_HEADER = "correlationId";
 
    private final AsyncMockDefinition mockDefinition;
    private final Binding binding;
@@ -184,6 +188,12 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
       }
       evaluableRequest.setHeaders(requestHeaders);
 
+      // Extract correlationId from the request headers if present, otherwise generate one.
+      // This follows the AsyncAPI spec correlation ID object, which allows defining a header
+      // location (e.g. "$message.header#/correlationId") to link requests and replies.
+      String correlationId = requestHeaders.getOrDefault(CORRELATION_ID_HEADER, UUID.randomUUID().toString());
+      logger.debugf("Using correlationId '%s' for this request-reply exchange", correlationId);
+
       // Find matching request-reply pair
       EventMessage replyMessage = findReplyForRequest(evaluableRequest);
       if (replyMessage == null) {
@@ -200,9 +210,9 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
 
       logger.debugf("Sending reply to %s", replyTopic);
 
-      // Convert to byte array and publish with headers
+      // Convert to byte array and publish with headers, propagating the correlation ID.
       byte[] replyBytes = replyContent.getBytes(StandardCharsets.UTF_8);
-      Set<org.apache.kafka.common.header.Header> kafkaHeaders = buildReplyHeaders(replyMessage);
+      Set<org.apache.kafka.common.header.Header> kafkaHeaders = buildReplyHeaders(replyMessage, correlationId);
       producerManager.publishMessage(replyTopic, key, replyBytes, kafkaHeaders);
    }
 
@@ -247,14 +257,23 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
       return content;
    }
 
-   /** Build headers for reply message. */
-   private Set<org.apache.kafka.common.header.Header> buildReplyHeaders(EventMessage replyMessage) {
+   /**
+    * Build headers for the reply message, propagating the correlation ID from the request.
+    *
+    * @param replyMessage  The reply event message whose defined headers should be included.
+    * @param correlationId The correlation ID extracted from the incoming request (or auto-generated).
+    * @return A set of Kafka headers to attach to the reply record.
+    */
+   private Set<org.apache.kafka.common.header.Header> buildReplyHeaders(EventMessage replyMessage,
+         String correlationId) {
       Set<org.apache.kafka.common.header.Header> headers = new HashSet<>();
 
-      // TODO: Add correlation ID header when we parse correlation object from
-      // AsyncAPI spec
+      // Propagate the correlation ID so consumers can match this reply to their original request.
+      // This implements the AsyncAPI correlation ID object specification.
+      headers.add(new org.apache.kafka.common.header.internals.RecordHeader(CORRELATION_ID_HEADER,
+            correlationId.getBytes(StandardCharsets.UTF_8)));
 
-      // Add any headers defined in the reply message
+      // Add any headers defined in the reply message definition.
       if (replyMessage.getHeaders() != null) {
          for (Header domainHeader : replyMessage.getHeaders()) {
             // Convert domain Header to Kafka Header
