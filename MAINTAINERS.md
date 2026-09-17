@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document provides an alphabetical list of Microcks' maintainers and code owners. If you want to contribute and become a maintainer or code owner, please refer to [CONTRIBUTING](CONTRIBUTING.md).
+This document provides an alphabetical list of Microcks' maintainers and code owners. If you want to contribute and become a maintainer or code owner, please refer to [CONTRIBUTING](https://github.com/microcks/.github/blob/main/CONTRIBUTING.md).
 
 ## Maintainers
 
