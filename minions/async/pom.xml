@@ -28,7 +28,7 @@
     <apache-httpcore.version>5.4.3</apache-httpcore.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.25.3</nats.version>
-    <rabbitmq.version>5.33.1</rabbitmq.version>
+    <rabbitmq.version>5.34.0</rabbitmq.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
   </properties>
