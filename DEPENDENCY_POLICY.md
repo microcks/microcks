@@ -8,7 +8,7 @@ The list of external dependencies in this Microcks repository with their current
 ## Declaring external dependencies
 
 Depending on the Microcks Core or Module/extension technology stack, all external dependencies should be declared
-in either [pom.xml](pom.xml), [package.json](package.json) or [go.mod](go.mod) root files.
+in either `pom.xml`, `package.json` or `go.mod` root files.
 
 Dependency declarations must:
 
@@ -48,7 +48,7 @@ basis:
 
 * Core Microcks dependencies will be updated by the Microcks maintainers/security team.
 
-* Module/extension [CODEOWNERS](./CODEOWNERS) should update extension specific dependencies.
+* Module/extension `CODEOWNERS` should update extension specific dependencies.
 
 Where possible, we prefer the latest release version for external dependencies, rather than main branch GitHub SHA tarballs.
 
