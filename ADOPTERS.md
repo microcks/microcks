@@ -9,7 +9,7 @@ Respect is a core principle in our open source community; see our [Code of Condu
 
 If you need to know why and how to add yourself to the list, please read the blog post "[Join the Microcks Adopters list](https://microcks.io/blog/join-adopters-list/) and Empower the vibrant open source Community 🙌"
 
-This document also lists the organizations using Microcks based on public information in blog posts, events, and videos. If any organization would like to get added or removed, please edit this file (make a pull request) after following our [contribution guide](https://github.com/microcks/.github/blob/master/CONTRIBUTING.md) and by following these specifics guidelines:
+This document also lists the organizations using Microcks based on public information in blog posts, events, and videos. If any organization would like to get added or removed, please edit this file (make a pull request) after following our [contribution guide](https://github.com/microcks/.github/blob/main/CONTRIBUTING.md) and by following these specifics guidelines:
 - Kindly include a reference (such as a link to a public blog post, video, slides, etc.) that mentions using Microcks.
 - You consent to have your company’s name and logo featured on the [Microcks.io website](https://microcks.io/), included in our adopters' section, and potentially displayed in our rotating logo carousel.
 - Adopter type follows the [CNCF definitions outlined](https://github.com/cncf/toc/blob/main/FAQ.md#what-is-the-definition-of-an-adopter): CNCF `End-User` member, `Another project`, `end user`, `Service Provider` or `Consultancy`.
