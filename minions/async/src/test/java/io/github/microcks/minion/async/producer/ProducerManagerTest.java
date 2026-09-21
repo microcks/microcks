@@ -19,6 +19,8 @@ import io.github.microcks.domain.Binding;
 import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.TriggerInfo;
 import io.github.microcks.event.AsyncAPITriggerCommand;
@@ -27,11 +29,15 @@ import io.github.microcks.event.ResponseSnapshot;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.SchemaRegistry;
+import io.github.microcks.util.AvroUtil;
 
+import org.apache.avro.Schema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +66,12 @@ class ProducerManagerTest {
    private AmazonSNSProducerManager amazonSNSProducerManager;
 
    private ProducerManager producerManager;
+
+   private static final String USER_AVSC = """
+         {"type":"record","name":"User","namespace":"io.github.microcks","fields":[\
+         {"name":"fullName","type":"string"},{"name":"age","type":"int"}]}""";
+
+   private static final String USER_JSON = "{\"fullName\": \"Laurent Broudoux\", \"age\": 41}";
 
    @BeforeEach
    void setUp() throws Exception {
@@ -550,6 +562,78 @@ class ProducerManagerTest {
    /**
     * Build a simple AsyncMockDefinition with one pure event message and a single binding.
     */
+   // -----------------------------------------------------------------------
+   // Tests for Avro binary publication on the NATS binding
+   // -----------------------------------------------------------------------
+
+   @Test
+   void testProduceAsyncMockMessagesAt_avroIsPublishedAsBinaryOnNATS() throws Exception {
+      AsyncMockDefinition definition = buildAvroMockDefinition("avro/binary");
+      when(mockRepository.getMockDefinitionsByFrequency(30L)).thenReturn(Set.of(definition));
+      when(natsProducerManager.getTopicName(any(), any())).thenReturn("nats-topic");
+      when(schemaRegistry.getSchemaEntries(definition.getOwnerService()))
+            .thenReturn(List.of(avroSchemaEntryFor(definition)));
+
+      producerManager.produceAsyncMockMessagesAt(30L);
+
+      // The rendered JSON must never reach the broker: what goes on the wire is the Avro encoding of it.
+      verify(natsProducerManager, never()).publishMessage(anyString(), anyString(), any());
+      ArgumentCaptor<byte[]> published = ArgumentCaptor.forClass(byte[].class);
+      verify(natsProducerManager).publishMessage(eq("nats-topic"), published.capture(), any());
+
+      assertNotEquals(USER_JSON, new String(published.getValue(), StandardCharsets.UTF_8));
+      assertEquals(USER_JSON.replace(" ", ""),
+            AvroUtil.avroToJson(published.getValue(), AvroUtil.getSchema(USER_AVSC)).replace(" ", ""));
+   }
+
+   @Test
+   void testProduceAsyncMockMessagesAt_nonAvroIsStillPublishedAsTextOnNATS() {
+      AsyncMockDefinition definition = buildAvroMockDefinition("application/json");
+      when(mockRepository.getMockDefinitionsByFrequency(30L)).thenReturn(Set.of(definition));
+      when(natsProducerManager.getTopicName(any(), any())).thenReturn("nats-topic");
+
+      producerManager.produceAsyncMockMessagesAt(30L);
+
+      verify(natsProducerManager).publishMessage(eq("nats-topic"), eq(USER_JSON), any());
+      verify(natsProducerManager, never()).publishMessage(anyString(), any(byte[].class), any());
+      // A JSON message must not even look for a schema.
+      verifyNoInteractions(schemaRegistry);
+   }
+
+   @Test
+   void testProduceAsyncMockMessagesAt_avroWithoutSchemaPublishesNothingOnNATS() {
+      AsyncMockDefinition definition = buildAvroMockDefinition("avro/binary");
+      when(mockRepository.getMockDefinitionsByFrequency(30L)).thenReturn(Set.of(definition));
+      when(natsProducerManager.getTopicName(any(), any())).thenReturn("nats-topic");
+      when(schemaRegistry.getSchemaEntries(definition.getOwnerService())).thenReturn(Collections.emptyList());
+
+      producerManager.produceAsyncMockMessagesAt(30L);
+
+      // Publishing the JSON text on a channel declared as Avro would be worse than publishing nothing.
+      verify(natsProducerManager, never()).publishMessage(anyString(), anyString(), any());
+      verify(natsProducerManager, never()).publishMessage(anyString(), any(byte[].class), any());
+   }
+
+   @Test
+   void testRetrieveAvroSchema_readsTheSchemaEntryAttachedToTheOperation() {
+      AsyncMockDefinition definition = buildAvroMockDefinition("avro/binary");
+      when(schemaRegistry.getSchemaEntries(definition.getOwnerService()))
+            .thenReturn(List.of(avroSchemaEntryFor(definition)));
+
+      Schema schema = producerManager.retrieveAvroSchema(definition);
+
+      assertNotNull(schema);
+      assertEquals("io.github.microcks.User", schema.getFullName());
+   }
+
+   @Test
+   void testRetrieveAvroSchema_returnsNullWhenRegistryHoldsNothing() {
+      AsyncMockDefinition definition = buildAvroMockDefinition("avro/binary");
+      when(schemaRegistry.getSchemaEntries(definition.getOwnerService())).thenReturn(Collections.emptyList());
+
+      assertNull(producerManager.retrieveAvroSchema(definition));
+   }
+
    private AsyncMockDefinition buildMockDefinition(String bindingName, String messageContent) {
       Service service = new Service();
       service.setId("test-svc-" + bindingName);
@@ -565,6 +649,37 @@ class ProducerManagerTest {
       eventMessage.setName("TestMessage");
       eventMessage.setContent(messageContent);
       eventMessage.setMediaType("application/json");
+
+      return new AsyncMockDefinition(service, operation, List.of(eventMessage));
+   }
+
+   /** An Avro schema held by the registry as an external .avsc reference attached to the operation. */
+   private SchemaRegistry.SchemaEntry avroSchemaEntryFor(AsyncMockDefinition definition) {
+      Resource resource = new Resource();
+      resource.setName("user.avsc");
+      resource.setPath("user.avsc");
+      resource.setType(ResourceType.AVRO_SCHEMA);
+      resource.setContent(USER_AVSC);
+      resource.setOperations(Set.of(definition.getOperation().getName()));
+      return schemaRegistry.new SchemaEntry(resource);
+   }
+
+   /** A NATS-bound definition carrying one pure message of the given media type. */
+   private AsyncMockDefinition buildAvroMockDefinition(String mediaType) {
+      Service service = new Service();
+      service.setId("test-svc-avro");
+      service.setName("TestService");
+      service.setVersion("1.0.0");
+
+      Operation operation = new Operation();
+      operation.setName("SEND user/signedup");
+      operation.setBindings(Map.of("NATS", new Binding(BindingType.NATS)));
+      service.addOperation(operation);
+
+      EventMessage eventMessage = new EventMessage();
+      eventMessage.setName("Laurent");
+      eventMessage.setContent(USER_JSON);
+      eventMessage.setMediaType(mediaType);
 
       return new AsyncMockDefinition(service, operation, List.of(eventMessage));
    }
