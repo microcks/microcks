@@ -20,6 +20,7 @@ import io.github.microcks.util.SchemaMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,9 @@ public class AsyncAPISchemaUtil {
    private static final Logger log = LoggerFactory.getLogger(AsyncAPISchemaUtil.class);
 
    public static final String ASYNC_SCHEMA_PAYLOAD_ELEMENT = "payload";
+   public static final String ASYNC_SCHEMA_SCHEMA_FORMAT_ELEMENT = "schemaFormat";
+   public static final String ASYNC_SCHEMA_SCHEMA_ELEMENT = "schema";
+
    private static final String ONE_OF_STRUCT = "oneOf";
 
 
@@ -128,6 +132,13 @@ public class AsyncAPISchemaUtil {
       // Navigate to payload definition.
       messageNode = messageNode.path(ASYNC_SCHEMA_PAYLOAD_ELEMENT);
 
+      // AsyncAPI v3 payload may be expressed as a Multi Format Schema Object, holding the actual
+      // schema (and its optional external reference) under a nested 'schema' property, alongside a
+      // 'schemaFormat' property. In that case, we have to unwrap it to get the real Avro schema node.
+      if (messageNode.has(ASYNC_SCHEMA_SCHEMA_FORMAT_ELEMENT) && messageNode.has(ASYNC_SCHEMA_SCHEMA_ELEMENT)) {
+         messageNode = messageNode.path(ASYNC_SCHEMA_SCHEMA_ELEMENT);
+      }
+
       // Payload node can be just a reference to another schema... But in the case of Avro, this is an external schema
       // as #/components/schemas can only hold JSON schemas. So we have to use a registry for resolving and accessing
       // this Avro schema. We'll have to build an Avro Schema either from payload content or registry content.
@@ -153,8 +164,14 @@ public class AsyncAPISchemaUtil {
          schemaContent = messageNode.toString();
       }
 
-      // Now build and return the schema.
-      return AvroUtil.getSchema(schemaContent);
+      // Now build and return the schema. getSchema throws unchecked Avro errors (e.g. SchemaParseException) that
+      // must be wrapped so callers relying on AsyncAPISchemaException don't let them escape and kill the caller.
+      try {
+         return AvroUtil.getSchema(schemaContent);
+      } catch (AvroRuntimeException e) {
+         log.info("Avro schema content cannot be parsed: {}", e.getMessage());
+         throw new AsyncAPISchemaException("Avro schema content cannot be parsed: " + e.getMessage(), e);
+      }
    }
 
    /** Check if a node has a reference and follow it to target node in the document. */

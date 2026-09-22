@@ -298,4 +298,131 @@ class AvroUtilTest {
          assertEquals("age is not an integer", error);
       }
    }
+
+   @Test
+   void testUnionTrialContinuesAfterFailingBranch() {
+      // 'big' is tried first and its decode runs out of bytes (EOFException) on the second field.
+      // 'small' matches the written binary. A failing branch must not abort the remaining trials.
+      Schema big = SchemaBuilder.record("Big").fields().requiredString("name").requiredString("extra").endRecord();
+      Schema small = SchemaBuilder.record("Small").fields().requiredString("name").endRecord();
+      Schema union = SchemaBuilder.unionOf().type(big).and().type(small).endUnion();
+
+      try {
+         // Write a binary that only satisfies the 'small' branch.
+         byte[] avroBinary = AvroUtil.jsonToAvro("{\"name\":\"Tigresse\"}", small);
+
+         // Reading as a union must fall through the failing 'big' branch to the matching 'small' branch.
+         GenericRecord record = AvroUtil.avroToAvroRecord(avroBinary, union);
+         assertEquals("Tigresse", record.get("name").toString());
+
+         String jsonRepresentation = AvroUtil.avroToJson(avroBinary, union);
+         assertTrue(jsonRepresentation.contains("\"Tigresse\""));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   private static byte[] writeWithUnionWriterSchema(Schema union, GenericRecord record) throws Exception {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      GenericDatumWriter<Object> writer = new GenericDatumWriter<>(union);
+      Encoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+      writer.write(record, encoder);
+      encoder.flush();
+      return baos.toByteArray();
+   }
+
+   @Test
+   void testReadUnionStandardEncoding() {
+      // Standard Avro union encoding prefixes the datum with a zig-zag branch index. Both branches must be resolved
+      // to the right schema and value, not silently misread as the first branch.
+      Schema cat = SchemaBuilder.record("Cat").fields().requiredString("name").endRecord();
+      Schema chat = SchemaBuilder.record("Chat").fields().requiredString("nom").endRecord();
+      Schema union = SchemaBuilder.unionOf().type(cat).and().type(chat).endUnion();
+
+      try {
+         GenericRecord tigresse = new GenericData.Record(cat);
+         tigresse.put("name", "Tigresse");
+         byte[] catBinary = writeWithUnionWriterSchema(union, tigresse);
+
+         GenericRecord decodedCat = AvroUtil.avroToAvroRecord(catBinary, union);
+         assertEquals("Cat", decodedCat.getSchema().getName());
+         assertEquals("Tigresse", decodedCat.get("name").toString());
+         assertTrue(AvroUtil.avroToJson(catBinary, union).contains("\"Tigresse\""));
+
+         GenericRecord minou = new GenericData.Record(chat);
+         minou.put("nom", "Minou");
+         byte[] chatBinary = writeWithUnionWriterSchema(union, minou);
+
+         GenericRecord decodedChat = AvroUtil.avroToAvroRecord(chatBinary, union);
+         assertEquals("Chat", decodedChat.getSchema().getName());
+         assertEquals("Minou", decodedChat.get("nom").toString());
+         assertTrue(AvroUtil.avroToJson(chatBinary, union).contains("\"Minou\""));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   void testReadUnionBareBranchEncoding() {
+      // Bare-branch encoding is what the Microcks producer emits (jsonToAvro with the union schema): no leading
+      // index. With structurally distinct branches it must keep decoding to the correct branch and value.
+      Schema cat = SchemaBuilder.record("Cat").fields().requiredString("name").endRecord();
+      Schema dog = SchemaBuilder.record("Dog").fields().requiredInt("legs").endRecord();
+      Schema union = SchemaBuilder.unionOf().type(cat).and().type(dog).endUnion();
+
+      try {
+         byte[] bareCat = AvroUtil.jsonToAvro("{\"name\":\"Tigresse\"}", union);
+         GenericRecord decodedCat = AvroUtil.avroToAvroRecord(bareCat, union);
+         assertEquals("Cat", decodedCat.getSchema().getName());
+         assertEquals("Tigresse", decodedCat.get("name").toString());
+
+         byte[] bareDog = AvroUtil.jsonToAvro("{\"legs\":4}", union);
+         GenericRecord decodedDog = AvroUtil.avroToAvroRecord(bareDog, union);
+         assertEquals("Dog", decodedDog.getSchema().getName());
+         assertEquals(4, decodedDog.get("legs"));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   void testGetValidationErrorsTopLevelPrimitive() {
+      Schema stringSchema = SchemaBuilder.builder().stringType();
+
+      // A top-level non-record schema carries no field name: it must not throw but report a typed error.
+      List<String> errors = assertDoesNotThrow(() -> AvroUtil.getValidationErrors(stringSchema, 42));
+
+      assertEquals(1, errors.size());
+      assertEquals("string is not a string", errors.get(0));
+   }
+
+   @Test
+   void testGetValidationErrorsTopLevelArray() {
+      Schema arraySchema = SchemaBuilder.array().items().stringType();
+
+      // Datum is not a collection at all.
+      List<String> notAnArray = assertDoesNotThrow(() -> AvroUtil.getValidationErrors(arraySchema, "nope"));
+      assertEquals(1, notAnArray.size());
+      assertEquals("array is not a valid array", notAnArray.get(0));
+
+      // Array of wrongly-typed elements: each element mismatch must be reported without throwing.
+      List<String> wrongElements = assertDoesNotThrow(
+            () -> AvroUtil.getValidationErrors(arraySchema, List.of(1, 2, 3)));
+      assertEquals(3, wrongElements.size());
+      for (String error : wrongElements) {
+         assertEquals("array is not a string", error);
+      }
+   }
+
+   @Test
+   void testGetValidationErrorsTopLevelUnionOfPrimitives() {
+      Schema union = SchemaBuilder.unionOf().stringType().and().intType().endUnion();
+      String name = union.getFullName();
+
+      // A top-level union of primitives against a mismatching datum used to throw on fieldName[0].
+      List<String> errors = assertDoesNotThrow(() -> AvroUtil.getValidationErrors(union, true));
+      assertEquals(2, errors.size());
+      assertTrue(errors.contains(name + " is not a string"));
+      assertTrue(errors.contains(name + " is not an integer"));
+   }
 }
