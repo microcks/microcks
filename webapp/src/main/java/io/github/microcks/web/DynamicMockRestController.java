@@ -550,8 +550,11 @@ public class DynamicMockRestController {
       // Setting delay to default one if not set.
       if (delay == null && mockContext.operation.getDefaultDelay() != null) {
          Long operationDelay = mockContext.operation.getDefaultDelay();
-         // TODO: Get DelayStrategy
-         delay = new DelaySpec(operationDelay, DelayApplierOptions.FIXED);
+         String delayStrategy = mockContext.operation.getDefaultDelayStrategy();
+         if (delayStrategy == null) {
+            delayStrategy = DelayApplierOptions.FIXED;
+         }
+         delay = new DelaySpec(operationDelay, delayStrategy);
       }
 
       MockControllerCommons.waitForDelay(since, delay);
