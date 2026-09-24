@@ -17,6 +17,7 @@ package io.github.microcks.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 import io.github.microcks.web.dto.GenericResourceServiceDTO;
 
@@ -350,6 +351,38 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       assertTrue(elapsed >= delay, "Response should be delayed by at least " + delay + "ms, was " + elapsed + "ms");
+   }
+
+   @Test
+   void testCreateResourceWithOperationDefaultDelay() {
+      // First, get the service and set default delay and strategy on its POST operation
+      Service service = serviceRepository.findByNameAndVersion(SERVICE_NAME, SERVICE_VERSION);
+      for (Operation operation : service.getOperations()) {
+         if (("POST /" + RESOURCE).equals(operation.getName())) {
+            operation.setDefaultDelay(200L);
+            operation.setDefaultDelayStrategy("FIXED");
+         }
+      }
+      serviceRepository.save(service);
+
+      String body = "{\"productId\": \"DELAY2\", \"quantity\": 1}";
+
+      long startTime = System.currentTimeMillis();
+      ResponseEntity<String> response = restTemplate.postForEntity(
+            "/dynarest/" + encodedServiceName() + "/" + SERVICE_VERSION + "/" + RESOURCE, body, String.class);
+      long elapsed = System.currentTimeMillis() - startTime;
+
+      assertEquals(201, response.getStatusCode().value());
+      assertTrue(elapsed >= 200L, "Response should be delayed by at least 200ms, was " + elapsed + "ms");
+
+      // Cleanup the operation state
+      for (Operation operation : service.getOperations()) {
+         if (("POST /" + RESOURCE).equals(operation.getName())) {
+            operation.setDefaultDelay(null);
+            operation.setDefaultDelayStrategy(null);
+         }
+      }
+      serviceRepository.save(service);
    }
 
    @Test
