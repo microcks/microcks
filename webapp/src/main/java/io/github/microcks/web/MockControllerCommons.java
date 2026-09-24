@@ -132,8 +132,8 @@ public class MockControllerCommons {
          externalUrl = externalUrl.replaceFirst("/$", "") + resourcePath;
          if (!externalUrl.contentEquals(request.getRequestURL())) {
             try {
-               return Optional.of(
-                     UriComponentsBuilder.fromUriString(externalUrl).query(request.getQueryString()).build().toUri());
+               return Optional.of(UriComponentsBuilder.fromUriString(externalUrl).query(request.getQueryString())
+                     .build(true).toUri());
             } catch (IllegalArgumentException ex) {
                log.warn("Invalid external URL in the dispatcher - {}", externalUrl);
             }

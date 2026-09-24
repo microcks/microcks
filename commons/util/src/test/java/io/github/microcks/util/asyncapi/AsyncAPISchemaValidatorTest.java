@@ -731,6 +731,119 @@ class AsyncAPISchemaValidatorTest {
    }
 
    @Test
+   void testValidateAvroSuccessFromAsyncAPI3Resource() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+      Schema avroSchema = null;
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi-3.0.yaml"),
+               StandardCharsets.UTF_8);
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Load schema from file.
+         avroSchema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+
+         GenericRecord data = new GenericData.Record(avroSchema);
+         data.put("fullName", "Laurent Broudoux");
+         data.put("email", "laurent@microcks.io");
+         data.put("age", 42);
+
+         // Validate the content of publishUserSignedUps operation messages, where payload is expressed
+         // as a Multi Format Schema Object holding an inline Avro schema.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, data,
+               "/operations/publishUserSignedUps/messages", null);
+         assertTrue(errors.isEmpty());
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   void testValidateAvroFailureFromAsyncAPI3Resource() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+      Schema avroSchema = null;
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi-3.0.yaml"),
+               StandardCharsets.UTF_8);
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Load schema from file.
+         avroSchema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-bad.avsc"));
+
+         GenericRecord data = new GenericData.Record(avroSchema);
+         data.put("name", "Laurent");
+         data.put("email", "laurent@microcks.io");
+         data.put("age", 42);
+
+         // Validate the content of publishUserSignedUps operation messages.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, data,
+               "/operations/publishUserSignedUps/messages", null);
+         assertFalse(errors.isEmpty());
+         assertEquals(1, errors.size());
+         assertEquals("Required field fullName cannot be found in record", errors.get(0));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   void testValidateAvroSuccessFromAsyncAPI3WithRefsResource() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+      Schema avroSchema = null;
+
+      SchemaMap schemaMap = new SchemaMap();
+      schemaMap.putSchemaEntry("./user-signedup.avsc", """
+            {
+               "namespace": "microcks.avro",
+               "type": "record",
+               "name": "User",
+               "fields": [
+                  { "name": "fullName", "type": "string" },
+                  { "name": "email", "type": "string" },
+                  { "name": "age", "type": "int" }
+               ]
+            }
+            """);
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File(
+                     "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi-3.0.yaml"),
+               StandardCharsets.UTF_8);
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Load schema from file.
+         avroSchema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+
+         GenericRecord data = new GenericData.Record(avroSchema);
+         data.put("fullName", "Laurent Broudoux");
+         data.put("email", "laurent@microcks.io");
+         data.put("age", 42);
+
+         // Validate the content of publishUserSignedUps operation messages, where payload is expressed
+         // as a Multi Format Schema Object referencing an external Avro schema.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, data,
+               "/operations/publishUserSignedUps/messages", schemaMap);
+         assertTrue(errors.isEmpty());
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
    void testValidateAvroSuccessFromAsyncAPIWithOneOf23() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
@@ -878,5 +991,64 @@ class AsyncAPISchemaValidatorTest {
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
+   }
+
+   @Test
+   void testValidateAvroMalformedBinaryReturnsErrors() {
+      JsonNode asyncAPISpec = null;
+      try {
+         // Load full specification from file.
+         String asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml"),
+               StandardCharsets.UTF_8);
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+      } catch (Exception e) {
+         fail("Specification should be loaded");
+      }
+
+      final JsonNode spec = asyncAPISpec;
+      // A leading 0x01 zigzag-decodes to a negative string length, which the Avro binary decoder
+      // reports through an AvroRuntimeException ("Malformed data. Length is negative"). Such a failure
+      // used to escape validateAvroMessage and hang the test thread instead of being reported.
+      byte[] negativeLength = new byte[] { 0x01 };
+      // A large positive length with no following bytes triggers a misaligned read.
+      byte[] misaligned = new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, 0x0F };
+
+      for (byte[] malformed : new byte[][] { negativeLength, misaligned }) {
+         List<String> errors = assertDoesNotThrow(() -> AsyncAPISchemaValidator.validateAvroMessage(spec, malformed,
+               "/channels/user~1signedup/subscribe/message", null));
+         assertFalse(errors.isEmpty(), "Malformed Avro binary should produce validation errors, not throw");
+      }
+   }
+
+   @Test
+   void testValidateAvroMalformedSchemaReturnsErrors() {
+      // The inline Avro payload is a record without fields, which Schema.Parser rejects with an unchecked
+      // SchemaParseException. It must be reported as a validation error, not escape and kill the caller.
+      String asyncAPIText = """
+            {
+              "channels": {
+                "test": {
+                  "subscribe": {
+                    "message": {
+                      "payload": { "type": "record", "name": "Bad" }
+                    }
+                  }
+                }
+              }
+            }
+            """;
+      JsonNode asyncAPISpec = null;
+      try {
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+      } catch (Exception e) {
+         fail("Specification should be loaded");
+      }
+
+      final JsonNode spec = asyncAPISpec;
+      List<String> errors = assertDoesNotThrow(() -> AsyncAPISchemaValidator.validateAvroMessage(spec,
+            new byte[] { 0x00 }, "/channels/test/subscribe/message", null));
+      assertFalse(errors.isEmpty(), "Malformed Avro schema should produce a validation error, not throw");
+      assertTrue(errors.get(0).contains("cannot be parsed"));
    }
 }

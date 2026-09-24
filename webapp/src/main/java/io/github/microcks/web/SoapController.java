@@ -112,6 +112,9 @@ public class SoapController {
    @Value("${validation.resourceUrl}")
    private String resourceUrl;
 
+   @Value("${mocks.service-state-store.default-ttl:10}")
+   private int defaultTtl;
+
 
    /**
     * Build a SoapController with required dependencies.
@@ -485,7 +488,7 @@ public class SoapController {
          // Evaluating request with script coming from operation dispatcher rules.
          String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
          ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body, requestContext,
-               new ServiceStateStore(serviceStateRepository, service.getId()), request);
+               new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl), request);
 
          return new DispatchContext((String) scriptEngine.eval(script, scriptContext), requestContext);
       } catch (Exception e) {
@@ -509,7 +512,7 @@ public class SoapController {
       Map<String, Object> requestContext = new HashMap<>();
       try {
          Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
-               new ServiceStateStore(serviceStateRepository, service.getId()), request);
+               new ServiceStateStore(serviceStateRepository, service.getId(), defaultTtl), request);
 
          return new DispatchContext(JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext),
                requestContext);

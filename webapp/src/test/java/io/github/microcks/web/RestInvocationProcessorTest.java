@@ -30,12 +30,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.net.URI;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -249,6 +251,32 @@ class RestInvocationProcessorTest {
          assertEquals(HttpStatus.OK, result.status());
          assertArrayEquals("from proxy".getBytes(), result.content());
          verify(proxyService).callExternal(any(), eq(HttpMethod.GET), any(), isNull());
+      }
+
+      @Test
+      @DisplayName("should forward an already encoded proxy url as-is")
+      void shouldProxyRequestWithEncodedProxyUrl() {
+         // Arrange
+         var context = createMockContext("GET /invocations", "GET", "/invocations");
+         context.operation().setDispatcher("PROXY");
+         context.operation().setDispatcherRules(
+               "https://backend.example.com/runtimes/urn%3Aorg%3Aexample%3Aservice%2Fruntime%2Fexample-ABC123");
+
+         var proxyResponse = new ResponseEntity<>("from proxy".getBytes(), HttpStatus.OK);
+         when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/invocations"));
+         when(request.getQueryString()).thenReturn("qualifier=DEFAULT");
+         when(proxyService.callExternal(any(), eq(HttpMethod.GET), any(), isNull())).thenReturn(proxyResponse);
+
+         // Act
+         var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
+
+         // Assert
+         assertEquals(HttpStatus.OK, result.status());
+         var forwardedUri = ArgumentCaptor.forClass(URI.class);
+         verify(proxyService).callExternal(forwardedUri.capture(), eq(HttpMethod.GET), any(), isNull());
+         assertEquals("/runtimes/urn%3Aorg%3Aexample%3Aservice%2Fruntime%2Fexample-ABC123/invocations",
+               forwardedUri.getValue().getRawPath());
+         assertEquals("qualifier=DEFAULT", forwardedUri.getValue().getRawQuery());
       }
    }
 }

@@ -1,6 +1,6 @@
 # Microcks Community Code of Conduct
 
-Microcks project adheres to the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md), aligning with the values of collaboration, transparency, and inclusivity that define open source.
+Microcks project adheres to the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md), aligning with the values of collaboration, transparency, and inclusivity that define open source.
 
 ## Our Pledge
 
@@ -21,12 +21,26 @@ To ensure a productive, positive experience for all community members, we ask ev
 
 ## Enforcement
 
-Instances of unacceptable behavior—including harassment, abusive language, or any other forms of misconduct—should be reported to the Microcks project team at **info@microcks.io**.
+Please do not report Code of Conduct incidents through public channels.
+
+Incidents occurring entirely within the Microcks community may be reported privately to the Microcks project team at [info@microcks.io](mailto:info@microcks.io).
+
+Reports may instead be submitted to the CNCF Code of Conduct Committee at [conduct@cncf.io](mailto:conduct@cncf.io), especially when:
+
+- A Microcks Maintainer or project-level incident responder is involved,
+- A conflict of interest may prevent impartial project-level handling,
+- The incident is project-agnostic or affects multiple CNCF projects, or
+- The reporter prefers independent handling by CNCF.
+
+The CNCF [Incident Resolution Procedures](https://github.com/cncf/foundation/blob/main/code-of-conduct/coc-incident-resolution-procedures.md) explain what to include in a report, what happens after submission and how to report anonymously. Reports are handled or transferred according to the CNCF [Code of Conduct jurisdiction policy](https://github.com/cncf/foundation/blob/main/code-of-conduct/coc-committee-jurisdiction-policy.md).
 
 The project team will:
+
 - Review and investigate all reports confidentially.
-- Take action deemed appropriate for the situation, including potential temporary or permanent bans from the community.
-- Keep the identity of the reporter confidential, ensuring a safe and respectful process for all involved.
+- Take proportionate protective or remedial action within the project's jurisdiction and applicable CNCF policies.
+- Protect the reporter's identity and share confidential information only when needed to investigate, resolve or transfer the incident, subject to the CNCF procedures and applicable law.
+- Require anyone with a conflict of interest to recuse themselves from accessing confidential report information, investigating the incident or deciding its resolution.
+- Transfer incidents to the CNCF Code of Conduct Committee when required by the CNCF jurisdiction policy.
 
 ## A Community-Driven Open Source
 

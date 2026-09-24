@@ -15,12 +15,14 @@
  */
 package io.github.microcks.util;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -84,7 +86,7 @@ public class AvroUtil {
          for (Schema schema : avroSchema.getTypes()) {
             try {
                return jsonToAvro(json, schema);
-            } catch (AvroTypeException e) {
+            } catch (AvroRuntimeException | IOException e) {
                // Ignore and try next schema.
             }
          }
@@ -136,7 +138,7 @@ public class AvroUtil {
          for (Schema schema : avroSchema.getTypes()) {
             try {
                return jsonToAvroRecord(json, schema);
-            } catch (AvroTypeException e) {
+            } catch (AvroRuntimeException | IOException e) {
                // Ignore and try next schema.
             }
          }
@@ -173,15 +175,7 @@ public class AvroUtil {
     */
    public static String avroToJson(byte[] avroBinary, Schema avroSchema) throws AvroTypeException, IOException {
       if (avroSchema.isUnion()) {
-         // If the schema is a union, we need to find the right schema to use.
-         for (Schema schema : avroSchema.getTypes()) {
-            try {
-               return avroToJson(avroBinary, schema);
-            } catch (AvroTypeException e) {
-               // Ignore and try next schema.
-            }
-         }
-         throw new AvroTypeException("No schema in union matches Avro binary data");
+         return unionBinaryToAvroRecord(avroBinary, avroSchema).toString();
       }
       DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(avroSchema);
       Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
@@ -214,20 +208,61 @@ public class AvroUtil {
    public static GenericRecord avroToAvroRecord(byte[] avroBinary, Schema avroSchema)
          throws AvroTypeException, IOException {
       if (avroSchema.isUnion()) {
-         // If the schema is a union, we need to find the right schema to use.
-         for (Schema schema : avroSchema.getTypes()) {
-            try {
-               return avroToAvroRecord(avroBinary, schema);
-            } catch (AvroTypeException e) {
-               // Ignore and try next schema.
-            }
-         }
-         throw new AvroTypeException("No schema in union matches Avro binary data");
+         return unionBinaryToAvroRecord(avroBinary, avroSchema);
       }
       DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(avroSchema);
       Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
 
       return datumReader.read(null, decoder);
+   }
+
+   /**
+    * Read an Avro binary whose root schema is a union, supporting both the standard union encoding (with a leading
+    * zig-zag branch index) and the "bare-branch" encoding produced by Microcks itself (see {@link #jsonToAvro}), which
+    * omits that index. Each candidate decoding is only accepted when it consumes the whole binary, so a bare payload is
+    * not silently misread as an indexed one (and vice versa).
+    * @param avroBinary  The Avro binary to read
+    * @param unionSchema The union Schema to read the binary against
+    * @return The decoded GenericRecord
+    * @throws AvroTypeException if no union branch and no encoding can fully read the binary
+    */
+   private static GenericRecord unionBinaryToAvroRecord(byte[] avroBinary, Schema unionSchema)
+         throws AvroTypeException {
+      // First, try the bare-branch encoding: each branch is read as a standalone schema, with no leading index.
+      // This is what the Microcks producer emits and must keep working.
+      for (Schema schema : unionSchema.getTypes()) {
+         GenericRecord record = readFully(avroBinary, schema);
+         if (record != null) {
+            return record;
+         }
+      }
+      // Then, try the standard union encoding, letting the reader consume the leading branch index.
+      GenericRecord record = readFully(avroBinary, unionSchema);
+      if (record != null) {
+         return record;
+      }
+      throw new AvroTypeException("No schema in union matches Avro binary data");
+   }
+
+   /**
+    * Try to fully read an Avro binary against a given schema. Returns the decoded record only if reading succeeds and
+    * consumes the entire binary; returns {@code null} otherwise so the caller can try another schema or encoding.
+    */
+   private static GenericRecord readFully(byte[] avroBinary, Schema schema) {
+      try {
+         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
+         GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+         GenericRecord record = datumReader.read(null, decoder);
+         // Only accept the decoding if the whole binary has been consumed. This is what distinguishes a genuine
+         // match from an accidental partial read (e.g. an index byte mistaken for a field length).
+         if (decoder.isEnd()) {
+            return record;
+         }
+      } catch (AvroRuntimeException | IOException | ArrayIndexOutOfBoundsException | NegativeArraySizeException
+            | ClassCastException e) {
+         // Not a match for this schema/encoding, let the caller try the next one.
+      }
+      return null;
    }
 
    /**
@@ -265,6 +300,10 @@ public class AvroUtil {
    public static List<String> getValidationErrors(Schema schema, Object datum, String... fieldName) {
       List<String> errors = new ArrayList<>();
 
+      // fieldName is optional (top-level, ARRAY and UNION recursions may not provide one), so fall back to a
+      // meaningful label to avoid an ArrayIndexOutOfBoundsException when reporting a type mismatch.
+      String name = (fieldName != null && fieldName.length > 0) ? fieldName[0] : schema.getFullName();
+
       switch (schema.getType()) {
          case RECORD:
             if (datum instanceof GenericRecord genericRecord) {
@@ -285,46 +324,46 @@ public class AvroUtil {
             break;
          case ARRAY:
             if (!(datum instanceof Collection<?> collection)) {
-               errors.add(fieldName[0] + " is not a valid array");
+               errors.add(name + " is not a valid array");
             } else {
                // Now add errors for each element.
                for (Object element : collection) {
-                  errors.addAll(getValidationErrors(schema.getElementType(), element));
+                  errors.addAll(getValidationErrors(schema.getElementType(), element, name));
                }
             }
             break;
          case STRING:
             if (!(datum instanceof CharSequence))
-               errors.add(fieldName[0] + " is not a string");
+               errors.add(name + " is not a string");
             break;
          case BYTES:
             if (!(datum instanceof ByteBuffer))
-               errors.add(fieldName[0] + " is not bytes");
+               errors.add(name + " is not bytes");
             break;
          case INT:
             if (!(datum instanceof Integer))
-               errors.add(fieldName[0] + " is not an integer");
+               errors.add(name + " is not an integer");
             break;
          case LONG:
             if (!(datum instanceof Long))
-               errors.add(fieldName[0] + " is not a long");
+               errors.add(name + " is not a long");
             break;
          case FLOAT:
             if (!(datum instanceof Float))
-               errors.add(fieldName[0] + " is not a float");
+               errors.add(name + " is not a float");
             break;
          case DOUBLE:
             if (!(datum instanceof Double))
-               errors.add(fieldName[0] + " is not a double");
+               errors.add(name + " is not a double");
             break;
          case BOOLEAN:
             if (!(datum instanceof Boolean))
-               errors.add(fieldName[0] + " is not a boolean");
+               errors.add(name + " is not a boolean");
             break;
          case UNION:
             // Get validation errors for each type in union.
             for (Schema unionSchema : schema.getTypes()) {
-               errors.addAll(getValidationErrors(unionSchema, datum));
+               errors.addAll(getValidationErrors(unionSchema, datum, name));
             }
             break;
       }

@@ -137,6 +137,10 @@ data:
     kafka.producers.service-changes.properties.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
     kafka.producers.asyncapi-triggers.properties.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
         {{- end }}
+        {{- if .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
+    kafka.producers.service-changes.properties.sasl.client.callback.handler.class={{ .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
+    kafka.producers.asyncapi-triggers.properties.sasl.client.callback.handler.class={{ .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
+        {{- end }}
       {{- end }}
     {{- end }}
 
@@ -555,6 +559,9 @@ data:
         {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
     %kube.kafka.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
         {{- end }}
+        {{- if .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
+    %kube.kafka.sasl.client.callback.handler.class={{ .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
+        {{- end }}
     
     %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SASL_SSL
     %kube.mp.messaging.incoming.microcks-asyncapi-triggers.security.protocol=SASL_SSL
@@ -573,6 +580,10 @@ data:
         {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
     %kube.mp.messaging.incoming.microcks-services-updates.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
     %kube.mp.messaging.incoming.microcks-asyncapi-triggers.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
+        {{- end }}
+        {{- if .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
+    %kube.mp.messaging.incoming.microcks-services-updates.sasl.client.callback.handler.class={{ .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
+    %kube.mp.messaging.incoming.microcks-asyncapi-triggers.sasl.client.callback.handler.class={{ .Values.features.async.kafka.authentication.saslClientCallbackHandlerClass }}
         {{- end }}
       {{- end }}
     {{ end }}

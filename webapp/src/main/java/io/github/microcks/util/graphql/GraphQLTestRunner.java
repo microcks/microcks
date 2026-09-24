@@ -146,15 +146,16 @@ public class GraphQLTestRunner extends HttpTestRunner {
    @Override
    protected String extractTestReturnMessage(Service service, Operation operation, Request request,
          ClientHttpResponse httpResponse) {
-      StringBuilder builder = new StringBuilder();
-      if (lastValidationErrors != null && !lastValidationErrors.isEmpty()) {
-         for (String error : lastValidationErrors) {
-            builder.append(error).append("/n");
+      try {
+         if (lastValidationErrors == null || lastValidationErrors.isEmpty()) {
+            return "";
          }
+
+         return String.join(System.lineSeparator(), lastValidationErrors);
+      } finally {
+         // Reset after consumption to avoid side effects.
+         lastValidationErrors = null;
       }
-      // Reset just after consumption so avoid side-effects.
-      lastValidationErrors = null;
-      return builder.toString();
    }
 
    /**

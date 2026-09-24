@@ -277,6 +277,7 @@ Here are below the configuration properties of the Kafka support feature:
 | `features.async.kafka.authentication` | `saslMechanism`                 | **Optional**. For SASL authentication, you'll have to specify an additional authentication mechanism such as `SCRAM-SHA-512` or `OAUTHBEARER`                                                                          |
 | `features.async.kafka.authentication` | `saslJaasConfig`                | **Optional**. For SASL authentication, you'll have to specify a JAAS configuration line with login module, username and password.                                                                                      |
 | `features.async.kafka.authentication` | `saslLoginCallbackHandlerClass` | **Optional**. For SASL authentication, you may want to provide a Login Callback Handler implementations. This implementation may be provided by extending the main and `async-minion` images and adding your own libs. |
+| `features.async.kafka.authentication` | `saslClientCallbackHandlerClass` | **Optional**. For SASL authentication, you may want to provide a Client Callback Handler implementation (required for Amazon MSK IAM with `AWS_MSK_IAM`). This implementation may be provided by extending the main and `async-minion` images and adding your own libs. |
 
 #### MQTT feature details
 
@@ -307,7 +308,7 @@ Here are below the configuration properties of the AMQP support feature:
 
 | Section               | Property   | Description                                                                                                                              |
 | --------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `features.async.amqp` | `url`      | **Optional**. The URL of AMQP broker (eg: `my-amqp-broker.example.com:5672`). Default is undefined which means that feature is disabled. |
+| `features.async.amqp` | `url`      | **Optional**. The URL of AMQP broker. Supports `host:5672` (plain AMQP), `host:5671` (auto `amqps://` for TLS), or explicit `amqps://host:5671` (e.g. Amazon MQ). Default is undefined which means that feature is disabled. |
 | `features.async.amqp` | `username` | **Optional**. The username to use for connecting to secured AMQP broker. Default to `microcks`.                                          |
 | `features.async.amqp` | `password` | **Optional**. The password to use for connecting to secured AMQP broker. Default to `microcks`.                                          |
 

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -227,8 +228,14 @@ public class AsyncAPISchemaValidator {
          return List.of();
       } catch (AvroTypeException ate) {
          errors.add("Avro schema cannot be used to read message: " + ate.getMessage());
+      } catch (AvroRuntimeException are) {
+         // AvroTypeException's parent covers malformed binary data (e.g. "Malformed data. Length is negative").
+         errors.add("Avro binary cannot be read with schema: " + are.getMessage());
       } catch (IOException ioe) {
          errors.add("IOException while trying to validate message: " + ioe.getMessage());
+      } catch (ArrayIndexOutOfBoundsException | NegativeArraySizeException e) {
+         // A misaligned binary read may cause the decoder to compute wrong lengths or offsets.
+         errors.add("Avro binary is malformed and cannot be read with schema: " + e.getMessage());
       }
       return errors;
    }

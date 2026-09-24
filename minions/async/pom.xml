@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.16.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -21,13 +21,14 @@
 
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>3.31.4</quarkus.platform.version>
-    <quarkus-plugin.version>3.31.4</quarkus-plugin.version>
+    <quarkus.platform.version>3.33.3.2</quarkus.platform.version>
+    <quarkus-plugin.version>3.33.3.2</quarkus-plugin.version>
 
-    <apache-httpclient.version>5.3</apache-httpclient.version>
+    <apache-httpclient.version>5.6.3</apache-httpclient.version>
+    <apache-httpcore.version>5.4.3</apache-httpcore.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.25.3</nats.version>
-    <rabbitmq.version>5.30.0</rabbitmq.version>
+    <rabbitmq.version>5.34.0</rabbitmq.version>
     <ibmmq.version>9.3.4.1</ibmmq.version>
     <apicurio-registry.version>2.6.13.Final</apicurio-registry.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
@@ -111,6 +112,16 @@
       <version>${apache-httpclient.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.httpcomponents.core5</groupId>
+      <artifactId>httpcore5</artifactId>
+      <version>${apache-httpcore.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents.core5</groupId>
+      <artifactId>httpcore5-h2</artifactId>
+      <version>${apache-httpcore.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.paho</groupId>
       <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
       <version>${eclipse-paho.version}</version>
@@ -162,12 +173,6 @@
       <artifactId>quarkus-apicurio-registry-avro</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.apicurio</groupId>
-      <artifactId>apicurio-registry-serdes-avro-serde</artifactId>
-      <version>${apicurio-registry.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-confluent-registry-avro</artifactId>
     </dependency>
@@ -202,7 +207,7 @@
     <!-- Test related dependencies -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
+      <artifactId>quarkus-junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
