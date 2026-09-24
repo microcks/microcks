@@ -438,7 +438,7 @@ public class ProducerManager {
    /** Take care publishing IBM MQ message for definition. */
    protected void produceIBMMQMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
          String renderedContent) {
-      String queue = ibmmqProducerManager.getTopicName(definition, eventMessage);
+      String queue = ibmmqProducerManager.getQueueName(definition, eventMessage);
       ibmmqProducerManager.publishMessage(queue, renderedContent);
    }
 

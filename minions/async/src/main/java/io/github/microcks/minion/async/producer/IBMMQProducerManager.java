@@ -29,6 +29,9 @@ import com.ibm.mq.MQMessage;
 import com.ibm.mq.MQQueue;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.constants.CMQC;
+import com.ibm.mq.constants.CMQCFC;
+import com.ibm.mq.headers.pcf.PCFMessage;
+import com.ibm.mq.headers.pcf.PCFMessageAgent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -46,10 +49,10 @@ public class IBMMQProducerManager {
    private MQQueueManager queueManager;
 
    @ConfigProperty(name = "ibmmq.server")
-   Optional<String> ibmmqServer;
+   String ibmmqServer;
 
    @ConfigProperty(name = "ibmmq.queue-manager")
-   Optional<String> queueManagerName;
+   String queueManagerName;
 
    @ConfigProperty(name = "ibmmq.channel", defaultValue = "DEV.APP.SVRCONN")
    String ibmmqChannel;
@@ -67,11 +70,9 @@ public class IBMMQProducerManager {
    @PostConstruct
    public void create() throws Exception {
       try {
-         if (ibmmqServer.isPresent() && !ibmmqServer.get().isEmpty()) {
-            queueManager = createClient();
-         }
+         queueManager = createClient();
       } catch (Exception e) {
-         logger.errorf("Cannot connect to IBM MQ broker %s", ibmmqServer.orElse(""));
+         logger.errorf("Cannot connect to IBM MQ broker %s", ibmmqServer);
          logger.errorf("Connection exception: %s", e.getMessage());
          throw e;
       }
@@ -83,7 +84,7 @@ public class IBMMQProducerManager {
     * @throws Exception in case of connection failure
     */
    protected MQQueueManager createClient() throws Exception {
-      String host = ibmmqServer.get();
+      String host = ibmmqServer;
       int port = 1414;
       if (host.contains(":")) {
          String[] parts = host.split(":");
@@ -102,7 +103,7 @@ public class IBMMQProducerManager {
          MQEnvironment.password = ibmmqPassword.get();
       }
 
-      return new MQQueueManager(queueManagerName.orElse("QM1"));
+      return new MQQueueManager(queueManagerName);
    }
 
    /**
@@ -121,13 +122,13 @@ public class IBMMQProducerManager {
       MQQueue queue = null;
       try {
          int openOptions = CMQC.MQOO_OUTPUT | CMQC.MQOO_FAIL_IF_QUIESCING;
-         queue = queueManager.accessQueue(queueName, openOptions);
+         queue = accessOrCreateQueue(queueName, openOptions);
 
          MQMessage message = new MQMessage();
          message.write(value.getBytes(StandardCharsets.UTF_8));
 
          queue.put(message);
-      } catch (MQException | java.io.IOException e) {
+      } catch (Exception e) {
          logger.warnf("Exception caught while publishing message to IBM MQ", e);
       } finally {
          if (queue != null) {
@@ -141,23 +142,70 @@ public class IBMMQProducerManager {
    }
 
    /**
+    * Access a queue, creating it as a local queue if it does not exist yet. IBM MQ does not create destinations on the
+    * fly (unlike some other brokers), so we take care of provisioning the queue the first time it is used.
+    * @param queueName   The name of the queue to access
+    * @param openOptions The MQ open options to use when accessing the queue
+    * @return An opened {@link MQQueue} ready for use
+    * @throws MQException if the queue cannot be accessed nor created
+    */
+   protected MQQueue accessOrCreateQueue(String queueName, int openOptions) throws MQException {
+      try {
+         return queueManager.accessQueue(queueName, openOptions);
+      } catch (MQException e) {
+         if (e.reasonCode == CMQC.MQRC_UNKNOWN_OBJECT_NAME) {
+            logger.infof("Queue {%s} does not exist yet, creating a new local queue", queueName);
+            createLocalQueue(queueName);
+            return queueManager.accessQueue(queueName, openOptions);
+         }
+         throw e;
+      }
+   }
+
+   /**
+    * Create a new local queue on the connected queue manager using a PCF administration command.
+    * @param queueName The name of the local queue to create
+    */
+   protected void createLocalQueue(String queueName) {
+      PCFMessageAgent agent = null;
+      try {
+         agent = new PCFMessageAgent(queueManager);
+         PCFMessage request = new PCFMessage(CMQCFC.MQCMD_CREATE_Q);
+         request.addParameter(CMQC.MQCA_Q_NAME, queueName);
+         request.addParameter(CMQC.MQIA_Q_TYPE, CMQC.MQQT_LOCAL);
+         agent.send(request);
+      } catch (Exception e) {
+         throw new IllegalStateException("Cannot create IBM MQ queue " + queueName, e);
+      } finally {
+         if (agent != null) {
+            try {
+               agent.disconnect();
+            } catch (Exception e) {
+               logger.warn("Exception caught while disconnecting IBM MQ PCF agent", e);
+            }
+         }
+      }
+   }
+
+   /**
     * Get the IBM MQ queue name corresponding to a AsyncMockDefinition, sanitizing all parameters.
     * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get queue name
     * @return The queue name for definition and event
     */
-   public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      // Produce service name part of topic name.
+   public String getQueueName(AsyncMockDefinition definition, EventMessage eventMessage) {
+      // Produce service name part of queue name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
 
-      // Produce version name part of topic name.
+      // Produce version name part of queue name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
 
-      // Produce operation name part of topic name.
+      // Produce operation name part of queue name.
       String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
-      // Aggregate the 3 parts using '-' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
+      // Aggregate the 3 parts using '_' as delimiter. IBM MQ object names do not allow the '-' character, so we rely on
+      // the underscore that is part of the valid characters set (letters, digits, '.', '/', '_', '%').
+      return serviceName + "_" + versionName + "_" + operationName;
    }
 }

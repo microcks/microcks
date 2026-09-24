@@ -214,7 +214,8 @@ class NATSProducerManagerIT {
 
       // Act.
       ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry,
-            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null), null);
+            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null),
+            null);
       producerManager.produceNatsMockMessages(mockDefinition);
 
       // Assert - what landed on the broker is Avro binary, and it decodes back to the example.
@@ -275,7 +276,8 @@ class NATSProducerManagerIT {
 
       // Act.
       ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry,
-            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null), null);
+            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null),
+            null);
       producerManager.produceNatsMockMessages(mockDefinition);
 
       // Assert - Avro binary encoded against the schema embedded in the v3 document.
