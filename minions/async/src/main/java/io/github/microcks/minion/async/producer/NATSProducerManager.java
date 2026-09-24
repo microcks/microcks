@@ -100,8 +100,24 @@ public class NATSProducerManager {
     */
    public void publishMessage(String topic, String value, Headers headers) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
-      Message msg = NatsMessage.builder().subject(topic).data(value.getBytes(StandardCharsets.UTF_8)).headers(headers)
-            .build();
+      publishBytes(topic, value.getBytes(StandardCharsets.UTF_8), headers);
+   }
+
+   /**
+    * Publish a binary message on specified topic. Used for the content types whose wire representation is not the
+    * rendered text of the message - Avro binary being the one we support today.
+    *
+    * @param topic   The destination topic for message
+    * @param value   The message payload as raw bytes
+    * @param headers A set of headers if any (maybe null or empty)
+    */
+   public void publishMessage(String topic, byte[] value, Headers headers) {
+      logger.infof("Publishing on topic {%s}, a binary message of %d bytes", topic, value.length);
+      publishBytes(topic, value, headers);
+   }
+
+   private void publishBytes(String topic, byte[] value, Headers headers) {
+      Message msg = NatsMessage.builder().subject(topic).data(value).headers(headers).build();
       client.publish(msg);
    }
 

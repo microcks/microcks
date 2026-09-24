@@ -38,6 +38,7 @@ import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.nats.client.impl.Headers;
 import io.quarkus.arc.Unremovable;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -284,10 +285,15 @@ public class ProducerManager {
       }
    }
 
-   /** Take care publishing Kafka Avro mock message for definition. */
-   protected void produceKafkaAvroMockMessage(AsyncMockDefinition definition, EventMessage eventMessage, String topic,
-         String message, String key) {
-      // Retrieve an Avro schema for this operation.
+   /**
+    * Retrieve the Avro schema to use for the messages of a mock definition. Looks first for a schema entry attached to
+    * the operation (an external <code>.avsc</code> reference), then falls back to the Avro schema embedded in the
+    * AsyncAPI specification. Protocol agnostic on purpose: every binding publishing Avro binary needs exactly this.
+    *
+    * @param definition The mock definition to retrieve an Avro schema for
+    * @return The Avro schema for this definition messages, or null if none could be found
+    */
+   protected Schema retrieveAvroSchema(AsyncMockDefinition definition) {
       Schema schema = null;
 
       // First browse schema entries for this operation.
@@ -323,28 +329,37 @@ public class ProducerManager {
          schema = AvroUtil.getSchema(entries.getFirst().getContent());
       }
 
-      if (schema != null) {
-         logger.debugf("Found an Avro schema '%s' for operation '%s'", schema, definition.getOperation().getName());
-
-         try {
-            if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding)
-                  && kafkaProducerManager.isRegistryEnabled()) {
-               logger.debug("Using a registry and converting message to Avro record");
-               GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schema);
-               kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
-                     .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-            } else {
-               logger.debug("Converting message to Avro bytes array");
-               byte[] avroBinary = AvroUtil.jsonToAvro(message, schema);
-               kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
-                     .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-            }
-         } catch (Exception e) {
-            logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
-         }
-      } else {
+      if (schema == null) {
          logger.warnf("Failed finding a suitable Avro schema for the '%s' operation. No publication done.",
                definition.getOperation().getName());
+      } else {
+         logger.debugf("Found an Avro schema '%s' for operation '%s'", schema, definition.getOperation().getName());
+      }
+      return schema;
+   }
+
+   /** Take care publishing Kafka Avro mock message for definition. */
+   protected void produceKafkaAvroMockMessage(AsyncMockDefinition definition, EventMessage eventMessage, String topic,
+         String message, String key) {
+      Schema schema = retrieveAvroSchema(definition);
+      if (schema == null) {
+         return;
+      }
+
+      try {
+         if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
+            logger.debug("Using a registry and converting message to Avro record");
+            GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schema);
+            kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
+                  .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         } else {
+            logger.debug("Converting message to Avro bytes array");
+            byte[] avroBinary = AvroUtil.jsonToAvro(message, schema);
+            kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
+                  .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         }
+      } catch (Exception e) {
+         logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
       }
    }
 
@@ -359,8 +374,34 @@ public class ProducerManager {
    protected void produceNatsMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
          String renderedContent) {
       String topic = natsProducerManager.getTopicName(definition, eventMessage);
-      natsProducerManager.publishMessage(topic, renderedContent, natsProducerManager
-            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+      Headers headers = natsProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
+            eventMessage.getHeaders());
+
+      // Check if Avro binary is expected, we should convert to bytes.
+      if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
+         produceNatsAvroMockMessage(definition, topic, renderedContent, headers);
+      } else {
+         natsProducerManager.publishMessage(topic, renderedContent, headers);
+      }
+   }
+
+   /**
+    * Take care publishing Nats Avro mock message for definition. Unlike Kafka, NATS has no schema registry integration
+    * so the raw Avro binary encoding is the only one we can produce here.
+    */
+   protected void produceNatsAvroMockMessage(AsyncMockDefinition definition, String topic, String message,
+         Headers headers) {
+      Schema schema = retrieveAvroSchema(definition);
+      if (schema == null) {
+         return;
+      }
+
+      try {
+         logger.debug("Converting message to Avro bytes array");
+         natsProducerManager.publishMessage(topic, AvroUtil.jsonToAvro(message, schema), headers);
+      } catch (Exception e) {
+         logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
+      }
    }
 
    /** Take care publishing MQTT mock messages for definition. */
