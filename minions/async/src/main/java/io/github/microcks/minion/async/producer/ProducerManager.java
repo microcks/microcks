@@ -81,6 +81,7 @@ public class ProducerManager {
    final GooglePubSubProducerManager googlePubSubProducerManager;
    final AmazonSQSProducerManager amazonSQSProducerManager;
    final AmazonSNSProducerManager amazonSNSProducerManager;
+   final IBMMQProducerManager ibmmqProducerManager;
 
    @SuppressWarnings("java:S6813")
    final WebSocketProducerManager wsProducerManager;
@@ -100,12 +101,13 @@ public class ProducerManager {
       final GooglePubSubProducerManager googlePubSubProducerManager;
       final AmazonSQSProducerManager amazonSQSProducerManager;
       final AmazonSNSProducerManager amazonSNSProducerManager;
+      final IBMMQProducerManager ibmmqProducerManager;
 
       @Inject
       public ProducerDependencies(KafkaProducerManager kafkaProducerManager, MQTTProducerManager mqttProducerManager,
             NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
             GooglePubSubProducerManager googlePubSubProducerManager, AmazonSQSProducerManager amazonSQSProducerManager,
-            AmazonSNSProducerManager amazonSNSProducerManager) {
+            AmazonSNSProducerManager amazonSNSProducerManager, IBMMQProducerManager ibmmqProducerManager) {
          this.kafkaProducerManager = kafkaProducerManager;
          this.mqttProducerManager = mqttProducerManager;
          this.natsProducerManager = natsProducerManager;
@@ -113,6 +115,7 @@ public class ProducerManager {
          this.googlePubSubProducerManager = googlePubSubProducerManager;
          this.amazonSQSProducerManager = amazonSQSProducerManager;
          this.amazonSNSProducerManager = amazonSNSProducerManager;
+         this.ibmmqProducerManager = ibmmqProducerManager;
       }
    }
 
@@ -135,6 +138,7 @@ public class ProducerManager {
       this.googlePubSubProducerManager = dependencies.googlePubSubProducerManager;
       this.amazonSQSProducerManager = dependencies.amazonSQSProducerManager;
       this.amazonSNSProducerManager = dependencies.amazonSNSProducerManager;
+      this.ibmmqProducerManager = dependencies.ibmmqProducerManager;
       this.wsProducerManager = wsProducerManager;
    }
 
@@ -178,6 +182,9 @@ public class ProducerManager {
                      break;
                   case SNS:
                      produceSNSMockMessages(definition);
+                     break;
+                  case IBMMQ:
+                     produceIBMMQMockMessages(definition);
                      break;
                   default:
                      break;
@@ -256,6 +263,10 @@ public class ProducerManager {
             break;
          case SNS:
             produceSNSMockMessage(definition, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case IBMMQ:
+            produceIBMMQMockMessage(definition, eventMessage,
                   renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
             break;
          default:
@@ -411,11 +422,24 @@ public class ProducerManager {
       }
    }
 
-   /** Take care publishing MQTT message for definition. */
    protected void produceMQTTMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
          String renderedContent) {
       String topic = mqttProducerManager.getTopicName(definition, eventMessage);
       mqttProducerManager.publishMessage(topic, renderedContent);
+   }
+
+   /** Take care publishing IBM MQ mock messages for definition. */
+   protected void produceIBMMQMockMessages(AsyncMockDefinition definition) {
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceIBMMQMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
+      }
+   }
+
+   /** Take care publishing IBM MQ message for definition. */
+   protected void produceIBMMQMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+         String renderedContent) {
+      String queue = ibmmqProducerManager.getTopicName(definition, eventMessage);
+      ibmmqProducerManager.publishMessage(queue, renderedContent);
    }
 
    /** Take care publishing WebSocket mock messages for definition. */
