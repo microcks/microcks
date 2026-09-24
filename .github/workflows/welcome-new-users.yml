@@ -19,7 +19,7 @@ permissions: {}
 jobs:
   welcome-issue:
     if: github.event_name == 'issues'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       issues: write
     steps:
@@ -47,7 +47,7 @@ jobs:
 
   welcome-pr-opened:
     if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       pull-requests: write
     steps:
@@ -65,7 +65,7 @@ jobs:
 
   welcome-pr-merged:
     if: github.event_name == 'pull_request_target' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       pull-requests: write
     steps:
