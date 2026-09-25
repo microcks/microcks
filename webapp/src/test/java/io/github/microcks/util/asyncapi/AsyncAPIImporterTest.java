@@ -1085,4 +1085,45 @@ class AsyncAPIImporterTest {
          }
       }
    }
+
+   @Test
+   void testAsyncAPIWithIBMMQBinding() {
+      AsyncAPIImporter importer = null;
+      try {
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-ibmmq.yaml", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Account Service", service.getName());
+      assertEquals(ServiceType.EVENT, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+         if ("SUBSCRIBE user/signedup".equals(operation.getName())) {
+            assertEquals("SUBSCRIBE", operation.getMethod());
+
+            // Check that IBM MQ channel binding has been parsed (queue destination).
+            Binding binding = operation.getBindings().get(BindingType.IBMMQ.name());
+            assertNotNull(binding);
+            assertEquals("queue", binding.getDestinationType());
+            assertEquals("myQueueName", binding.getDestinationName());
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
 }

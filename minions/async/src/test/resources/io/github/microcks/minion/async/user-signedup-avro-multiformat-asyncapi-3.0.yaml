@@ -1,0 +1,51 @@
+asyncapi: 3.0.0
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User signed-up Avro API V3
+  version: 0.1.1
+  description: Sample AsyncAPI v3 for user signedup events whose payload is an Avro Multi Format Schema Object
+defaultContentType: application/json
+channels:
+  user-signedup:
+    address: user/signedup
+    description: The topic on which user signed up events may be consumed
+    messages:
+      userSignedUp:
+        $ref: '#/components/messages/userSignedUp'
+operations:
+  sendUserSignedUp:
+    action: 'send'
+    channel:
+      $ref: '#/channels/user-signedup'
+    summary: Send information about user signed up
+    bindings:
+      nats:
+        queue: microcks
+    messages:
+      - $ref: '#/channels/user-signedup/messages/userSignedUp'
+components:
+  messages:
+    userSignedUp:
+      description: An event describing that a user just signed up.
+      contentType: avro/binary
+      payload:
+        schemaFormat: 'application/vnd.apache.avro;version=1.9.0'
+        schema:
+          namespace: microcks.avro
+          type: record
+          doc: User information
+          name: User
+          fields:
+            - name: fullName
+              type: string
+            - name: email
+              type: string
+            - name: age
+              type: int
+      examples:
+        - name: laurent
+          summary: Example for Laurent user
+          payload:
+            fullName: Laurent Broudoux
+            email: "laurent@microcks.io"
+            age: 41

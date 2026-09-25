@@ -161,16 +161,23 @@ public class AsyncAPITestManager {
                   "Exception: found no suitable MessageConsumptionTask implementation for endpoint", null, null));
          }
 
-         // Validate all the received outputs if any.
-         if (outputs != null && !outputs.isEmpty()) {
-            validateConsumedMessages(testCaseReturn, outputs);
-         } else {
-            logger.infof("No consumed message to validate, test {%s} will be marked as timed-out",
-                  specification.getTestResultId());
+         // Validate all the received outputs if any and always report the result, even if validation throws an
+         // unchecked exception. Otherwise the test thread would die before reporting and the test would hang.
+         try {
+            if (outputs != null && !outputs.isEmpty()) {
+               validateConsumedMessages(testCaseReturn, outputs);
+            } else {
+               logger.infof("No consumed message to validate, test {%s} will be marked as timed-out",
+                     specification.getTestResultId());
+            }
+         } catch (Exception e) {
+            logger.error("Caught an exception while validating consumed messages", e);
+            testCaseReturn.addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
+                  "Exception: message validation failed: " + e.getMessage(), null, null));
+         } finally {
+            // Finally, report the testCase results using Microcks API.
+            microcksAPIConnector.reportTestCaseResult(specification.getTestResultId(), testCaseReturn);
          }
-
-         // Finally, report the testCase results using Microcks API.
-         microcksAPIConnector.reportTestCaseResult(specification.getTestResultId(), testCaseReturn);
       }
 
       /**

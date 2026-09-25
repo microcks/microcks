@@ -21,14 +21,14 @@
 
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>3.31.4</quarkus.platform.version>
-    <quarkus-plugin.version>3.31.4</quarkus-plugin.version>
+    <quarkus.platform.version>3.33.3.2</quarkus.platform.version>
+    <quarkus-plugin.version>3.33.3.2</quarkus-plugin.version>
 
     <apache-httpclient.version>5.6.3</apache-httpclient.version>
     <apache-httpcore.version>5.4.3</apache-httpcore.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.25.3</nats.version>
-    <rabbitmq.version>5.30.0</rabbitmq.version>
+    <rabbitmq.version>5.34.0</rabbitmq.version>
     <ibmmq.version>9.3.4.1</ibmmq.version>
     <apicurio-registry.version>2.6.13.Final</apicurio-registry.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
@@ -173,12 +173,6 @@
       <artifactId>quarkus-apicurio-registry-avro</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.apicurio</groupId>
-      <artifactId>apicurio-registry-serdes-avro-serde</artifactId>
-      <version>${apicurio-registry.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-confluent-registry-avro</artifactId>
     </dependency>
@@ -213,7 +207,7 @@
     <!-- Test related dependencies -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
+      <artifactId>quarkus-junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -265,6 +259,12 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-gcloud</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm.mq</groupId>
+      <artifactId>mq-java-testcontainer</artifactId>
+      <version>2.0.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

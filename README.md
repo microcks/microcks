@@ -61,9 +61,9 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch         | Container images tags |
 | ----------- |-------------------|----------------|-----------------------|
-| Stable      | `1.14.0`          | `release-1.14` | `1.14.0`, `latest`    |
-| Dev         | `1.15.0-SNAPSHOT` | `master`       | `nightly`             |
-| Maintenance | `1.13.3-SNAPSHOT` | `1.13.x`       | `maintenance`         |
+| Stable      | `1.15.0`          | `release-1.15` | `1.15.0`, `latest`    |
+| Dev         | `1.16.0-SNAPSHOT` | `master`       | `nightly`             |
+| Maintenance | `1.14.1-SNAPSHOT` | `1.14.x`       | `maintenance`         |
 
 Have a look at our [tested configurations](TESTED_CONFIGURATIONS.md) to know more about the versions of dependencies 
 and integrations that we are using for development and testing.

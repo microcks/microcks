@@ -38,6 +38,7 @@ import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.nats.client.impl.Headers;
 import io.quarkus.arc.Unremovable;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -80,6 +81,7 @@ public class ProducerManager {
    final GooglePubSubProducerManager googlePubSubProducerManager;
    final AmazonSQSProducerManager amazonSQSProducerManager;
    final AmazonSNSProducerManager amazonSNSProducerManager;
+   final IBMMQProducerManager ibmmqProducerManager;
 
    @SuppressWarnings("java:S6813")
    final WebSocketProducerManager wsProducerManager;
@@ -99,12 +101,13 @@ public class ProducerManager {
       final GooglePubSubProducerManager googlePubSubProducerManager;
       final AmazonSQSProducerManager amazonSQSProducerManager;
       final AmazonSNSProducerManager amazonSNSProducerManager;
+      final IBMMQProducerManager ibmmqProducerManager;
 
       @Inject
       public ProducerDependencies(KafkaProducerManager kafkaProducerManager, MQTTProducerManager mqttProducerManager,
             NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
             GooglePubSubProducerManager googlePubSubProducerManager, AmazonSQSProducerManager amazonSQSProducerManager,
-            AmazonSNSProducerManager amazonSNSProducerManager) {
+            AmazonSNSProducerManager amazonSNSProducerManager, IBMMQProducerManager ibmmqProducerManager) {
          this.kafkaProducerManager = kafkaProducerManager;
          this.mqttProducerManager = mqttProducerManager;
          this.natsProducerManager = natsProducerManager;
@@ -112,6 +115,7 @@ public class ProducerManager {
          this.googlePubSubProducerManager = googlePubSubProducerManager;
          this.amazonSQSProducerManager = amazonSQSProducerManager;
          this.amazonSNSProducerManager = amazonSNSProducerManager;
+         this.ibmmqProducerManager = ibmmqProducerManager;
       }
    }
 
@@ -134,6 +138,7 @@ public class ProducerManager {
       this.googlePubSubProducerManager = dependencies.googlePubSubProducerManager;
       this.amazonSQSProducerManager = dependencies.amazonSQSProducerManager;
       this.amazonSNSProducerManager = dependencies.amazonSNSProducerManager;
+      this.ibmmqProducerManager = dependencies.ibmmqProducerManager;
       this.wsProducerManager = wsProducerManager;
    }
 
@@ -177,6 +182,10 @@ public class ProducerManager {
                      break;
                   case SNS:
                      produceSNSMockMessages(definition);
+                     break;
+                  case IBMMQ:
+                     Binding ibmmqBindingDef = definition.getOperation().getBindings().get(binding);
+                     produceIBMMQMockMessages(definition, ibmmqBindingDef);
                      break;
                   default:
                      break;
@@ -257,6 +266,11 @@ public class ProducerManager {
             produceSNSMockMessage(definition, eventMessage,
                   renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
             break;
+         case IBMMQ:
+            Binding ibmmqBindingDef = definition.getOperation().getBindings().get(binding);
+            produceIBMMQMockMessage(definition, ibmmqBindingDef, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
          default:
             break;
       }
@@ -284,10 +298,15 @@ public class ProducerManager {
       }
    }
 
-   /** Take care publishing Kafka Avro mock message for definition. */
-   protected void produceKafkaAvroMockMessage(AsyncMockDefinition definition, EventMessage eventMessage, String topic,
-         String message, String key) {
-      // Retrieve an Avro schema for this operation.
+   /**
+    * Retrieve the Avro schema to use for the messages of a mock definition. Looks first for a schema entry attached to
+    * the operation (an external <code>.avsc</code> reference), then falls back to the Avro schema embedded in the
+    * AsyncAPI specification. Protocol agnostic on purpose: every binding publishing Avro binary needs exactly this.
+    *
+    * @param definition The mock definition to retrieve an Avro schema for
+    * @return The Avro schema for this definition messages, or null if none could be found
+    */
+   protected Schema retrieveAvroSchema(AsyncMockDefinition definition) {
       Schema schema = null;
 
       // First browse schema entries for this operation.
@@ -323,28 +342,37 @@ public class ProducerManager {
          schema = AvroUtil.getSchema(entries.getFirst().getContent());
       }
 
-      if (schema != null) {
-         logger.debugf("Found an Avro schema '%s' for operation '%s'", schema, definition.getOperation().getName());
-
-         try {
-            if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding)
-                  && kafkaProducerManager.isRegistryEnabled()) {
-               logger.debug("Using a registry and converting message to Avro record");
-               GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schema);
-               kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
-                     .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-            } else {
-               logger.debug("Converting message to Avro bytes array");
-               byte[] avroBinary = AvroUtil.jsonToAvro(message, schema);
-               kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
-                     .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-            }
-         } catch (Exception e) {
-            logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
-         }
-      } else {
+      if (schema == null) {
          logger.warnf("Failed finding a suitable Avro schema for the '%s' operation. No publication done.",
                definition.getOperation().getName());
+      } else {
+         logger.debugf("Found an Avro schema '%s' for operation '%s'", schema, definition.getOperation().getName());
+      }
+      return schema;
+   }
+
+   /** Take care publishing Kafka Avro mock message for definition. */
+   protected void produceKafkaAvroMockMessage(AsyncMockDefinition definition, EventMessage eventMessage, String topic,
+         String message, String key) {
+      Schema schema = retrieveAvroSchema(definition);
+      if (schema == null) {
+         return;
+      }
+
+      try {
+         if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
+            logger.debug("Using a registry and converting message to Avro record");
+            GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schema);
+            kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
+                  .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         } else {
+            logger.debug("Converting message to Avro bytes array");
+            byte[] avroBinary = AvroUtil.jsonToAvro(message, schema);
+            kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
+                  .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         }
+      } catch (Exception e) {
+         logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
       }
    }
 
@@ -359,8 +387,34 @@ public class ProducerManager {
    protected void produceNatsMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
          String renderedContent) {
       String topic = natsProducerManager.getTopicName(definition, eventMessage);
-      natsProducerManager.publishMessage(topic, renderedContent, natsProducerManager
-            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+      Headers headers = natsProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
+            eventMessage.getHeaders());
+
+      // Check if Avro binary is expected, we should convert to bytes.
+      if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
+         produceNatsAvroMockMessage(definition, topic, renderedContent, headers);
+      } else {
+         natsProducerManager.publishMessage(topic, renderedContent, headers);
+      }
+   }
+
+   /**
+    * Take care publishing Nats Avro mock message for definition. Unlike Kafka, NATS has no schema registry integration
+    * so the raw Avro binary encoding is the only one we can produce here.
+    */
+   protected void produceNatsAvroMockMessage(AsyncMockDefinition definition, String topic, String message,
+         Headers headers) {
+      Schema schema = retrieveAvroSchema(definition);
+      if (schema == null) {
+         return;
+      }
+
+      try {
+         logger.debug("Converting message to Avro bytes array");
+         natsProducerManager.publishMessage(topic, AvroUtil.jsonToAvro(message, schema), headers);
+      } catch (Exception e) {
+         logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
+      }
    }
 
    /** Take care publishing MQTT mock messages for definition. */
@@ -370,11 +424,25 @@ public class ProducerManager {
       }
    }
 
-   /** Take care publishing MQTT message for definition. */
    protected void produceMQTTMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
          String renderedContent) {
       String topic = mqttProducerManager.getTopicName(definition, eventMessage);
       mqttProducerManager.publishMessage(topic, renderedContent);
+   }
+
+   /** Take care publishing IBM MQ mock messages for definition. */
+   protected void produceIBMMQMockMessages(AsyncMockDefinition definition, Binding bindingDef) {
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         produceIBMMQMockMessage(definition, bindingDef, eventMessage, renderEventMessageContent(eventMessage));
+      }
+   }
+
+   /** Take care publishing IBM MQ message for definition. */
+   protected void produceIBMMQMockMessage(AsyncMockDefinition definition, Binding bindingDef, EventMessage eventMessage,
+         String renderedContent) {
+      String destinationName = ibmmqProducerManager.getDestinationName(definition, eventMessage);
+      String destinationType = bindingDef != null ? bindingDef.getDestinationType() : null;
+      ibmmqProducerManager.publishMessage(destinationType, destinationName, renderedContent);
    }
 
    /** Take care publishing WebSocket mock messages for definition. */

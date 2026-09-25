@@ -26,7 +26,7 @@ If you'd like to help and support Microcks to [level up](https://www.cncf.io/pro
 
 ## Gold Sponsors
 [image width="250"]: #
-[Become the first gold sponsor](hhttps://opencollective.com/microcks/contribute/gold-sponsors-61340/checkout?interval=month&amount=1000&name=&legalName=&email=)
+[Become the first gold sponsor](https://opencollective.com/microcks/contribute/gold-sponsors-61340/checkout?interval=month&amount=1000&name=&legalName=&email=)
 
 ## Silver Sponsors
 [image width="200"]: #

@@ -19,8 +19,8 @@ import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.util.el.TemplateEngine;
 
-import io.apicurio.registry.serde.SerdeConfig;
 import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
+import io.apicurio.registry.serde.config.SerdeConfig;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.avro.generic.GenericRecord;
@@ -158,7 +158,8 @@ public class KafkaProducerManager {
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, AvroKafkaSerializer.class.getName());
 
             props.put(SerdeConfig.REGISTRY_URL, schemaRegistryUrl.get());
-            props.put(SerdeConfig.ENABLE_CONFLUENT_ID_HANDLER, true);
+            //props.put(SerdeConfig.ENABLE_CONFLUENT_ID_HANDLER, true);
+            props.put("apicurio.registry.as-confluent", true);
             // Get an existing schema or auto-register if not found.
             props.put(SerdeConfig.SCHEMA_RESOLVER, io.apicurio.registry.resolver.DefaultSchemaResolver.class.getName());
             props.put(SerdeConfig.AUTO_REGISTER_ARTIFACT, true);

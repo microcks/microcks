@@ -114,7 +114,7 @@ postman:
   image:
     registry: quay.io
     repository: microcks/microcks-postman-runtime
-    tag: 0.7.2
+    tag: 0.8.0
     digest:
   replicas: 1
   resources:
@@ -412,6 +412,14 @@ features:
       #credentialsSecretRef:
         #secret: aws-credentials
         #fileKey: aws.profile
+
+    # Uncomment the ibmmq.server and put a valid endpoint address below to enable IBM MQ support.
+    ibmmq:
+      #server: localhost:1414
+      #queueManager: QM1
+      #channel: DEV.APP.SVRCONN
+      username: microcks
+      password: microcks
 
     ws:
       #ingressSecretRef: my-secret-for-microcks-ws-ingress
