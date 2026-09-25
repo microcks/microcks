@@ -163,6 +163,22 @@
               </dd>
             </dl>
           </span>
+          <span *ngIf="hasBinding(item, 'IBMMQ')">
+            <dl class="dl-horizontal left">
+              <dt>IBM MQ destination:</dt>
+              <dd>
+                <div class="input-group">
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'IBMMQ') }}" disabled/>
+                  <span class="input-group-addon">
+                    <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
+                        (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'IBMMQ'))"></i>
+                  </span>
+                </div>
+              </dd>
+              <dt>IBM MQ destination type:</dt>
+              <dd>{{ getBindingProperty(item, 'IBMMQ', 'destinationType') || 'queue' }}</dd>
+            </dl>
+          </span>
           <span *ngIf="hasBinding(item, 'AMQP1')">
             <dl class="dl-horizontal left">
               <dt>AMQP destination:</dt>

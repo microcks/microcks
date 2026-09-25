@@ -585,6 +585,9 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'SQS':
             result += 'Amazon SQS';
             break;
+          case 'IBMMQ':
+            result += 'IBM MQ';
+            break;
         }
         if (i + 1 < bindings.length) {
           result += ', ';
@@ -790,6 +793,10 @@ export class ServiceDetailPageComponent implements OnInit {
     }
     if ('SQS' === binding || 'SNS' === binding) {
       versionName = versionName.replace(/\./g, '');
+    }
+    // IBM MQ object names do not allow '-': the producer joins parts with '_' and keeps '/' as is.
+    if ('IBMMQ' === binding) {
+      return serviceName + '_' + versionName + '_' + operationName;
     }
 
     return serviceName + '-' + versionName + '-' + operationName;

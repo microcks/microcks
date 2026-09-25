@@ -300,6 +300,10 @@
                     <dt>Amazon SNS region:</dt>
                     <dd><a>{{ asyncAPIFeatureEndpoint('SNS') }}</a></dd>
                   </span>
+                  <span *ngIf="hasBinding(item, 'IBMMQ')">
+                    <dt>IBM MQ endpoint:</dt>
+                    <dd><a>{{ asyncAPIFeatureEndpoint('IBMMQ') }}</a></dd>
+                  </span>
                 </dl>
                 <dl class="dl-horizontal left" *ngIf="!isEventTypeService()">
                   <span
