@@ -2,10 +2,6 @@
 
 We love your input! We want to make contributing to this project as easy and transparent as possible.
 
-## Contribution recogniton
-
-We plan to use [All Contributors](https://allcontributors.org/docs/en/specification) specification to handle recognitions.
-
 ## Summary of the contribution flow
 
 The following is a summary of the ideal contribution flow. Please, note that Pull Requests can also be rejected by the maintainers when appropriate.
