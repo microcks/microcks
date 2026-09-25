@@ -28,6 +28,7 @@ import com.ibm.mq.MQException;
 import com.ibm.mq.MQMessage;
 import com.ibm.mq.MQQueue;
 import com.ibm.mq.MQQueueManager;
+import com.ibm.mq.MQTopic;
 import com.ibm.mq.constants.CMQC;
 import com.ibm.mq.constants.CMQCFC;
 import com.ibm.mq.headers.pcf.PCFMessage;
@@ -45,6 +46,9 @@ public class IBMMQProducerManager {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
+
+   /** Destination type used in AsyncAPI IBM MQ binding to represent a publish/subscribe topic. */
+   private static final String TOPIC_DESTINATION_TYPE = "topic";
 
    private MQQueueManager queueManager;
 
@@ -107,17 +111,32 @@ public class IBMMQProducerManager {
    }
 
    /**
-    * Publish a message on specified queue.
-    * @param queueName The destination queue for message
-    * @param value     The message payload
+    * Publish a message on the specified destination. IBM MQ supports both point-to-point (queue) and publish/subscribe
+    * (topic) messaging: the destination type coming from the AsyncAPI IBM MQ binding tells which one to use.
+    * @param destinationType The type of destination ('queue' or 'topic'); defaults to a queue when null or unknown
+    * @param destinationName The name of the queue or the topic string to publish onto
+    * @param value           The message payload
     */
-   public void publishMessage(String queueName, String value) {
-      logger.infof("Publishing on queue {%s}, message: %s ", queueName, value);
-
+   public void publishMessage(String destinationType, String destinationName, String value) {
       if (queueManager == null) {
          logger.warn("IBM MQ queueManager is not initialized, ignoring publish.");
          return;
       }
+
+      if (TOPIC_DESTINATION_TYPE.equalsIgnoreCase(destinationType)) {
+         publishToTopic(destinationName, value);
+      } else {
+         publishToQueue(destinationName, value);
+      }
+   }
+
+   /**
+    * Publish a message on the specified queue, creating it on the fly if it does not exist yet.
+    * @param queueName The destination queue for message
+    * @param value     The message payload
+    */
+   protected void publishToQueue(String queueName, String value) {
+      logger.infof("Publishing on queue {%s}, message: %s ", queueName, value);
 
       MQQueue queue = null;
       try {
@@ -129,13 +148,44 @@ public class IBMMQProducerManager {
 
          queue.put(message);
       } catch (Exception e) {
-         logger.warnf("Exception caught while publishing message to IBM MQ", e);
+         logger.warn("Exception caught while publishing message to IBM MQ queue", e);
       } finally {
          if (queue != null) {
             try {
                queue.close();
             } catch (MQException e) {
                logger.warn("Exception caught while closing IBM MQ queue", e);
+            }
+         }
+      }
+   }
+
+   /**
+    * Publish a message on the specified topic string. Unlike queues, topics do not need to be provisioned beforehand:
+    * IBM MQ resolves the topic string against the topic tree and delivers the publication to matching subscribers.
+    * @param topicString The destination topic string for message
+    * @param value       The message payload
+    */
+   protected void publishToTopic(String topicString, String value) {
+      logger.infof("Publishing on topic {%s}, message: %s ", topicString, value);
+
+      MQTopic topic = null;
+      try {
+         int openOptions = CMQC.MQOO_OUTPUT | CMQC.MQOO_FAIL_IF_QUIESCING;
+         topic = queueManager.accessTopic(topicString, "", CMQC.MQTOPIC_OPEN_AS_PUBLICATION, openOptions);
+
+         MQMessage message = new MQMessage();
+         message.write(value.getBytes(StandardCharsets.UTF_8));
+
+         topic.put(message);
+      } catch (Exception e) {
+         logger.warn("Exception caught while publishing message to IBM MQ topic", e);
+      } finally {
+         if (topic != null) {
+            try {
+               topic.close();
+            } catch (MQException e) {
+               logger.warn("Exception caught while closing IBM MQ topic", e);
             }
          }
       }
@@ -188,20 +238,21 @@ public class IBMMQProducerManager {
    }
 
    /**
-    * Get the IBM MQ queue name corresponding to a AsyncMockDefinition, sanitizing all parameters.
+    * Get the IBM MQ destination name corresponding to a AsyncMockDefinition, sanitizing all parameters. The same
+    * deterministic name is used both as a queue name and as a topic string, depending on the binding destination type.
     * @param definition   The AsyncMockDefinition
-    * @param eventMessage The message to get queue name
-    * @return The queue name for definition and event
+    * @param eventMessage The message to get destination name
+    * @return The destination name for definition and event
     */
-   public String getQueueName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      // Produce service name part of queue name.
+   public String getDestinationName(AsyncMockDefinition definition, EventMessage eventMessage) {
+      // Produce service name part of destination name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
 
-      // Produce version name part of queue name.
+      // Produce version name part of destination name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
 
-      // Produce operation name part of queue name.
+      // Produce operation name part of destination name.
       String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '_' as delimiter. IBM MQ object names do not allow the '-' character, so we rely on

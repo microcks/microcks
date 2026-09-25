@@ -98,6 +98,22 @@ public class AsyncAPICommons {
                b.setDestinationName(bindingNode.path(TOPIC_VALUE).asText(null));
                b.setPersistent(bindingNode.path("messageRetentionDuration").asBoolean(false));
                break;
+            case "ibmmq":
+               b = retrieveOrInitBinding(holder, BindingType.IBMMQ);
+               // Destination is a topic unless explicitly stated as a queue (see AsyncAPI IBM MQ binding spec).
+               String destinationType = bindingNode.path("destinationType").asText(TOPIC_VALUE);
+               b.setDestinationType(destinationType);
+               if (QUEUE_VALUE.equals(destinationType) && bindingNode.has(QUEUE_VALUE)) {
+                  b.setDestinationName(bindingNode.get(QUEUE_VALUE).path("objectName").asText(null));
+               } else if (bindingNode.has(TOPIC_VALUE)) {
+                  JsonNode topic = bindingNode.get(TOPIC_VALUE);
+                  if (topic.has("objectName")) {
+                     b.setDestinationName(topic.path("objectName").asText(null));
+                  } else if (topic.has("string")) {
+                     b.setDestinationName(topic.path("string").asText(null));
+                  }
+               }
+               break;
             default:
                break;
          }
@@ -175,6 +191,11 @@ public class AsyncAPICommons {
                if (bindingNode.has("key")) {
                   b.setKeyType(bindingNode.path("key").path("type").asText());
                }
+               break;
+            case "ibmmq":
+               // The IBM MQ binding may be declared only at message level (for example 'type: string'); make sure the
+               // binding is registered so that IBM MQ mocking gets enabled for this operation.
+               retrieveOrInitBinding(holder, BindingType.IBMMQ);
                break;
             default:
                break;

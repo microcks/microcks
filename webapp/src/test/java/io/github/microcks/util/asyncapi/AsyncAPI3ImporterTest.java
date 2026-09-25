@@ -16,6 +16,7 @@
 
 package io.github.microcks.util.asyncapi;
 
+import io.github.microcks.domain.Binding;
 import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
@@ -698,5 +699,42 @@ class AsyncAPI3ImporterTest {
       assertEquals(
             "{\"userId\":\"usr-12345\",\"status\":\"success\",\"message\":\"User account created successfully\"}",
             replyMessage.getContent());
+   }
+
+   @Test
+   void testAsyncAPI3WithIBMMQBinding() {
+      AsyncAPI3Importer importer = null;
+      try {
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-3.0-ibmmq.yaml", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Account Service", service.getName());
+      assertEquals(ServiceType.EVENT, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations have been found.
+      assertEquals(1, service.getOperations().size());
+
+      Operation operation = service.getOperations().get(0);
+      assertEquals("RECEIVE onUserSignedUp", operation.getName());
+      assertEquals("RECEIVE", operation.getMethod());
+
+      // Check that IBM MQ channel binding has been parsed (queue destination).
+      Binding binding = operation.getBindings().get(BindingType.IBMMQ.name());
+      assertNotNull(binding);
+      assertEquals("queue", binding.getDestinationType());
+      assertEquals("myQueueName", binding.getDestinationName());
    }
 }

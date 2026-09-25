@@ -184,7 +184,8 @@ public class ProducerManager {
                      produceSNSMockMessages(definition);
                      break;
                   case IBMMQ:
-                     produceIBMMQMockMessages(definition);
+                     Binding ibmmqBindingDef = definition.getOperation().getBindings().get(binding);
+                     produceIBMMQMockMessages(definition, ibmmqBindingDef);
                      break;
                   default:
                      break;
@@ -266,7 +267,8 @@ public class ProducerManager {
                   renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
             break;
          case IBMMQ:
-            produceIBMMQMockMessage(definition, eventMessage,
+            Binding ibmmqBindingDef = definition.getOperation().getBindings().get(binding);
+            produceIBMMQMockMessage(definition, ibmmqBindingDef, eventMessage,
                   renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
             break;
          default:
@@ -429,17 +431,18 @@ public class ProducerManager {
    }
 
    /** Take care publishing IBM MQ mock messages for definition. */
-   protected void produceIBMMQMockMessages(AsyncMockDefinition definition) {
+   protected void produceIBMMQMockMessages(AsyncMockDefinition definition, Binding bindingDef) {
       for (EventMessage eventMessage : getPureEventMessages(definition)) {
-         produceIBMMQMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
+         produceIBMMQMockMessage(definition, bindingDef, eventMessage, renderEventMessageContent(eventMessage));
       }
    }
 
    /** Take care publishing IBM MQ message for definition. */
-   protected void produceIBMMQMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+   protected void produceIBMMQMockMessage(AsyncMockDefinition definition, Binding bindingDef, EventMessage eventMessage,
          String renderedContent) {
-      String queue = ibmmqProducerManager.getQueueName(definition, eventMessage);
-      ibmmqProducerManager.publishMessage(queue, renderedContent);
+      String destinationName = ibmmqProducerManager.getDestinationName(definition, eventMessage);
+      String destinationType = bindingDef != null ? bindingDef.getDestinationType() : null;
+      ibmmqProducerManager.publishMessage(destinationType, destinationName, renderedContent);
    }
 
    /** Take care publishing WebSocket mock messages for definition. */
