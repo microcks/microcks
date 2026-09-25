@@ -1,0 +1,48 @@
+asyncapi: 3.0.0
+info:
+  title: Account Service
+  version: 1.0.0
+  description: This service is in charge of processing user signups
+
+channels:
+  userSignedUp:
+    address: 'user/signedup'
+    messages:
+      userSignedUp:
+        $ref: '#/components/messages/UserSignedUp'
+    bindings:
+      ibmmq:
+        destinationType: queue
+        queue:
+          objectName: myQueueName
+          exclusive: true
+        bindingVersion: 0.1.0
+
+operations:
+  onUserSignedUp:
+    action: receive
+    channel:
+      $ref: '#/channels/userSignedUp'
+    messages:
+      - $ref: '#/components/messages/UserSignedUp'
+
+components:
+  messages:
+    UserSignedUp:
+      name: UserSignedUp
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          displayName:
+            type: string
+            description: Name of the user
+          email:
+            type: string
+            format: email
+            description: Email of the user
+      examples:
+        - name: laurent
+          payload:
+            displayName: Laurent Broudoux
+            email: laurent@microcks.io

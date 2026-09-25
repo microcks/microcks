@@ -1,0 +1,44 @@
+asyncapi: '2.1.0'
+info:
+  title: Account Service
+  version: 1.0.0
+  description: This service is in charge of processing user signups
+servers:
+  production:
+    url: ibmmq://qmgr1host:1414/qm1/DEV.APP.SVRCONN
+    protocol: ibmmq
+channels:
+  user/signedup:
+    bindings:
+      ibmmq:
+        destinationType: queue
+        queue:
+          objectName: myQueueName
+          exclusive: true
+        bindingVersion: 0.1.0
+    subscribe:
+      message:
+        $ref: '#/components/messages/UserSignedUp'
+        bindings:
+          ibmmq:
+            type: jms
+            description: JMS bytes message
+            bindingVersion: 0.1.0
+components:
+  messages:
+    UserSignedUp:
+      payload:
+        type: object
+        properties:
+          displayName:
+            type: string
+            description: Name of the user
+          email:
+            type: string
+            format: email
+            description: Email of the user
+      examples:
+        - name: laurent
+          payload:
+            displayName: Laurent Broudoux
+            email: laurent@microcks.io
