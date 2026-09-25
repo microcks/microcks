@@ -16,15 +16,15 @@
 package io.github.microcks.minion.async.consumer;
 
 import io.github.microcks.minion.async.AsyncTestSpecification;
-import org.jboss.logging.Logger;
 
+import com.ibm.mq.MQDestination;
 import com.ibm.mq.MQEnvironment;
 import com.ibm.mq.MQException;
 import com.ibm.mq.MQGetMessageOptions;
 import com.ibm.mq.MQMessage;
-import com.ibm.mq.MQQueue;
 import com.ibm.mq.MQQueueManager;
 import com.ibm.mq.constants.CMQC;
+import org.jboss.logging.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,9 +35,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on an IBM MQ broker. Endpoint URL
- * should be specified using the following form:
- * <code>ibmmq://{brokerhost[:port]}/{queueManager}/{queue}[?channel=channelName]</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a queue or a topic on an IBM MQ broker.
+ * Endpoint URL should be specified using the following form:
+ * <code>ibmmq://{brokerhost[:port]}/{queueManager}/{type}/{destination}[?channel=channelName]</code> where
+ * <code>type</code> is either <code>queue</code> (point-to-point consumption) or <code>topic</code> (publish/subscribe
+ * consumption through a managed, non-durable subscription).
  * @author laurent
  */
 public class IBMMQMessageConsumptionTask implements MessageConsumptionTask {
@@ -46,16 +48,26 @@ public class IBMMQMessageConsumptionTask implements MessageConsumptionTask {
    private final Logger logger = Logger.getLogger(getClass());
 
    /** The string for Regular Expression that helps validating acceptable endpoints. */
-   public static final String ENDPOINT_PATTERN_STRING = "ibmmq://(?<brokerUrl>[^/]+)/(?<queueManager>[^/]+)/(?<queue>[^?]+)(\\?(?<options>.+))?";
+   public static final String ENDPOINT_PATTERN_STRING = "ibmmq://(?<brokerUrl>[^/]+)/(?<queueManager>[^/]+)/(?<type>queue|topic)/(?<destination>[^?]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
+
+   /** Constant representing a queue destination type in endpoint URL. */
+   public static final String QUEUE_TYPE = "queue";
+   /** Constant representing a topic destination type in endpoint URL. */
+   public static final String TOPIC_TYPE = "topic";
+
+   /** The endpoint URL option representing the server connection channel to use. */
+   public static final String CHANNEL_OPTION = "channel";
+   /** The default server connection channel when none is specified in endpoint URL. */
+   public static final String DEFAULT_CHANNEL = "DEV.APP.SVRCONN";
 
    private File trustStore;
 
    private final AsyncTestSpecification specification;
 
    private MQQueueManager queueManager;
-   private MQQueue queue;
+   private MQDestination destination;
 
    /**
     * Create a new consumption task from an Async test specification.
@@ -81,18 +93,18 @@ public class IBMMQMessageConsumptionTask implements MessageConsumptionTask {
       }
       List<ConsumedMessage> messages = new ArrayList<>();
 
-      long startTime = System.currentTimeMillis();
-      long timeout = specification.getTimeoutMS();
+      long timeoutTime = System.currentTimeMillis() + specification.getTimeoutMS();
 
       // Poll messages until timeout
-      while (System.currentTimeMillis() - startTime < timeout) {
+      while (System.currentTimeMillis() < timeoutTime) {
          try {
             MQMessage message = new MQMessage();
             MQGetMessageOptions gmo = new MQGetMessageOptions();
             gmo.options = CMQC.MQGMO_WAIT | CMQC.MQGMO_FAIL_IF_QUIESCING;
-            gmo.waitInterval = 1000; // wait 1 second
+            // Only wait for the remaining time so that the last poll never overshoots the configured timeout.
+            gmo.waitInterval = (int) (timeoutTime - System.currentTimeMillis());
 
-            queue.get(message, gmo);
+            destination.get(message, gmo);
 
             byte[] b = new byte[message.getMessageLength()];
             message.readFully(b);
@@ -120,17 +132,17 @@ public class IBMMQMessageConsumptionTask implements MessageConsumptionTask {
    }
 
    /**
-    * Close the resources used by this task. Namely the IBM MQ subscriber and the optionally created truststore holding
-    * server client SSL credentials.
+    * Close the resources used by this task. Namely the IBM MQ destination (queue or topic subscription), the queue
+    * manager connection and the optionally created truststore holding server client SSL credentials.
     * @throws IOException should not happen.
     */
    @Override
    public void close() throws IOException {
-      if (queue != null) {
+      if (destination != null) {
          try {
-            queue.close();
+            destination.close();
          } catch (MQException e) {
-            logger.warn("Closing IBM MQ queue raised an exception", e);
+            logger.warn("Closing IBM MQ destination raised an exception", e);
          }
       }
       if (queueManager != null) {
@@ -145,14 +157,15 @@ public class IBMMQMessageConsumptionTask implements MessageConsumptionTask {
       }
    }
 
-   /** */
+   /** Initialize the IBM MQ client from endpoint URL and open the destination to consume. */
    private void initializeIBMMQClient() throws Exception {
       Matcher matcher = ENDPOINT_PATTERN.matcher(specification.getEndpointUrl().trim());
       // Call matcher.find() to be able to use named expressions.
       matcher.find();
       String endpointBrokerUrl = matcher.group("brokerUrl");
       String queueManagerName = matcher.group("queueManager");
-      String queueName = matcher.group("queue");
+      String destinationType = matcher.group("type");
+      String destinationName = matcher.group("destination");
       String options = matcher.group("options");
 
       String host = endpointBrokerUrl;
@@ -163,11 +176,11 @@ public class IBMMQMessageConsumptionTask implements MessageConsumptionTask {
          port = Integer.parseInt(parts[1]);
       }
 
-      String channel = "DEV.APP.SVRCONN";
-      if (options != null && options.contains("channel=")) {
+      String channel = DEFAULT_CHANNEL;
+      if (options != null) {
          for (String option : options.split("&")) {
-            if (option.startsWith("channel=")) {
-               channel = option.substring("channel=".length());
+            if (option.startsWith(CHANNEL_OPTION + "=")) {
+               channel = option.substring(CHANNEL_OPTION.length() + 1);
             }
          }
       }
@@ -195,7 +208,18 @@ public class IBMMQMessageConsumptionTask implements MessageConsumptionTask {
 
       queueManager = new MQQueueManager(queueManagerName);
 
-      int openOptions = CMQC.MQOO_INPUT_AS_Q_DEF | CMQC.MQOO_FAIL_IF_QUIESCING;
-      queue = queueManager.accessQueue(queueName, openOptions);
+      if (TOPIC_TYPE.equals(destinationType)) {
+         logger.infof("Subscribing to IBM MQ topic {%s} on queue manager {%s}", destinationName, queueManagerName);
+         // Open a managed, non-durable subscription: the queue manager provisions the subscription queue for us and
+         // discards it once closed, so that the test does not leave anything behind on the broker.
+         int subscriptionOptions = CMQC.MQSO_CREATE | CMQC.MQSO_MANAGED | CMQC.MQSO_NON_DURABLE
+               | CMQC.MQSO_FAIL_IF_QUIESCING;
+         destination = queueManager.accessTopic(destinationName, "", CMQC.MQTOPIC_OPEN_AS_SUBSCRIPTION,
+               subscriptionOptions);
+      } else {
+         logger.infof("Opening IBM MQ queue {%s} on queue manager {%s}", destinationName, queueManagerName);
+         int openOptions = CMQC.MQOO_INPUT_AS_Q_DEF | CMQC.MQOO_FAIL_IF_QUIESCING;
+         destination = queueManager.accessQueue(destinationName, openOptions);
+      }
    }
 }
