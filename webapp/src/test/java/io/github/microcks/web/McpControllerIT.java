@@ -70,16 +70,16 @@ class McpControllerIT extends AbstractBaseIT {
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
          try {
-            restTemplate.execute("/mcp/Petstore+API/1.0.0/sse", HttpMethod.GET, request -> {}, response -> {
+            executeSse("/mcp/Petstore+API/1.0.0/sse", response -> {
                String line;
-               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()));) {
+               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response));) {
                   while ((line = bufferedReader.readLine()) != null) {
                      parseAndStoreMcpSseFrame(line, sseFrames);
                   }
                } catch (IOException e) {
                   System.err.println("Caught exception while reading SSE response: " + e.getMessage());
                }
-               return response;
+               return;
             });
          } catch (Exception e) {
             System.err.println("Caught exception while executing SSE client: " + e.getMessage());
@@ -128,8 +128,8 @@ class McpControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       headers.setAccept(List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM));
 
-      ResponseEntity<String> response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(initializeRequest, headers), String.class);
+      ResponseEntity<String> response = postForEntity(messageEndpoint, new HttpEntity<>(initializeRequest, headers),
+            String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -162,7 +162,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
+      response = postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -200,7 +200,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
+      response = postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -234,19 +234,17 @@ class McpControllerIT extends AbstractBaseIT {
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
          try {
-            restTemplate.execute("/mcp/org.acme.petstore.v1.PetstoreService/v1/sse", HttpMethod.GET, request -> {},
-                  response -> {
-                     String line;
-                     try (BufferedReader bufferedReader = new BufferedReader(
-                           new InputStreamReader(response.getBody()));) {
-                        while ((line = bufferedReader.readLine()) != null) {
-                           parseAndStoreMcpSseFrame(line, sseFrames);
-                        }
-                     } catch (IOException e) {
-                        System.err.println("Caught exception while reading SSE response: " + e.getMessage());
-                     }
-                     return response;
-                  });
+            executeSse("/mcp/org.acme.petstore.v1.PetstoreService/v1/sse", response -> {
+               String line;
+               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response));) {
+                  while ((line = bufferedReader.readLine()) != null) {
+                     parseAndStoreMcpSseFrame(line, sseFrames);
+                  }
+               } catch (IOException e) {
+                  System.err.println("Caught exception while reading SSE response: " + e.getMessage());
+               }
+               return;
+            });
          } catch (Exception e) {
             System.err.println("Caught exception while executing SSE client: " + e.getMessage());
          }
@@ -294,8 +292,8 @@ class McpControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       headers.setAccept(List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM));
 
-      ResponseEntity<String> response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(initializeRequest, headers), String.class);
+      ResponseEntity<String> response = postForEntity(messageEndpoint, new HttpEntity<>(initializeRequest, headers),
+            String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -328,7 +326,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
+      response = postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -366,7 +364,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
+      response = postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -402,16 +400,16 @@ class McpControllerIT extends AbstractBaseIT {
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
          try {
-            restTemplate.execute("/mcp/Petstore+Graph+API/1.0/sse", HttpMethod.GET, request -> {}, response -> {
+            executeSse("/mcp/Petstore+Graph+API/1.0/sse", response -> {
                String line;
-               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()));) {
+               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response));) {
                   while ((line = bufferedReader.readLine()) != null) {
                      parseAndStoreMcpSseFrame(line, sseFrames);
                   }
                } catch (IOException e) {
                   System.err.println("Caught exception while reading SSE response: " + e.getMessage());
                }
-               return response;
+               return;
             });
          } catch (Exception e) {
             System.err.println("Caught exception while executing SSE client: " + e.getMessage());
@@ -460,8 +458,8 @@ class McpControllerIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
       headers.setAccept(List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM));
 
-      ResponseEntity<String> response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(initializeRequest, headers), String.class);
+      ResponseEntity<String> response = postForEntity(messageEndpoint, new HttpEntity<>(initializeRequest, headers),
+            String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -491,7 +489,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
+      response = postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -532,7 +530,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
+      response = postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);

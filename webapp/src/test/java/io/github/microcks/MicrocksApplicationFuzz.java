@@ -23,14 +23,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +56,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * @author laurent
  */
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@AutoConfigureTestRestTemplate
+@AutoConfigureRestTestClient
 @SpringBootTest(classes = MicrocksApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("fuzz")
 @TestPropertySource(locations = { "classpath:/config/fuzz.properties" })
@@ -88,7 +87,7 @@ public class MicrocksApplicationFuzz {
    protected MockMvc mockMvc;
 
    @Autowired
-   protected TestRestTemplate restTemplate;
+   protected RestTestClient restTestClient;
 
    private boolean beforeCalled = false;
 
@@ -142,13 +141,15 @@ public class MicrocksApplicationFuzz {
       MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
       body.add("file", new FileSystemResource(new File(artifactFilePath)));
 
-      HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
       ResponseEntity<String> response;
       if (isMainArtifact) {
-         response = restTemplate.postForEntity("/api/artifact/upload", requestEntity, String.class);
+         var result = restTestClient.post().uri("/api/artifact/upload").headers(h -> h.addAll(headers)).body(body)
+               .exchange().returnResult(String.class);
+         response = new ResponseEntity<>(result.getResponseBody(), result.getResponseHeaders(), result.getStatus());
       } else {
-         response = restTemplate.postForEntity("/api/artifact/upload?mainArtifact=false", requestEntity, String.class);
+         var result = restTestClient.post().uri("/api/artifact/upload?mainArtifact=false")
+               .headers(h -> h.addAll(headers)).body(body).exchange().returnResult(String.class);
+         response = new ResponseEntity<>(result.getResponseBody(), result.getResponseHeaders(), result.getStatus());
       }
 
       assertEquals(201, response.getStatusCode().value());
