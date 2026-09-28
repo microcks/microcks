@@ -13,6 +13,29 @@ Don't forget to indicate your Java, Maven and/or Docker version.
 
 ## Setup
 
+### Git hooks
+
+The repository ships its client-side hooks in the versioned `.githooks` directory (a `pre-commit` hook running
+`mvn spotless:check` and a `commit-msg` hook enforcing Conventional Commits and sign-off).
+
+Running a build from the repository root (`mvn validate`, `mvn clean install`, ...) wires them automatically by setting
+the **repository-local** Git config:
+
+```
+$ git config --local core.hooksPath .githooks
+```
+
+Notes:
+
+- Only this repository's config is touched. Your global/system Git configuration and your other projects are never
+  modified.
+- The path is relative, so Git resolves it from the top level of the current working tree. This makes it work
+  identically in the main clone and in any [git worktree](https://git-scm.com/docs/git-worktree), where `.git` is a
+  file and has no `hooks` directory of its own.
+- If you previously built Microcks, stale copies may still live in `.git/hooks`; they are now ignored and can be
+  deleted.
+- Pass `-Dgit.hooks.skip=true` to skip this step, or run `git commit --no-verify` to bypass the hooks for a commit.
+
 ## Build
 
 ### Build the whole project

@@ -66,6 +66,7 @@
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
     <sonar.organization>microcks</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <git.hooks.skip>false</git.hooks.skip>
   </properties>
 
   <dependencyManagement>
@@ -108,29 +109,6 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.5.0</version>
-        <executions>
-          <execution>
-            <id>copy-hooks</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${multi-project.rootdir}/.git/hooks</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${multi-project.rootdir}/.githooks</directory>
-                  <filtering>false</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
       </plugin>
@@ -164,6 +142,53 @@
   </build>
 
   <profiles>
+    <!-- Point Git at the versioned .githooks directory instead of copying scripts into
+         $GIT_DIR/hooks. The setting is written to the repository-local config only
+         (git config with the local scope), so it never leaks to the user's global/system Git setup nor
+         to any other project. A relative core.hooksPath is resolved from the top level of
+         the working tree, so this single repository-local setting works for the main
+         checkout and for every git worktree, where .git is a file and has no hooks
+         directory of its own.
+         Activated only when a .git entry is present (skipped for source tarballs) and
+         executed once, from the aggregator root. Disable with -Dgit.hooks.skip=true. -->
+    <profile>
+      <id>git-hooks</id>
+      <activation>
+        <file>
+          <exists>${basedir}/.git</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.5.0</version>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <id>configure-git-hooks</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <skip>${git.hooks.skip}</skip>
+                  <executable>git</executable>
+                  <workingDirectory>${basedir}</workingDirectory>
+                  <arguments>
+                    <argument>config</argument>
+                    <argument>--local</argument>
+                    <argument>core.hooksPath</argument>
+                    <argument>.githooks</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>coverage</id>
       <build>
