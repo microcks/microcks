@@ -52,7 +52,7 @@ class SoapControllerIT extends AbstractBaseIT {
       HttpEntity<String> entity = new HttpEntity<>(request, headers);
 
       // Execute and assert.
-      ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      ResponseEntity<String> response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
       assertEquals(200, response.getStatusCode().value());
       assertEquals(
             "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
@@ -74,7 +74,7 @@ class SoapControllerIT extends AbstractBaseIT {
       entity = new HttpEntity<>(request, headers);
 
       // Execute and assert, content-type is different for SOAP 1.1.
-      response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
       assertEquals(200, response.getStatusCode().value());
       assertEquals(
             "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
@@ -92,7 +92,7 @@ class SoapControllerIT extends AbstractBaseIT {
       entity = new HttpEntity<>(request, headers);
 
       // Execute and assert.
-      response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
       assertEquals(500, response.getStatusCode().value());
       assertEquals(
             "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
@@ -147,8 +147,7 @@ class SoapControllerIT extends AbstractBaseIT {
 
       // Execute and assert.
       for (int i = 0; i < 10; ++i) {
-         ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity,
-               String.class);
+         ResponseEntity<String> response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
          switch (response.getStatusCode().value()) {
             case 200:
                assertTrue(okResponses.contains(response.getBody()));
@@ -181,7 +180,7 @@ class SoapControllerIT extends AbstractBaseIT {
       HttpEntity<String> entity = createBaseEntityForName("Andrew");
 
       // Execute and assert.
-      ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      ResponseEntity<String> response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
       assertResponseIsOkAndContains(response, "<sayHello>Hello Real Andrew !</sayHello>");
    }
 
@@ -207,14 +206,14 @@ class SoapControllerIT extends AbstractBaseIT {
       HttpEntity<String> entity = createBaseEntityForName("Andrew");
 
       // Execute and assert that it wasn't proxy.
-      ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      ResponseEntity<String> response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
       assertResponseIsOkAndContains(response, "<sayHello>Hello Andrew !</sayHello>");
 
       // Build the request that doesn't match QUERY_MATCH.
       entity = createBaseEntityForName("Garry");
 
       // Execute and assert that it was proxy.
-      response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      response = postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
       assertResponseIsOkAndContains(response, "<sayHello>Hello Real Garry !</sayHello>");
    }
 
