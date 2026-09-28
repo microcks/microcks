@@ -198,8 +198,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   Set<Entry<String, JsonNode>> responseCodes = verb.getValue().path(RESPONSES_NODE).properties();
                   for (Entry<String, JsonNode> responseCode : responseCodes) {
                      Set<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).properties();
+                     JsonNode resolvedResponseCode = followRefIfAny(responseCode.getValue());
 
-                     if (contents.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
+                     if (contents.isEmpty() && resolvedResponseCode.has(X_MICROCKS_REFS)) {
                         result.putAll(getNoContentRequestResponsePair(operation, rootDispatcher, rootDispatcherRules,
                               requestBodiesByExample, pathParametersByExample, queryParametersByExample,
                               headerParametersByExample, responseCode));
@@ -483,7 +484,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
                      Set<Entry<String, JsonNode>> contentNodes = getResponseContent(responseCode.getValue())
                            .properties();
-                     if (contentNodes.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
+                     JsonNode resolvedResponseCode = followRefIfAny(responseCode.getValue());
+                     if (contentNodes.isEmpty() && resolvedResponseCode.has(X_MICROCKS_REFS)) {
                         requestResponseMap.putAll(getNoContentCallbackRequestResponsePair(callbackName,
                               requestBodiesByExample, responseCode));
                      }
@@ -524,8 +526,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                Set<Entry<String, JsonNode>> responseCodes = verb.getValue().path(RESPONSES_NODE).properties();
                for (Entry<String, JsonNode> responseCode : responseCodes) {
                   Set<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).properties();
+                  JsonNode resolvedResponseCode = followRefIfAny(responseCode.getValue());
 
-                  if (contents.isEmpty() && responseCode.getValue().has(X_MICROCKS_REFS)) {
+                  if (contents.isEmpty() && resolvedResponseCode.has(X_MICROCKS_REFS)) {
                      results.putAll(getNoContentRequestResponsePair(operation, null, null, requestBodiesByExample,
                            Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), responseCode));
                   }
@@ -709,7 +712,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          Map<String, Multimap<String, String>> headerParametersByExample, Entry<String, JsonNode> responseCode) {
 
       Map<Request, Response> results = new HashMap<>();
-      JsonNode requestRefs = responseCode.getValue().path(X_MICROCKS_REFS);
+      JsonNode resolvedResponse = followRefIfAny(responseCode.getValue());
+      JsonNode requestRefs = resolvedResponse.path(X_MICROCKS_REFS);
 
       if (requestRefs.isArray()) {
          // Find here potential headers for output of this operation examples.
@@ -846,7 +850,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          Map<String, Request> requestBodiesByExample, Entry<String, JsonNode> responseCode) {
 
       Map<Request, Response> results = new HashMap<>();
-      JsonNode requestRefs = responseCode.getValue().path(X_MICROCKS_REFS);
+      JsonNode resolvedResponse = followRefIfAny(responseCode.getValue());
+      JsonNode requestRefs = resolvedResponse.path(X_MICROCKS_REFS);
 
       if (requestRefs.isArray()) {
          Iterator<JsonNode> requestRefsIterator = requestRefs.elements();

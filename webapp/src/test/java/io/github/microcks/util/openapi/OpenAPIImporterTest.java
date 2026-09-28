@@ -1507,12 +1507,13 @@ class OpenAPIImporterTest {
       }
    }
 
-   @Test
-   void testNoContentResponseOpenAPIImport() {
+   @ParameterizedTest
+   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent.yaml",
+         "target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent-response-ref.yaml" })
+   void testNoContentResponseOpenAPIImport(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent.yaml", null);
+         importer = new OpenAPIImporter(specificationFile, null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
