@@ -50,7 +50,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for WebhookController.
- * @author laurent
  */
 @ExtendWith(MockitoExtension.class)
 class WebhookControllerTest {
@@ -157,6 +156,13 @@ class WebhookControllerTest {
       ResponseEntity<Object> response2 = controller.registerToWebhook(request2);
       assertEquals(HttpStatus.NOT_FOUND, response2.getStatusCode());
       assertEquals("OperationId is invalid", response2.getBody());
+
+      // Starts with hyphen (empty serviceId)
+      WebhookRegistrationRequestDTO request3 = new WebhookRegistrationRequestDTO();
+      request3.setOperationId("-someOperation");
+      ResponseEntity<Object> response3 = controller.registerToWebhook(request3);
+      assertEquals(HttpStatus.NOT_FOUND, response3.getStatusCode());
+      assertEquals("OperationId is invalid", response3.getBody());
 
       verify(serviceService, never()).getServiceById(any());
       verify(webhookRegistrationRepository, never()).save(any());

@@ -89,12 +89,12 @@ public class WebhookController {
 
       // Check Service and Operation exist.
       String rawOperationId = registrationRequest.getOperationId();
-      if (rawOperationId == null || rawOperationId.indexOf('-') == -1) {
+      int delimiterIdx = rawOperationId != null ? rawOperationId.indexOf('-') : -1;
+      if (rawOperationId == null || delimiterIdx <= 0) {
          log.error("Invalid operationId received for webhook registration");
          return new ResponseEntity<>("OperationId is invalid", HttpStatus.NOT_FOUND);
       }
 
-      int delimiterIdx = rawOperationId.indexOf('-');
       String serviceId = rawOperationId.substring(0, delimiterIdx);
       String operationName = rawOperationId.substring(delimiterIdx + 1).replace('!', '/');
       String operationId = serviceId + "-" + operationName;
