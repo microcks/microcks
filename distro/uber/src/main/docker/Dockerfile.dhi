@@ -1,0 +1,72 @@
+# Alternative distroless image based on Docker Hardened Images (DHI).
+# Requires being logged in to the dhi.io registry (free with a Docker Hub account):
+#   docker login dhi.io
+#
+# Multi-stage build:
+#   1. extract - unpacks the Spring Boot fat jar for a faster classloading layout (dev image: shell + JDK)
+#   2. train   - performs a JVM AOT cache (JEP 514) training run *inside the runtime image* so that the
+#                cache is guaranteed to match the exact JVM used at runtime
+#   3. final   - minimal distroless runtime: JRE + extracted application + AOT cache only
+#
+# Note: the JVM AOT cache replaces Spring AOT (-Dspring.aot.enabled=true) here. It provides
+# equivalent-or-better startup gains while keeping bean conditions evaluated at runtime, so
+# properties like management.otlp.*.export.enabled remain fully effective.
+
+# ---- Stage 1: extract the Spring Boot fat jar ----
+FROM dhi.io/eclipse-temurin:25-jdk-dev AS extract
+
+WORKDIR /work
+COPY target/*-exec.jar app.jar
+RUN java -Djarmode=tools -jar app.jar extract --destination /work/application \
+ && rm app.jar \
+ && mkdir -p /work/lib /work/data /work/config
+
+# ---- Stage 2: AOT training run inside the runtime image ----
+# Exiting once the Spring context refresh completes produces a JVM AOT cache that dramatically
+# reduces classloading/linking work at startup. Lazy initialization is disabled during training to
+# maximize the number of classes recorded in the cache. The RUN instruction uses the exec form as
+# distroless images have no shell.
+FROM dhi.io/eclipse-temurin:25 AS train
+
+USER 0
+WORKDIR /deployments
+COPY --from=extract /work/application /deployments/application
+ENV SPRING_MAIN_LAZY_INITIALIZATION=false \
+    SPRING_PROFILES_ACTIVE=uber
+RUN ["java", "-XX:AOTCacheOutput=/deployments/app.aot", "-Dspring.context.exit=onRefresh", \
+     "-jar", "/deployments/application/app.jar"]
+
+# ---- Stage 3: final distroless runtime image ----
+FROM dhi.io/eclipse-temurin:25
+
+# Some version information
+LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.authors="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.title="Microcks Application Uber" \
+      org.opencontainers.image.description="Microcks is Open Source cloud-native native tool for API Mocking and Testing" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.documentation="https://github.com/microcks/microcks/tree/master/distro/uber" \
+      io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/distro/uber/README.md"
+
+WORKDIR /deployments
+COPY --from=extract --chown=65532:65532 /work/application /deployments/application
+COPY --from=extract --chown=65532:65532 /work/lib /deployments/lib
+COPY --from=extract --chown=65532:65532 /work/data /deployments/data
+COPY --from=extract --chown=65532:65532 /work/config /deployments/config
+COPY --from=train --chown=65532:65532 /deployments/app.aot /deployments/app.aot
+
+VOLUME /deployments/config
+EXPOSE 8080
+
+# There is no shell in this image so run-java.sh (and its JAVA_OPTIONS env variable) is not
+# available anymore: use JAVA_TOOL_OPTIONS or JDK_JAVA_OPTIONS to pass extra JVM options.
+# JDK_JAVA_OPTIONS is additive and picked up by the java launcher, so the AOT cache stays active
+# even when deployments add their own options through JAVA_TOOL_OPTIONS.
+ENV SPRING_PROFILES_ACTIVE=uber \
+    JDK_JAVA_OPTIONS="-XX:AOTCache=/deployments/app.aot -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError"
+
+# /deployments/lib/* remains on the classpath so that custom extension libraries can simply be
+# mounted or copied there - no PropertiesLauncher/loader.path setting is needed.
+USER 65532
+ENTRYPOINT ["java", "-cp", "/deployments/application/app.jar:/deployments/lib/*", \
+            "io.github.microcks.MicrocksApplication"]
