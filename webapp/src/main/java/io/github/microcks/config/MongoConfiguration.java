@@ -55,14 +55,18 @@ public class MongoConfiguration {
 
    @EventListener(ContextRefreshedEvent.class)
    public void initIndicesAfterStartup() {
-      log.info("Ensuring TTL index for ServiceState");
-      MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
-            .getConverter().getMappingContext();
+      // Ensure indices in a background thread: this requires a Mongo roundtrip that doesn't
+      // need to block or delay the application startup completion.
+      Thread.ofVirtual().name("mongo-indices-initializer").start(() -> {
+         log.info("Ensuring TTL index for ServiceState");
+         MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
+               .getConverter().getMappingContext();
 
-      IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
-      IndexOperations indexOps = mongoTemplate.indexOps(ServiceState.class);
+         IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+         IndexOperations indexOps = mongoTemplate.indexOps(ServiceState.class);
 
-      resolver.resolveIndexFor(ServiceState.class).forEach(indexOps::ensureIndex);
+         resolver.resolveIndexFor(ServiceState.class).forEach(indexOps::createIndex);
+      });
    }
 
    @Bean

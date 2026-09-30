@@ -117,6 +117,13 @@ public class GrpcServerStarter {
 
    @PostConstruct
    public void startGrpcServer() {
+      // Build and start the gRPC server in a background thread so that it does not delay
+      // the main Spring context refresh and thus the application boot time.
+      // Use a platform thread to avoid blocking the virtual thread pool carrier thread.
+      Thread.ofPlatform().name("grpc-server-starter").start(this::buildAndStartGrpcServer);
+   }
+
+   protected void buildAndStartGrpcServer() {
       try {
          latch = new CountDownLatch(1);
          Server grpcServer = null;
