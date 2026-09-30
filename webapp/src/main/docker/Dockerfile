@@ -48,12 +48,15 @@ EXPOSE 8080
 # (exiting once the Spring context refresh completes) to produce a JVM AOT cache (JEP 514).
 # This dramatically reduces classloading/linking work at startup, which is the dominant boot cost
 # on CPU-constrained containers. Lazy initialization is disabled during training to maximize the
-# number of classes recorded in the cache.
+# number of classes recorded in the cache. G1 is pinned explicitly during training so the cache is
+# produced deterministically with G1 regardless of the builder's CPU/RAM: on constrained CI runners
+# (1 CPU / <2GB) the JVM ergonomics otherwise select SerialGC, under which the Red Hat build of
+# JDK 25 fails to map the archived heap objects, and it must match the GC used at runtime anyway.
 RUN java -Djarmode=tools -jar app.jar extract --destination application \
  && rm app.jar \
  && mkdir -p /deployments/lib \
  && SPRING_MAIN_LAZY_INITIALIZATION=false \
-      java -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
+      java -XX:+UseG1GC -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
 
 # The extracted layout is launched via classpath + main class (the Spring Boot loader is no longer
 # used). /deployments/lib/* remains on the classpath so that custom extension libraries can simply
