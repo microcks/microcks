@@ -67,6 +67,7 @@ public class WebhookController {
          @PathVariable("operationId") String operationId,
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
          @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+      operationId = operationId.replace('!', '/');
       log.debug("Getting webhook registrations list for operation '{}', page {} and size {}", operationId, page, size);
       return webhookRegistrationRepository.findByOperationId(operationId,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdOn")));
@@ -74,6 +75,7 @@ public class WebhookController {
 
    @GetMapping("/webhooks/operation/{operationId}/count")
    public Map<String, Long> countWebhookRegistrationsForOperation(@PathVariable("operationId") String operationId) {
+      operationId = operationId.replace('!', '/');
       log.debug("Counting tests for operationId...");
       Map<String, Long> counter = new HashMap<>();
       counter.put("counter", webhookRegistrationRepository.countByOperationId(operationId));
@@ -86,28 +88,33 @@ public class WebhookController {
             registrationRequest.getOperationId());
 
       // Check Service and Operation exist.
-      String[] parts = registrationRequest.getOperationId().split("-");
-      if (parts.length != 2) {
+      String rawOperationId = registrationRequest.getOperationId();
+      if (rawOperationId == null || rawOperationId.indexOf('-') == -1) {
          log.error("Invalid operationId received for webhook registration");
          return new ResponseEntity<>("OperationId is invalid", HttpStatus.NOT_FOUND);
       }
-      String serviceId = parts[0];
+
+      int delimiterIdx = rawOperationId.indexOf('-');
+      String serviceId = rawOperationId.substring(0, delimiterIdx);
+      String operationName = rawOperationId.substring(delimiterIdx + 1).replace('!', '/');
+      String operationId = serviceId + "-" + operationName;
+
       Service service = serviceService.getServiceById(serviceId);
       if (service == null) {
          log.error("Service with id '{}' not found", serviceId);
          return new ResponseEntity<>("Service not found", HttpStatus.NOT_FOUND);
       }
-      Operation operation = service.getOperations().stream().filter(op -> op.getName().equals(parts[1])).findFirst()
-            .orElse(null);
+      Operation operation = service.getOperations().stream().filter(op -> op.getName().equals(operationName))
+            .findFirst().orElse(null);
       if (operation == null) {
-         log.error("Operation with name '{}' not found", parts[1]);
+         log.error("Operation with name '{}' not found", operationName);
          return new ResponseEntity<>("Operation not found", HttpStatus.NOT_FOUND);
       }
 
       // Create a new registration with properties.
       WebhookRegistration webhookRegistration = new WebhookRegistration();
       webhookRegistration.setTargetUrl(registrationRequest.getTargetUrl());
-      webhookRegistration.setOperationId(registrationRequest.getOperationId());
+      webhookRegistration.setOperationId(operationId);
       webhookRegistration.setOperationMethod(operation.getMethod());
       if (registrationRequest.getFrequency() != null) {
          webhookRegistration.setFrequency(registrationRequest.getFrequency());
