@@ -52,8 +52,8 @@ EXPOSE 8080
 RUN java -Djarmode=tools -jar app.jar extract --destination application \
  && rm app.jar \
  && mkdir -p /deployments/lib \
- && SPRING_MAIN_LAZY_INITIALIZATION=false java -XX:AOTCacheOutput=/deployments/app.aot \
-      -Dspring.context.exit=onRefresh -jar application/app.jar
+ && SPRING_MAIN_LAZY_INITIALIZATION=false \
+      java -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
 
 # The extracted layout is launched via classpath + main class (the Spring Boot loader is no longer
 # used). /deployments/lib/* remains on the classpath so that custom extension libraries can simply

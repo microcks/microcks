@@ -53,8 +53,7 @@ RUN java -Djarmode=tools -jar app.jar extract --destination application \
  && rm app.jar \
  && mkdir -p /deployments/lib \
  && SPRING_MAIN_LAZY_INITIALIZATION=false SPRING_PROFILES_ACTIVE=uber \
-      java -XX:AOTCacheOutput=/deployments/app.aot \
-      -Dspring.context.exit=onRefresh -jar application/app.jar \
+      java -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
 
 # Run it in uber mode. The JVM AOT cache replaces Spring AOT (-Dspring.aot.enabled=true): it
 # provides equivalent-or-better startup gains while keeping bean conditions evaluated at runtime.
