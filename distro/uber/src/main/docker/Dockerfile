@@ -44,7 +44,32 @@ USER 1001
 COPY target/*-exec.jar app.jar
 EXPOSE 8080
 
-# Run it in uber mode with AOT support
-ENV SPRING_PROFILES_ACTIVE=uber
-ENV JAVA_OPTIONS="-Dspring.aot.enabled=true"
+# Extract the Spring Boot fat jar for a faster classloading layout, then perform a training run
+# (exiting once the Spring context refresh completes) to produce a JVM AOT cache (JEP 514).
+# This dramatically reduces classloading/linking work at startup, which is the dominant boot cost
+# on CPU-constrained containers. Lazy initialization is disabled during training to maximize the
+# number of classes recorded in the cache.
+RUN java -Djarmode=tools -jar app.jar extract --destination application \
+ && rm app.jar \
+ && mkdir -p /deployments/lib \
+ && SPRING_MAIN_LAZY_INITIALIZATION=false SPRING_PROFILES_ACTIVE=uber \
+      java -XX:AOTCacheOutput=/deployments/app.aot \
+      -Dspring.context.exit=onRefresh -jar application/app.jar \
+
+# Run it in uber mode. The JVM AOT cache replaces Spring AOT (-Dspring.aot.enabled=true): it
+# provides equivalent-or-better startup gains while keeping bean conditions evaluated at runtime.
+# The extracted layout is launched via classpath + main class (the Spring Boot loader is no longer
+# used). /deployments/lib/* remains on the classpath so that custom extension libraries can simply
+# be mounted or copied there - no PropertiesLauncher/loader.path setting is needed anymore.
+# JDK_JAVA_OPTIONS is additive and picked up by the java launcher, so the AOT cache stays active
+# even when deployments override JAVA_OPTIONS. MaxRAMPercentage=70 replaces the too-conservative
+# 25% JVM default. G1 is pinned to match the GC used during the training run: the Red Hat build
+# of JDK 25 cannot map the archived heap objects of the cache under the SerialGC that ergonomics
+# select on small containers (1 CPU / <2GB). To use another GC, override JDK_JAVA_OPTIONS itself
+# (dropping the -XX:AOTCache option) instead of adding the GC flag to JAVA_OPTIONS.
+ENV SPRING_PROFILES_ACTIVE=uber \
+    JAVA_MAIN_CLASS=io.github.microcks.MicrocksApplication \
+    JAVA_CLASSPATH="/deployments/application/app.jar:/deployments/lib/*" \
+    JDK_JAVA_OPTIONS="-XX:AOTCache=/deployments/app.aot -XX:MaxRAMPercentage=70.0 -XX:+UseG1GC"
+
 ENTRYPOINT [ "/deployments/run-java.sh" ]
