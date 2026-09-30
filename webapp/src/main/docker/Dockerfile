@@ -52,10 +52,14 @@ EXPOSE 8080
 # produced deterministically with G1 regardless of the builder's CPU/RAM: on constrained CI runners
 # (1 CPU / <2GB) the JVM ergonomics otherwise select SerialGC, under which the Red Hat build of
 # JDK 25 fails to map the archived heap objects, and it must match the GC used at runtime anyway.
+# OTEL_TRACES_EXPORTER is forced to 'none' because BuildKit injects OTEL_TRACES_EXPORTER=otlp and
+# OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=unix:///dev/otel-grpc.sock into RUN steps when it propagates
+# its own build trace (as docker/build-push-action does in CI). Spring Boot honours these standard
+# variables and would then fail to start on the unsupported unix:// endpoint.
 RUN java -Djarmode=tools -jar app.jar extract --destination application \
  && rm app.jar \
  && mkdir -p /deployments/lib \
- && SPRING_MAIN_LAZY_INITIALIZATION=false \
+ && SPRING_MAIN_LAZY_INITIALIZATION=false OTEL_TRACES_EXPORTER=none \
       java -XX:+UseG1GC -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
 
 # The extracted layout is launched via classpath + main class (the Spring Boot loader is no longer

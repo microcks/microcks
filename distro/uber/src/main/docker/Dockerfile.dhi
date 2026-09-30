@@ -25,14 +25,19 @@ RUN java -Djarmode=tools -jar app.jar extract --destination /work/application \
 # Exiting once the Spring context refresh completes produces a JVM AOT cache that dramatically
 # reduces classloading/linking work at startup. Lazy initialization is disabled during training to
 # maximize the number of classes recorded in the cache. The RUN instruction uses the exec form as
-# distroless images have no shell.
+# distroless images have no shell. OTEL_TRACES_EXPORTER is forced to 'none' because BuildKit
+# injects OTEL_TRACES_EXPORTER=otlp and OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=unix:///dev/otel-grpc.sock
+# into RUN steps when it propagates its own build trace (as docker/build-push-action does in CI).
+# Spring Boot honours these standard variables and would then fail to start on the unsupported
+# unix:// endpoint.
 FROM dhi.io/eclipse-temurin:25 AS train
 
 USER 0
 WORKDIR /deployments
 COPY --from=extract /work/application /deployments/application
 ENV SPRING_MAIN_LAZY_INITIALIZATION=false \
-    SPRING_PROFILES_ACTIVE=uber
+    SPRING_PROFILES_ACTIVE=uber \
+    OTEL_TRACES_EXPORTER=none
 RUN ["java", "-XX:AOTCacheOutput=/deployments/app.aot", "-Dspring.context.exit=onRefresh", \
      "-jar", "/deployments/application/app.jar"]
 

@@ -48,11 +48,15 @@ EXPOSE 8080
 # (exiting once the Spring context refresh completes) to produce a JVM AOT cache (JEP 514).
 # This dramatically reduces classloading/linking work at startup, which is the dominant boot cost
 # on CPU-constrained containers. Lazy initialization is disabled during training to maximize the
-# number of classes recorded in the cache.
+# number of classes recorded in the cache. OTEL_TRACES_EXPORTER is forced to 'none' because
+# BuildKit injects OTEL_TRACES_EXPORTER=otlp and OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=unix:///dev/otel-grpc.sock
+# into RUN steps when it propagates its own build trace (as docker/build-push-action does in CI).
+# Spring Boot honours these standard variables and would then fail to start on the unsupported
+# unix:// endpoint.
 RUN java -Djarmode=tools -jar app.jar extract --destination application \
  && rm app.jar \
  && mkdir -p /deployments/lib \
- && SPRING_MAIN_LAZY_INITIALIZATION=false SPRING_PROFILES_ACTIVE=uber \
+ && SPRING_MAIN_LAZY_INITIALIZATION=false SPRING_PROFILES_ACTIVE=uber OTEL_TRACES_EXPORTER=none \
       java -XX:+UseG1GC -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
 
 # Run it in uber mode. The JVM AOT cache replaces Spring AOT (-Dspring.aot.enabled=true): it
