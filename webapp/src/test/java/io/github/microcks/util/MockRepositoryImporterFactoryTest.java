@@ -29,12 +29,22 @@ import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import java.io.IOException;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -255,5 +265,39 @@ class MockRepositoryImporterFactoryTest {
             "Getting importer for a multi-file OpenCollection should not fail!");
 
       assertInstanceOf(OpenCollectionImporter.class, importer);
+   }
+
+   @Test
+   void testOpenCollectionParsingError() {
+      File unreadable = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/invalid-opencollection.yml");
+
+      IOException exception = assertThrows(IOException.class,
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(unreadable, null));
+
+      assertEquals("OpenCollection file parsing error", exception.getMessage());
+   }
+
+   static Stream<Arguments> firstLinesAndTheirImporter() {
+      String petstoreInfo = "info:\n  name: Petstore API\n  version: \"1.0\"\n";
+      String minimalOpenAPI = "openapi: 3.0.2\ninfo:\n  title: Petstore API\n  version: \"1.0\"\npaths: {}\n";
+      return Stream.of(Arguments.of("opencollection: 1.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("opencollection: \"1.0.0\"\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("\"opencollection\": \"1.0.0\"\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("opencollection: 2.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("opencollection-extra: x\n" + minimalOpenAPI, OpenAPIImporter.class),
+            Arguments.of(minimalOpenAPI, OpenAPIImporter.class));
+   }
+
+   @ParameterizedTest
+   @MethodSource("firstLinesAndTheirImporter")
+   void testOpenCollectionDetectionLine(String content, Class<?> expectedImporter, @TempDir Path directory)
+         throws IOException {
+      Path file = Files.writeString(directory.resolve("collection.yml"), content, UTF_8);
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(file.toFile(), null));
+
+      assertInstanceOf(expectedImporter, importer);
    }
 }

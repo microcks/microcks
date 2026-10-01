@@ -371,6 +371,20 @@ class OpenCollectionImporterTest {
       assertTrue(exception.getMessage().contains("path contains whitespace"));
    }
 
+   @Test
+   void testJsonRenderingIsImported() {
+      File collection = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/petstore-opencollection.json");
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(collection, null));
+
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+
+      assertEquals("Petstore API", service.getName());
+      assertEquals(List.of("GET /pet/findByStatus", "GET /pet/:petId"),
+            service.getOperations().stream().map(Operation::getName).toList());
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
