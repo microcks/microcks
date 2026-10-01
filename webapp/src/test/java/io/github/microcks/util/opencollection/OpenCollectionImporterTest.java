@@ -314,6 +314,63 @@ class OpenCollectionImporterTest {
       assertTrue(resource.getContent().contains("method: get"));
    }
 
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = { "{{baseUrl}}/api/users | /api/users",
+         "{{baseUrl}}/pet/findByStatus?status=available | /pet/findByStatus", "{{baseUrl}}/pet/:petId | /pet/:petId",
+         "https://petstore.example.com/v2/pet/:petId | /v2/pet/:petId", "{{host}}{{basePath}}/pet | /pet",
+         "{{host}}:8080/pet | /pet", "http://localhost:8080 | /", "/pet/:petId | /pet/:petId" })
+   void testOperationNameFromUrl(String address, String path, @TempDir Path directory) throws IOException {
+      OpenCollectionImporter importer = importerForGetRequests(directory, address);
+
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
+
+      assertEquals(List.of("GET " + path), service.getOperations().stream().map(Operation::getName).toList());
+      assertTrue(resource.getContent().contains(address));
+   }
+
+   @Test
+   void testVariableInPathIsKeptVerbatim(@TempDir Path directory) throws IOException {
+      OpenCollectionImporter importer = importerForGetRequests(directory, "{{baseUrl}}/pet/{{petId}}");
+
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+
+      assertEquals("GET /pet/{{petId}}", service.getOperations().get(0).getName());
+   }
+
+   @Test
+   void testTrailingSlashKeepsOperationsApart(@TempDir Path directory) throws IOException {
+      OpenCollectionImporter importer = importerForGetRequests(directory, "{{baseUrl}}/pet", "{{baseUrl}}/pet/");
+
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+
+      assertEquals(List.of("GET /pet", "GET /pet/"), service.getOperations().stream().map(Operation::getName).toList());
+   }
+
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = { "{{baseUrl}}pet | no path found after host prefix",
+         "petstore.example.com/pet | no path found after host prefix", "pet/:petId | no path found after host prefix" })
+   void testUnderivablePathIsRejected(String address, String reason, @TempDir Path directory) throws IOException {
+      OpenCollectionImporter importer = importerForGetRequests(directory, address);
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage()
+            .contains("Cannot derive an operation path from OpenCollection 'http.url' '" + address + "'"));
+      assertTrue(exception.getMessage().contains(reason));
+   }
+
+   @Test
+   void testWhitespaceInPathIsRejected(@TempDir Path directory) throws IOException {
+      OpenCollectionImporter importer = importerForGetRequests(directory, "{{baseUrl}}/pet/{{ petId }}");
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("path contains whitespace"));
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
@@ -336,5 +393,23 @@ class OpenCollectionImporterTest {
          appender.list.stream().filter(event -> event.getLevel() == Level.WARN)
                .forEach(event -> warnings.add(event.getFormattedMessage()));
       }
+   }
+
+   private static OpenCollectionImporter importerForGetRequests(Path directory, String... addresses)
+         throws IOException {
+      StringBuilder collection = new StringBuilder("""
+            opencollection: 1.0.0
+            info:
+              name: Petstore API
+              version: "1.0"
+            items:
+            """);
+      for (int index = 0; index < addresses.length; index++) {
+         collection.append("  - info: {name: Request %d, type: http}\n".formatted(index));
+         collection.append("    http: {method: GET, url: \"%s\"}\n".formatted(addresses[index]));
+      }
+      Path file = directory.resolve("collection.yml");
+      Files.writeString(file, collection, UTF_8);
+      return assertDoesNotThrow(() -> new OpenCollectionImporter(file.toString()));
    }
 }

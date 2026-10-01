@@ -27,6 +27,8 @@ public final class OpenCollectionPathExtractor {
 
    private static final Pattern LEADING_VARIABLES = Pattern.compile("^(\\{\\{[^{}]*}})+");
 
+   private static final Pattern LITERAL_SCHEME = Pattern.compile("^[A-Za-z][A-Za-z0-9+.\\-]*://");
+
    private OpenCollectionPathExtractor() {
       // Private constructor to hide the implicit one as it's a utility class.
    }
@@ -35,23 +37,53 @@ public final class OpenCollectionPathExtractor {
     * Extract the path of an URL, without its host prefix, its query and its fragment.
     * @param url The <code>http.url</code> of an OpenCollection item
     * @return The path, kept verbatim
+    * @throws IllegalArgumentException with a human-readable reason when no path can be derived
     */
    public static String extractPath(String url) {
-      String path = url.strip();
-      int queryOrFragment = indexOfQueryOrFragment(path);
-      if (queryOrFragment >= 0) {
-         path = path.substring(0, queryOrFragment);
+      String trimmedUrl = url.strip();
+      if (trimmedUrl.isEmpty()) {
+         throw new IllegalArgumentException("url is empty");
       }
-      Matcher variables = LEADING_VARIABLES.matcher(path);
-      return variables.find() ? path.substring(variables.end()) : path;
+      String path = withoutHostPrefix(withoutQueryAndFragment(trimmedUrl));
+      if (path.isEmpty()) {
+         return "/";
+      }
+      if (!path.startsWith("/")) {
+         throw new IllegalArgumentException("no path found after host prefix");
+      }
+      if (path.chars().anyMatch(Character::isWhitespace)) {
+         throw new IllegalArgumentException("path contains whitespace");
+      }
+      return path;
    }
 
-   private static int indexOfQueryOrFragment(String url) {
-      int query = url.indexOf('?');
-      int fragment = url.indexOf('#');
-      if (query < 0 || fragment < 0) {
-         return Math.max(query, fragment);
+   private static String withoutQueryAndFragment(String url) {
+      int end = url.length();
+      for (char separator : new char[] { '?', '#' }) {
+         int position = url.indexOf(separator);
+         end = position < 0 ? end : Math.min(end, position);
       }
-      return Math.min(query, fragment);
+      return url.substring(0, end);
+   }
+
+   private static String withoutHostPrefix(String url) {
+      Matcher literalScheme = LITERAL_SCHEME.matcher(url);
+      if (literalScheme.find()) {
+         return withoutAuthority(url.substring(literalScheme.end()));
+      }
+      Matcher variables = LEADING_VARIABLES.matcher(url);
+      if (!variables.find()) {
+         return url;
+      }
+      String remainder = url.substring(variables.end());
+      if (remainder.startsWith("://")) {
+         return withoutAuthority(remainder.substring("://".length()));
+      }
+      return remainder.startsWith(":") ? withoutAuthority(remainder) : remainder;
+   }
+
+   private static String withoutAuthority(String authorityAndPath) {
+      int pathStart = authorityAndPath.indexOf('/');
+      return pathStart < 0 ? "" : authorityAndPath.substring(pathStart);
    }
 }

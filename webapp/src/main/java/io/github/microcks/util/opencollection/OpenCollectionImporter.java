@@ -85,6 +85,9 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    /** Message of the error raised when an http method contains whitespace. */
    public static final String HTTP_METHOD_INVALID_MESSAGE = "OpenCollection 'http.method' must not contain whitespace";
 
+   /** Message of the error raised when no operation path can be derived from an http url. */
+   public static final String HTTP_URL_INVALID_MESSAGE = "Cannot derive an operation path from OpenCollection 'http.url'";
+
    /** Message of the error raised when an http item has no url. */
    public static final String HTTP_URL_MISSING_MESSAGE = "OpenCollection http item has no 'http.url'";
 
@@ -266,11 +269,20 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    private void addHttpOperation(JsonNode http, String location, Map<String, Operation> operations)
          throws MockRepositoryImportException {
       String method = methodOf(http, location);
-      String name = method + " " + OpenCollectionPathExtractor.extractPath(urlOf(http, location));
+      String name = method + " " + pathOf(urlOf(http, location), location);
       Operation operation = new Operation();
       operation.setName(name);
       operation.setMethod(method);
       operations.putIfAbsent(name, operation);
+   }
+
+   private static String pathOf(String url, String location) throws MockRepositoryImportException {
+      try {
+         return OpenCollectionPathExtractor.extractPath(url);
+      } catch (IllegalArgumentException e) {
+         throw new MockRepositoryImportException(
+               HTTP_URL_INVALID_MESSAGE + " '" + url + "'" + locationSuffix(location) + ": " + e.getMessage(), e);
+      }
    }
 
    private static String methodOf(JsonNode http, String location) throws MockRepositoryImportException {
