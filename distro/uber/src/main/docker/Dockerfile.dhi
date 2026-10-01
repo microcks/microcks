@@ -30,6 +30,11 @@ RUN java -Djarmode=tools -jar app.jar extract --destination /work/application \
 # into RUN steps when it propagates its own build trace (as docker/build-push-action does in CI).
 # Spring Boot honours these standard variables and would then fail to start on the unsupported
 # unix:// endpoint.
+# AOT code caching (adapters and stubs) is disabled: that machine code is generated for the CPU
+# features of the build machine (e.g. AVX-512 on Intel runners) and JDK 25 reloads it without any
+# CPU feature check (see JDK-8377507 / JDK-8377630), crashing with SIGILL in ~AdapterBlob on CPUs
+# lacking those features (e.g. AMD EPYC). Classes, heap objects and profiles - which carry the
+# startup gain - remain in the cache.
 FROM dhi.io/eclipse-temurin:25 AS train
 
 USER 0
@@ -38,7 +43,8 @@ COPY --from=extract /work/application /deployments/application
 ENV SPRING_MAIN_LAZY_INITIALIZATION=false \
     SPRING_PROFILES_ACTIVE=uber \
     OTEL_TRACES_EXPORTER=none
-RUN ["java", "-XX:AOTCacheOutput=/deployments/app.aot", "-Dspring.context.exit=onRefresh", \
+RUN ["java", "-XX:+UnlockDiagnosticVMOptions", "-XX:-AOTAdapterCaching", "-XX:-AOTStubCaching", \
+     "-XX:AOTCacheOutput=/deployments/app.aot", "-Dspring.context.exit=onRefresh", \
      "-jar", "/deployments/application/app.jar"]
 
 # ---- Stage 3: final distroless runtime image ----
@@ -68,7 +74,7 @@ EXPOSE 8080
 # JDK_JAVA_OPTIONS is additive and picked up by the java launcher, so the AOT cache stays active
 # even when deployments add their own options through JAVA_TOOL_OPTIONS.
 ENV SPRING_PROFILES_ACTIVE=uber \
-    JDK_JAVA_OPTIONS="-XX:AOTCache=/deployments/app.aot -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError"
+    JDK_JAVA_OPTIONS="-XX:AOTCache=/deployments/app.aot -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError -XX:+UseG1GC"
 
 # /deployments/lib/* remains on the classpath so that custom extension libraries can simply be
 # mounted or copied there - no PropertiesLauncher/loader.path setting is needed.

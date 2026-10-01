@@ -53,11 +53,17 @@ EXPOSE 8080
 # into RUN steps when it propagates its own build trace (as docker/build-push-action does in CI).
 # Spring Boot honours these standard variables and would then fail to start on the unsupported
 # unix:// endpoint.
+# AOT code caching (adapters and stubs) is disabled: that machine code is generated for the CPU
+# features of the build machine (e.g. AVX-512 on Intel runners) and JDK 25 reloads it without any
+# CPU feature check (see JDK-8377507 / JDK-8377630), crashing with SIGILL in ~AdapterBlob on CPUs
+# lacking those features (e.g. AMD EPYC). Classes, heap objects and profiles - which carry the
+# startup gain - remain in the cache.
 RUN java -Djarmode=tools -jar app.jar extract --destination application \
  && rm app.jar \
  && mkdir -p /deployments/lib \
  && SPRING_MAIN_LAZY_INITIALIZATION=false SPRING_PROFILES_ACTIVE=uber OTEL_TRACES_EXPORTER=none \
-      java -XX:+UseG1GC -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
+      java -XX:+UseG1GC -XX:+UnlockDiagnosticVMOptions -XX:-AOTAdapterCaching -XX:-AOTStubCaching \
+           -XX:AOTCacheOutput=/deployments/app.aot -Dspring.context.exit=onRefresh -jar application/app.jar
 
 # Run it in uber mode. The JVM AOT cache replaces Spring AOT (-Dspring.aot.enabled=true): it
 # provides equivalent-or-better startup gains while keeping bean conditions evaluated at runtime.
