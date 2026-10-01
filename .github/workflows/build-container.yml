@@ -84,7 +84,7 @@ jobs:
           provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
-          file: webapp/src/main/docker/Dockerfile
+          file: webapp/src/main/docker/Dockerfile.dhi
           labels: |
             org.opencontainers.image.revision=${GITHUB_SHA}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
@@ -149,7 +149,7 @@ jobs:
           provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
-          file: distro/uber/src/main/docker/Dockerfile
+          file: distro/uber/src/main/docker/Dockerfile.dhi
           labels: |
             org.opencontainers.image.revision=${GITHUB_SHA}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
