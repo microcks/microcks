@@ -45,6 +45,12 @@ import java.util.Map;
  */
 public class OpenCollectionImporter implements MockRepositoryImporter {
 
+   /** Name of the root property marking an OpenCollection document. */
+   public static final String OPENCOLLECTION_PROPERTY = "opencollection";
+
+   /** Prefix of the supported OpenCollection specification versions (major version 1). */
+   public static final String SUPPORTED_MAJOR_VERSION_PREFIX = "1.";
+
    /** Message of the error raised when the document has no opencollection root property. */
    public static final String NOT_AN_OPENCOLLECTION_MESSAGE = "Not an OpenCollection document: 'opencollection' "
          + "root property is missing";
@@ -55,6 +61,16 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
 
    /** Message of the error raised when the OpenCollection specification major version is not supported. */
    public static final String UNSUPPORTED_SPEC_VERSION_MESSAGE = "Only OpenCollection 1.x documents are supported";
+
+   /** Message of the error raised when the service name is missing or blank. */
+   public static final String NAME_MISSING_MESSAGE = "Name property is missing in OpenCollection info";
+
+   /** Message of the error raised when the service version is missing or blank. */
+   public static final String VERSION_MISSING_MESSAGE = "Version property is missing in OpenCollection info";
+
+   /** Message of the error raised when the service version is not a string. */
+   public static final String VERSION_NOT_STRING_MESSAGE = "Version property in OpenCollection info must be a string "
+         + "(quote it, e.g. version: \"1.0\")";
 
    /** Message of the error raised when the collection declares itself as a multi-file one. */
    public static final String BUNDLED_FALSE_NOT_SUPPORTED_MESSAGE = "OpenCollection with 'bundled: false' "
@@ -91,6 +107,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
       checkSpecVersion();
       checkBundled();
+      checkServiceIdentity();
       Service service = new Service();
       JsonNode info = collection.path("info");
       service.setName(info.path("name").asText());
@@ -119,7 +136,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    }
 
    private void checkSpecVersion() throws MockRepositoryImportException {
-      JsonNode specNode = collection.path("opencollection");
+      JsonNode specNode = collection.path(OPENCOLLECTION_PROPERTY);
       if (specNode.isMissingNode()) {
          throw new MockRepositoryImportException(NOT_AN_OPENCOLLECTION_MESSAGE);
       }
@@ -127,7 +144,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
          throw new MockRepositoryImportException(OPENCOLLECTION_NOT_STRING_MESSAGE);
       }
       String specVersion = specNode.textValue();
-      if (!specVersion.startsWith("1.")) {
+      if (!specVersion.startsWith(SUPPORTED_MAJOR_VERSION_PREFIX)) {
          throw new MockRepositoryImportException(UNSUPPORTED_SPEC_VERSION_MESSAGE + " (found '" + specVersion + "')");
       }
    }
@@ -142,6 +159,24 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       }
       if (!bundled.booleanValue()) {
          throw new MockRepositoryImportException(BUNDLED_FALSE_NOT_SUPPORTED_MESSAGE);
+      }
+   }
+
+   private void checkServiceIdentity() throws MockRepositoryImportException {
+      JsonNode info = collection.path("info");
+      JsonNode name = info.path("name");
+      if (!name.isTextual() || name.textValue().isBlank()) {
+         throw new MockRepositoryImportException(NAME_MISSING_MESSAGE);
+      }
+      JsonNode version = info.path("version");
+      if (version.isMissingNode()) {
+         throw new MockRepositoryImportException(VERSION_MISSING_MESSAGE);
+      }
+      if (!version.isTextual()) {
+         throw new MockRepositoryImportException(VERSION_NOT_STRING_MESSAGE);
+      }
+      if (version.textValue().isBlank()) {
+         throw new MockRepositoryImportException(VERSION_MISSING_MESSAGE);
       }
    }
 

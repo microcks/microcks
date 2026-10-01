@@ -26,6 +26,8 @@ import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.MockRepositoryImporterFactory;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -95,8 +97,7 @@ class OpenCollectionImporterTest {
 
    @Test
    void testBundledFalseIsRejected() {
-      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
-            "target/test-classes/io/github/microcks/util/opencollection/petstore-bundled-false.yml"));
+      OpenCollectionImporter importer = importerFor("petstore-bundled-false.yml");
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);
@@ -106,8 +107,7 @@ class OpenCollectionImporterTest {
 
    @Test
    void testBundledNotBooleanIsRejected() {
-      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
-            "target/test-classes/io/github/microcks/util/opencollection/bundled-not-boolean.yml"));
+      OpenCollectionImporter importer = importerFor("bundled-not-boolean.yml");
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);
@@ -117,8 +117,7 @@ class OpenCollectionImporterTest {
 
    @Test
    void testUnsupportedSpecVersionIsRejected() {
-      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
-            "target/test-classes/io/github/microcks/util/opencollection/petstore-spec-2.yml"));
+      OpenCollectionImporter importer = importerFor("petstore-spec-2.yml");
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);
@@ -129,8 +128,7 @@ class OpenCollectionImporterTest {
 
    @Test
    void testNumericOpenCollectionPropertyIsRejected() {
-      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
-            "target/test-classes/io/github/microcks/util/opencollection/petstore-numeric-opencollection.yml"));
+      OpenCollectionImporter importer = importerFor("petstore-numeric-opencollection.yml");
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);
@@ -140,13 +138,49 @@ class OpenCollectionImporterTest {
 
    @Test
    void testNotAnOpenCollectionIsRejected() {
-      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
-            "target/test-classes/io/github/microcks/util/opencollection/not-an-opencollection.yml"));
+      OpenCollectionImporter importer = importerFor("not-an-opencollection.yml");
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);
 
       assertTrue(exception.getMessage()
             .contains("Not an OpenCollection document: 'opencollection' root property is missing"));
+   }
+
+   @ParameterizedTest
+   @ValueSource(strings = { "petstore-no-version.yml", "petstore-blank-version.yml" })
+   void testMissingOrBlankVersionIsRejected(String fixture) {
+      OpenCollectionImporter importer = importerFor(fixture);
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("Version property"));
+   }
+
+   @Test
+   void testNumericVersionIsRejected() {
+      OpenCollectionImporter importer = importerFor("petstore-numeric-version.yml");
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("must be a string"));
+   }
+
+   @ParameterizedTest
+   @ValueSource(strings = { "petstore-no-name.yml", "petstore-blank-name.yml" })
+   void testMissingOrBlankNameIsRejected(String fixture) {
+      OpenCollectionImporter importer = importerFor(fixture);
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("Name property"));
+   }
+
+   private static OpenCollectionImporter importerFor(String fixture) {
+      return assertDoesNotThrow(
+            () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
    }
 }
