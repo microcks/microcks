@@ -244,4 +244,16 @@ class MockRepositoryImporterFactoryTest {
 
       assertInstanceOf(OpenCollectionImporter.class, importer);
    }
+
+   @Test
+   void testGetMockRepositoryImporterForNotBundledOpenCollection() {
+      File notBundled = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/petstore-bundled-false.yml");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(notBundled, null),
+            "Getting importer for a multi-file OpenCollection should not fail!");
+
+      assertInstanceOf(OpenCollectionImporter.class, importer);
+   }
 }

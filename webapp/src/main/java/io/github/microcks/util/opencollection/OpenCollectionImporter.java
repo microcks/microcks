@@ -45,6 +45,13 @@ import java.util.Map;
  */
 public class OpenCollectionImporter implements MockRepositoryImporter {
 
+   /** Message of the error raised when the collection declares itself as a multi-file one. */
+   public static final String BUNDLED_FALSE_NOT_SUPPORTED_MESSAGE = "OpenCollection with 'bundled: false' "
+         + "(multi-file collection) is not yet supported. Please import a bundled single-file OpenCollection";
+
+   /** Message of the error raised when the bundled property is not a boolean. */
+   public static final String BUNDLED_NOT_BOOLEAN_MESSAGE = "OpenCollection 'bundled' property must be a boolean";
+
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(OpenCollectionImporter.class);
 
@@ -71,6 +78,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
 
    @Override
    public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
+      checkBundled();
       Service service = new Service();
       JsonNode info = collection.path("info");
       service.setName(info.path("name").asText());
@@ -96,6 +104,19 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
       return List.of();
+   }
+
+   private void checkBundled() throws MockRepositoryImportException {
+      JsonNode bundled = collection.path("bundled");
+      if (bundled.isMissingNode()) {
+         return;
+      }
+      if (!bundled.isBoolean()) {
+         throw new MockRepositoryImportException(BUNDLED_NOT_BOOLEAN_MESSAGE);
+      }
+      if (!bundled.booleanValue()) {
+         throw new MockRepositoryImportException(BUNDLED_FALSE_NOT_SUPPORTED_MESSAGE);
+      }
    }
 
    private void collectOperations(JsonNode items, Map<String, Operation> operations) {

@@ -21,6 +21,7 @@ import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.MockRepositoryImporterFactory;
 
@@ -34,6 +35,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for class OpenCollectionImporter.
@@ -88,5 +91,27 @@ class OpenCollectionImporterTest {
 
       byte[] uploaded = assertDoesNotThrow(() -> Files.readAllBytes(collection.toPath()));
       assertArrayEquals(uploaded, resource.getContent().getBytes(UTF_8));
+   }
+
+   @Test
+   void testBundledFalseIsRejected() {
+      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
+            "target/test-classes/io/github/microcks/util/opencollection/petstore-bundled-false.yml"));
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("not yet supported"));
+   }
+
+   @Test
+   void testBundledNotBooleanIsRejected() {
+      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
+            "target/test-classes/io/github/microcks/util/opencollection/bundled-not-boolean.yml"));
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("'bundled' property must be a boolean"));
    }
 }
