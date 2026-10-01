@@ -23,6 +23,7 @@ import io.github.microcks.util.har.HARImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.openapi.SwaggerImporter;
+import io.github.microcks.util.opencollection.OpenCollectionImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
@@ -32,6 +33,8 @@ import java.io.File;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -205,5 +208,40 @@ class MockRepositoryImporterFactoryTest {
          fail("Getting importer for HAR JSON file should not fail!");
       }
       assertTrue(importer instanceof HARImporter);
+   }
+
+   @Test
+   void testGetMockRepositoryImporterForOpenCollection() {
+      File openCollection = new File("../samples/PetstoreAPI-opencollection.yml");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openCollection, null),
+            "Getting importer for OpenCollection should not fail!");
+
+      assertInstanceOf(OpenCollectionImporter.class, importer);
+   }
+
+   @Test
+   void testNestedOpenCollectionKeyIsNotMistakenForAnOpenCollection() {
+      File openAPIWithNestedKey = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/nested-opencollection-key.yml");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openAPIWithNestedKey, null),
+            "Getting importer for a file with a nested opencollection key should not fail!");
+
+      assertInstanceOf(OpenAPIImporter.class, importer);
+   }
+
+   @Test
+   void testGetMockRepositoryImporterForPrettyPrintedJsonOpenCollection() {
+      File openCollection = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/pretty-printed-opencollection.json");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openCollection, null),
+            "Getting importer for a JSON OpenCollection should not fail!");
+
+      assertInstanceOf(OpenCollectionImporter.class, importer);
    }
 }
