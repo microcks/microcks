@@ -168,7 +168,7 @@ export class ServicesPageComponent implements OnInit, OnDestroy {
         } as Filter);
       }
       if (this.nameFilterTerm != null || this.repositoryFilter != null) {
-        this.filterServices(this.repositoryFilter!, this.nameFilterTerm!);
+        this.filterServices(this.nameFilterTerm!);
       } else {
         // Default - retrieve all the services
         this.getServices();
@@ -187,30 +187,14 @@ export class ServicesPageComponent implements OnInit, OnDestroy {
       queryParams: {} as Params,
     });
   }
-  filterServices(repositoryFilter: string, nameFilterTerm: string): void {
-    const labelsFilter = new Map<string, string>();
-    if (repositoryFilter != null) {
-      labelsFilter.set(
-        this.repositoryFilterFeatureLabelKey(),
-        repositoryFilter
-      );
-    }
+  filterServices(nameFilterTerm: string): void {
+    const labelsFilter = this.buildLabelsFilter();
     this.servicesSvc
       .filterServices(labelsFilter, nameFilterTerm)
       .subscribe((results) => {
         this.services = results;
         this.filterConfig.resultsCount = results.length;
       });
-    // Update browser URL to make the page bookmarkable.
-    const queryParams: any = { name: nameFilterTerm };
-    for (const key of Array.from(labelsFilter.keys())) {
-      queryParams['labels.' + key] = labelsFilter.get(key);
-    }
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: queryParams as Params,
-      queryParamsHandling: 'merge',
-    });
   }
 
   countServices(): void {
@@ -287,7 +271,10 @@ export class ServicesPageComponent implements OnInit, OnDestroy {
     if (!$event.appliedFilters || $event.appliedFilters.length == 0) {
       this.nameFilterTerm = null;
       this.repositoryFilter = null;
-      this.getServices();
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {} as Params,
+      });
     } else {
       $event.appliedFilters.forEach((filter) => {
         if (
@@ -299,7 +286,18 @@ export class ServicesPageComponent implements OnInit, OnDestroy {
           this.nameFilterTerm = filter.value;
         }
       });
-      this.filterServices(this.repositoryFilter!, this.nameFilterTerm!);
+      // Update browser URL to make the page bookmarkable.
+      const labelsFilter = this.buildLabelsFilter();
+
+      const queryParams: any = { name: this.nameFilterTerm };
+      for (const key of Array.from(labelsFilter.keys())) {
+        queryParams['labels.' + key] = labelsFilter.get(key);
+      }
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: queryParams as Params,
+        queryParamsHandling: 'merge',
+      });
     }
   }
 
@@ -378,6 +376,14 @@ export class ServicesPageComponent implements OnInit, OnDestroy {
 
   handleCloseNotification($event: NotificationEvent): void {
     this.notificationService.remove($event.notification);
+  }
+
+  private buildLabelsFilter(): Map<string, string> {
+    return new Map<string, string>(
+      this.repositoryFilter != null
+        ? [[this.repositoryFilterFeatureLabelKey(), this.repositoryFilter]]
+        : []
+    );
   }
 
   public hasRole(role: string): boolean {
