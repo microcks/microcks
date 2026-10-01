@@ -19,7 +19,7 @@
     "@angular/material": "21.2.14",
     "@angular/platform-browser": "21.2.22",
     "@angular/platform-browser-dynamic": "21.2.22",
-    "@angular/router": "21.2.22",
+    "@angular/router": "21.2.24",
     "@opentelemetry/api": "1.9.0",
     "@opentelemetry/sdk-trace-base": "2.8.0",
     "bootstrap": "5.3.3",
