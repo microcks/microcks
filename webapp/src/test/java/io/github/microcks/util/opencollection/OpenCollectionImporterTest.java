@@ -114,4 +114,39 @@ class OpenCollectionImporterTest {
 
       assertTrue(exception.getMessage().contains("'bundled' property must be a boolean"));
    }
+
+   @Test
+   void testUnsupportedSpecVersionIsRejected() {
+      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
+            "target/test-classes/io/github/microcks/util/opencollection/petstore-spec-2.yml"));
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("Only OpenCollection 1.x"));
+      assertTrue(exception.getMessage().contains("2.0.0"));
+   }
+
+   @Test
+   void testNumericOpenCollectionPropertyIsRejected() {
+      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
+            "target/test-classes/io/github/microcks/util/opencollection/petstore-numeric-opencollection.yml"));
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("'opencollection' property must be a string"));
+   }
+
+   @Test
+   void testNotAnOpenCollectionIsRejected() {
+      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(
+            "target/test-classes/io/github/microcks/util/opencollection/not-an-opencollection.yml"));
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage()
+            .contains("Not an OpenCollection document: 'opencollection' root property is missing"));
+   }
 }

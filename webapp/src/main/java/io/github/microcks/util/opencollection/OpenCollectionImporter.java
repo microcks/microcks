@@ -45,6 +45,17 @@ import java.util.Map;
  */
 public class OpenCollectionImporter implements MockRepositoryImporter {
 
+   /** Message of the error raised when the document has no opencollection root property. */
+   public static final String NOT_AN_OPENCOLLECTION_MESSAGE = "Not an OpenCollection document: 'opencollection' "
+         + "root property is missing";
+
+   /** Message of the error raised when the opencollection property is not a string. */
+   public static final String OPENCOLLECTION_NOT_STRING_MESSAGE = "OpenCollection 'opencollection' property must be "
+         + "a string (quote it, e.g. opencollection: \"1.0.0\")";
+
+   /** Message of the error raised when the OpenCollection specification major version is not supported. */
+   public static final String UNSUPPORTED_SPEC_VERSION_MESSAGE = "Only OpenCollection 1.x documents are supported";
+
    /** Message of the error raised when the collection declares itself as a multi-file one. */
    public static final String BUNDLED_FALSE_NOT_SUPPORTED_MESSAGE = "OpenCollection with 'bundled: false' "
          + "(multi-file collection) is not yet supported. Please import a bundled single-file OpenCollection";
@@ -78,6 +89,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
 
    @Override
    public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
+      checkSpecVersion();
       checkBundled();
       Service service = new Service();
       JsonNode info = collection.path("info");
@@ -104,6 +116,20 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
       return List.of();
+   }
+
+   private void checkSpecVersion() throws MockRepositoryImportException {
+      JsonNode specNode = collection.path("opencollection");
+      if (specNode.isMissingNode()) {
+         throw new MockRepositoryImportException(NOT_AN_OPENCOLLECTION_MESSAGE);
+      }
+      if (!specNode.isTextual()) {
+         throw new MockRepositoryImportException(OPENCOLLECTION_NOT_STRING_MESSAGE);
+      }
+      String specVersion = specNode.textValue();
+      if (!specVersion.startsWith("1.")) {
+         throw new MockRepositoryImportException(UNSUPPORTED_SPEC_VERSION_MESSAGE + " (found '" + specVersion + "')");
+      }
    }
 
    private void checkBundled() throws MockRepositoryImportException {
