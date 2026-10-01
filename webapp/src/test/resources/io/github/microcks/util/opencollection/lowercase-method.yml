@@ -1,0 +1,12 @@
+opencollection: 1.0.0
+info:
+  name: Petstore API
+  version: "1.0"
+items:
+  - info:
+      name: Find pets by status
+      type: http
+    http:
+      method: get
+      url: "{{baseUrl}}/pet/findByStatus"
+bundled: true

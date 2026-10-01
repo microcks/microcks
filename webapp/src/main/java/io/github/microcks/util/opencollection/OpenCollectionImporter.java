@@ -79,6 +79,15 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    /** Message of the error raised when the bundled property is not a boolean. */
    public static final String BUNDLED_NOT_BOOLEAN_MESSAGE = "OpenCollection 'bundled' property must be a boolean";
 
+   /** Message of the error raised when an http item has no method. */
+   public static final String HTTP_METHOD_MISSING_MESSAGE = "OpenCollection http item has no 'http.method'";
+
+   /** Message of the error raised when an http method contains whitespace. */
+   public static final String HTTP_METHOD_INVALID_MESSAGE = "OpenCollection 'http.method' must not contain whitespace";
+
+   /** Message of the error raised when an http item has no url. */
+   public static final String HTTP_URL_MISSING_MESSAGE = "OpenCollection http item has no 'http.url'";
+
    /** The type reported in logs for an item that does not declare one. */
    private static final String UNKNOWN_ITEM_TYPE = "unknown";
 
@@ -213,10 +222,14 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       }
       switch (kindOf(item)) {
          case FOLDER -> collectOperations(item.path("items"), location, operations);
-         case HTTP -> addHttpOperation(item.path("http"), operations);
+         case HTTP -> addHttpOperation(item.path("http"), location, operations);
          case UNSUPPORTED ->
             log.warn("Item '{}' of type '{}' is not supported yet, skipping", location, declaredTypeOf(item));
       }
+   }
+
+   private static boolean isNonBlankText(JsonNode node) {
+      return node.isTextual() && !node.textValue().isBlank();
    }
 
    private static String locationSuffix(String location) {
@@ -250,13 +263,33 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       return item.has("items") ? ItemKind.FOLDER : ItemKind.UNSUPPORTED;
    }
 
-   private void addHttpOperation(JsonNode http, Map<String, Operation> operations) {
-      String method = http.path("method").asText().strip().toUpperCase(Locale.ROOT);
-      String name = method + " " + OpenCollectionPathExtractor.extractPath(http.path("url").asText());
+   private void addHttpOperation(JsonNode http, String location, Map<String, Operation> operations)
+         throws MockRepositoryImportException {
+      String method = methodOf(http, location);
+      String name = method + " " + OpenCollectionPathExtractor.extractPath(urlOf(http, location));
       Operation operation = new Operation();
       operation.setName(name);
       operation.setMethod(method);
       operations.putIfAbsent(name, operation);
+   }
+
+   private static String methodOf(JsonNode http, String location) throws MockRepositoryImportException {
+      if (!isNonBlankText(http.path("method"))) {
+         throw new MockRepositoryImportException(HTTP_METHOD_MISSING_MESSAGE + locationSuffix(location));
+      }
+      String method = http.path("method").textValue().strip();
+      if (method.chars().anyMatch(Character::isWhitespace)) {
+         throw new MockRepositoryImportException(
+               HTTP_METHOD_INVALID_MESSAGE + " '" + method + "'" + locationSuffix(location));
+      }
+      return method.toUpperCase(Locale.ROOT);
+   }
+
+   private static String urlOf(JsonNode http, String location) throws MockRepositoryImportException {
+      if (!isNonBlankText(http.path("url"))) {
+         throw new MockRepositoryImportException(HTTP_URL_MISSING_MESSAGE + locationSuffix(location));
+      }
+      return http.path("url").textValue();
    }
 
    /** The kinds of items the importer distinguishes. */

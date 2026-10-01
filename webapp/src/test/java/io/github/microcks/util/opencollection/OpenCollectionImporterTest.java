@@ -263,6 +263,57 @@ class OpenCollectionImporterTest {
       assertTrue(exception.getMessage().endsWith(" at '" + location + "'"));
    }
 
+   @Test
+   void testHttpItemWithoutUrlIsRejected() {
+      OpenCollectionImporter importer = importerFor("http-item-without-url.yml");
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("http.url"));
+      assertTrue(exception.getMessage().contains("pet/Get pet by id"));
+   }
+
+   @Test
+   void testHttpItemWithoutMethodIsRejected() {
+      OpenCollectionImporter importer = importerFor("http-item-without-method.yml");
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("http.method"));
+      assertTrue(exception.getMessage().contains("pet/Get pet by id"));
+   }
+
+   @Test
+   void testMethodWithWhitespaceIsRejected() {
+      OpenCollectionImporter importer = importerFor("method-with-whitespace.yml");
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("must not contain whitespace"));
+      assertTrue(exception.getMessage().contains("'GET PET'"));
+      assertTrue(exception.getMessage().contains("pet/Get pet by id"));
+   }
+
+   @Test
+   void testDuplicateOperationsCollapse() {
+      assertEquals(List.of("GET /pet/findByStatus"), operationNamesOf("duplicate-operations.yml"));
+   }
+
+   @Test
+   void testLowerCaseMethodIsUppercased() {
+      OpenCollectionImporter importer = importerFor("lowercase-method.yml");
+
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
+
+      assertEquals("GET /pet/findByStatus", service.getOperations().get(0).getName());
+      assertEquals("GET", service.getOperations().get(0).getMethod());
+      assertTrue(resource.getContent().contains("method: get"));
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
