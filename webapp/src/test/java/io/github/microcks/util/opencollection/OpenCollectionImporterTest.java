@@ -166,7 +166,7 @@ class OpenCollectionImporterTest {
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);
 
-      assertTrue(exception.getMessage().contains("Version property"));
+      assertTrue(exception.getMessage().contains(OpenCollectionImporter.VERSION_MISSING_MESSAGE));
    }
 
    @Test
@@ -274,9 +274,10 @@ class OpenCollectionImporterTest {
       assertTrue(exception.getMessage().contains("pet/Get pet by id"));
    }
 
-   @Test
-   void testHttpItemWithoutMethodIsRejected() {
-      OpenCollectionImporter importer = importerFor("http-item-without-method.yml");
+   @ParameterizedTest
+   @ValueSource(strings = { "http-item-without-method.yml", "http-item-without-http-section.yml" })
+   void testHttpItemWithoutMethodIsRejected(String fixture) {
+      OpenCollectionImporter importer = importerFor(fixture);
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);

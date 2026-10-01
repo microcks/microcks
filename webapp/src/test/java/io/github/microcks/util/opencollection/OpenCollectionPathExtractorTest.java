@@ -52,7 +52,8 @@ class OpenCollectionPathExtractorTest {
             Arguments.of("{{baseUrl}}/", "/"), Arguments.of("{{baseUrl}}", "/"),
             Arguments.of("{{baseUrl}}#section", "/"), Arguments.of("{{baseUrl}}/pet/:id.json", "/pet/:id.json"),
             Arguments.of("{{baseUrl}}/pet/%7Bid%7D", "/pet/%7Bid%7D"),
-            Arguments.of("{{baseUrl}}/Pet//Find", "/Pet//Find"), Arguments.of("  {{baseUrl}}/pet  ", "/pet"));
+            Arguments.of("{{baseUrl}}/Pet//Find", "/Pet//Find"), Arguments.of("  {{baseUrl}}/pet  ", "/pet"),
+            Arguments.of("https:///pet", "/pet"), Arguments.of("?status=available", "/"));
    }
 
    @ParameterizedTest
