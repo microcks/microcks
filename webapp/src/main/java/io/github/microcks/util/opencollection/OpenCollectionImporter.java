@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -49,6 +50,9 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
 
    private JsonNode collection;
 
+   /** The collection text exactly as uploaded: it is stored as the contract and never re-serialised. */
+   private String collectionContent;
+
    /**
     * Build a new importer.
     * @param collectionFilePath The path to OpenCollection file
@@ -57,6 +61,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public OpenCollectionImporter(String collectionFilePath) throws IOException {
       try {
          byte[] yamlBytes = Files.readAllBytes(Paths.get(collectionFilePath));
+         collectionContent = new String(yamlBytes, StandardCharsets.UTF_8);
          collection = ObjectMapperFactory.getYamlObjectMapper().readTree(yamlBytes);
       } catch (Exception e) {
          log.error("Exception while parsing OpenCollection file {}", collectionFilePath, e);
@@ -83,6 +88,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       Resource resource = new Resource();
       resource.setName(service.getName() + "-" + service.getVersion() + ".yaml");
       resource.setType(ResourceType.OPEN_COLLECTION);
+      resource.setContent(collectionContent);
       return List.of(resource);
    }
 

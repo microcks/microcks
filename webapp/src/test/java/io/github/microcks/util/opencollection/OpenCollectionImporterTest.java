@@ -27,8 +27,11 @@ import io.github.microcks.util.MockRepositoryImporterFactory;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -72,5 +75,18 @@ class OpenCollectionImporterTest {
          List<Exchange> exchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, operation));
          assertEquals(0, exchanges.size());
       }
+   }
+
+   @Test
+   void testResourceContentIsUntouched() {
+      File collection = new File("../samples/PetstoreAPI-opencollection.yml");
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(collection, null));
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+
+      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
+
+      byte[] uploaded = assertDoesNotThrow(() -> Files.readAllBytes(collection.toPath()));
+      assertArrayEquals(uploaded, resource.getContent().getBytes(UTF_8));
    }
 }
