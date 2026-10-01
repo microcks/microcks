@@ -1,0 +1,10 @@
+opencollection: 1.0.0
+info:
+  name: Petstore API
+  version: "1.0"
+items:
+  - info:
+      name: pet
+      type: folder
+    items: not a list
+bundled: true

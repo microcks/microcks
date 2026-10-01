@@ -79,6 +79,18 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    /** Message of the error raised when the bundled property is not a boolean. */
    public static final String BUNDLED_NOT_BOOLEAN_MESSAGE = "OpenCollection 'bundled' property must be a boolean";
 
+   /** The type reported in logs for an item that does not declare one. */
+   private static final String UNKNOWN_ITEM_TYPE = "unknown";
+
+   /** Message of the error raised when an items property is not a list. */
+   public static final String ITEMS_NOT_A_LIST_MESSAGE = "OpenCollection 'items' property must be a list";
+
+   /** Message of the error raised when an item is not an object. */
+   public static final String ITEM_NOT_AN_OBJECT_MESSAGE = "OpenCollection item must be an object";
+
+   /** The location reported in errors for the root items of the collection. */
+   private static final String ROOT_LOCATION = "<root>";
+
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(OpenCollectionImporter.class);
 
@@ -115,7 +127,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       service.setType(ServiceType.REST);
 
       Map<String, Operation> operations = new LinkedHashMap<>();
-      collectOperations(collection.path("items"), operations);
+      collectOperations(collection.path("items"), "", operations);
       service.setOperations(new ArrayList<>(operations.values()));
       return List.of(service);
    }
@@ -180,20 +192,85 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       }
    }
 
-   private void collectOperations(JsonNode items, Map<String, Operation> operations) {
-      for (JsonNode item : items) {
-         String type = item.path("info").path("type").asText();
-         if ("folder".equals(type)) {
-            collectOperations(item.path("items"), operations);
-         } else if ("http".equals(type)) {
-            JsonNode http = item.path("http");
-            String method = http.path("method").asText().strip().toUpperCase(Locale.ROOT);
-            String name = method + " " + OpenCollectionPathExtractor.extractPath(http.path("url").asText());
-            Operation operation = new Operation();
-            operation.setName(name);
-            operation.setMethod(method);
-            operations.putIfAbsent(name, operation);
-         }
+   private void collectOperations(JsonNode items, String parentLocation, Map<String, Operation> operations)
+         throws MockRepositoryImportException {
+      if (items.isMissingNode()) {
+         return;
+      }
+      if (!items.isArray()) {
+         throw new MockRepositoryImportException(
+               ITEMS_NOT_A_LIST_MESSAGE + locationSuffix(parentLocation.isEmpty() ? ROOT_LOCATION : parentLocation));
+      }
+      for (int index = 0; index < items.size(); index++) {
+         collectItemOperations(items.get(index), itemLocation(parentLocation, items.get(index), index), operations);
+      }
+   }
+
+   private void collectItemOperations(JsonNode item, String location, Map<String, Operation> operations)
+         throws MockRepositoryImportException {
+      if (!item.isObject()) {
+         throw new MockRepositoryImportException(ITEM_NOT_AN_OBJECT_MESSAGE + locationSuffix(location));
+      }
+      switch (kindOf(item)) {
+         case FOLDER -> collectOperations(item.path("items"), location, operations);
+         case HTTP -> addHttpOperation(item.path("http"), operations);
+         case UNSUPPORTED ->
+            log.warn("Item '{}' of type '{}' is not supported yet, skipping", location, declaredTypeOf(item));
+      }
+   }
+
+   private static String locationSuffix(String location) {
+      return " at '" + location + "'";
+   }
+
+   private static String itemLocation(String parentLocation, JsonNode item, int index) {
+      JsonNode name = item.path("info").path("name");
+      String label = name.isTextual() ? name.textValue() : "#" + index;
+      return parentLocation.isEmpty() ? label : parentLocation + "/" + label;
+   }
+
+   /** The type an item declares, in <code>info.type</code> or at its root (ScriptFile), else "unknown". */
+   private static String declaredTypeOf(JsonNode item) {
+      JsonNode infoType = item.path("info").path("type");
+      if (infoType.isTextual()) {
+         return infoType.textValue();
+      }
+      JsonNode rootType = item.path("type");
+      return rootType.isTextual() ? rootType.textValue() : UNKNOWN_ITEM_TYPE;
+   }
+
+   private static ItemKind kindOf(JsonNode item) {
+      JsonNode type = item.path("info").path("type");
+      if (type.isTextual()) {
+         return ItemKind.fromType(type.textValue());
+      }
+      if (item.has("http")) {
+         return ItemKind.HTTP;
+      }
+      return item.has("items") ? ItemKind.FOLDER : ItemKind.UNSUPPORTED;
+   }
+
+   private void addHttpOperation(JsonNode http, Map<String, Operation> operations) {
+      String method = http.path("method").asText().strip().toUpperCase(Locale.ROOT);
+      String name = method + " " + OpenCollectionPathExtractor.extractPath(http.path("url").asText());
+      Operation operation = new Operation();
+      operation.setName(name);
+      operation.setMethod(method);
+      operations.putIfAbsent(name, operation);
+   }
+
+   /** The kinds of items the importer distinguishes. */
+   private enum ItemKind {
+      HTTP,
+      FOLDER,
+      UNSUPPORTED;
+
+      static ItemKind fromType(String type) {
+         return switch (type) {
+            case "http" -> HTTP;
+            case "folder" -> FOLDER;
+            default -> UNSUPPORTED;
+         };
       }
    }
 }

@@ -25,13 +25,24 @@ import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.MockRepositoryImporterFactory;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -179,8 +190,100 @@ class OpenCollectionImporterTest {
       assertTrue(exception.getMessage().contains("Name property"));
    }
 
+   @Test
+   void testItemsWithoutTypeAreResolvedStructurally() {
+      assertEquals(List.of("GET /pet/findByStatus", "GET /pet/:petId"), operationNamesOf("items-without-type.yml"));
+   }
+
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = { "{info: {name: Skipped, type: graphql}} | graphql",
+         "{info: {name: Skipped, type: grpc}} | grpc", "{info: {name: Skipped, type: websocket}} | websocket",
+         "{type: script, path: ./setup.js} | script", "{info: {name: Skipped, type: app}} | app",
+         "{info: {name: Skipped, type: teleport}} | teleport" })
+   void testUnsupportedItemKindsAreSkipped(String unsupportedItem, String expectedType, @TempDir Path directory)
+         throws IOException {
+      Path collection = directory.resolve("unsupported-item.yml");
+      Files.writeString(collection, """
+            opencollection: 1.0.0
+            info:
+              name: Petstore API
+              version: "1.0"
+            items:
+              - %s
+              - info: {name: Find pets by status, type: http}
+                http: {method: GET, url: "{{baseUrl}}/pet/findByStatus"}
+            """.formatted(unsupportedItem), UTF_8);
+      OpenCollectionImporter importer = assertDoesNotThrow(() -> new OpenCollectionImporter(collection.toString()));
+
+      List<String> warnings = new ArrayList<>();
+      List<Operation> operations = warningsCapturedWhile(() -> assertDoesNotThrow(importer::getServiceDefinitions),
+            warnings).get(0).getOperations();
+
+      assertEquals(1, operations.size());
+      assertEquals("GET /pet/findByStatus", operations.get(0).getName());
+      assertEquals(1, warnings.size());
+      assertTrue(warnings.get(0).contains("is not supported yet, skipping"));
+      assertTrue(warnings.get(0).contains("of type '" + expectedType + "'"));
+   }
+
+   @Test
+   void testNestedFoldersAreTraversed() {
+      assertEquals(List.of("GET /pet/:petId"), operationNamesOf("nested-folders.yml"));
+   }
+
+   @Test
+   void testCollectionWithoutRequestsHasNoOperation() {
+      assertEquals(List.of(), operationNamesOf("no-requests.yml"));
+   }
+
+   @Test
+   void testUnidentifiableItemIsSkipped() {
+      OpenCollectionImporter importer = importerFor("unidentifiable-item.yml");
+      List<String> warnings = new ArrayList<>();
+
+      List<Service> services = warningsCapturedWhile(() -> assertDoesNotThrow(importer::getServiceDefinitions),
+            warnings);
+
+      assertEquals(0, services.get(0).getOperations().size());
+      assertEquals(List.of("Item 'Mystery' of type 'unknown' is not supported yet, skipping"), warnings);
+   }
+
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', quoteCharacter = '"', value = {
+         "items-not-a-list-root.yml | 'items' property must be a list | <root>",
+         "items-not-a-list-folder.yml | 'items' property must be a list | pet",
+         "item-not-an-object.yml | item must be an object | #0" })
+   void testMalformedItemsAreRejected(String fixture, String reason, String location) {
+      OpenCollectionImporter importer = importerFor(fixture);
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains(reason));
+      assertTrue(exception.getMessage().endsWith(" at '" + location + "'"));
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
+   }
+
+   private static List<String> operationNamesOf(String fixture) {
+      Service service = assertDoesNotThrow(importerFor(fixture)::getServiceDefinitions).get(0);
+      return service.getOperations().stream().map(Operation::getName).toList();
+   }
+
+   private static <T> T warningsCapturedWhile(Supplier<T> action, List<String> warnings) {
+      Logger importerLogger = (Logger) LoggerFactory.getLogger(OpenCollectionImporter.class);
+      ListAppender<ILoggingEvent> appender = new ListAppender<>();
+      appender.start();
+      importerLogger.addAppender(appender);
+      try {
+         return action.get();
+      } finally {
+         importerLogger.detachAppender(appender);
+         appender.list.stream().filter(event -> event.getLevel() == Level.WARN)
+               .forEach(event -> warnings.add(event.getFormattedMessage()));
+      }
    }
 }
