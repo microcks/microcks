@@ -18,18 +18,25 @@ package io.github.microcks.util.opencollection;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.ObjectMapperFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * An implementation of MockRepositoryImporter that deals with OpenCollection specification files.
@@ -40,6 +47,8 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(OpenCollectionImporter.class);
 
+   private JsonNode collection;
+
    /**
     * Build a new importer.
     * @param collectionFilePath The path to OpenCollection file
@@ -48,7 +57,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public OpenCollectionImporter(String collectionFilePath) throws IOException {
       try {
          byte[] yamlBytes = Files.readAllBytes(Paths.get(collectionFilePath));
-         ObjectMapperFactory.getYamlObjectMapper().readTree(yamlBytes);
+         collection = ObjectMapperFactory.getYamlObjectMapper().readTree(yamlBytes);
       } catch (Exception e) {
          log.error("Exception while parsing OpenCollection file {}", collectionFilePath, e);
          throw new IOException("OpenCollection file parsing error");
@@ -57,17 +66,46 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
 
    @Override
    public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
-      return null;
+      Service service = new Service();
+      JsonNode info = collection.path("info");
+      service.setName(info.path("name").asText());
+      service.setVersion(info.path("version").asText());
+      service.setType(ServiceType.REST);
+
+      Map<String, Operation> operations = new LinkedHashMap<>();
+      collectOperations(collection.path("items"), operations);
+      service.setOperations(new ArrayList<>(operations.values()));
+      return List.of(service);
    }
 
    @Override
    public List<Resource> getResourceDefinitions(Service service) throws MockRepositoryImportException {
-      return null;
+      Resource resource = new Resource();
+      resource.setName(service.getName() + "-" + service.getVersion() + ".yaml");
+      resource.setType(ResourceType.OPEN_COLLECTION);
+      return List.of(resource);
    }
 
    @Override
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
-      return null;
+      return List.of();
+   }
+
+   private void collectOperations(JsonNode items, Map<String, Operation> operations) {
+      for (JsonNode item : items) {
+         String type = item.path("info").path("type").asText();
+         if ("folder".equals(type)) {
+            collectOperations(item.path("items"), operations);
+         } else if ("http".equals(type)) {
+            JsonNode http = item.path("http");
+            String method = http.path("method").asText().strip().toUpperCase(Locale.ROOT);
+            String name = method + " " + OpenCollectionPathExtractor.extractPath(http.path("url").asText());
+            Operation operation = new Operation();
+            operation.setName(name);
+            operation.setMethod(method);
+            operations.putIfAbsent(name, operation);
+         }
+      }
    }
 }
