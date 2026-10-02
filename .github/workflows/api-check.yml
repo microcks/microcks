@@ -87,6 +87,21 @@ jobs:
             echo "All checks passed."
           fi
 
+      - name: Dump Microcks container diagnostics
+        if: failure()
+        run: |
+          echo "::group::Container states"
+          docker ps -a --filter "name=microcks" --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
+          docker inspect microcks --format 'exit_code={{.State.ExitCode}} oom_killed={{.State.OOMKilled}} error={{.State.Error}}' || true
+          echo "::endgroup::"
+          echo "::group::microcks logs"
+          docker logs microcks 2>&1 || true
+          echo "::endgroup::"
+          echo "::group::JVM crash reports (hs_err)"
+          docker cp microcks:/deployments /tmp/microcks-deployments 2>/dev/null \
+            && find /tmp/microcks-deployments -maxdepth 1 -name 'hs_err*' -exec cat {} \; || echo "no hs_err file"
+          echo "::endgroup::"
+
       - name: Teardown all containers after tests
         if: always()
         run: |
@@ -216,6 +231,21 @@ jobs:
           else
             echo "All checks passed."
           fi
+
+      - name: Dump Microcks container diagnostics
+        if: failure()
+        run: |
+          echo "::group::Container states"
+          docker ps -a --filter "name=microcks" --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
+          docker inspect microcks --format 'exit_code={{.State.ExitCode}} oom_killed={{.State.OOMKilled}} error={{.State.Error}}' || true
+          echo "::endgroup::"
+          echo "::group::microcks logs"
+          docker logs microcks 2>&1 || true
+          echo "::endgroup::"
+          echo "::group::JVM crash reports (hs_err)"
+          docker cp microcks:/deployments /tmp/microcks-deployments 2>/dev/null \
+            && find /tmp/microcks-deployments -maxdepth 1 -name 'hs_err*' -exec cat {} \; || echo "no hs_err file"
+          echo "::endgroup::"
 
       - name: Teardown regular install
         if: always()
