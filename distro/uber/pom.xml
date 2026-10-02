@@ -123,6 +123,10 @@
               </profiles>
               <arguments>
                 <argument>--spring.profiles.active=uber</argument>
+                <!-- Spring Data AOT-generated PersistentPropertyAccessor classes rely on MethodHandles that fail in
+                     native image for primitive boolean fields ("Can not set boolean field ... to java.lang.Integer").
+                     Disable their generation so Spring Data falls back to reflection-based accessors at runtime. -->
+                <argument>--spring.aot.data.accessors.enabled=false</argument>
               </arguments>
               <image>
                 <!-- The new builder provided for Spring Boot 3.4.0 validates the GrralVM stuff but does not contain libc++6... -->
