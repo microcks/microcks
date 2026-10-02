@@ -46,59 +46,59 @@ import java.util.Map;
 public class OpenCollectionImporter implements MockRepositoryImporter {
 
    /** Name of the root property marking an OpenCollection document. */
-   public static final String OPENCOLLECTION_PROPERTY = "opencollection";
+   static final String OPENCOLLECTION_PROPERTY = "opencollection";
 
    /** Prefix of the supported OpenCollection specification versions (major version 1). */
-   public static final String SUPPORTED_MAJOR_VERSION_PREFIX = "1.";
+   static final String SUPPORTED_MAJOR_VERSION_PREFIX = "1.";
 
    /** Message of the error raised when the document has no opencollection root property. */
-   public static final String NOT_AN_OPENCOLLECTION_MESSAGE = "Not an OpenCollection document: 'opencollection' "
+   static final String NOT_AN_OPENCOLLECTION_MESSAGE = "Not an OpenCollection document: 'opencollection' "
          + "root property is missing";
 
    /** Message of the error raised when the opencollection property is not a string. */
-   public static final String OPENCOLLECTION_NOT_STRING_MESSAGE = "OpenCollection 'opencollection' property must be "
+   static final String OPENCOLLECTION_NOT_STRING_MESSAGE = "OpenCollection 'opencollection' property must be "
          + "a string (quote it, e.g. opencollection: \"1.0.0\")";
 
    /** Message of the error raised when the OpenCollection specification major version is not supported. */
-   public static final String UNSUPPORTED_SPEC_VERSION_MESSAGE = "Only OpenCollection 1.x documents are supported";
+   static final String UNSUPPORTED_SPEC_VERSION_MESSAGE = "Only OpenCollection 1.x documents are supported";
 
    /** Message of the error raised when the service name is missing or blank. */
-   public static final String NAME_MISSING_MESSAGE = "Name property is missing in OpenCollection info";
+   static final String NAME_MISSING_MESSAGE = "Name property is missing in OpenCollection info";
 
    /** Message of the error raised when the service version is missing or blank. */
-   public static final String VERSION_MISSING_MESSAGE = "Version property is missing in OpenCollection info";
+   static final String VERSION_MISSING_MESSAGE = "Version property is missing in OpenCollection info";
 
    /** Message of the error raised when the service version is not a string. */
-   public static final String VERSION_NOT_STRING_MESSAGE = "Version property in OpenCollection info must be a string "
+   static final String VERSION_NOT_STRING_MESSAGE = "Version property in OpenCollection info must be a string "
          + "(quote it, e.g. version: \"1.0\")";
 
    /** Message of the error raised when the collection declares itself as a multi-file one. */
-   public static final String BUNDLED_FALSE_NOT_SUPPORTED_MESSAGE = "OpenCollection with 'bundled: false' "
+   static final String BUNDLED_FALSE_NOT_SUPPORTED_MESSAGE = "OpenCollection with 'bundled: false' "
          + "(multi-file collection) is not yet supported. Please import a bundled single-file OpenCollection";
 
    /** Message of the error raised when the bundled property is not a boolean. */
-   public static final String BUNDLED_NOT_BOOLEAN_MESSAGE = "OpenCollection 'bundled' property must be a boolean";
+   static final String BUNDLED_NOT_BOOLEAN_MESSAGE = "OpenCollection 'bundled' property must be a boolean";
 
    /** Message of the error raised when an http item has no method. */
-   public static final String HTTP_METHOD_MISSING_MESSAGE = "OpenCollection http item has no 'http.method'";
+   static final String HTTP_METHOD_MISSING_MESSAGE = "OpenCollection http item has no 'http.method'";
 
    /** Message of the error raised when an http method contains whitespace. */
-   public static final String HTTP_METHOD_INVALID_MESSAGE = "OpenCollection 'http.method' must not contain whitespace";
+   static final String HTTP_METHOD_INVALID_MESSAGE = "OpenCollection 'http.method' must not contain whitespace";
 
    /** Message of the error raised when no operation path can be derived from an http url. */
-   public static final String HTTP_URL_INVALID_MESSAGE = "Cannot derive an operation path from OpenCollection 'http.url'";
+   static final String HTTP_URL_INVALID_MESSAGE = "Cannot derive an operation path from OpenCollection 'http.url'";
 
    /** Message of the error raised when an http item has no url. */
-   public static final String HTTP_URL_MISSING_MESSAGE = "OpenCollection http item has no 'http.url'";
+   static final String HTTP_URL_MISSING_MESSAGE = "OpenCollection http item has no 'http.url'";
+
+   /** Message of the error raised when an items property is not a list. */
+   static final String ITEMS_NOT_A_LIST_MESSAGE = "OpenCollection 'items' property must be a list";
+
+   /** Message of the error raised when an item is not an object. */
+   static final String ITEM_NOT_AN_OBJECT_MESSAGE = "OpenCollection item must be an object";
 
    /** The type reported in logs for an item that does not declare one. */
    private static final String UNKNOWN_ITEM_TYPE = "unknown";
-
-   /** Message of the error raised when an items property is not a list. */
-   public static final String ITEMS_NOT_A_LIST_MESSAGE = "OpenCollection 'items' property must be a list";
-
-   /** Message of the error raised when an item is not an object. */
-   public static final String ITEM_NOT_AN_OBJECT_MESSAGE = "OpenCollection item must be an object";
 
    /** The location reported in errors for the root items of the collection. */
    private static final String ROOT_LOCATION = "<root>";
