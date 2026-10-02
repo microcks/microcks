@@ -47,10 +47,6 @@ spec:
           protocol: TCP
         {{- end }}
         env:
-          - name: JAVA_OPTIONS
-            value: "-XX:+TieredCompilation -XX:TieredStopAtLevel=2"
-          - name: JAVA_MAJOR_VERSION
-            value: "11"
           - name: SPRING_PROFILES_ACTIVE
             value: prod{{ if .Values.microcks.extraProperties }},extra{{ end }}
           - name: SPRING_MONGODB_URI
@@ -128,7 +124,7 @@ spec:
             path: "/api/health"
             port: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
             scheme: {{ if .Values.microcks.httpEnableTLS }}HTTPS{{ else }}HTTP{{ end }}
-          initialDelaySeconds: 25
+          initialDelaySeconds: 20
           timeoutSeconds: 3
           periodSeconds: 10
           successThreshold: 1
@@ -138,7 +134,7 @@ spec:
             path: "/api/health"
             port: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
             scheme: {{ if .Values.microcks.httpEnableTLS }}HTTPS{{ else }}HTTP{{ end }}
-          initialDelaySeconds: 35
+          initialDelaySeconds: 25
           timeoutSeconds: 3
           periodSeconds: 10
           successThreshold: 1
@@ -148,7 +144,7 @@ spec:
             path: "/api/health"
             port: {{ if .Values.microcks.httpEnableTLS }}8443{{ else }}8080{{ end }}
             scheme: {{ if .Values.microcks.httpEnableTLS }}HTTPS{{ else }}HTTP{{ end }}
-          initialDelaySeconds: 10
+          initialDelaySeconds: 8
           timeoutSeconds: 3
           periodSeconds: 10
           successThreshold: 1
