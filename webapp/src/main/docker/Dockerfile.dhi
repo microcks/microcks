@@ -17,6 +17,11 @@ RUN java -Djarmode=tools -jar app.jar extract --destination /work/application \
  && rm app.jar \
  && mkdir -p /work/lib /work/data /work/config
 
+# The distroless runtime image ships libstdc++ but not libgcc_s, which the native protoc binary
+# (extracted and executed at runtime by protoc-jar when importing Protobuf/gRPC artifacts) is
+# dynamically linked against. Grab it from the dev image so it can be copied into the final stage.
+RUN mkdir -p /work/native && cp -L /usr/lib/$(uname -m)-linux-gnu/libgcc_s.so.1 /work/native/
+
 # ---- Stage 2: AOT training run inside the runtime image ----
 # Exiting once the Spring context refresh completes produces a JVM AOT cache that dramatically
 # reduces classloading/linking work at startup - the dominant boot cost on CPU-constrained
@@ -60,6 +65,9 @@ COPY --from=extract --chown=65532:65532 /work/lib /deployments/lib
 COPY --from=extract --chown=65532:65532 /work/data /deployments/data
 COPY --from=extract --chown=65532:65532 /work/config /deployments/config
 COPY --from=train --chown=65532:65532 /deployments/app.aot /deployments/app.aot
+
+# /usr/lib is part of the dynamic loader default search path, so no arch-specific dir is needed.
+COPY --from=extract /work/native/libgcc_s.so.1 /usr/lib/libgcc_s.so.1
 
 VOLUME /deployments/config
 EXPOSE 8080

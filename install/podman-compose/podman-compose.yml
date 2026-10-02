@@ -63,9 +63,3 @@ services:
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       #- LOGGING_LEVEL_IO_GITHUB_MICROCKS=DEBUG
       #- MAX_UPLOAD_FILE_SIZE=3MB
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
-      start_period: 35s
-      interval: 10s
-      timeout: 3s
-      retries: 3

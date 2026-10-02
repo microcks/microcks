@@ -65,12 +65,6 @@ services:
       #- MAX_UPLOAD_FILE_SIZE=3MB
       - ASYNC_MINION_URL=http://microcks-async-minion:8081
       - KAFKA_BOOTSTRAP_SERVER=kafka:19092
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
-      start_period: 35s
-      interval: 10s
-      timeout: 3s
-      retries: 3
 
   async-minion:
     depends_on:

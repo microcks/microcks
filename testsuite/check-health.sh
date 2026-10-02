@@ -49,6 +49,44 @@ if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
     echo "Inspecting container: $cname"
     echo "  Global elapsed time: ${global_elapsed}s"
 
+    # Distroless images (e.g. Microcks DHI variants) have no shell nor curl and thus no container
+    # healthcheck: probe their /api/health endpoint over HTTP from the host instead.
+    if [[ "$($INSPECT_CMD inspect -f '{{if .Config.Healthcheck}}yes{{end}}' "$cname")" != "yes" ]]; then
+      image=$($INSPECT_CMD inspect -f '{{.Config.Image}}' "$cname")
+      host_port=$($INSPECT_CMD inspect -f '{{range $p, $conf := .NetworkSettings.Ports}}{{if eq $p "8080/tcp"}}{{(index $conf 0).HostPort}}{{end}}{{end}}' "$cname" 2>/dev/null)
+      if [[ "$image" != *microcks/microcks* || -z "$host_port" ]]; then
+        echo "  No healthcheck defined and not a Microcks app with a host port mapped to 8080/tcp, skipping"
+        continue
+      fi
+
+      health_url="http://localhost:${host_port}/api/health"
+      echo "  No healthcheck defined, probing ${health_url} from host"
+      interval=10
+      retries=6
+      try=0
+      elapsed=0
+      status="unhealthy"
+      while [[ $try -lt $retries ]]; do
+        if curl -sf --max-time 3 "$health_url" > /dev/null; then
+          status="healthy"
+        fi
+        echo "  Status after ${elapsed}s: $status"
+        if [[ "$status" == "healthy" ]]; then
+          echo "$cname is healthy!"
+          break
+        fi
+        sleep "$interval"
+        try=$((try + 1))
+        elapsed=$((elapsed + interval))
+        global_elapsed=$((global_elapsed + interval))
+      done
+
+      if [[ "$status" != "healthy" ]]; then
+        unhealthy+=("$cname:$status")
+      fi
+      continue
+    fi
+
     interval=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Interval}}' "$cname")
     timeout=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Timeout}}' "$cname")
     start_period=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.StartPeriod}}' "$cname")
