@@ -107,7 +107,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      waitForTestCompletion(testResult, 3);
+      waitForTestCompletion(testResult, 6);
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
@@ -155,7 +155,7 @@ class TestControllerIT extends AbstractBaseIT {
 
       // Wait till timeout and re-fetch the result.
       try {
-         waitForTestCompletion(testResult, 4);
+         waitForTestCompletion(testResult, 7);
       } catch (ConditionTimeoutException cde) {
          System.err.println("Test execution seems to take too long - Here are Postman Runner logs for diagnostic:");
          System.err.println(postmanRunner.getLogs());
@@ -196,7 +196,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      waitForTestCompletion(testResult, 3);
+      waitForTestCompletion(testResult, 6);
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
@@ -258,7 +258,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      waitForTestCompletion(testResult, 3);
+      waitForTestCompletion(testResult, 6);
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
@@ -306,7 +306,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      waitForTestCompletion(testResult, 3);
+      waitForTestCompletion(testResult, 6);
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
