@@ -29,7 +29,7 @@
     <grpc.version>1.81.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
-    <testcontainers.version>2.0.3</testcontainers.version>
+    <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
 
   <dependencyManagement>
