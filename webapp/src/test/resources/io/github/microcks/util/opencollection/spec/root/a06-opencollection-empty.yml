@@ -1,0 +1,11 @@
+opencollection: ""
+info:
+  name: "Svc"
+  version: "1.0"
+items:
+  - info:
+      name: "op"
+      type: "http"
+    http:
+      method: "GET"
+      url: "{{baseUrl}}/pet"
