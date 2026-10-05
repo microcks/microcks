@@ -48,8 +48,11 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    /** Name of the root property marking an OpenCollection document. */
    static final String OPENCOLLECTION_PROPERTY = "opencollection";
 
+   /** The supported OpenCollection specification major version, when given alone. */
+   static final String SUPPORTED_MAJOR_VERSION = "1";
+
    /** Prefix of the supported OpenCollection specification versions (major version 1). */
-   static final String SUPPORTED_MAJOR_VERSION_PREFIX = "1.";
+   static final String SUPPORTED_MAJOR_VERSION_PREFIX = SUPPORTED_MAJOR_VERSION + ".";
 
    /** Message of the error raised when the document has no opencollection root property. */
    static final String NOT_AN_OPENCOLLECTION_MESSAGE = "Not an OpenCollection document: 'opencollection' "
@@ -168,7 +171,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
          throw new MockRepositoryImportException(OPENCOLLECTION_NOT_STRING_MESSAGE);
       }
       String specVersion = specNode.textValue();
-      if (!specVersion.startsWith(SUPPORTED_MAJOR_VERSION_PREFIX)) {
+      if (!specVersion.equals(SUPPORTED_MAJOR_VERSION) && !specVersion.startsWith(SUPPORTED_MAJOR_VERSION_PREFIX)) {
          throw new MockRepositoryImportException(UNSUPPORTED_SPEC_VERSION_MESSAGE + " (found '" + specVersion + "')");
       }
    }

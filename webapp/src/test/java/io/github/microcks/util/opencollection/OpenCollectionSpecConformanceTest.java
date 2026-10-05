@@ -57,6 +57,7 @@ class OpenCollectionSpecConformanceTest {
    @ParameterizedTest(name = "{0}")
    @CsvSource(delimiter = '|', quoteCharacter = '"', value = {
          "root/a02-opencollection-other-1x.yml | Svc | 1.0 | GET /pet",
+         "root/a07-opencollection-major-only.yml | Svc | 1.0 | GET /pet",
          "root/a13-unknown-root-key.yml | Svc | 1.0 | GET /pet", "root/a14-items-absent.yml | Svc | 1.0 |",
          "root/a15-items-empty-list.yml | Svc | 1.0 |", "info/b01-version-non-numeric-string.yml | Svc | v3 | GET /pet",
          "info/b08-name-with-accents.yml | Gestes activés | 1.0 | GET /pet",
