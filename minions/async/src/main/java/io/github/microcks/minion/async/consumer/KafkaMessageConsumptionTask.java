@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  * <code>kafka://{brokerhost[:port]}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
-public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
+public class KafkaMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -329,6 +329,10 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
                   avroConsumer.seek(p, startOffset);
                }
             });
+         }
+         // Partitions are now assigned: the consumer is connected and ready to receive messages.
+         if (!partitions.isEmpty()) {
+            notifyWaitingForMessage();
          }
       }
    }
