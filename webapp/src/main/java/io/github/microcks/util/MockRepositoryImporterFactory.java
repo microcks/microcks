@@ -23,6 +23,7 @@ import io.github.microcks.util.har.HARImporter;
 import io.github.microcks.util.metadata.ExamplesImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
+import io.github.microcks.util.opencollection.OpenCollectionImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
@@ -59,6 +60,12 @@ public class MockRepositoryImporterFactory {
    /** A RegExp for detecting a line containing the swagger pragma. */
    public static final String SWAGGER_REGEXP = ".*['\\\"]?swagger['\\\"]?\\s*:\\s*.*";
 
+   /** A RegExp for detecting a line starting with the opencollection root property. */
+   public static final String OPENCOLLECTION_REGEXP = "^['\\\"]?opencollection['\\\"]?\\s*:.*";
+
+   /** The UTF-8 byte order mark, as read at the very start of a file. */
+   private static final String BYTE_ORDER_MARK = "\uFEFF";
+
    private MockRepositoryImporterFactory() {
       // Private constructor to hide the implicit one as it's a utility class.
    }
@@ -78,9 +85,14 @@ public class MockRepositoryImporterFactory {
       String line = null;
       try (BufferedReader reader = Files.newBufferedReader(mockRepository.toPath(), StandardCharsets.UTF_8)) {
          while ((line = reader.readLine()) != null && importer == null) {
+            String rawLine = line;
             line = line.trim();
-            // Check with basic Postman formats..
-            importer = checkPostmanImporters(line, mockRepository);
+            // Check with OpenCollection format first...
+            importer = checkOpenCollectionImporters(rawLine, mockRepository);
+            // Then basic Postman formats..
+            if (importer == null) {
+               importer = checkPostmanImporters(line, mockRepository);
+            }
             // Then try OpenAPI related ones...
             if (importer == null) {
                importer = checkOpenAPIImporters(line, mockRepository, referenceResolver);
@@ -99,6 +111,28 @@ public class MockRepositoryImporterFactory {
       }
 
       return importer;
+   }
+
+   private static MockRepositoryImporter checkOpenCollectionImporters(String rawLine, File mockRepository)
+         throws IOException {
+      if (rootKeyCandidateOf(rawLine).matches(OPENCOLLECTION_REGEXP)) {
+         log.info("Found an opencollection pragma in file so assuming it's an OpenCollection to import");
+         return new OpenCollectionImporter(mockRepository.getPath());
+      }
+      return null;
+   }
+
+   /**
+    * Only the root key counts: a YAML key must start at column 0, a JSON key is a quoted one (indented when
+    * pretty-printed, or right after the opening brace when minified). An indented unquoted key is nested in another
+    * structure, so it is not a marker. A leading byte order mark is ignored.
+    */
+   private static String rootKeyCandidateOf(String lineAsRead) {
+      String rawLine = lineAsRead.startsWith(BYTE_ORDER_MARK) ? lineAsRead.substring(BYTE_ORDER_MARK.length())
+            : lineAsRead;
+      String trimmed = rawLine.trim();
+      String afterOpeningBrace = trimmed.startsWith("{") ? trimmed.substring(1).stripLeading() : trimmed;
+      return afterOpeningBrace.startsWith("\"") ? afterOpeningBrace : rawLine;
    }
 
    private static MockRepositoryImporter checkPostmanImporters(String line, File mockRepository) throws IOException {

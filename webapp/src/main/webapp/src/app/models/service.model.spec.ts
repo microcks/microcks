@@ -13,28 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+import { ContractType } from './service.model';
 
-/**
- * Enumeration of types of resources managed by microservices.
- * @author laurent
- */
-public enum ResourceType {
-   WSDL,
-   XSD,
-   JSON_SCHEMA,
-   SWAGGER,
-   RAML,
-   OPEN_API_SPEC,
-   OPEN_API_SCHEMA,
-   ASYNC_API_SPEC,
-   ASYNC_API_SCHEMA,
-   AVRO_SCHEMA,
-   PROTOBUF_SCHEMA,
-   PROTOBUF_DESCRIPTOR,
-   GRAPHQL_SCHEMA,
-   POSTMAN_COLLECTION,
-   SOAP_UI_PROJECT,
-   JSON_FRAGMENT,
-   OPEN_COLLECTION
-}
+describe('ContractType', () => {
+  it('exposes OPEN_COLLECTION as a contract type', () => {
+    expect((ContractType as Record<string, string>)['OPEN_COLLECTION']).toBe('OPEN_COLLECTION');
+  });
+
+  it('keeps every member name equal to its value (Java enum name parity)', () => {
+    Object.entries(ContractType).forEach(([key, value]) => expect(value).toBe(key));
+  });
+});

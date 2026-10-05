@@ -23,15 +23,28 @@ import io.github.microcks.util.har.HARImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.openapi.SwaggerImporter;
+import io.github.microcks.util.opencollection.OpenCollectionImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import java.io.IOException;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -205,5 +218,86 @@ class MockRepositoryImporterFactoryTest {
          fail("Getting importer for HAR JSON file should not fail!");
       }
       assertTrue(importer instanceof HARImporter);
+   }
+
+   @Test
+   void testGetMockRepositoryImporterForOpenCollection() {
+      File openCollection = new File("../samples/PetstoreAPI-opencollection.yml");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openCollection, null),
+            "Getting importer for OpenCollection should not fail!");
+
+      assertInstanceOf(OpenCollectionImporter.class, importer);
+   }
+
+   @Test
+   void testNestedOpenCollectionKeyIsNotMistakenForAnOpenCollection() {
+      File openAPIWithNestedKey = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/nested-opencollection-key.yml");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openAPIWithNestedKey, null),
+            "Getting importer for a file with a nested opencollection key should not fail!");
+
+      assertInstanceOf(OpenAPIImporter.class, importer);
+   }
+
+   @Test
+   void testGetMockRepositoryImporterForPrettyPrintedJsonOpenCollection() {
+      File openCollection = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/pretty-printed-opencollection.json");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openCollection, null),
+            "Getting importer for a JSON OpenCollection should not fail!");
+
+      assertInstanceOf(OpenCollectionImporter.class, importer);
+   }
+
+   @Test
+   void testGetMockRepositoryImporterForNotBundledOpenCollection() {
+      File notBundled = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/petstore-bundled-false.yml");
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(notBundled, null),
+            "Getting importer for a multi-file OpenCollection should not fail!");
+
+      assertInstanceOf(OpenCollectionImporter.class, importer);
+   }
+
+   @Test
+   void testOpenCollectionParsingError() {
+      File unreadable = new File(
+            "target/test-classes/io/github/microcks/util/opencollection/invalid-opencollection.yml");
+
+      IOException exception = assertThrows(IOException.class,
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(unreadable, null));
+
+      assertEquals("OpenCollection file parsing error", exception.getMessage());
+   }
+
+   static Stream<Arguments> firstLinesAndTheirImporter() {
+      String petstoreInfo = "info:\n  name: Petstore API\n  version: \"1.0\"\n";
+      String minimalOpenAPI = "openapi: 3.0.2\ninfo:\n  title: Petstore API\n  version: \"1.0\"\npaths: {}\n";
+      return Stream.of(Arguments.of("opencollection: 1.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("opencollection: \"1.0.0\"\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("\"opencollection\": \"1.0.0\"\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("opencollection: 2.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("opencollection-extra: x\n" + minimalOpenAPI, OpenAPIImporter.class),
+            Arguments.of(minimalOpenAPI, OpenAPIImporter.class));
+   }
+
+   @ParameterizedTest
+   @MethodSource("firstLinesAndTheirImporter")
+   void testOpenCollectionDetectionLine(String content, Class<?> expectedImporter, @TempDir Path directory)
+         throws IOException {
+      Path file = Files.writeString(directory.resolve("collection.yml"), content, UTF_8);
+
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(file.toFile(), null));
+
+      assertInstanceOf(expectedImporter, importer);
    }
 }
