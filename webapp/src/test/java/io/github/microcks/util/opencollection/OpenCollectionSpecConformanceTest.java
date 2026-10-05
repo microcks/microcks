@@ -110,8 +110,8 @@ class OpenCollectionSpecConformanceTest {
    }
 
    @ParameterizedTest(name = "{0}")
-   @ValueSource(strings = { "detection/f04-yaml-document-start.yml", "detection/f04-yaml-leading-comment.yml",
-         "detection/f06-g03-crlf-line-endings.yml" })
+   @ValueSource(strings = { "detection/f03-minified-json.json", "detection/f04-yaml-document-start.yml",
+         "detection/f04-yaml-leading-comment.yml", "detection/f06-g03-crlf-line-endings.yml" })
    void testSpecFileIsDetectedAsOpenCollection(String fixture) {
       MockRepositoryImporter importer = assertDoesNotThrow(
             () -> MockRepositoryImporterFactory.getMockRepositoryImporter(new File(SPEC_FIXTURES + fixture), null));

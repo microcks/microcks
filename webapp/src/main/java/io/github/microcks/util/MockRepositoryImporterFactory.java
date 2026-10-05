@@ -112,14 +112,22 @@ public class MockRepositoryImporterFactory {
 
    private static MockRepositoryImporter checkOpenCollectionImporters(String rawLine, File mockRepository)
          throws IOException {
-      // Only the root key counts: a YAML key must start at column 0, a JSON key is a quoted one (indented when
-      // pretty-printed). An indented unquoted key is nested in another structure, so it is not a marker.
-      String line = rawLine.stripLeading().startsWith("\"") ? rawLine.trim() : rawLine;
-      if (line.matches(OPENCOLLECTION_REGEXP)) {
+      if (rootKeyCandidateOf(rawLine).matches(OPENCOLLECTION_REGEXP)) {
          log.info("Found an opencollection pragma in file so assuming it's an OpenCollection to import");
          return new OpenCollectionImporter(mockRepository.getPath());
       }
       return null;
+   }
+
+   /**
+    * Only the root key counts: a YAML key must start at column 0, a JSON key is a quoted one (indented when
+    * pretty-printed, or right after the opening brace when minified). An indented unquoted key is nested in another
+    * structure, so it is not a marker.
+    */
+   private static String rootKeyCandidateOf(String rawLine) {
+      String trimmed = rawLine.trim();
+      String afterOpeningBrace = trimmed.startsWith("{") ? trimmed.substring(1).stripLeading() : trimmed;
+      return afterOpeningBrace.startsWith("\"") ? afterOpeningBrace : rawLine;
    }
 
    private static MockRepositoryImporter checkPostmanImporters(String line, File mockRepository) throws IOException {
