@@ -63,6 +63,9 @@ public class MockRepositoryImporterFactory {
    /** A RegExp for detecting a line starting with the opencollection root property. */
    public static final String OPENCOLLECTION_REGEXP = "^['\\\"]?opencollection['\\\"]?\\s*:.*";
 
+   /** The UTF-8 byte order mark, as read at the very start of a file. */
+   private static final String BYTE_ORDER_MARK = "\uFEFF";
+
    private MockRepositoryImporterFactory() {
       // Private constructor to hide the implicit one as it's a utility class.
    }
@@ -122,9 +125,11 @@ public class MockRepositoryImporterFactory {
    /**
     * Only the root key counts: a YAML key must start at column 0, a JSON key is a quoted one (indented when
     * pretty-printed, or right after the opening brace when minified). An indented unquoted key is nested in another
-    * structure, so it is not a marker.
+    * structure, so it is not a marker. A leading byte order mark is ignored.
     */
-   private static String rootKeyCandidateOf(String rawLine) {
+   private static String rootKeyCandidateOf(String lineAsRead) {
+      String rawLine = lineAsRead.startsWith(BYTE_ORDER_MARK) ? lineAsRead.substring(BYTE_ORDER_MARK.length())
+            : lineAsRead;
       String trimmed = rawLine.trim();
       String afterOpeningBrace = trimmed.startsWith("{") ? trimmed.substring(1).stripLeading() : trimmed;
       return afterOpeningBrace.startsWith("\"") ? afterOpeningBrace : rawLine;

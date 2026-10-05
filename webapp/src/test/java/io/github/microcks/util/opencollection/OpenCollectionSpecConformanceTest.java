@@ -111,7 +111,8 @@ class OpenCollectionSpecConformanceTest {
 
    @ParameterizedTest(name = "{0}")
    @ValueSource(strings = { "detection/f03-minified-json.json", "detection/f04-yaml-document-start.yml",
-         "detection/f04-yaml-leading-comment.yml", "detection/f06-g03-crlf-line-endings.yml" })
+         "detection/f04-yaml-leading-comment.yml", "detection/f05-utf8-bom.yml",
+         "detection/f06-g03-crlf-line-endings.yml" })
    void testSpecFileIsDetectedAsOpenCollection(String fixture) {
       MockRepositoryImporter importer = assertDoesNotThrow(
             () -> MockRepositoryImporterFactory.getMockRepositoryImporter(new File(SPEC_FIXTURES + fixture), null));
@@ -121,8 +122,8 @@ class OpenCollectionSpecConformanceTest {
 
    @ParameterizedTest(name = "{0}")
    @ValueSource(strings = { SPEC_FIXTURES + "detection/f03-minified-json.json",
-         SPEC_FIXTURES + "detection/f06-g03-crlf-line-endings.yml", SPEC_FIXTURES + "info/b08-name-with-accents.yml",
-         FIXTURES + "petstore-opencollection.json",
+         SPEC_FIXTURES + "detection/f06-g03-crlf-line-endings.yml", SPEC_FIXTURES + "detection/f05-utf8-bom.yml",
+         SPEC_FIXTURES + "info/b08-name-with-accents.yml", FIXTURES + "petstore-opencollection.json",
          SPEC_FIXTURES + "realistic/h01-openapi-style-server-variables-collection.json",
          SPEC_FIXTURES + "realistic/h02-bruno-export-without-version.yaml" })
    void testSourceIsStoredByteForByte(String fixture) throws IOException {
