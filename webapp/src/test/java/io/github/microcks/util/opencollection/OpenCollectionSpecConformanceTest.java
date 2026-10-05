@@ -147,6 +147,21 @@ class OpenCollectionSpecConformanceTest {
       assertEquals("Petstore API-1.0.yaml", resource.getName());
    }
 
+   /** A refused collection without a version tells how to add one. */
+   @ParameterizedTest(name = "{0}")
+   @ValueSource(strings = { FIXTURES + "petstore-no-version.yml",
+         SPEC_FIXTURES + "realistic/h02-bruno-export-without-version.yaml" })
+   void testMissingVersionExplainsHowToAddIt(String fixture) {
+      OpenCollectionImporter importer = importerFor(fixture);
+
+      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
+            importer::getServiceDefinitions);
+
+      assertTrue(exception.getMessage().contains("Version property is missing"), exception.getMessage());
+      assertTrue(exception.getMessage().contains("info.version"), exception.getMessage());
+      assertTrue(exception.getMessage().contains("version: \"1.0\""), exception.getMessage());
+   }
+
    /** A collection shaped like the ones tools export for an OpenAPI-style server: <code>{protocol}://{host}</code>. */
    @Test
    void testRealisticOpenApiStyleCollectionIsImported() {

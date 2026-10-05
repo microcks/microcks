@@ -69,7 +69,8 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    static final String NAME_MISSING_MESSAGE = "Name property is missing in OpenCollection info";
 
    /** Message of the error raised when the service version is missing or blank. */
-   static final String VERSION_MISSING_MESSAGE = "Version property is missing in OpenCollection info";
+   static final String VERSION_MISSING_MESSAGE = "Version property is missing in OpenCollection info: add "
+         + "info.version as a string (e.g. version: \"1.0\")";
 
    /** Message of the error raised when the service version is not a string. */
    static final String VERSION_NOT_STRING_MESSAGE = "Version property in OpenCollection info must be a string "
