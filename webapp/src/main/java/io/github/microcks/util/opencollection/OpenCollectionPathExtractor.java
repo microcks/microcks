@@ -25,9 +25,9 @@ import java.util.regex.Pattern;
  */
 public final class OpenCollectionPathExtractor {
 
-   private static final Pattern LEADING_VARIABLES = Pattern.compile("^(\\{\\{[^{}]*}})+");
+   private static final Pattern LEADING_VARIABLES = Pattern.compile("^(\\{\\{[^{}]*}}|\\{[^{}]*})+");
 
-   private static final Pattern LITERAL_SCHEME = Pattern.compile("^[A-Za-z][A-Za-z0-9+.\\-]*://");
+   private static final Pattern LITERAL_SCHEME = Pattern.compile("^[^/?#]*://");
 
    private OpenCollectionPathExtractor() {
       // Private constructor to hide the implicit one as it's a utility class.
@@ -76,9 +76,6 @@ public final class OpenCollectionPathExtractor {
          return url;
       }
       String remainder = url.substring(variables.end());
-      if (remainder.startsWith("://")) {
-         return withoutAuthority(remainder.substring("://".length()));
-      }
       return remainder.startsWith(":") ? withoutAuthority(remainder) : remainder;
    }
 

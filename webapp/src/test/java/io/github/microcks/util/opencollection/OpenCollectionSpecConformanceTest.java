@@ -100,10 +100,11 @@ class OpenCollectionSpecConformanceTest {
 
    @ParameterizedTest(name = "{0}")
    @CsvSource(delimiter = '|', value = { "url/e02-literal-https-with-base-path.yml | GET /v2/pet",
-         "url/e03-localhost-port-and-path.yml | GET /api/v1/tasks/8", "url/e08-path-only.yml | GET /pet",
-         "url/e15-fragment.yml | GET /pet", "url/e17-percent-encoded-space.yml | GET /pet%20shop",
-         "url/e19-ipv6-host.yml | GET /pet", "url/e20-userinfo-in-authority.yml | GET /pet",
-         "url/e21-websocket-scheme.yml | GET /pet" })
+         "url/e03-localhost-port-and-path.yml | GET /api/v1/tasks/8",
+         "url/e04-openapi-style-server-variables.yml | GET /api/v3/dpes", "url/e08-path-only.yml | GET /pet",
+         "url/e09-single-brace-variable.yml | GET /pet", "url/e15-fragment.yml | GET /pet",
+         "url/e17-percent-encoded-space.yml | GET /pet%20shop", "url/e19-ipv6-host.yml | GET /pet",
+         "url/e20-userinfo-in-authority.yml | GET /pet", "url/e21-websocket-scheme.yml | GET /pet" })
    void testOperationNameFromSpecUrl(String fixture, String expectedOperation) {
       assertEquals(List.of(expectedOperation), operationNamesOf(serviceOf(SPEC_FIXTURES + fixture)));
    }
@@ -121,7 +122,9 @@ class OpenCollectionSpecConformanceTest {
    @ParameterizedTest(name = "{0}")
    @ValueSource(strings = { SPEC_FIXTURES + "detection/f03-minified-json.json",
          SPEC_FIXTURES + "detection/f06-g03-crlf-line-endings.yml", SPEC_FIXTURES + "info/b08-name-with-accents.yml",
-         FIXTURES + "petstore-opencollection.json", SPEC_FIXTURES + "realistic/h02-bruno-export-without-version.yaml" })
+         FIXTURES + "petstore-opencollection.json",
+         SPEC_FIXTURES + "realistic/h01-openapi-style-server-variables-collection.json",
+         SPEC_FIXTURES + "realistic/h02-bruno-export-without-version.yaml" })
    void testSourceIsStoredByteForByte(String fixture) throws IOException {
       OpenCollectionImporter importer = importerFor(fixture);
       Service service = new Service();
@@ -142,6 +145,22 @@ class OpenCollectionSpecConformanceTest {
       Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
 
       assertEquals("Petstore API-1.0.yaml", resource.getName());
+   }
+
+   /** A collection shaped like the ones tools export for an OpenAPI-style server: <code>{protocol}://{host}</code>. */
+   @Test
+   void testRealisticOpenApiStyleCollectionIsImported() {
+      File collection = new File(SPEC_FIXTURES + "realistic/h01-openapi-style-server-variables-collection.json");
+      MockRepositoryImporter importer = assertDoesNotThrow(
+            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(collection, null));
+
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+
+      assertEquals("Démo API", service.getName());
+      assertEquals("v3", service.getVersion());
+      assertEquals(List.of("GET /api/v3/catalog/items", "GET /api/v3/catalog/items/:id", "POST /api/v3/orders",
+            "PUT /api/v3/orders/:id", "DELETE /api/v3/orders/:id", "GET /api/v3/customers",
+            "GET /api/v3/customers/:customerId/addresses", "GET /api/v3/health"), operationNamesOf(service));
    }
 
    private static void assertImportIsRejected(String path, String messageFragment) {
