@@ -40,6 +40,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -260,6 +261,140 @@ class OpenAPIMcpToolConverterTest {
       assertFalse(inputSchema.properties().isEmpty(), "Properties should not be empty");
       assertTrue(inputSchema.properties().containsKey("testField"),
             "Properties should contain 'testField' from external ref");
+   }
+
+   @Test
+   @SuppressWarnings("unchecked")
+   void testPathLevelAndOperationLevelParameters() {
+      // 1. Create a dummy Service
+      Service pathParamService = new Service();
+      pathParamService.setId("test-path-params");
+      pathParamService.setName("Path Params API");
+      pathParamService.setVersion("1.0.0");
+      pathParamService.setType(io.github.microcks.domain.ServiceType.REST);
+
+      // 2. Create the main Resource with path-level and operation-level parameters
+      Resource mainResource = new Resource();
+      mainResource.setId("path-params-res-id");
+      mainResource.setServiceId(pathParamService.getId());
+      mainResource.setType(ResourceType.OPEN_API_SPEC);
+      mainResource.setName("path-params.yaml");
+      mainResource.setContent("""
+            openapi: 3.0.0
+            info:
+              title: Path Params API
+              version: 1.0.0
+            paths:
+              /orders/{orderId}:
+                parameters:
+                  - name: orderId
+                    in: path
+                    description: The unique order identifier
+                    schema:
+                      type: integer
+                      format: int64
+                get:
+                  operationId: getOrder
+                  parameters:
+                    - name: includeDetails
+                      in: query
+                      description: Whether to include order details
+                      schema:
+                        type: boolean
+                        default: false
+                  responses:
+                    '200':
+                      description: OK
+            """);
+      resourceRepository.save(mainResource);
+
+      // 3. Create the Operation
+      Operation operation = new Operation();
+      operation.setName("GET /orders/{orderId}");
+      operation.setMethod("GET");
+
+      // 4. Instantiate converter
+      OpenAPIMcpToolConverter converter = new OpenAPIMcpToolConverter(pathParamService, mainResource,
+            resourceRepository, restInvocationProcessor, new ObjectMapper());
+
+      // 5. Assert input schema
+      McpSchema.JsonSchema inputSchema = converter.getInputSchema(operation);
+      assertNotNull(inputSchema, "Input schema should not be null");
+      assertEquals("object", inputSchema.type());
+      assertEquals(2, inputSchema.properties().size(), "Should contain 2 parameters");
+
+      // Verify path-level parameter 'orderId'
+      assertTrue(inputSchema.properties().containsKey("orderId"),
+            "Properties should contain 'orderId' from path-level");
+      Map<String, Object> orderIdProp = (Map<String, Object>) inputSchema.properties().get("orderId");
+      assertEquals("integer", orderIdProp.get("type"), "orderId type should be preserved as integer");
+      assertEquals("int64", orderIdProp.get("format"), "orderId format should be preserved as int64");
+      assertEquals("The unique order identifier", orderIdProp.get("description"));
+      assertTrue(inputSchema.required().contains("orderId"), "Path parameter 'orderId' should be required");
+
+      // Verify operation-level parameter 'includeDetails'
+      assertTrue(inputSchema.properties().containsKey("includeDetails"), "Properties should contain 'includeDetails'");
+      Map<String, Object> detailsProp = (Map<String, Object>) inputSchema.properties().get("includeDetails");
+      assertEquals("boolean", detailsProp.get("type"), "includeDetails type should be boolean");
+      assertEquals("Whether to include order details", detailsProp.get("description"));
+   }
+
+   @Test
+   @SuppressWarnings("unchecked")
+   void testOperationLevelParameterOverridesPathLevel() {
+      // 1. Create a dummy Service
+      Service overrideService = new Service();
+      overrideService.setId("test-override-params");
+      overrideService.setName("Override Params API");
+      overrideService.setVersion("1.0.0");
+      overrideService.setType(io.github.microcks.domain.ServiceType.REST);
+
+      // 2. Create Resource where operation-level overrides path-level description
+      Resource mainResource = new Resource();
+      mainResource.setId("override-params-res-id");
+      mainResource.setServiceId(overrideService.getId());
+      mainResource.setType(ResourceType.OPEN_API_SPEC);
+      mainResource.setName("override-params.yaml");
+      mainResource.setContent("""
+            openapi: 3.0.0
+            info:
+              title: Override Params API
+              version: 1.0.0
+            paths:
+              /items/{itemId}:
+                parameters:
+                  - name: itemId
+                    in: path
+                    description: Path-level item identifier
+                    schema:
+                      type: string
+                get:
+                  operationId: getItem
+                  parameters:
+                    - name: itemId
+                      in: path
+                      description: Operation-level item identifier override
+                      schema:
+                        type: string
+                  responses:
+                    '200':
+                      description: OK
+            """);
+      resourceRepository.save(mainResource);
+
+      Operation operation = new Operation();
+      operation.setName("GET /items/{itemId}");
+      operation.setMethod("GET");
+
+      OpenAPIMcpToolConverter converter = new OpenAPIMcpToolConverter(overrideService, mainResource, resourceRepository,
+            restInvocationProcessor, new ObjectMapper());
+
+      McpSchema.JsonSchema inputSchema = converter.getInputSchema(operation);
+      assertNotNull(inputSchema);
+      assertTrue(inputSchema.properties().containsKey("itemId"));
+      Map<String, Object> itemIdProp = (Map<String, Object>) inputSchema.properties().get("itemId");
+      assertEquals("Operation-level item identifier override", itemIdProp.get("description"),
+            "Operation-level parameter should override path-level parameter");
    }
 }
 

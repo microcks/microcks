@@ -43,6 +43,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -148,20 +149,19 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
             }
          }
 
-         // Add parameters to input schema.
-         String paramsPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb + "/parameters";
-         JsonNode paramsNode = schemaNode.at(paramsPointer);
-
-         Iterator<JsonNode> parameters = paramsNode.elements();
-         while (parameters.hasNext()) {
-            JsonNode parameter = followRefIfAny(parameters.next());
-            String paramName = parameter.path("name").asText();
+         // Add parameters (both path-level and operation-level) to input schema.
+         Map<String, JsonNode> parameters = getParametersForOperation(path, verb);
+         for (Map.Entry<String, JsonNode> entry : parameters.entrySet()) {
+            String paramName = entry.getKey();
+            JsonNode parameter = entry.getValue();
 
             // Create a property node for the parameter.
-            ObjectNode propertyNode = mapper.createObjectNode();
-            propertyNode.put("type", "string");
+            ObjectNode propertyNode = buildParameterPropertyNode(parameter);
             schemaPropertiesNode.set(paramName, propertyNode);
-            if (parameter.path(JSON_SCHEMA_REQUIRED_ELEMENT).asBoolean(false)) {
+
+            boolean isRequired = parameter.path(JSON_SCHEMA_REQUIRED_ELEMENT).asBoolean(false)
+                  || "path".equalsIgnoreCase(parameter.path("in").asText());
+            if (isRequired && !arrayNodeContains(requiredPropertiesNode, paramName)) {
                requiredPropertiesNode.add(paramName);
             }
          }
@@ -180,31 +180,36 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
       Map<String, String> pathParams = new HashMap<>();
       Map<String, String> queryParams = new HashMap<>();
 
+      // Copy arguments to a mutable map to avoid mutating input or failing on unmodifiable map.
+      Map<String, Object> remainingArguments = request != null && request.arguments() != null
+            ? new HashMap<>(request.arguments())
+            : new HashMap<>();
+
       // Unwrap the request parameters and headers and remove them from request.
       try {
          if (schemaNode == null) {
             schemaNode = OpenAPISchemaValidator.getJsonNodeForSchema(resource.getContent());
          }
 
-         // Extract JsonNode corresponding to request parameters.
+         // Extract JsonNode corresponding to request parameters (both path-level and operation-level).
          String path = resourcePath.replace("/", "~1");
-         String paramsPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb.toLowerCase() + "/parameters";
-         JsonNode paramsNode = schemaNode.at(paramsPointer);
+         Map<String, JsonNode> parameters = getParametersForOperation(path, verb.toLowerCase());
 
-         Iterator<JsonNode> parameters = paramsNode.elements();
-         while (parameters.hasNext()) {
-            JsonNode parameter = followRefIfAny(parameters.next());
+         for (JsonNode parameter : parameters.values()) {
             String paramName = parameter.path("name").asText();
-            String paramIn = parameter.path("in").asText(); // Check if it's "path" or "query"
+            String paramIn = parameter.path("in").asText(); // Check if it's "path" or "query" or "header"
 
-            if (request.arguments().containsKey(paramName)) {
-               String paramValue = request.arguments().remove(paramName).toString();
-               if ("path".equals(paramIn)) {
-                  pathParams.put(paramName, paramValue);
-               } else if ("query".equals(paramIn)) {
-                  queryParams.put(paramName, paramValue);
-               } else if ("header".equals(paramIn)) {
-                  headers.put(paramName, List.of(paramValue));
+            if (remainingArguments.containsKey(paramName)) {
+               Object argVal = remainingArguments.remove(paramName);
+               if (argVal != null) {
+                  String paramValue = argVal.toString();
+                  if ("path".equals(paramIn)) {
+                     pathParams.put(paramName, paramValue);
+                  } else if ("query".equals(paramIn)) {
+                     queryParams.put(paramName, paramValue);
+                  } else if ("header".equals(paramIn)) {
+                     headers.put(paramName, List.of(paramValue));
+                  }
                }
             }
          }
@@ -229,7 +234,7 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
       try {
          // Serialize remaining arguments as the request body.
-         String body = mapper.writeValueAsString(request.arguments());
+         String body = mapper.writeValueAsString(remainingArguments);
 
          // Execute the invocation processor after having cleaned the headers to propagate.
          headers = sanitizeHttpHeaders(headers);
@@ -443,5 +448,97 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          }
       }
       return false;
+   }
+
+   /**
+    * Extract all parameters applicable to an operation, combining path-level parameters and operation-level parameters.
+    * Operation-level parameters override path-level parameters with the same name.
+    */
+   private Map<String, JsonNode> getParametersForOperation(String path, String verb) {
+      Map<String, JsonNode> parametersByName = new LinkedHashMap<>();
+
+      // 1. Path-level parameters first (can be overridden by operation-level parameters).
+      String pathParamsPointer = OPEN_API_PATHS_ELEMENT + path + "/parameters";
+      JsonNode pathParamsNode = schemaNode.at(pathParamsPointer);
+      if (pathParamsNode.isArray()) {
+         for (JsonNode paramNode : pathParamsNode) {
+            JsonNode parameter = followRefIfAny(paramNode);
+            if (parameter != null && parameter.has("name")) {
+               parametersByName.put(parameter.path("name").asText(), parameter);
+            }
+         }
+      }
+
+      // 2. Operation-level parameters (override path-level parameters with the same name).
+      String opParamsPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb.toLowerCase() + "/parameters";
+      JsonNode opParamsNode = schemaNode.at(opParamsPointer);
+      if (opParamsNode.isArray()) {
+         for (JsonNode paramNode : opParamsNode) {
+            JsonNode parameter = followRefIfAny(paramNode);
+            if (parameter != null && parameter.has("name")) {
+               parametersByName.put(parameter.path("name").asText(), parameter);
+            }
+         }
+      }
+
+      return parametersByName;
+   }
+
+   /** Build a JsonSchema property node for an OpenAPI parameter. */
+   private ObjectNode buildParameterPropertyNode(JsonNode parameter) {
+      ObjectNode propertyNode = mapper.createObjectNode();
+
+      // Check if parameter has an OpenAPI schema.
+      JsonNode paramSchema = parameter.path("schema");
+      if (!paramSchema.isMissingNode()) {
+         paramSchema = followRefIfAny(paramSchema);
+      }
+
+      if (paramSchema != null && !paramSchema.isMissingNode()) {
+         if (paramSchema.has("type")) {
+            propertyNode.put("type", paramSchema.path("type").asText());
+         } else {
+            propertyNode.put("type", "string");
+         }
+         if (paramSchema.has("format")) {
+            propertyNode.put("format", paramSchema.path("format").asText());
+         }
+         if (paramSchema.has("description")) {
+            propertyNode.put("description", paramSchema.path("description").asText());
+         }
+         if (paramSchema.has("enum")) {
+            propertyNode.set("enum", paramSchema.path("enum"));
+         }
+         if (paramSchema.has("default")) {
+            propertyNode.set("default", paramSchema.path("default"));
+         }
+         if (paramSchema.has("items")) {
+            propertyNode.set("items", followRefIfAny(paramSchema.path("items")));
+         }
+      } else if (parameter.has("type")) {
+         // OpenAPI 2.0 / Swagger style where type is directly on parameter.
+         propertyNode.put("type", parameter.path("type").asText());
+         if (parameter.has("format")) {
+            propertyNode.put("format", parameter.path("format").asText());
+         }
+         if (parameter.has("enum")) {
+            propertyNode.set("enum", parameter.path("enum"));
+         }
+         if (parameter.has("default")) {
+            propertyNode.set("default", parameter.path("default"));
+         }
+         if (parameter.has("items")) {
+            propertyNode.set("items", followRefIfAny(parameter.path("items")));
+         }
+      } else {
+         propertyNode.put("type", "string");
+      }
+
+      // If parameter has description at parameter level, prefer it over schema description.
+      if (parameter.has("description")) {
+         propertyNode.put("description", parameter.path("description").asText());
+      }
+
+      return propertyNode;
    }
 }
