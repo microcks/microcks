@@ -102,6 +102,9 @@ public class TestRunnerService {
    @Value("${tests-callback.url}")
    private String testsCallbackUrl = null;
 
+   @Value("${tests-runner.connect-timeout:5000}")
+   private long runnerConnectTimeout;
+
    @Value("${postman-runner.url}")
    private String postmanRunnerUrl = null;
 
@@ -385,8 +388,9 @@ public class TestRunnerService {
             .setSSLSocketFactory(sslsf).build();
 
       CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager)
-            .setDefaultRequestConfig(RequestConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(200))
-                  .setResponseTimeout(Timeout.ofMilliseconds(runnerTimeout)).build())
+            .setDefaultRequestConfig(
+                  RequestConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(runnerConnectTimeout))
+                        .setResponseTimeout(Timeout.ofMilliseconds(runnerTimeout)).build())
             .build();
 
       HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
