@@ -20,6 +20,7 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.TestCaseResult;
 
+import io.github.microcks.minion.async.client.dto.TestCasePhaseDTO;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -98,4 +99,16 @@ public interface MicrocksAPIConnector {
    @Path("/tests/{id}/testCaseResult")
    @Produces("application/json")
    TestCaseResult reportTestCaseResult(@PathParam("id") String testResultId, TestCaseReturnDTO testCaseReturn);
+
+   /**
+    * Report the current progress phase of a test case while an asynchronous test is still in progress. This is a
+    * best-effort, additive notification: callers should ignore failures (for example, a 404 from an older Microcks
+    * server that does not expose this endpoint).
+    * @param testResultId  The unique identifier of TestResult we want to report a phase for
+    * @param testCasePhase A Test Case phase data object for this TestResult
+    */
+   @POST
+   @Path("/tests/{id}/testCasePhase")
+   @Produces("application/json")
+   void reportTestCasePhase(@PathParam("id") String testResultId, TestCasePhaseDTO testCasePhase);
 }
