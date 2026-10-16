@@ -86,7 +86,7 @@ jobs:
           builder: buildx-multi-arch
           file: webapp/src/main/docker/Dockerfile.dhi
           labels: |
-            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
           tags: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
 
@@ -118,7 +118,7 @@ jobs:
           builder: buildx-multi-arch
           file: minions/async/src/main/docker/Dockerfile.legacy-jar
           labels: |
-            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
           tags: quay.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}},docker.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}}
 
@@ -151,7 +151,7 @@ jobs:
           builder: buildx-multi-arch
           file: distro/uber/src/main/docker/Dockerfile.dhi
           labels: |
-            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
           tags: quay.io/microcks/microcks-uber:${{env.IMAGE_TAG}},docker.io/microcks/microcks-uber:${{env.IMAGE_TAG}}
 
@@ -184,7 +184,7 @@ jobs:
           builder: buildx-multi-arch
           file: distro/uber-async-minion/src/main/docker/Dockerfile.jvm
           labels: |
-            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
           tags: quay.io/microcks/microcks-uber-async-minion:${{env.IMAGE_TAG}},docker.io/microcks/microcks-uber-async-minion:${{env.IMAGE_TAG}}
 
