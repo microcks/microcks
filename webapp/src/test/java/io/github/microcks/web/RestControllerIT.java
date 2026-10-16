@@ -181,6 +181,39 @@ class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
+   void testFallbackMatchingKeepsRegexMetacharactersLiteral() {
+      // Issue #2227: characters of an operation path that are regex metacharacters ('.', ')', ...) must be
+      // matched literally by the fallback matching, not interpreted as regex syntax.
+      // Operations are 'GET /files/report.pdf' and 'GET /emoticons/smile:-)'.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/regex-metachar-path-openapi.yaml", true);
+
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/Regex+Metachar+Path+API/1.0.0/files/report.pdf", String.class);
+      assertEquals(200, response.getStatusCode().value());
+
+      // '.' is a literal dot, not a wildcard: 'reportXpdf' used to be served by 'GET /files/report.pdf'.
+      response = restTemplate.getForEntity("/rest/Regex+Metachar+Path+API/1.0.0/files/reportXpdf", String.class);
+      assertEquals(404, response.getStatusCode().value());
+
+      // The unbalanced ')' of 'smile:-)' used to break the regex compilation and return a 500.
+      response = restTemplate.getForEntity("/rest/Regex+Metachar+Path+API/1.0.0/emoticons/wink", String.class);
+      assertEquals(404, response.getStatusCode().value());
+   }
+
+   @Test
+   void testFallbackMatchingKeepsQueryStringOfPathKeyLiteral() {
+      // Issue #2227: when an OpenAPI path key embeds a query string, its '?' must be matched literally. It used to
+      // be read as a regex modifier (lazy '+?') so the '?' was simply dropped: a path without it was wrongly
+      // served (400 for missing example) instead of matching no operation.
+      // Operation is 'GET /pastry/{name}?api-version=2024-06-01'.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-query-path-openapi.json", true);
+
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/API+Pastry+Query+Path/1.0.0/pastry/Eclairapi-version=2024-06-01", String.class);
+      assertEquals(404, response.getStatusCode().value());
+   }
+
+   @Test
    void testHeadersTemplating() {
       // Upload modified pastry-with-headers-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
