@@ -162,6 +162,25 @@ class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
+   void testFallbackMatchingKeepsUnresolvedVariableSegmentLiteral() {
+      // Issue #2366: an unresolved Postman variable like '{{petId}}' is not a path parameter. It used to be
+      // injected raw into the fallback regex, breaking its compilation and returning a 500 for any request.
+      // Operations are 'GET /pets/{{petId}}/owner' (unresolved Postman variable) and 'GET /toys/:toyId'.
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/postman/pets-double-brace-postman-collection.json", true);
+
+      // '{{petId}}' is a literal segment, so '/pets/2/owner' matches no operation: 404, not 500.
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Pets+Double+Brace+API/1.0/pets/2/owner",
+            String.class);
+      assertEquals(404, response.getStatusCode().value());
+
+      // ':toyId' remains a path parameter: request reaches 'GET /toys/:toyId' that has no example for toyId=3,
+      // hence the 400 as per #819 and #1132 (and no more 500 caused by the other operation of the service).
+      response = restTemplate.getForEntity("/rest/Pets+Double+Brace+API/1.0/toys/3", String.class);
+      assertEquals(400, response.getStatusCode().value());
+   }
+
+   @Test
    void testHeadersTemplating() {
       // Upload modified pastry-with-headers-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
