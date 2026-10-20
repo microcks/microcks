@@ -213,7 +213,7 @@ public class ExpressionParser {
       int variableStart = expressionString.indexOf('.');
 
       boolean hasVariable = variableStart != -1;
-      boolean hasArgs = (argsStart != 1 && argsEnd != -1 && argsStart < argsEnd);
+      boolean hasArgs = (argsStart != -1 && argsEnd != -1 && argsStart < argsEnd);
       boolean isPostmanFunction = expressionString.startsWith("$");
       boolean varBeforeArgs = (variableStart < argsStart) && !isPostmanFunction;
 

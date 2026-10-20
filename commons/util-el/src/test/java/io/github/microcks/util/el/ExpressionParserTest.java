@@ -53,6 +53,30 @@ class ExpressionParserTest {
    }
 
    @Test
+   void testParseFunctionWithSingleCharName() {
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.registerFunction("f", UUIDELFunction.class);
+
+      Expression[] expressions = ExpressionParser.parseExpressions("{{ f() }}", context, "{{", "}}");
+
+      assertEquals(1, expressions.length);
+      assertInstanceOf(FunctionExpression.class, expressions[0]);
+   }
+
+   @Test
+   void testParseClosingParenWithoutOpeningParen() {
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.setVariable("request", new EvaluableRequest("{\"a\": \"v\"}", null));
+
+      Expression[] expressions = ExpressionParser.parseExpressions("{{ request.body/a) }}", context, "{{", "}}");
+
+      assertEquals(1, expressions.length);
+      assertInstanceOf(VariableReferenceExpression.class, expressions[0]);
+   }
+
+   @Test
    void testRedirectParseExpressions() {
       String template = "Hello {{ guid() > put(id) }} world! This is my {{ id }}";
 
