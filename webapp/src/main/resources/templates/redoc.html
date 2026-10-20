@@ -15,7 +15,14 @@
     </style>
   </head>
   <body>
-    <redoc spec-url="{RESOURCE_URL}"></redoc>
-    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
+    <div id="redoc-container"></div>
+    <script type="module">
+      import { init } from "https://cdn.redoc.ly/redoc/v3.x/bundles/redoc.standalone.js";
+
+      // Decode the file name so the download box doesn't show %20.
+      const specUrl = "{RESOURCE_URL}";
+      const title = decodeURIComponent(specUrl.substring(specUrl.lastIndexOf("/") + 1));
+      init(specUrl, { downloadUrls: [{ url: specUrl, title: title }] }, document.getElementById("redoc-container"));
+    </script>
   </body>
 </html>
