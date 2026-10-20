@@ -5,7 +5,6 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
 
     <style>
       body {
@@ -15,14 +14,13 @@
     </style>
   </head>
   <body>
-    <div id="redoc-container"></div>
+    <div id="redoc-container">Loading API documentation…</div>
     <script type="module">
       import { init } from "https://cdn.redoc.ly/redoc/v3.x/bundles/redoc.standalone.js";
 
-      // Decode the file name so the download box doesn't show %20.
       const specUrl = "{RESOURCE_URL}";
-      const title = decodeURIComponent(specUrl.substring(specUrl.lastIndexOf("/") + 1));
-      init(specUrl, { downloadUrls: [{ url: specUrl, title: title }] }, document.getElementById("redoc-container"));
+      init(specUrl, { disableTelemetry: true, downloadUrls: [{ url: specUrl, title: "Download API description" }] },
+        document.getElementById("redoc-container"));
     </script>
   </body>
 </html>
