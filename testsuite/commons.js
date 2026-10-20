@@ -215,30 +215,37 @@ export function invokeSOAPMocks() {
 
 // Function to test GRPC endpoints
 export function invokeGRPCMocks() {
-    client.connect(`${HOST}:${GRPC_PORT}`, { plaintext: true });
+    // k6 throws on connect/invoke errors, which would abort the iteration without recording a failed check.
+    // Record failures explicitly so they are reflected in the checks.fails metric.
+    try {
+        client.connect(`${HOST}:${GRPC_PORT}`, { plaintext: true, timeout: '10s' });
 
-    const payloads = [
-        { firstname: 'Laurent', lastname: 'Broudoux' },
-        { firstname: 'John', lastname: 'Doe' },
-    ];
+        const payloads = [
+            { firstname: 'Laurent', lastname: 'Broudoux' },
+            { firstname: 'John', lastname: 'Doe' },
+        ];
 
-    payloads.forEach((payload) => {
-        const response = client.invoke(
-            'io.github.microcks.grpc.hello.v1.HelloService/greeting',
-            payload
-        );
+        payloads.forEach((payload) => {
+            const response = client.invoke(
+                'io.github.microcks.grpc.hello.v1.HelloService/greeting',
+                payload
+            );
 
-        let ok = check(response, {
-            'status is OK': (r) => r && r.status === grpc.StatusOK,
-            'response contains greeting': (r) =>
-                r && r.message && r.message.greeting.includes(payload.firstname),
+            let ok = check(response, {
+                'status is OK': (r) => r && r.status === grpc.StatusOK,
+                'response contains greeting': (r) =>
+                    r && r.message && r.message.greeting.includes(payload.firstname),
+            });
+            if (!ok) {
+              console.error(`Unexpected status ${response.status} from ${payload.firstname}`);
+            }
         });
-        if (!ok) {
-          console.error(`Unexpected status ${response.status} from ${payload.firstname}`);
-        }
-    });
-
-    client.close();
+    } catch (e) {
+        console.error(`gRPC mock invocation failed: ${e}`);
+        check(null, { 'gRPC mock is reachable': () => false });
+    } finally {
+        client.close();
+    }
     sleep(1);
 };
 

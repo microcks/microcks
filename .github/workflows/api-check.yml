@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.branch || '1.13.x' }}
+          ref: ${{ github.event.inputs.branch || 'master' }}
 
       - name: Set up dependencies for ${{ matrix.flavor }}
         run: |
@@ -48,7 +48,12 @@ jobs:
             --add-host=host.docker.internal:host-gateway \
             --name microcks \
             "$IMAGE:$TAG"
-          sleep 30
+          echo "Waiting for Microcks to be ready..."
+          for i in $(seq 1 120); do
+            curl -sf http://localhost:8585/api/keycloak/config >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://localhost:8585/api/keycloak/config >/dev/null
 
       - name: Upload API artifacts to Microcks
         run: |
@@ -58,6 +63,15 @@ jobs:
             -e BASE_URL="http://host.docker.internal:8585" \
             -e MICROCKS_TOKEN="microcks" \
             curlimages/curl:latest sh /scripts/upload-artifacts.sh
+
+      - name: gRPC smoke test for ${{ matrix.flavor }}
+          run: |
+            docker run --rm --network host fullstorydev/grpcurl:latest \
+              -plaintext -connect-timeout 10 \
+              -d '{"firstname":"Laurent","lastname":"Broudoux"}' \
+              localhost:9090 io.github.microcks.grpc.hello.v1.HelloService/greeting | tee grpc-response.json
+            grep -q "Hello Laurent Broudoux" grpc-response.json
+            rm grpc-response.json
 
       - name: Run API tests for ${{ matrix.flavor }}
         env:
