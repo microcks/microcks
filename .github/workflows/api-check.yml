@@ -65,13 +65,13 @@ jobs:
             curlimages/curl:latest sh /scripts/upload-artifacts.sh
 
       - name: gRPC smoke test for ${{ matrix.flavor }}
-          run: |
-            docker run --rm --network host fullstorydev/grpcurl:latest \
-              -plaintext -connect-timeout 10 \
-              -d '{"firstname":"Laurent","lastname":"Broudoux"}' \
-              localhost:9090 io.github.microcks.grpc.hello.v1.HelloService/greeting | tee grpc-response.json
-            grep -q "Hello Laurent Broudoux" grpc-response.json
-            rm grpc-response.json
+        run: |
+          docker run --rm --network host fullstorydev/grpcurl:latest \
+            -plaintext -connect-timeout 10 \
+            -d '{"firstname":"Laurent","lastname":"Broudoux"}' \
+            localhost:9090 io.github.microcks.grpc.hello.v1.HelloService/greeting | tee grpc-response.json
+          grep -q "Hello Laurent Broudoux" grpc-response.json
+          rm grpc-response.json
 
       - name: Run API tests for ${{ matrix.flavor }}
         env:
