@@ -1,0 +1,8 @@
+opencollection: "1.0.0"
+items:
+  - info:
+      name: "op"
+      type: "http"
+    http:
+      method: "GET"
+      url: "{{baseUrl}}/pet"
