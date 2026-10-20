@@ -26,7 +26,12 @@
                 "input": "public"
               },
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "redoc.standalone.js",
+                "input": "node_modules/redoc/bundles",
+                "output": "assets/redoc"
+              }
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",

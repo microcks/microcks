@@ -16,7 +16,7 @@
   <body>
     <div id="redoc-container">Loading API documentation…</div>
     <script type="module">
-      import { init } from "https://cdn.redoc.ly/redoc/v3.x/bundles/redoc.standalone.js";
+      import { init } from "/assets/redoc/redoc.standalone.js";
 
       const specUrl = "{RESOURCE_URL}";
       init(specUrl, { disableTelemetry: true, downloadUrls: [{ url: specUrl, title: "Download API description" }] },
