@@ -1,0 +1,71 @@
+{
+  "info": {
+    "_postman_id": "0b7e1f3a-1111-4c2a-9d3e-000000000001",
+    "name": "Pets Double Brace API",
+    "description": "version=1.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get pet owner",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/pets/{{petId}}/owner",
+          "host": ["{{baseUrl}}"],
+          "path": ["pets", "{{petId}}", "owner"]
+        }
+      },
+      "response": [
+        {
+          "name": "Owner of pet",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pets/{{petId}}/owner",
+              "host": ["{{baseUrl}}"],
+              "path": ["pets", "{{petId}}", "owner"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"owner\":\"Laurent\"}"
+        }
+      ]
+    },
+    {
+      "name": "Get toy",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/toys/:toyId",
+          "host": ["{{baseUrl}}"],
+          "path": ["toys", ":toyId"]
+        }
+      },
+      "response": [
+        {
+          "name": "Toy 1",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/toys/:toyId",
+              "host": ["{{baseUrl}}"],
+              "path": ["toys", ":toyId"],
+              "variable": [{ "key": "toyId", "value": "1" }]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"toy\":\"Ball\"}"
+        }
+      ]
+    }
+  ]
+}

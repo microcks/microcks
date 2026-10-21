@@ -1,0 +1,30 @@
+openapi: 3.0.2
+info:
+  title: Regex Metachar Path API
+  version: 1.0.0
+  description: Operation paths holding characters that are regex metacharacters but legal URI path characters.
+paths:
+  /files/report.pdf:
+    get:
+      operationId: GetReport
+      responses:
+        '200':
+          description: The report
+          content:
+            application/json:
+              examples:
+                report:
+                  value:
+                    doc: report.pdf
+  /emoticons/smile:-):
+    get:
+      operationId: GetSmile
+      responses:
+        '200':
+          description: The smile emoticon
+          content:
+            application/json:
+              examples:
+                smile:
+                  value:
+                    emoticon: smile

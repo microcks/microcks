@@ -22,6 +22,7 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.util.OperationPathPattern;
 import io.github.microcks.util.ParameterConstraintUtil;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.delay.DelaySpec;
@@ -335,12 +336,7 @@ public class RestController {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          // ... then check is current resource path matches operation path pattern.
          if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null) {
-            // Produce a matching regexp removing {part} and :part from pattern.
-            String operationPattern = getURIPattern(operation.getName());
-            //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
-            operationPattern = operationPattern.replaceAll("\\{[\\w-]+\\}", "([^/])+");
-            operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
-            if (resourcePath.matches(operationPattern)) {
+            if (OperationPathPattern.compile(getURIPattern(operation.getName())).matches(resourcePath)) {
                return operation;
             }
          }

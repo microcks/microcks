@@ -1,0 +1,63 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "API Pastry Query Path",
+        "version": "1.0.0",
+        "description": "Minimal reproduction: an OpenAPI path key that embeds a query string (Azure-style api-version versioning) produces an unroutable mock operation in Microcks."
+    },
+    "paths": {
+        "/pastry/{name}?api-version=2024-06-01": {
+            "get": {
+                "summary": "Get a pastry by name (api-version 2024-06-01)",
+                "operationId": "GetPastry_2024-06-01",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "Eclair": {
+                                "value": "Eclair"
+                            }
+                        }
+                    },
+                    {
+                        "name": "api-version",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "Eclair": {
+                                "value": "2024-06-01"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A pastry",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "Eclair": {
+                                        "value": {
+                                            "name": "Eclair",
+                                            "description": "Delicieux Eclair au chocolat",
+                                            "price": 2.5,
+                                            "status": "available"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
