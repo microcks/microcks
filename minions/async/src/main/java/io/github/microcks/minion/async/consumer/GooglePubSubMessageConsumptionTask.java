@@ -55,7 +55,7 @@ import java.util.regex.Pattern;
  * <code>googlepubsub://{projectId}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
-public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTask {
+public class GooglePubSubMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -135,6 +135,9 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       // Create a new subscriber for subscription.
       subscriber = subBuilder.build();
       subscriber.startAsync().awaitRunning();
+
+      // Subscriber is running: the consumer is connected and ready to receive messages.
+      notifyWaitingForMessage();
 
       // Wait and stop async receiver.
       Thread.sleep(specification.getTimeoutMS() - (System.currentTimeMillis() - start));
