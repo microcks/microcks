@@ -28,12 +28,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.util.UriUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -81,7 +83,8 @@ public class DocumentationController {
          }
       }
 
-      return responseWithResource("/api/resources/" + name, resourceType, resource);
+      return responseWithResource("/api/resources/" + UriUtils.encodePathSegment(name, StandardCharsets.UTF_8),
+            resourceType, resource);
    }
 
    @GetMapping(value = "/documentation/id/{id}/{resourceType}")
@@ -99,7 +102,8 @@ public class DocumentationController {
          }
       }
 
-      return responseWithResource("/api/resources/id/" + id, resourceType, resource);
+      return responseWithResource("/api/resources/id/" + UriUtils.encodePathSegment(id, StandardCharsets.UTF_8),
+            resourceType, resource);
    }
 
    private ResponseEntity<byte[]> responseWithResource(String resourceUrl, String resourceType, Resource resource) {
