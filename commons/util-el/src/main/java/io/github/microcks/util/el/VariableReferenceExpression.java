@@ -119,7 +119,7 @@ public class VariableReferenceExpression implements Expression {
          log.debug("variableValue: {}", variableValue);
       }
 
-      if (propertyPath != null) {
+      if (propertyPath != null && variableValue != null) {
          if (variableValue.getClass().equals(String.class)) {
             variableValue = getStringValue(variableValue, propertyPath);
          } else if (variableValue.getClass().isArray()) {
