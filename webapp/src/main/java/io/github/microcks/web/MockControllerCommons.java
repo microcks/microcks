@@ -27,6 +27,8 @@ import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
+import io.github.microcks.util.tracing.TraceUtil;
+import io.opentelemetry.api.trace.Span;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,7 +278,10 @@ public class MockControllerCommons {
       try {
          return engine.getValue(responseContent);
       } catch (Throwable t) {
-         log.error("Failing at evaluating template {}", responseContent, t);
+         log.error("Failing at evaluating template {}: {}", responseContent, t.getMessage());
+         Span.current().recordException(t);
+         Span.current().addEvent("template_evaluation_failed",
+               TraceUtil.explainSpanEventBuilder("Failed to evaluate template: " + t.getMessage()).build());
       }
       return responseContent;
    }

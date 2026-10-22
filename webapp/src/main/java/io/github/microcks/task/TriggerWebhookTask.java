@@ -178,7 +178,11 @@ public class TriggerWebhookTask {
       if (contentTemplate != null && contentTemplate.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          log.debug("Rendering content template {}", contentTemplate);
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
-         return engine.getValue(contentTemplate);
+         try {
+            return engine.getValue(contentTemplate);
+         } catch (Throwable t) {
+            log.error("Failing at evaluating template {}: {}", contentTemplate, t.getMessage());
+         }
       }
       // No dynamic rendering, just return the template as is.
       return contentTemplate;
