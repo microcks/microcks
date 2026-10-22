@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -512,11 +513,13 @@ public class DispatchCriteriaHelper {
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
    public static String extractFromParamMap(String paramsRule, Map<String, String> paramMap) {
-      Set<String> sortedKeys = paramMap.keySet().stream().sorted().collect(Collectors.toSet());
+      // TreeSet keeps keys sorted like buildFromParamsMap()'s TreeMultimap, so both agree on multi-key rules.
+      Set<String> sortedKeys = new TreeSet<>(paramMap.keySet());
 
       StringBuilder result = new StringBuilder();
       for (String param : sortedKeys) {
-         if (paramsRule.contains(param)) {
+         // Word-boundary check, same as buildFromParamsMap(): contains() would match "accept" inside "accept-language".
+         if (paramsRule.matches(".*(^|[^-])\\b" + param + "\\b([^-]|$).*")) {
             result.append("?").append(param).append("=").append(paramMap.get(param));
          }
       }

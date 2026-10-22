@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.test.context.NestedTestConfiguration;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -349,6 +350,40 @@ class DispatchCriteriaHelperTest {
          // Only 1 parameter should be taken into account according to rules.
          String dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap("?foo", paramsMap);
          assertEquals("?foo=fooValue", dispatchCriteria);
+      }
+   }
+
+   @Nested
+   class ImportVsRuntimeConsistency {
+
+      @Test
+      void twoHeaderRuleMatchesBetweenImportAndRuntime() {
+         Multimap<String, String> importHeaders = ArrayListMultimap.create();
+         importHeaders.put("tenant", "acme");
+         importHeaders.put("version", "2");
+         String storedAtImport = DispatchCriteriaHelper.buildFromParamsMap("tenant && version", importHeaders);
+
+         Map<String, String> runtimeHeaders = new HashMap<>();
+         runtimeHeaders.put("tenant", "acme");
+         runtimeHeaders.put("version", "2");
+         String computedAtRuntime = DispatchCriteriaHelper.extractFromParamMap("tenant && version", runtimeHeaders);
+
+         // Import-time (buildFromParamsMap) and runtime (extractFromParamMap) must produce the same key.
+         assertEquals(storedAtImport, computedAtRuntime);
+      }
+
+      @Test
+      void unrelatedSubstringHeaderIsNotPulledIntoCriteria() {
+         Multimap<String, String> importHeaders = ArrayListMultimap.create();
+         importHeaders.put("accept-language", "fr");
+         String storedAtImport = DispatchCriteriaHelper.buildFromParamsMap("accept-language", importHeaders);
+
+         Map<String, String> runtimeHeaders = new HashMap<>();
+         runtimeHeaders.put("accept-language", "fr");
+         runtimeHeaders.put("accept", "*/*"); // sent by every real HTTP client
+         String computedAtRuntime = DispatchCriteriaHelper.extractFromParamMap("accept-language", runtimeHeaders);
+
+         assertEquals(storedAtImport, computedAtRuntime);
       }
    }
 }
