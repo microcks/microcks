@@ -168,8 +168,8 @@ public class MetricsService {
                metric.getLatestScores().remove(lastEntry.getKey());
                latestReversedScores.remove(latestReversedScores.size() - 1);
             }
-            metric.getLatestScores().put(metric.getLastUpdateDay(), currentScore);
          }
+         metric.getLatestScores().put(metric.getLastUpdateDay(), currentScore);
          // Save updated metric.
          metricRepository.save(metric);
       }
