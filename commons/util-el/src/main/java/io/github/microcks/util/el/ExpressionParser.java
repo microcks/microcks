@@ -75,7 +75,7 @@ public class ExpressionParser {
             String expr = extractAndValidateExpression(template, expressionPrefix, expressionSuffix, prefixIndex,
                   suffixIndex);
 
-            addParsedExpression(expressions, expr, context);
+            addParsedExpression(expressions, template, expr, prefixIndex, context);
             startIdx = suffixIndex + expressionSuffix.length();
             log.debug("Expression accumulated. Pursuing with index {} on {}", startIdx, template.length());
          } else {
@@ -134,10 +134,24 @@ public class ExpressionParser {
    /**
     * Add the parsed expression to the list, handling special curly brace wrapping.
     */
-   private static void addParsedExpression(List<Expression> expressions, String expr, EvaluationContext context) {
+   private static void addParsedExpression(List<Expression> expressions, String template, String expr, int prefixIndex,
+         EvaluationContext context) throws ParseException {
       if (expr.charAt(0) == '{') {
+
+         if (expr.length() < 2 || !expr.endsWith("}")) {
+            log.info("Malformed expression: unmatched curly brace wrapping in '{}' at character {}", expr, prefixIndex);
+            throw new ParseException(template, prefixIndex,
+                  "Malformed expression: unmatched curly brace wrapping in '" + expr + "' at character " + prefixIndex);
+         }
+         String innerExpr = expr.substring(1, expr.length() - 1).trim();
+         if (innerExpr.isEmpty()) {
+            log.info("No expression defined within curly braces in '{}' at character {}", expr, prefixIndex);
+            throw new ParseException(template, prefixIndex,
+                  "No expression defined within curly braces in '" + expr + "' at character " + prefixIndex);
+         }
+
          expressions.add(new LiteralExpression(expr.substring(0, 1)));
-         expressions.add(doParseExpression(expr.substring(1, expr.length() - 1), context));
+         expressions.add(doParseExpression(innerExpr, context));
          expressions.add(new LiteralExpression(expr.substring(expr.length() - 1)));
       } else {
          expressions.add(doParseExpression(expr, context));
