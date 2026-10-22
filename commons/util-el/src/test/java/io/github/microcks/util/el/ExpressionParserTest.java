@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * A TestCase for ExpressionParser class.
@@ -190,5 +191,28 @@ class ExpressionParserTest {
 
       assertEquals("name : #", ((LiteralExpression) expressions[0]).getValue(context));
       assertEquals("#", ((LiteralExpression) expressions[2]).getValue(context));
+   }
+
+   @Test
+   void testParseExpressionWithMalformedCurlyBraces() {
+      EvaluationContext context = new EvaluationContext();
+
+      // Test unmatched closing brace with single brace inside delimiters (issue #2377).
+      ParseException pe = assertThrows(ParseException.class,
+            () -> ExpressionParser.parseExpressions("{{{}}", context, "{{", "}}"));
+      assertTrue(pe.getMessage().contains("unmatched curly brace"));
+
+      // Test unmatched closing brace with inner content.
+      pe = assertThrows(ParseException.class, () -> ExpressionParser.parseExpressions("{{{foo}}", context, "{{", "}}"));
+      assertTrue(pe.getMessage().contains("unmatched curly brace"));
+
+      // Test empty expression within curly braces.
+      pe = assertThrows(ParseException.class, () -> ExpressionParser.parseExpressions("{{{}}}", context, "{{", "}}"));
+      assertTrue(pe.getMessage().contains("No expression defined within curly braces"));
+
+      // Test whitespace-only expression within curly braces.
+      pe = assertThrows(ParseException.class,
+            () -> ExpressionParser.parseExpressions("{{{   }}}", context, "{{", "}}"));
+      assertTrue(pe.getMessage().contains("No expression defined within curly braces"));
    }
 }
