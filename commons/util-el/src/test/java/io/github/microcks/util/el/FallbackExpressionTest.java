@@ -83,4 +83,12 @@ class FallbackExpressionTest {
       FallbackExpression exp = new FallbackExpression(expressions);
       assertEquals("default", exp.getValue(new EvaluationContext()));
    }
+
+   @Test
+   void testNullVariableFallsBackToLiteral() {
+      Expression[] expressions = new Expression[] { new VariableReferenceExpression(null, "body/id"),
+            new LiteralExpression("fallback") };
+      FallbackExpression exp = new FallbackExpression(expressions);
+      assertEquals("fallback", exp.getValue(new EvaluationContext()));
+   }
 }

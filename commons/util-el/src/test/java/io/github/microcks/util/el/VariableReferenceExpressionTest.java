@@ -184,4 +184,10 @@ class VariableReferenceExpressionTest {
       exp = new VariableReferenceExpression(request, "headers[X-Header]");
       assertEquals("null", exp.getValue(new EvaluationContext()));
    }
+
+   @Test
+   void testNullVariableWithPathExpression() {
+      VariableReferenceExpression exp = new VariableReferenceExpression(null, "body/id");
+      assertEquals("null", exp.getValue(new EvaluationContext()));
+   }
 }
