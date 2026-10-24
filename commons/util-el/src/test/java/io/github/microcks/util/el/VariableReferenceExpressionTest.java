@@ -172,4 +172,22 @@ class VariableReferenceExpressionTest {
       result = exp.getValue(new EvaluationContext());
       assertEquals("test", result);
    }
+
+   @Test
+   void testNullPropertyWithPathExpression() {
+      // No body in the request, so the body property is null.
+      EvaluableRequest request = new EvaluableRequest(null, null);
+
+      VariableReferenceExpression exp = new VariableReferenceExpression(request, "body/id");
+      assertEquals("null", exp.getValue(new EvaluationContext()));
+
+      exp = new VariableReferenceExpression(request, "headers[X-Header]");
+      assertEquals("null", exp.getValue(new EvaluationContext()));
+   }
+
+   @Test
+   void testNullVariableWithPathExpression() {
+      VariableReferenceExpression exp = new VariableReferenceExpression(null, "body/id");
+      assertEquals("null", exp.getValue(new EvaluationContext()));
+   }
 }

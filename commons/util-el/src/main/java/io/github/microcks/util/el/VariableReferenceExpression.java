@@ -119,7 +119,7 @@ public class VariableReferenceExpression implements Expression {
          log.debug("variableValue: {}", variableValue);
       }
 
-      if (propertyPath != null) {
+      if (propertyPath != null && variableValue != null) {
          if (variableValue.getClass().equals(String.class)) {
             variableValue = getStringValue(variableValue, propertyPath);
          } else if (variableValue.getClass().isArray()) {
@@ -187,6 +187,9 @@ public class VariableReferenceExpression implements Expression {
     * @return The value of the property or null if it does not exist.
     */
    private static Object getProperty(Object obj, String property) {
+      if (obj == null) {
+         return null;
+      }
       Object result = null;
 
       try {

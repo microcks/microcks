@@ -71,4 +71,24 @@ class FallbackExpressionTest {
       result = exp.getValue(new EvaluationContext());
       assertTrue(result.equals("true") || result.equals("false"));
    }
+
+   @Test
+   void testVariableReferenceWithNullPropertyFallsBack() {
+      // No body in the request: the first expression must not fail and the fallback must be used.
+      EvaluableRequest request = new EvaluableRequest(null, null);
+
+      Expression[] expressions = new Expression[] { new VariableReferenceExpression(request, "body/id"),
+            new LiteralExpression("default") };
+
+      FallbackExpression exp = new FallbackExpression(expressions);
+      assertEquals("default", exp.getValue(new EvaluationContext()));
+   }
+
+   @Test
+   void testNullVariableFallsBackToLiteral() {
+      Expression[] expressions = new Expression[] { new VariableReferenceExpression(null, "body/id"),
+            new LiteralExpression("fallback") };
+      FallbackExpression exp = new FallbackExpression(expressions);
+      assertEquals("fallback", exp.getValue(new EvaluationContext()));
+   }
 }
