@@ -17,6 +17,7 @@ package io.github.microcks.util.opencollection;
 
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Response;
@@ -48,9 +49,30 @@ final class OpenCollectionHttpExampleMapper {
    /** Build the request/response pair of one example: both sides are named after the example. */
    static Exchange exchangeOf(JsonNode example) {
       String name = example.path("name").asText();
+      return new RequestResponsePair(requestOf(name, example.path("request")),
+            responseOf(name, example.path("response")));
+   }
+
+   /**
+    * Build the request of an example: headers, params and raw body data, kept as written. Path and query params are
+    * both kept as request parameters, as for other collection formats.
+    */
+   private static Request requestOf(String name, JsonNode exampleRequest) {
       Request request = new Request();
       request.setName(name);
-      return new RequestResponsePair(request, responseOf(name, example.path("response")));
+      request.setHeaders(headersOf(exampleRequest.path("headers")));
+      request.setContent(exampleRequest.path("body").path("data").textValue());
+      for (JsonNode param : exampleRequest.path("params")) {
+         request.addQueryParameter(parameterOf(param));
+      }
+      return request;
+   }
+
+   private static Parameter parameterOf(JsonNode param) {
+      Parameter parameter = new Parameter();
+      parameter.setName(param.path("name").asText());
+      parameter.setValue(param.path("value").asText());
+      return parameter;
    }
 
    /** Build the response of an example: its body data is the content, kept exactly as written. */
@@ -71,7 +93,7 @@ final class OpenCollectionHttpExampleMapper {
             .flatMap(header -> header.getValues().stream()).findFirst();
    }
 
-   /** Map the <code>{name, value}</code> list of an example to Microcks headers, one value each. */
+   /** Map the <code>{name, value}</code> header list of an example request or response, one value each. */
    private static Set<Header> headersOf(JsonNode exampleHeaders) {
       Set<Header> headers = new HashSet<>();
       for (JsonNode exampleHeader : exampleHeaders) {
