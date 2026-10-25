@@ -16,11 +16,15 @@
 package io.github.microcks.util.opencollection;
 
 import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Maps the <code>examples</code> entries of an OpenCollection http item to Microcks request/response pairs. Other item
@@ -47,6 +51,24 @@ final class OpenCollectionHttpExampleMapper {
       response.setName(name);
       response.setStatus(exampleResponse.path("status").asText());
       response.setContent(exampleResponse.path("body").path("data").textValue());
+      response.setHeaders(headersOf(exampleResponse.path("headers")));
       return response;
+   }
+
+   /** Map the <code>{name, value}</code> list of an example to Microcks headers, one value each. */
+   private static Set<Header> headersOf(JsonNode exampleHeaders) {
+      Set<Header> headers = new HashSet<>();
+      for (JsonNode exampleHeader : exampleHeaders) {
+         headers.add(headerOf(exampleHeader));
+      }
+      return headers;
+   }
+
+   private static Header headerOf(JsonNode exampleHeader) {
+      Header header = new Header();
+      header.setName(exampleHeader.path("name").asText());
+      // A mutable set, as other Microcks components may complete header values.
+      header.setValues(new HashSet<>(Set.of(exampleHeader.path("value").asText())));
+      return header;
    }
 }
