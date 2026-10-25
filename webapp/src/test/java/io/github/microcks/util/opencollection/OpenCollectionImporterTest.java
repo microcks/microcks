@@ -411,38 +411,29 @@ class OpenCollectionImporterTest {
    }
 
    @Test
-   void testSingleExampleIsImported() {
-      List<Response> responses = responsesOf("example-single.yml");
+   void testExamplesAreImportedAsRequestResponsePairs() {
+      OpenCollectionImporter importer = importerFor("examples.yml");
 
-      assertEquals(1, responses.size());
-      assertEquals("pet created", responses.get(0).getName());
-      assertEquals("201", responses.get(0).getStatus());
-   }
+      // Import phase: the http item gives its operation.
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+      Operation getById = service.getOperations().get(0);
+      assertEquals("GET /pet/:petId", getById.getName());
 
-   @ParameterizedTest
-   @CsvSource(delimiter = '|', value = { "example-body-json.yml|{\"id\":2,\"name\":\"cat\"}",
-         "example-body-empty.yml|''" })
-   void testResponseContentIsTheExampleBodyAsWritten(String fixture, String content) {
-      List<Response> responses = responsesOf(fixture);
+      // Examples phase: one request/response pair per example, in document order.
+      List<Response> responses = responsesOf(importer, service, getById);
+      assertEquals(List.of("get-2", "get-1"), responses.stream().map(Response::getName).toList());
 
-      assertEquals(content, responses.get(0).getContent());
-   }
+      Response found = responses.get(0);
+      assertEquals("200", found.getStatus());
+      assertEquals("{\"id\":2,\"name\":\"cat\"}", found.getContent());
+      assertEquals(Map.of("Content-Type", Set.of("application/vnd.petstore+json"), "X-Rate-Limit", Set.of("10")),
+            headersOf(found));
+      assertEquals("application/vnd.petstore+json", found.getMediaType());
 
-   @Test
-   void testResponseHeadersAreTheExampleHeaders() {
-      List<Response> responses = responsesOf("example-headers.yml");
-
-      assertEquals(Map.of("X-Rate-Limit", Set.of("10"), "X-Request-Id", Set.of("abc-123")),
-            headersOf(responses.get(0)));
-   }
-
-   @ParameterizedTest
-   @ValueSource(strings = { "example-media-type-header-content-type.yml",
-         "example-media-type-header-content-type-lowercase.yml" })
-   void testMediaTypeIsTheContentTypeHeader(String fixture) {
-      List<Response> responses = responsesOf(fixture);
-
-      assertEquals("application/vnd.petstore+json", responses.get(0).getMediaType());
+      Response notFound = responses.get(1);
+      assertEquals("404", notFound.getStatus());
+      assertEquals("", notFound.getContent());
+      assertEquals("application/json", notFound.getMediaType());
    }
 
    private static OpenCollectionImporter importerFor(String fixture) {
@@ -450,11 +441,8 @@ class OpenCollectionImporterTest {
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
    }
 
-   private static List<Response> responsesOf(String fixture) {
-      OpenCollectionImporter importer = importerFor(fixture);
-      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-      List<Exchange> exchanges = assertDoesNotThrow(
-            () -> importer.getMessageDefinitions(service, service.getOperations().get(0)));
+   private static List<Response> responsesOf(OpenCollectionImporter importer, Service service, Operation operation) {
+      List<Exchange> exchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, operation));
       return exchanges.stream().map(exchange -> ((RequestResponsePair) exchange).getResponse()).toList();
    }
 

@@ -1,0 +1,35 @@
+opencollection: 1.0.0
+info:
+  name: Petstore API
+  version: "1.0"
+items:
+  - info:
+      name: Find pet by ID
+      type: http
+    http:
+      method: GET
+      url: "{{baseUrl}}/pet/:petId"
+    examples:
+      # Found: headers, Content-Type header for the media type, body data as written.
+      - name: get-2
+        response:
+          status: 200
+          headers:
+            - name: Content-Type
+              value: application/vnd.petstore+json
+            - name: X-Rate-Limit
+              value: "10"
+          body:
+            type: text
+            data: '{"id":2,"name":"cat"}'
+      # Not found: lowercase content-type header, empty body kept as written.
+      - name: get-1
+        response:
+          status: 404
+          headers:
+            - name: content-type
+              value: application/json
+          body:
+            type: json
+            data: ""
+bundled: true
