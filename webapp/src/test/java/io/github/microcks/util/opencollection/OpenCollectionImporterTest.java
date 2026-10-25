@@ -460,10 +460,16 @@ class OpenCollectionImporterTest {
       OpenCollectionImporter importer = importerFor("examples-incomplete.yml");
       Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
 
-      List<Response> responses = responsesOf(importer, service, service.getOperations().get(0));
+      List<String> warnings = new ArrayList<>();
+      List<Response> responses = warningsCapturedWhile(
+            () -> responsesOf(importer, service, service.getOperations().get(0)), warnings);
 
       assertEquals(List.of("Find pet by ID 1", "get-1", "Find pet by ID 3"),
             responses.stream().map(Response::getName).toList());
+      assertEquals(List.of("404", "400"), responses.stream().skip(1).map(Response::getStatus).toList());
+      assertEquals(1, warnings.size());
+      assertTrue(warnings.get(0).contains("'get-1'"));
+      assertTrue(warnings.get(0).contains("already used"));
    }
 
    @ParameterizedTest

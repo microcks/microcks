@@ -18,4 +18,8 @@ items:
           status: 404
       - response:
           status: 400
+      # Name already used in the operation: skipped with a warning.
+      - name: get-1
+        response:
+          status: 500
 bundled: true
