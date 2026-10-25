@@ -24,6 +24,8 @@ import io.github.microcks.domain.Response;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -34,6 +36,10 @@ import java.util.Set;
 final class OpenCollectionHttpExampleMapper {
 
    private static final String CONTENT_TYPE_HEADER = "Content-Type";
+
+   /** The media type of each OpenCollection <code>body.type</code>, used when there is no Content-Type header. */
+   private static final Map<String, String> MEDIA_TYPES_BY_BODY_TYPE = Map.of("json", "application/json", "xml",
+         "application/xml", "text", "text/plain", "html", "text/html", "binary", "application/octet-stream");
 
    private OpenCollectionHttpExampleMapper() {
       // Private constructor to hide the implicit one as it's a utility class.
@@ -54,14 +60,15 @@ final class OpenCollectionHttpExampleMapper {
       response.setStatus(exampleResponse.path("status").asText());
       response.setContent(exampleResponse.path("body").path("data").textValue());
       response.setHeaders(headersOf(exampleResponse.path("headers")));
-      response.setMediaType(contentTypeOf(response.getHeaders()));
+      response.setMediaType(contentTypeOf(response.getHeaders())
+            .orElseGet(() -> MEDIA_TYPES_BY_BODY_TYPE.get(exampleResponse.path("body").path("type").asText())));
       return response;
    }
 
-   /** The value of the <code>Content-Type</code> header, whatever its case, or null when there is none. */
-   private static String contentTypeOf(Set<Header> headers) {
+   /** The value of the <code>Content-Type</code> header, whatever its case, if any. */
+   private static Optional<String> contentTypeOf(Set<Header> headers) {
       return headers.stream().filter(header -> CONTENT_TYPE_HEADER.equalsIgnoreCase(header.getName()))
-            .flatMap(header -> header.getValues().stream()).findFirst().orElse(null);
+            .flatMap(header -> header.getValues().stream()).findFirst();
    }
 
    /** Map the <code>{name, value}</code> list of an example to Microcks headers, one value each. */
