@@ -17,7 +17,9 @@ package io.github.microcks.util.opencollection;
 
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Message;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
@@ -441,6 +443,13 @@ class OpenCollectionImporterTest {
       assertEquals("", notFound.getContent());
       assertEquals("application/json", notFound.getMediaType());
 
+      // Request side: example headers, params and raw body, kept as written.
+      Request getTwo = requestsOf(importer, service, getById).get(0);
+      assertEquals(Map.of("Accept", Set.of("application/json")), headersOf(getTwo));
+      assertEquals(List.of("petId=2"),
+            getTwo.getQueryParameters().stream().map(param -> param.getName() + "=" + param.getValue()).toList());
+      assertEquals("{\"name\":\"cat\"}", requestsOf(importer, service, addPet).get(0).getContent());
+
       // Each operation with examples gets its path, verbatim, as resource path: '/pet/2' reaches 'GET /pet/:petId'.
       assertEquals(Set.of("/pet/:petId"), getById.getResourcePaths());
       assertEquals(Set.of("/pet"), addPet.getResourcePaths());
@@ -469,11 +478,16 @@ class OpenCollectionImporterTest {
       return exchanges.stream().map(exchange -> ((RequestResponsePair) exchange).getResponse()).toList();
    }
 
-   private static Map<String, Set<String>> headersOf(Response response) {
-      if (response.getHeaders() == null) {
+   private static List<Request> requestsOf(OpenCollectionImporter importer, Service service, Operation operation) {
+      List<Exchange> exchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, operation));
+      return exchanges.stream().map(exchange -> ((RequestResponsePair) exchange).getRequest()).toList();
+   }
+
+   private static Map<String, Set<String>> headersOf(Message message) {
+      if (message.getHeaders() == null) {
          return Map.of();
       }
-      return response.getHeaders().stream().collect(Collectors.toMap(Header::getName, Header::getValues));
+      return message.getHeaders().stream().collect(Collectors.toMap(Header::getName, Header::getValues));
    }
 
    private static List<String> operationNamesOf(String fixture) {

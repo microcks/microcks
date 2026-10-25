@@ -12,6 +12,16 @@ items:
     examples:
       # Found: headers, Content-Type header for the media type, body data as written.
       - name: get-2
+        request:
+          url: "{{baseUrl}}/pet/:petId"
+          method: GET
+          headers:
+            - name: Accept
+              value: application/json
+          params:
+            - name: petId
+              value: "2"
+              type: path
         response:
           status: 200
           headers:
@@ -45,6 +55,10 @@ items:
           url: "{{baseUrl}}/pet"
         examples:
           - name: pet created
+            request:
+              body:
+                type: json
+                data: '{"name":"cat"}'
             response:
               status: 201
 bundled: true
