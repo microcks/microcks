@@ -33,6 +33,8 @@ import java.util.Set;
  */
 final class OpenCollectionHttpExampleMapper {
 
+   private static final String CONTENT_TYPE_HEADER = "Content-Type";
+
    private OpenCollectionHttpExampleMapper() {
       // Private constructor to hide the implicit one as it's a utility class.
    }
@@ -52,7 +54,14 @@ final class OpenCollectionHttpExampleMapper {
       response.setStatus(exampleResponse.path("status").asText());
       response.setContent(exampleResponse.path("body").path("data").textValue());
       response.setHeaders(headersOf(exampleResponse.path("headers")));
+      response.setMediaType(contentTypeOf(response.getHeaders()));
       return response;
+   }
+
+   /** The value of the <code>Content-Type</code> header, whatever its case, or null when there is none. */
+   private static String contentTypeOf(Set<Header> headers) {
+      return headers.stream().filter(header -> CONTENT_TYPE_HEADER.equalsIgnoreCase(header.getName()))
+            .flatMap(header -> header.getValues().stream()).findFirst().orElse(null);
    }
 
    /** Map the <code>{name, value}</code> list of an example to Microcks headers, one value each. */
