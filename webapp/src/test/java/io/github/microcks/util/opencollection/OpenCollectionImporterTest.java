@@ -464,9 +464,9 @@ class OpenCollectionImporterTest {
       List<Response> responses = warningsCapturedWhile(
             () -> responsesOf(importer, service, service.getOperations().get(0)), warnings);
 
-      assertEquals(List.of("Find pet by ID 1", "get-1", "Find pet by ID 3"),
+      assertEquals(List.of("Find pet by ID 1", "get-1", "Find pet by ID 3", "no status"),
             responses.stream().map(Response::getName).toList());
-      assertEquals(List.of("404", "400"), responses.stream().skip(1).map(Response::getStatus).toList());
+      assertEquals(List.of("404", "400", "200"), responses.stream().skip(1).map(Response::getStatus).toList());
       assertEquals(2, warnings.size());
       assertTrue(warnings.get(0).contains("'get-1'"));
       assertTrue(warnings.get(0).contains("already used"));

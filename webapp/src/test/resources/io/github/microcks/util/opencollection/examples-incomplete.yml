@@ -26,4 +26,10 @@ items:
       - name: no answer
         request:
           method: GET
+      # No status: 200 by default.
+      - name: no status
+        response:
+          body:
+            type: text
+            data: ok
 bundled: true
