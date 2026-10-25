@@ -184,10 +184,16 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       String name = example.path("name").asText();
       Request request = new Request();
       request.setName(name);
+      return new RequestResponsePair(request, responseOf(name, example.path("response")));
+   }
+
+   /** Build the response of an example: its body data is the content, kept exactly as written. */
+   private static Response responseOf(String name, JsonNode exampleResponse) {
       Response response = new Response();
       response.setName(name);
-      response.setStatus(example.path("response").path("status").asText());
-      return new RequestResponsePair(request, response);
+      response.setStatus(exampleResponse.path("status").asText());
+      response.setContent(exampleResponse.path("body").path("data").textValue());
+      return response;
    }
 
    private void checkSpecVersion() throws MockRepositoryImportException {
