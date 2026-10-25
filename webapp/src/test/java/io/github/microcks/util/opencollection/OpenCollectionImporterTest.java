@@ -436,6 +436,15 @@ class OpenCollectionImporterTest {
             headersOf(responses.get(0)));
    }
 
+   @ParameterizedTest
+   @ValueSource(strings = { "example-media-type-header-content-type.yml",
+         "example-media-type-header-content-type-lowercase.yml" })
+   void testMediaTypeIsTheContentTypeHeader(String fixture) {
+      List<Response> responses = responsesOf(fixture);
+
+      assertEquals("application/vnd.petstore+json", responses.get(0).getMediaType());
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
