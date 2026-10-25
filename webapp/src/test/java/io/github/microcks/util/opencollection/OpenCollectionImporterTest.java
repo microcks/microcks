@@ -467,9 +467,11 @@ class OpenCollectionImporterTest {
       assertEquals(List.of("Find pet by ID 1", "get-1", "Find pet by ID 3"),
             responses.stream().map(Response::getName).toList());
       assertEquals(List.of("404", "400"), responses.stream().skip(1).map(Response::getStatus).toList());
-      assertEquals(1, warnings.size());
+      assertEquals(2, warnings.size());
       assertTrue(warnings.get(0).contains("'get-1'"));
       assertTrue(warnings.get(0).contains("already used"));
+      assertTrue(warnings.get(1).contains("'no answer'"));
+      assertTrue(warnings.get(1).contains("has no response"));
    }
 
    @ParameterizedTest

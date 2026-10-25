@@ -22,4 +22,8 @@ items:
       - name: get-1
         response:
           status: 500
+      # No response: nothing to serve, skipped with a warning.
+      - name: no answer
+        request:
+          method: GET
 bundled: true
