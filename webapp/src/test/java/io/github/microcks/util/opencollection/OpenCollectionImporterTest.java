@@ -113,8 +113,8 @@ class OpenCollectionImporterTest {
       assertEquals("", notFound.getContent());
 
       // Check that operations get their path, verbatim, as resource path.
-      assertEquals(List.of("/pet/findByStatus"), findByStatus.getResourcePaths());
-      assertEquals(List.of("/pet/:petId"), getById.getResourcePaths());
+      assertEquals(Set.of("/pet/findByStatus"), findByStatus.getResourcePaths());
+      assertEquals(Set.of("/pet/:petId"), getById.getResourcePaths());
    }
 
    @Test
@@ -440,6 +440,10 @@ class OpenCollectionImporterTest {
       assertEquals("404", notFound.getStatus());
       assertEquals("", notFound.getContent());
       assertEquals("application/json", notFound.getMediaType());
+
+      // Each operation with examples gets its path, verbatim, as resource path: '/pet/2' reaches 'GET /pet/:petId'.
+      assertEquals(Set.of("/pet/:petId"), getById.getResourcePaths());
+      assertEquals(Set.of("/pet"), addPet.getResourcePaths());
    }
 
    @ParameterizedTest
