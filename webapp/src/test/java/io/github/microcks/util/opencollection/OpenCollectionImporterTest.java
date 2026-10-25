@@ -455,6 +455,17 @@ class OpenCollectionImporterTest {
       assertEquals(Set.of("/pet"), addPet.getResourcePaths());
    }
 
+   @Test
+   void testIncompleteExamplesAreCompletedOrSkipped() {
+      OpenCollectionImporter importer = importerFor("examples-incomplete.yml");
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+
+      List<Response> responses = responsesOf(importer, service, service.getOperations().get(0));
+
+      assertEquals(List.of("Find pet by ID 1", "get-1", "Find pet by ID 3"),
+            responses.stream().map(Response::getName).toList());
+   }
+
    @ParameterizedTest
    @CsvSource({ "json,application/json", "xml,application/xml", "text,text/plain", "html,text/html",
          "binary,application/octet-stream" })
