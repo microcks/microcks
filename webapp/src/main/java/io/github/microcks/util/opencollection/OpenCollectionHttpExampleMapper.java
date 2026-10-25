@@ -38,6 +38,9 @@ final class OpenCollectionHttpExampleMapper {
 
    private static final String CONTENT_TYPE_HEADER = "Content-Type";
 
+   /** The status of an example response that declares none. */
+   private static final String DEFAULT_STATUS = "200";
+
    /** The media type of each OpenCollection <code>body.type</code>, used when there is no Content-Type header. */
    private static final Map<String, String> MEDIA_TYPES_BY_BODY_TYPE = Map.of("json", "application/json", "xml",
          "application/xml", "text", "text/plain", "html", "text/html", "binary", "application/octet-stream");
@@ -82,7 +85,7 @@ final class OpenCollectionHttpExampleMapper {
    private static Response responseOf(String name, JsonNode exampleResponse) {
       Response response = new Response();
       response.setName(name);
-      response.setStatus(exampleResponse.path("status").asText());
+      response.setStatus(exampleResponse.path("status").asText(DEFAULT_STATUS));
       response.setContent(exampleResponse.path("body").path("data").textValue());
       response.setHeaders(headersOf(exampleResponse.path("headers")));
       response.setMediaType(contentTypeOf(response.getHeaders())
