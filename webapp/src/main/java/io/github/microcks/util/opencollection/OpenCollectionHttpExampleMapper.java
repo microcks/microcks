@@ -46,9 +46,13 @@ final class OpenCollectionHttpExampleMapper {
       // Private constructor to hide the implicit one as it's a utility class.
    }
 
-   /** Build the request/response pair of one example: both sides are named after the example. */
-   static Exchange exchangeOf(JsonNode example) {
-      String name = example.path("name").asText();
+   /**
+    * Build the request/response pair of one example: both sides are named after the example.
+    * @param example     The examples entry of an http item
+    * @param defaultName The name to use when the example has none
+    */
+   static Exchange exchangeOf(JsonNode example, String defaultName) {
+      String name = example.path("name").asText(defaultName);
       return new RequestResponsePair(requestOf(name, example.path("request")),
             responseOf(name, example.path("response")));
    }

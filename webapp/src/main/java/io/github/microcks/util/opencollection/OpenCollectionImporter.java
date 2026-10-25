@@ -176,11 +176,18 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
     */
    private static List<Exchange> exchangesOfExamples(JsonNode item, Operation operation) {
       List<Exchange> exchanges = new ArrayList<>();
-      for (JsonNode example : item.path("examples")) {
+      JsonNode examples = item.path("examples");
+      for (int index = 0; index < examples.size(); index++) {
          operation.addResourcePath(pathOf(operation));
-         exchanges.add(OpenCollectionHttpExampleMapper.exchangeOf(example));
+         exchanges
+               .add(OpenCollectionHttpExampleMapper.exchangeOf(examples.get(index), defaultExampleName(item, index)));
       }
       return exchanges;
+   }
+
+   /** The name of an example without name: the item name then the 1-based position of the example in the item. */
+   private static String defaultExampleName(JsonNode item, int index) {
+      return item.path("info").path("name").asText() + " " + (index + 1);
    }
 
    /** The path of an operation, kept verbatim: its name is its method, a space, then its path (ADR-001). */
