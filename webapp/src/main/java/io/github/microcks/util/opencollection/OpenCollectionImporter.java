@@ -165,18 +165,27 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
          throws MockRepositoryImportException {
       List<Exchange> exchanges = new ArrayList<>();
       for (JsonNode item : httpItemsByOperation.getOrDefault(operation.getName(), List.of())) {
-         exchanges.addAll(exchangesOfExamples(item));
+         exchanges.addAll(exchangesOfExamples(item, operation));
       }
       return exchanges;
    }
 
-   /** Turn every <code>examples</code> entry of an http item into an exchange, in document order. */
-   private static List<Exchange> exchangesOfExamples(JsonNode item) {
+   /**
+    * Turn every <code>examples</code> entry of an http item into an exchange, in document order. An operation with
+    * examples gets its path as resource path, so that a concrete path like '/pet/2' reaches 'GET /pet/:petId'.
+    */
+   private static List<Exchange> exchangesOfExamples(JsonNode item, Operation operation) {
       List<Exchange> exchanges = new ArrayList<>();
       for (JsonNode example : item.path("examples")) {
+         operation.addResourcePath(pathOf(operation));
          exchanges.add(OpenCollectionHttpExampleMapper.exchangeOf(example));
       }
       return exchanges;
+   }
+
+   /** The path of an operation, kept verbatim: its name is its method, a space, then its path (ADR-001). */
+   private static String pathOf(Operation operation) {
+      return operation.getName().substring(operation.getMethod().length() + 1);
    }
 
    private void checkSpecVersion() throws MockRepositoryImportException {
