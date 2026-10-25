@@ -445,6 +445,7 @@ class OpenCollectionImporterTest {
 
       // Request side: example headers, params and raw body, kept as written.
       Request getTwo = requestsOf(importer, service, getById).get(0);
+      assertEquals("get-2", getTwo.getName());
       assertEquals(Map.of("Accept", Set.of("application/json")), headersOf(getTwo));
       assertEquals(List.of("petId=2"),
             getTwo.getQueryParameters().stream().map(param -> param.getName() + "=" + param.getValue()).toList());

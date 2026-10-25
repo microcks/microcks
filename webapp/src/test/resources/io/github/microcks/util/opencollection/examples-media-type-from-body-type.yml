@@ -14,6 +14,10 @@ items:
       - name: json
         response:
           status: 200
+          # Another header than Content-Type must not give the media type.
+          headers:
+            - name: X-Rate-Limit
+              value: "10"
           body:
             type: json
             data: ""
