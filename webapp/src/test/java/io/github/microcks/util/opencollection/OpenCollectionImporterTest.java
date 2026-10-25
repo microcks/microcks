@@ -16,6 +16,7 @@
 package io.github.microcks.util.opencollection;
 
 import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
@@ -44,7 +45,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -424,6 +428,14 @@ class OpenCollectionImporterTest {
       assertEquals(content, responses.get(0).getContent());
    }
 
+   @Test
+   void testResponseHeadersAreTheExampleHeaders() {
+      List<Response> responses = responsesOf("example-headers.yml");
+
+      assertEquals(Map.of("X-Rate-Limit", Set.of("10"), "X-Request-Id", Set.of("abc-123")),
+            headersOf(responses.get(0)));
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
@@ -435,6 +447,13 @@ class OpenCollectionImporterTest {
       List<Exchange> exchanges = assertDoesNotThrow(
             () -> importer.getMessageDefinitions(service, service.getOperations().get(0)));
       return exchanges.stream().map(exchange -> ((RequestResponsePair) exchange).getResponse()).toList();
+   }
+
+   private static Map<String, Set<String>> headersOf(Response response) {
+      if (response.getHeaders() == null) {
+         return Map.of();
+      }
+      return response.getHeaders().stream().collect(Collectors.toMap(Header::getName, Header::getValues));
    }
 
    private static List<String> operationNamesOf(String fixture) {
