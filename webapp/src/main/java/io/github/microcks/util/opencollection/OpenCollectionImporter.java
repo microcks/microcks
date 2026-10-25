@@ -187,18 +187,33 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       return exchanges;
    }
 
-   /** The exchange of one example, or none when its name is already used by another example of the operation. */
+   /** The exchange of one example, or none when the example is skipped (see {@link #isSkipped}). */
    private static Optional<Exchange> exchangeOfExample(JsonNode item, int index, Operation operation,
          Set<String> exampleNames) {
       JsonNode example = item.path("examples").get(index);
       String name = example.path("name").asText(defaultExampleName(item, index));
-      if (!exampleNames.add(name)) {
-         log.warn("Example '{}' of operation '{}' is skipped: its name is already used in the operation", name,
-               operation.getName());
+      if (isSkipped(example, name, operation, exampleNames)) {
          return Optional.empty();
       }
       operation.addResourcePath(pathOf(operation));
       return Optional.of(OpenCollectionHttpExampleMapper.exchangeOf(example, name));
+   }
+
+   /**
+    * Whether an example cannot be served, logging why: it has no response, or its name is already used by another
+    * example of the operation. A served example name is recorded in <code>exampleNames</code>.
+    */
+   private static boolean isSkipped(JsonNode example, String name, Operation operation, Set<String> exampleNames) {
+      if (!example.has("response")) {
+         log.warn("Example '{}' of operation '{}' is skipped: it has no response", name, operation.getName());
+         return true;
+      }
+      if (!exampleNames.add(name)) {
+         log.warn("Example '{}' of operation '{}' is skipped: its name is already used in the operation", name,
+               operation.getName());
+         return true;
+      }
+      return false;
    }
 
    /** The name of an example without name: the item name then the 1-based position of the example in the item. */
