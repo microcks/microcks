@@ -115,6 +115,9 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    /** The collection text exactly as uploaded: it is stored as the contract and never re-serialised. */
    private String collectionContent;
 
+   /** The http items found while collecting operations, by operation name: they hold the examples of each one. */
+   private final Map<String, List<JsonNode>> httpItemsByOperation = new LinkedHashMap<>();
+
    /**
     * Build a new importer.
     * @param collectionFilePath The path to OpenCollection file
@@ -161,20 +164,14 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
       List<Exchange> exchanges = new ArrayList<>();
-      JsonNode items = collection.path("items");
-      for (int index = 0; index < items.size(); index++) {
-         JsonNode item = items.get(index);
-         exchanges.addAll(exchangesOfExamples(item, itemLocation("", item, index), operation));
+      for (JsonNode item : httpItemsByOperation.getOrDefault(operation.getName(), List.of())) {
+         exchanges.addAll(exchangesOfExamples(item));
       }
       return exchanges;
    }
 
-   /** Turn every <code>examples</code> entry of the http item of an operation into an exchange, in document order. */
-   private static List<Exchange> exchangesOfExamples(JsonNode item, String location, Operation operation)
-         throws MockRepositoryImportException {
-      if (!isHttpItemOf(item, location, operation)) {
-         return List.of();
-      }
+   /** Turn every <code>examples</code> entry of an http item into an exchange, in document order. */
+   private static List<Exchange> exchangesOfExamples(JsonNode item) {
       List<Exchange> exchanges = new ArrayList<>();
       for (JsonNode example : item.path("examples")) {
          exchanges.add(OpenCollectionHttpExampleMapper.exchangeOf(example));
@@ -248,7 +245,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       }
       switch (kindOf(item)) {
          case FOLDER -> collectOperations(item.path("items"), location, operations);
-         case HTTP -> addHttpOperation(item.path("http"), location, operations);
+         case HTTP -> addHttpOperation(item, location, operations);
          case UNSUPPORTED ->
             log.warn("Item '{}' of type '{}' is not supported yet, skipping", location, declaredTypeOf(item));
       }
@@ -289,19 +286,15 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       return item.has("items") ? ItemKind.FOLDER : ItemKind.UNSUPPORTED;
    }
 
-   private void addHttpOperation(JsonNode http, String location, Map<String, Operation> operations)
+   private void addHttpOperation(JsonNode item, String location, Map<String, Operation> operations)
          throws MockRepositoryImportException {
+      JsonNode http = item.path("http");
       String name = operationNameOf(http, location);
+      httpItemsByOperation.computeIfAbsent(name, operationName -> new ArrayList<>()).add(item);
       Operation operation = new Operation();
       operation.setName(name);
       operation.setMethod(methodOf(http, location));
       operations.putIfAbsent(name, operation);
-   }
-
-   /** Whether an item is the http item an operation was built from: same <code>METHOD path</code> name. */
-   private static boolean isHttpItemOf(JsonNode item, String location, Operation operation)
-         throws MockRepositoryImportException {
-      return kindOf(item) == ItemKind.HTTP && operation.getName().equals(operationNameOf(item.path("http"), location));
    }
 
    /** The operation name of an http item: its method then its path, kept verbatim (ADR-001). */
