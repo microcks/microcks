@@ -32,14 +32,19 @@ items:
           body:
             type: json
             data: ""
+  # Examples of an http item nested in a folder.
   - info:
-      name: Add a new pet
-      type: http
-    http:
-      method: POST
-      url: "{{baseUrl}}/pet"
-    examples:
-      - name: pet created
-        response:
-          status: 201
+      name: pet
+      type: folder
+    items:
+      - info:
+          name: Add a new pet
+          type: http
+        http:
+          method: POST
+          url: "{{baseUrl}}/pet"
+        examples:
+          - name: pet created
+            response:
+              status: 201
 bundled: true
