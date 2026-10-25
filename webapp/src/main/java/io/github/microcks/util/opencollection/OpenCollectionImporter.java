@@ -34,10 +34,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * An implementation of MockRepositoryImporter that deals with OpenCollection specification files.
@@ -164,8 +167,9 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
       List<Exchange> exchanges = new ArrayList<>();
+      Set<String> exampleNames = new HashSet<>();
       for (JsonNode item : httpItemsByOperation.getOrDefault(operation.getName(), List.of())) {
-         exchanges.addAll(exchangesOfExamples(item, operation));
+         exchanges.addAll(exchangesOfExamples(item, operation, exampleNames));
       }
       return exchanges;
    }
@@ -174,15 +178,27 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
     * Turn every <code>examples</code> entry of an http item into an exchange, in document order. An operation with
     * examples gets its path as resource path, so that a concrete path like '/pet/2' reaches 'GET /pet/:petId'.
     */
-   private static List<Exchange> exchangesOfExamples(JsonNode item, Operation operation) {
+   private static List<Exchange> exchangesOfExamples(JsonNode item, Operation operation, Set<String> exampleNames) {
       List<Exchange> exchanges = new ArrayList<>();
       JsonNode examples = item.path("examples");
       for (int index = 0; index < examples.size(); index++) {
-         operation.addResourcePath(pathOf(operation));
-         exchanges
-               .add(OpenCollectionHttpExampleMapper.exchangeOf(examples.get(index), defaultExampleName(item, index)));
+         exchangeOfExample(item, index, operation, exampleNames).ifPresent(exchanges::add);
       }
       return exchanges;
+   }
+
+   /** The exchange of one example, or none when its name is already used by another example of the operation. */
+   private static Optional<Exchange> exchangeOfExample(JsonNode item, int index, Operation operation,
+         Set<String> exampleNames) {
+      JsonNode example = item.path("examples").get(index);
+      String name = example.path("name").asText(defaultExampleName(item, index));
+      if (!exampleNames.add(name)) {
+         log.warn("Example '{}' of operation '{}' is skipped: its name is already used in the operation", name,
+               operation.getName());
+         return Optional.empty();
+      }
+      operation.addResourcePath(pathOf(operation));
+      return Optional.of(OpenCollectionHttpExampleMapper.exchangeOf(example, name));
    }
 
    /** The name of an example without name: the item name then the 1-based position of the example in the item. */
