@@ -91,7 +91,7 @@ class ProducerManagerTest {
       producerManager = new ProducerManager(mockRepository, schemaRegistry,
             new ProducerManager.ProducerDependencies(kafkaProducerManager, mqttProducerManager, natsProducerManager,
                   amqpProducerManager, googlePubSubProducerManager, amazonSQSProducerManager, amazonSNSProducerManager,
-                  null),
+                  null, null),
             null);
 
       // Set the supportedBindings field via reflection (normally injected by Quarkus).

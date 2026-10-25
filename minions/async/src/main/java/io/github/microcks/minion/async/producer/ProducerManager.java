@@ -82,6 +82,7 @@ public class ProducerManager {
    final AmazonSQSProducerManager amazonSQSProducerManager;
    final AmazonSNSProducerManager amazonSNSProducerManager;
    final IBMMQProducerManager ibmmqProducerManager;
+   final PulsarProducerManager pulsarProducerManager;
 
    @SuppressWarnings("java:S6813")
    final WebSocketProducerManager wsProducerManager;
@@ -102,12 +103,14 @@ public class ProducerManager {
       final AmazonSQSProducerManager amazonSQSProducerManager;
       final AmazonSNSProducerManager amazonSNSProducerManager;
       final IBMMQProducerManager ibmmqProducerManager;
+      final PulsarProducerManager pulsarProducerManager;
 
       @Inject
       public ProducerDependencies(KafkaProducerManager kafkaProducerManager, MQTTProducerManager mqttProducerManager,
             NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
             GooglePubSubProducerManager googlePubSubProducerManager, AmazonSQSProducerManager amazonSQSProducerManager,
-            AmazonSNSProducerManager amazonSNSProducerManager, IBMMQProducerManager ibmmqProducerManager) {
+            AmazonSNSProducerManager amazonSNSProducerManager, IBMMQProducerManager ibmmqProducerManager,
+            PulsarProducerManager pulsarProducerManager) {
          this.kafkaProducerManager = kafkaProducerManager;
          this.mqttProducerManager = mqttProducerManager;
          this.natsProducerManager = natsProducerManager;
@@ -116,6 +119,7 @@ public class ProducerManager {
          this.amazonSQSProducerManager = amazonSQSProducerManager;
          this.amazonSNSProducerManager = amazonSNSProducerManager;
          this.ibmmqProducerManager = ibmmqProducerManager;
+         this.pulsarProducerManager = pulsarProducerManager;
       }
    }
 
@@ -139,6 +143,7 @@ public class ProducerManager {
       this.amazonSQSProducerManager = dependencies.amazonSQSProducerManager;
       this.amazonSNSProducerManager = dependencies.amazonSNSProducerManager;
       this.ibmmqProducerManager = dependencies.ibmmqProducerManager;
+      this.pulsarProducerManager = dependencies.pulsarProducerManager;
       this.wsProducerManager = wsProducerManager;
    }
 
@@ -186,6 +191,9 @@ public class ProducerManager {
                   case IBMMQ:
                      Binding ibmmqBindingDef = definition.getOperation().getBindings().get(binding);
                      produceIBMMQMockMessages(definition, ibmmqBindingDef);
+                     break;
+                  case PULSAR:
+                     producePulsarMockMessages(definition);
                      break;
                   default:
                      break;
@@ -269,6 +277,10 @@ public class ProducerManager {
          case IBMMQ:
             Binding ibmmqBindingDef = definition.getOperation().getBindings().get(binding);
             produceIBMMQMockMessage(definition, ibmmqBindingDef, eventMessage,
+                  renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
+            break;
+         case PULSAR:
+            producePulsarMockMessage(definition, eventMessage,
                   renderEventMessageContent(eventMessage, command.getRequest(), command.getResponse()));
             break;
          default:
@@ -412,6 +424,44 @@ public class ProducerManager {
       try {
          logger.debug("Converting message to Avro bytes array");
          natsProducerManager.publishMessage(topic, AvroUtil.jsonToAvro(message, schema), headers);
+      } catch (Exception e) {
+         logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
+      }
+   }
+
+   /** Take care publishing Pulsar mock messages for definition. */
+   protected void producePulsarMockMessages(AsyncMockDefinition definition) {
+      for (EventMessage eventMessage : getPureEventMessages(definition)) {
+         producePulsarMockMessage(definition, eventMessage, renderEventMessageContent(eventMessage));
+      }
+   }
+
+   /** Take care publishing Pulsar message for definition. */
+   protected void producePulsarMockMessage(AsyncMockDefinition definition, EventMessage eventMessage,
+         String renderedContent) {
+      String topic = pulsarProducerManager.getTopicName(definition, eventMessage);
+      Map<String, String> properties = pulsarProducerManager
+            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders());
+
+      // Check if Avro binary is expected, we should convert to bytes.
+      if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
+         producePulsarAvroMockMessage(definition, topic, renderedContent, properties);
+      } else {
+         pulsarProducerManager.publishMessage(topic, renderedContent, properties);
+      }
+   }
+
+   /** Take care publishing Pulsar Avro mock message for definition. */
+   protected void producePulsarAvroMockMessage(AsyncMockDefinition definition, String topic, String message,
+         Map<String, String> properties) {
+      Schema schema = retrieveAvroSchema(definition);
+      if (schema == null) {
+         return;
+      }
+
+      try {
+         logger.debug("Converting message to Avro bytes array");
+         pulsarProducerManager.publishMessage(topic, AvroUtil.jsonToAvro(message, schema), properties);
       } catch (Exception e) {
          logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(), e);
       }
