@@ -1,0 +1,19 @@
+opencollection: 1.0.0
+info:
+  name: Petstore API
+  version: "1.0"
+items:
+  - info:
+      name: Find pet by ID
+      type: http
+    http:
+      method: GET
+      url: "{{baseUrl}}/pet/:petId"
+    examples:
+      - name: get-2
+        response:
+          status: 200
+          body:
+            type: json
+            data: ""
+bundled: true

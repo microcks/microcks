@@ -415,6 +415,15 @@ class OpenCollectionImporterTest {
       assertEquals("201", responses.get(0).getStatus());
    }
 
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = { "example-body-json.yml|{\"id\":2,\"name\":\"cat\"}",
+         "example-body-empty.yml|''" })
+   void testResponseContentIsTheExampleBodyAsWritten(String fixture, String content) {
+      List<Response> responses = responsesOf(fixture);
+
+      assertEquals(content, responses.get(0).getContent());
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
