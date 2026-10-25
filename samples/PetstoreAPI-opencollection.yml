@@ -17,6 +17,28 @@ items:
             - name: status
               value: available
               type: query
+        examples:
+          - name: available response
+            request:
+              url: "{{baseUrl}}/pet/findByStatus?status=available"
+              method: GET
+              params:
+                - name: status
+                  value: available
+                  type: query
+            response:
+              status: 200
+              statusText: OK
+              headers:
+                - name: Content-Type
+                  value: application/json
+              body:
+                type: json
+                data: |-
+                  [
+                    {"id": 190192062, "category": {"id": 0, "name": "string"}, "name": "doggie", "photoUrls": ["string"], "tags": [{"id": 0, "name": "string"}], "status": "available"},
+                    {"id": 190192063, "category": {"id": 0, "name": "string"}, "name": "doggie", "photoUrls": ["string"], "tags": [{"id": 0, "name": "string"}], "status": "available"}
+                  ]
       - info:
           name: Get pet by id
           type: http
@@ -27,4 +49,39 @@ items:
             - name: petId
               value: "1"
               type: path
+        examples:
+          - name: get-2
+            request:
+              url: "{{baseUrl}}/pet/:petId"
+              method: GET
+              params:
+                - name: petId
+                  value: "2"
+                  type: path
+            response:
+              status: 200
+              statusText: OK
+              headers:
+                - name: Content-Type
+                  value: application/json
+              body:
+                type: json
+                data: '{"id":2,"category":{"id":1,"name":"Animal"},"name":"cat","photoUrls":["string"],"tags":[{"id":1,"name":"domestic"}],"status":"available"}'
+          - name: get-1
+            request:
+              url: "{{baseUrl}}/pet/:petId"
+              method: GET
+              params:
+                - name: petId
+                  value: "1"
+                  type: path
+            response:
+              status: 404
+              statusText: Not Found
+              headers:
+                - name: Content-Type
+                  value: application/json
+              body:
+                type: json
+                data: ""
 bundled: true

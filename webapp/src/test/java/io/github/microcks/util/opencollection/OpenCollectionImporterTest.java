@@ -17,8 +17,10 @@ package io.github.microcks.util.opencollection;
 
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.MockRepositoryImportException;
@@ -86,11 +88,29 @@ class OpenCollectionImporterTest {
       assertEquals("Petstore API-1.0.yaml", resources.get(0).getName());
       assertEquals(ResourceType.OPEN_COLLECTION, resources.get(0).getType());
 
-      // Check that no example is provided for any operation.
-      for (Operation operation : service.getOperations()) {
-         List<Exchange> exchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, operation));
-         assertEquals(0, exchanges.size());
-      }
+      // Check that examples are provided as request/response pairs, in document order.
+      List<Exchange> findByStatusExchanges = assertDoesNotThrow(
+            () -> importer.getMessageDefinitions(service, findByStatus));
+      assertEquals(1, findByStatusExchanges.size());
+      Response available = ((RequestResponsePair) findByStatusExchanges.get(0)).getResponse();
+      assertEquals("available response", available.getName());
+      assertEquals("200", available.getStatus());
+      assertEquals("application/json", available.getMediaType());
+      assertTrue(available.getContent().contains("\"id\": 190192062"));
+
+      List<Exchange> getByIdExchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, getById));
+      assertEquals(2, getByIdExchanges.size());
+      Response found = ((RequestResponsePair) getByIdExchanges.get(0)).getResponse();
+      assertEquals("get-2", found.getName());
+      assertEquals("200", found.getStatus());
+      Response notFound = ((RequestResponsePair) getByIdExchanges.get(1)).getResponse();
+      assertEquals("get-1", notFound.getName());
+      assertEquals("404", notFound.getStatus());
+      assertEquals("", notFound.getContent());
+
+      // Check that operations get their path, verbatim, as resource path.
+      assertEquals(List.of("/pet/findByStatus"), findByStatus.getResourcePaths());
+      assertEquals(List.of("/pet/:petId"), getById.getResourcePaths());
    }
 
    @Test
@@ -386,9 +406,26 @@ class OpenCollectionImporterTest {
             service.getOperations().stream().map(Operation::getName).toList());
    }
 
+   @Test
+   void testSingleExampleIsImported() {
+      List<Response> responses = responsesOf("example-single.yml");
+
+      assertEquals(1, responses.size());
+      assertEquals("pet created", responses.get(0).getName());
+      assertEquals("201", responses.get(0).getStatus());
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
+   }
+
+   private static List<Response> responsesOf(String fixture) {
+      OpenCollectionImporter importer = importerFor(fixture);
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+      List<Exchange> exchanges = assertDoesNotThrow(
+            () -> importer.getMessageDefinitions(service, service.getOperations().get(0)));
+      return exchanges.stream().map(exchange -> ((RequestResponsePair) exchange).getResponse()).toList();
    }
 
    private static List<String> operationNamesOf(String fixture) {
