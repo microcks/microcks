@@ -17,8 +17,11 @@ package io.github.microcks.util.opencollection;
 
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.MockRepositoryImportException;
@@ -160,7 +163,31 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    @Override
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
-      return List.of();
+      List<Exchange> exchanges = new ArrayList<>();
+      for (JsonNode item : collection.path("items")) {
+         exchanges.addAll(exchangesOfExamples(item));
+      }
+      return exchanges;
+   }
+
+   /** Turn every <code>examples</code> entry of an http item into an exchange, in document order. */
+   private static List<Exchange> exchangesOfExamples(JsonNode item) {
+      List<Exchange> exchanges = new ArrayList<>();
+      for (JsonNode example : item.path("examples")) {
+         exchanges.add(exchangeOf(example));
+      }
+      return exchanges;
+   }
+
+   /** Build the request/response pair of one example: both sides are named after the example. */
+   private static Exchange exchangeOf(JsonNode example) {
+      String name = example.path("name").asText();
+      Request request = new Request();
+      request.setName(name);
+      Response response = new Response();
+      response.setName(name);
+      response.setStatus(example.path("response").path("status").asText());
+      return new RequestResponsePair(request, response);
    }
 
    private void checkSpecVersion() throws MockRepositoryImportException {
