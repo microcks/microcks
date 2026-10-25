@@ -1,0 +1,44 @@
+opencollection: 1.0.0
+info:
+  name: Petstore API
+  version: "1.0"
+items:
+  - info:
+      name: Find pet by ID
+      type: http
+    http:
+      method: GET
+      url: "{{baseUrl}}/pet/:petId"
+    # No Content-Type header: each example is named after its body type.
+    examples:
+      - name: json
+        response:
+          status: 200
+          body:
+            type: json
+            data: ""
+      - name: xml
+        response:
+          status: 200
+          body:
+            type: xml
+            data: ""
+      - name: text
+        response:
+          status: 200
+          body:
+            type: text
+            data: ""
+      - name: html
+        response:
+          status: 200
+          body:
+            type: html
+            data: ""
+      - name: binary
+        response:
+          status: 200
+          body:
+            type: binary
+            data: ""
+bundled: true

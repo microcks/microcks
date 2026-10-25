@@ -436,6 +436,19 @@ class OpenCollectionImporterTest {
       assertEquals("application/json", notFound.getMediaType());
    }
 
+   @ParameterizedTest
+   @CsvSource({ "json,application/json", "xml,application/xml", "text,text/plain", "html,text/html",
+         "binary,application/octet-stream" })
+   void testMediaTypeComesFromBodyTypeWithoutContentTypeHeader(String bodyType, String mediaType) {
+      OpenCollectionImporter importer = importerFor("examples-media-type-from-body-type.yml");
+      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
+
+      Response response = responsesOf(importer, service, service.getOperations().get(0)).stream()
+            .filter(example -> bodyType.equals(example.getName())).findFirst().orElseThrow();
+
+      assertEquals(mediaType, response.getMediaType());
+   }
+
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
