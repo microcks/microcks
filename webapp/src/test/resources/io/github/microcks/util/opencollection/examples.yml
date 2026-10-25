@@ -32,4 +32,14 @@ items:
           body:
             type: json
             data: ""
+  - info:
+      name: Add a new pet
+      type: http
+    http:
+      method: POST
+      url: "{{baseUrl}}/pet"
+    examples:
+      - name: pet created
+        response:
+          status: 201
 bundled: true

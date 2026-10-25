@@ -414,12 +414,18 @@ class OpenCollectionImporterTest {
    void testExamplesAreImportedAsRequestResponsePairs() {
       OpenCollectionImporter importer = importerFor("examples.yml");
 
-      // Import phase: the http item gives its operation.
+      // Import phase: each http item gives its operation.
       Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
       Operation getById = service.getOperations().get(0);
       assertEquals("GET /pet/:petId", getById.getName());
+      Operation addPet = service.getOperations().get(1);
+      assertEquals("POST /pet", addPet.getName());
 
-      // Examples phase: one request/response pair per example, in document order.
+      // Examples phase: each operation gets only its own examples, in document order.
+      List<Response> addPetResponses = responsesOf(importer, service, addPet);
+      assertEquals(List.of("pet created"), addPetResponses.stream().map(Response::getName).toList());
+      assertEquals("201", addPetResponses.get(0).getStatus());
+
       List<Response> responses = responsesOf(importer, service, getById);
       assertEquals(List.of("get-2", "get-1"), responses.stream().map(Response::getName).toList());
 
