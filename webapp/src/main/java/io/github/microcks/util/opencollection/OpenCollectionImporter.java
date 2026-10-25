@@ -161,14 +161,20 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
       List<Exchange> exchanges = new ArrayList<>();
-      for (JsonNode item : collection.path("items")) {
-         exchanges.addAll(exchangesOfExamples(item));
+      JsonNode items = collection.path("items");
+      for (int index = 0; index < items.size(); index++) {
+         JsonNode item = items.get(index);
+         exchanges.addAll(exchangesOfExamples(item, itemLocation("", item, index), operation));
       }
       return exchanges;
    }
 
-   /** Turn every <code>examples</code> entry of an http item into an exchange, in document order. */
-   private static List<Exchange> exchangesOfExamples(JsonNode item) {
+   /** Turn every <code>examples</code> entry of the http item of an operation into an exchange, in document order. */
+   private static List<Exchange> exchangesOfExamples(JsonNode item, String location, Operation operation)
+         throws MockRepositoryImportException {
+      if (!isHttpItemOf(item, location, operation)) {
+         return List.of();
+      }
       List<Exchange> exchanges = new ArrayList<>();
       for (JsonNode example : item.path("examples")) {
          exchanges.add(OpenCollectionHttpExampleMapper.exchangeOf(example));
@@ -285,12 +291,22 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
 
    private void addHttpOperation(JsonNode http, String location, Map<String, Operation> operations)
          throws MockRepositoryImportException {
-      String method = methodOf(http, location);
-      String name = method + " " + pathOf(urlOf(http, location), location);
+      String name = operationNameOf(http, location);
       Operation operation = new Operation();
       operation.setName(name);
-      operation.setMethod(method);
+      operation.setMethod(methodOf(http, location));
       operations.putIfAbsent(name, operation);
+   }
+
+   /** Whether an item is the http item an operation was built from: same <code>METHOD path</code> name. */
+   private static boolean isHttpItemOf(JsonNode item, String location, Operation operation)
+         throws MockRepositoryImportException {
+      return kindOf(item) == ItemKind.HTTP && operation.getName().equals(operationNameOf(item.path("http"), location));
+   }
+
+   /** The operation name of an http item: its method then its path, kept verbatim (ADR-001). */
+   private static String operationNameOf(JsonNode http, String location) throws MockRepositoryImportException {
+      return methodOf(http, location) + " " + pathOf(urlOf(http, location), location);
    }
 
    private static String pathOf(String url, String location) throws MockRepositoryImportException {
