@@ -29,17 +29,25 @@ public class TestOptionals {
    private List<String> filteredOperations;
    private OperationsHeaders operationsHeaders;
    private OAuth2ClientContext oAuth2Context;
+   private ResponseExampleComparisonMode responseExampleComparison;
 
    public TestOptionals() {
    }
 
    public TestOptionals(SecretRef secretRef, Long timeout, List<String> filteredOperations,
          OperationsHeaders operationsHeaders, OAuth2ClientContext oAuth2Context) {
+      this(secretRef, timeout, filteredOperations, operationsHeaders, oAuth2Context, null);
+   }
+
+   public TestOptionals(SecretRef secretRef, Long timeout, List<String> filteredOperations,
+         OperationsHeaders operationsHeaders, OAuth2ClientContext oAuth2Context,
+         ResponseExampleComparisonMode responseExampleComparison) {
       this.secretRef = secretRef;
       this.timeout = timeout;
       this.filteredOperations = filteredOperations;
       this.operationsHeaders = operationsHeaders;
       this.oAuth2Context = oAuth2Context;
+      this.responseExampleComparison = responseExampleComparison;
    }
 
    public SecretRef getSecretRef() {
@@ -80,5 +88,13 @@ public class TestOptionals {
 
    public void setOAuth2Context(OAuth2ClientContext oAuth2Context) {
       this.oAuth2Context = oAuth2Context;
+   }
+
+   public ResponseExampleComparisonMode getResponseExampleComparison() {
+      return responseExampleComparison;
+   }
+
+   public void setResponseExampleComparison(ResponseExampleComparisonMode responseExampleComparison) {
+      this.responseExampleComparison = responseExampleComparison;
    }
 }
