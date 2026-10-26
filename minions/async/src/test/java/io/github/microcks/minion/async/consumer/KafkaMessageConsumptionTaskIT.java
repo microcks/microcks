@@ -39,6 +39,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -99,6 +100,8 @@ class KafkaMessageConsumptionTaskIT {
             "kafka://%s/%s".formatted(kafkaContainer.getBootstrapServers().replace("PLAINTEXT://", ""), TOPIC_NAME));
 
       KafkaMessageConsumptionTask kafkaMessageConsumptionTask = new KafkaMessageConsumptionTask(asyncTestSpecification);
+      List<io.github.microcks.domain.TestCasePhase> reportedPhases = Collections.synchronizedList(new ArrayList<>());
+      kafkaMessageConsumptionTask.setPhaseListener(reportedPhases::add);
 
       // Act.
       ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -121,6 +124,9 @@ class KafkaMessageConsumptionTaskIT {
       ConsumedMessage message = messages.get(0);
       Assertions.assertEquals(TEXT_MESSAGE_TEMPLATE.formatted(0),
             new String(message.getPayload(), StandardCharsets.UTF_8));
+      // The real consumer should have reported it was connected and waiting for messages once partitions got assigned.
+      Assertions.assertTrue(reportedPhases.contains(io.github.microcks.domain.TestCasePhase.WAITING_FOR_MESSAGE),
+            "The Kafka consumer should have reported the WAITING_FOR_MESSAGE phase.");
    }
 
    @Test

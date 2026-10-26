@@ -36,6 +36,7 @@ import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -110,10 +111,12 @@ class AmazonSNSMessageConsumptionTaskIT {
       asyncTestSpecification.setEndpointUrl(endpointUrl);
 
       List<ConsumedMessage> messages = null;
+      List<io.github.microcks.domain.TestCasePhase> reportedPhases = Collections.synchronizedList(new ArrayList<>());
 
       // Act.
       try (AmazonSNSMessageConsumptionTask snsConsumptionTask = new AmazonSNSMessageConsumptionTask(
             asyncTestSpecification); ExecutorService executorService = Executors.newFixedThreadPool(2);) {
+         snsConsumptionTask.setPhaseListener(reportedPhases::add);
          List<Future<List<ConsumedMessage>>> outputs = executorService
                .invokeAll(List.of(new Callable<List<ConsumedMessage>>() {
                   @Override
@@ -134,6 +137,9 @@ class AmazonSNSMessageConsumptionTaskIT {
       ConsumedMessage message = messages.getFirst();
       Assertions.assertEquals(TEXT_MESSAGE_TEMPLATE.formatted(0),
             new String(message.getPayload(), StandardCharsets.UTF_8));
+      // The real consumer should have reported it was connected and waiting for messages.
+      Assertions.assertTrue(reportedPhases.contains(io.github.microcks.domain.TestCasePhase.WAITING_FOR_MESSAGE),
+            "The SNS consumer should have reported the WAITING_FOR_MESSAGE phase.");
    }
 
    private void sendTextMessagesOnTopic(int numberOfMessages, String topicName) {
