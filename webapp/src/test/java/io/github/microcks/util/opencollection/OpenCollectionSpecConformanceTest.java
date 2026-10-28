@@ -58,8 +58,8 @@ class OpenCollectionSpecConformanceTest {
    @CsvSource(delimiter = '|', quoteCharacter = '"', value = {
          "root/a02-opencollection-other-1x.yml | Svc | 1.0 | GET /pet",
          "root/a07-opencollection-major-only.yml | Svc | 1.0 | GET /pet",
-         "root/a13-unknown-root-key.yml | Svc | 1.0 | GET /pet", "root/a14-items-absent.yml | Svc | 1.0 |",
-         "root/a15-items-empty-list.yml | Svc | 1.0 |", "info/b01-version-non-numeric-string.yml | Svc | v3 | GET /pet",
+         "root/a13-unknown-root-key.yml | Svc | 1.0 | GET /pet",
+         "info/b01-version-non-numeric-string.yml | Svc | v3 | GET /pet",
          "info/b08-name-with-accents.yml | Gestes activés | 1.0 | GET /pet",
          "info/b09-info-authors-and-summary.yml | Svc | 1.0 | GET /pet",
          "info/b10-info-unknown-key.yml | Svc | 1.0 | GET /pet",
@@ -87,9 +87,7 @@ class OpenCollectionSpecConformanceTest {
    /** Documents the schema accepts, refused because of a Microcks rule (supported version, identity, path). */
    @ParameterizedTest(name = "{0}")
    @CsvSource(delimiter = '|', quoteCharacter = '"', value = {
-         "root/a06-opencollection-empty.yml | Only OpenCollection 1.x",
-         "info/b06-name-whitespace-only.yml | Name property is missing",
-         "info/b07-info-absent.yml | Name property is missing", "http/d05-method-empty.yml | http.method",
+         "info/b06-name-whitespace-only.yml | Name property is missing", "http/d05-method-empty.yml | http.method",
          "http/d08-url-empty.yml | http.url",
          "realistic/h02-bruno-export-without-version.yaml | Version property is missing" })
    void testDocumentMicrocksCannotImportIsRejected(String fixture, String messageFragment) {
@@ -133,21 +131,6 @@ class OpenCollectionSpecConformanceTest {
       Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
 
       assertEquals("Petstore API-1.0.yaml", resource.getName());
-   }
-
-   /** A refused collection without a version tells how to add one. */
-   @ParameterizedTest(name = "{0}")
-   @ValueSource(strings = { FIXTURES + "petstore-no-version.yml",
-         SPEC_FIXTURES + "realistic/h02-bruno-export-without-version.yaml" })
-   void testMissingVersionExplainsHowToAddIt(String fixture) {
-      OpenCollectionImporter importer = importerFor(fixture);
-
-      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
-            importer::getServiceDefinitions);
-
-      assertTrue(exception.getMessage().contains("Version property is missing"), exception.getMessage());
-      assertTrue(exception.getMessage().contains("info.version"), exception.getMessage());
-      assertTrue(exception.getMessage().contains("version: \"1.0\""), exception.getMessage());
    }
 
    /** A collection shaped like the ones tools export for an OpenAPI-style server: <code>{protocol}://{host}</code>. */

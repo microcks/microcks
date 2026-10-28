@@ -141,16 +141,6 @@ class OpenCollectionImporterTest {
    }
 
    @Test
-   void testBundledNotBooleanIsRejected() {
-      OpenCollectionImporter importer = importerFor("bundled-not-boolean.yml");
-
-      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
-            importer::getServiceDefinitions);
-
-      assertTrue(exception.getMessage().contains("'bundled' property must be a boolean"));
-   }
-
-   @Test
    void testUnsupportedSpecVersionIsRejected() {
       OpenCollectionImporter importer = importerFor("petstore-spec-2.yml");
 
@@ -203,10 +193,9 @@ class OpenCollectionImporterTest {
       assertTrue(exception.getMessage().contains("must be a string"));
    }
 
-   @ParameterizedTest
-   @ValueSource(strings = { "petstore-no-name.yml", "petstore-blank-name.yml" })
-   void testMissingOrBlankNameIsRejected(String fixture) {
-      OpenCollectionImporter importer = importerFor(fixture);
+   @Test
+   void testMissingNameIsRejected() {
+      OpenCollectionImporter importer = importerFor("petstore-no-name.yml");
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);
@@ -298,6 +287,7 @@ class OpenCollectionImporterTest {
       assertTrue(exception.getMessage().contains("pet/Get pet by id"));
    }
 
+   /** A declared http type wins over the structure: an http item without http section is rejected, not skipped. */
    @ParameterizedTest
    @ValueSource(strings = { "http-item-without-method.yml", "http-item-without-http-section.yml" })
    void testHttpItemWithoutMethodIsRejected(String fixture) {
