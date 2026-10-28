@@ -28,6 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -121,6 +122,20 @@ public abstract class AbstractBaseIT {
    protected <T> EntityExchangeResult<T> postForEntity(String uri, HttpEntity<?> entity, Class<T> responseType) {
       return restClient.post().uri(uri).headers(headers -> headers.addAll(entity.getHeaders())).body(entity.getBody())
             .exchange().expectBody(responseType).returnResult();
+   }
+
+   protected <T> EntityExchangeResult<T> getForEntity(String uri, Class<T> responseType) {
+      return restClient.get().uri(uri).exchange().expectBody(responseType).returnResult();
+   }
+
+   protected <T> EntityExchangeResult<T> exchange(String uri, HttpMethod method, HttpEntity<?> entity,
+         Class<T> responseType) {
+      HttpEntity<?> request = entity != null ? entity : HttpEntity.EMPTY;
+      RestTestClient.RequestBodySpec spec = restClient.method(method).uri(uri)
+            .headers(headers -> headers.addAll(request.getHeaders()));
+      RestTestClient.ResponseSpec response = request.getBody() == null ? spec.exchange()
+            : spec.body(request.getBody()).exchange();
+      return response.expectBody(responseType).returnResult();
    }
 
    protected <T> EntityExchangeResult<T> postForEntity(String uri, Object body, Class<T> responseType) {
