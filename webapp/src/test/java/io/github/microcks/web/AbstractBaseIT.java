@@ -18,6 +18,7 @@ package io.github.microcks.web;
 import io.github.microcks.MicrocksApplication;
 import io.github.microcks.repository.ServiceRepository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.testcontainers.mongodb.MongoDBContainer;
@@ -62,6 +64,8 @@ public abstract class AbstractBaseIT {
    @Autowired
    protected TestRestTemplate restTemplate;
 
+   protected RestTestClient restClient;
+
    @Autowired
    protected ServiceRepository serviceRepository;
 
@@ -85,6 +89,11 @@ public abstract class AbstractBaseIT {
 
    public String getServerUrl() {
       return "http://localhost:" + port;
+   }
+
+   @BeforeEach
+   void initRestClient() {
+      restClient = RestTestClient.bindToServer().baseUrl(getServerUrl()).build();
    }
 
    /** */
