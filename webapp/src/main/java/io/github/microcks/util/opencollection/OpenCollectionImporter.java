@@ -336,17 +336,19 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    private void addHttpOperation(JsonNode item, String location, Map<String, Operation> operations)
          throws MockRepositoryImportException {
       JsonNode http = item.path("http");
-      String name = operationNameOf(http, location);
+      String method = methodOf(http, location);
+      String name = operationNameOf(method, http, location);
       httpItemsByOperation.computeIfAbsent(name, operationName -> new ArrayList<>()).add(item);
       Operation operation = new Operation();
       operation.setName(name);
-      operation.setMethod(methodOf(http, location));
+      operation.setMethod(method);
       operations.putIfAbsent(name, operation);
    }
 
    /** The operation name of an http item: its method then its path, kept verbatim (ADR-001). */
-   private static String operationNameOf(JsonNode http, String location) throws MockRepositoryImportException {
-      return methodOf(http, location) + " " + pathOf(urlOf(http, location), location);
+   private static String operationNameOf(String method, JsonNode http, String location)
+         throws MockRepositoryImportException {
+      return method + " " + pathOf(urlOf(http, location), location);
    }
 
    private static String pathOf(String url, String location) throws MockRepositoryImportException {
