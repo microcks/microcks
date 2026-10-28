@@ -35,6 +35,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -115,6 +116,17 @@ public abstract class AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       log.info("Just uploaded: {}", response.getBody());
+   }
+
+   protected <T> EntityExchangeResult<T> postForEntity(String uri, HttpEntity<?> entity, Class<T> responseType) {
+      return restClient.post().uri(uri).headers(headers -> headers.addAll(entity.getHeaders())).body(entity.getBody())
+            .exchange().expectBody(responseType).returnResult();
+   }
+
+   protected void assertResponseIsOkAndContains(EntityExchangeResult<String> response, String substring) {
+      assertEquals(200, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
+      assertTrue(response.getResponseBody().contains(substring));
    }
 
    protected void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
