@@ -79,57 +79,55 @@ class OpenCollectionImporterTest {
       assertEquals("1.0", service.getVersion());
       assertEquals(ServiceType.REST, service.getType());
 
-      // Check that operations have been found, in document order and with the path kept verbatim.
-      assertEquals(2, service.getOperations().size());
+      // Check that operations have been found in folders, in document order and with the path kept verbatim.
+      assertEquals(List.of("GET /pet/findByStatus", "GET /pet/:petId", "POST /pet"),
+            service.getOperations().stream().map(Operation::getName).toList());
       Operation findByStatus = service.getOperations().get(0);
-      assertEquals("GET /pet/findByStatus", findByStatus.getName());
       assertEquals("GET", findByStatus.getMethod());
       Operation getById = service.getOperations().get(1);
-      assertEquals("GET /pet/:petId", getById.getName());
-      assertEquals("GET", getById.getMethod());
+      Operation addPet = service.getOperations().get(2);
+      assertEquals("POST", addPet.getMethod());
 
-      // Check that the collection is exposed as the only resource.
+      // Check that the collection is exposed, untouched, as the only resource.
       List<Resource> resources = assertDoesNotThrow(() -> importer.getResourceDefinitions(service));
       assertEquals(1, resources.size());
       assertEquals("Petstore API-1.0.yaml", resources.get(0).getName());
       assertEquals(ResourceType.OPEN_COLLECTION, resources.get(0).getType());
+      byte[] uploaded = assertDoesNotThrow(() -> Files.readAllBytes(collection.toPath()));
+      assertArrayEquals(uploaded, resources.get(0).getContent().getBytes(UTF_8));
 
-      // Check that examples are provided as request/response pairs, in document order.
-      List<Exchange> findByStatusExchanges = assertDoesNotThrow(
-            () -> importer.getMessageDefinitions(service, findByStatus));
-      assertEquals(1, findByStatusExchanges.size());
-      Response available = ((RequestResponsePair) findByStatusExchanges.get(0)).getResponse();
+      // Check that each operation gets only its own examples, in document order.
+      Response available = responsesOf(importer, service, findByStatus).get(0);
       assertEquals("available response", available.getName());
-      assertEquals("200", available.getStatus());
-      assertEquals("application/json", available.getMediaType());
       assertTrue(available.getContent().contains("\"id\": 190192062"));
 
-      List<Exchange> getByIdExchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, getById));
-      assertEquals(2, getByIdExchanges.size());
-      Response found = ((RequestResponsePair) getByIdExchanges.get(0)).getResponse();
-      assertEquals("get-2", found.getName());
+      List<Response> getByIdResponses = responsesOf(importer, service, getById);
+      assertEquals(List.of("get-2", "get-1"), getByIdResponses.stream().map(Response::getName).toList());
+      Response found = getByIdResponses.get(0);
       assertEquals("200", found.getStatus());
-      Response notFound = ((RequestResponsePair) getByIdExchanges.get(1)).getResponse();
-      assertEquals("get-1", notFound.getName());
+      assertEquals("application/json", found.getMediaType());
+      assertEquals(Map.of("Content-Type", Set.of("application/json"), "X-Rate-Limit", Set.of("10")), headersOf(found));
+      Response notFound = getByIdResponses.get(1);
       assertEquals("404", notFound.getStatus());
       assertEquals("", notFound.getContent());
 
-      // Check that operations get their path, verbatim, as resource path.
+      List<Response> addPetResponses = responsesOf(importer, service, addPet);
+      assertEquals(List.of("pet created"), addPetResponses.stream().map(Response::getName).toList());
+      assertEquals("201", addPetResponses.get(0).getStatus());
+
+      // Check the request side: example headers, params and raw body, kept as written.
+      Request getTwo = requestsOf(importer, service, getById).get(0);
+      assertEquals("get-2", getTwo.getName());
+      assertEquals(Map.of("Accept", Set.of("application/json")), headersOf(getTwo));
+      assertEquals(List.of("petId=2"),
+            getTwo.getQueryParameters().stream().map(param -> param.getName() + "=" + param.getValue()).toList());
+      assertEquals("{\"name\":\"cat\",\"photoUrls\":[\"string\"],\"status\":\"available\"}",
+            requestsOf(importer, service, addPet).get(0).getContent());
+
+      // Check that operations with examples get their path, verbatim, as resource path.
       assertEquals(Set.of("/pet/findByStatus"), findByStatus.getResourcePaths());
       assertEquals(Set.of("/pet/:petId"), getById.getResourcePaths());
-   }
-
-   @Test
-   void testResourceContentIsUntouched() {
-      File collection = new File("../samples/PetstoreAPI-opencollection.yml");
-      MockRepositoryImporter importer = assertDoesNotThrow(
-            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(collection, null));
-      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-
-      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
-
-      byte[] uploaded = assertDoesNotThrow(() -> Files.readAllBytes(collection.toPath()));
-      assertArrayEquals(uploaded, resource.getContent().getBytes(UTF_8));
+      assertEquals(Set.of("/pet"), addPet.getResourcePaths());
    }
 
    @Test
@@ -384,50 +382,6 @@ class OpenCollectionImporterTest {
    }
 
    @Test
-   void testExamplesAreImportedAsRequestResponsePairs() {
-      OpenCollectionImporter importer = importerFor("examples.yml");
-
-      // Import phase: each http item gives its operation.
-      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-      Operation getById = service.getOperations().get(0);
-      assertEquals("GET /pet/:petId", getById.getName());
-      Operation addPet = service.getOperations().get(1);
-      assertEquals("POST /pet", addPet.getName());
-
-      // Examples phase: each operation gets only its own examples, in document order.
-      List<Response> addPetResponses = responsesOf(importer, service, addPet);
-      assertEquals(List.of("pet created"), addPetResponses.stream().map(Response::getName).toList());
-      assertEquals("201", addPetResponses.get(0).getStatus());
-
-      List<Response> responses = responsesOf(importer, service, getById);
-      assertEquals(List.of("get-2", "get-1"), responses.stream().map(Response::getName).toList());
-
-      Response found = responses.get(0);
-      assertEquals("200", found.getStatus());
-      assertEquals("{\"id\":2,\"name\":\"cat\"}", found.getContent());
-      assertEquals(Map.of("Content-Type", Set.of("application/vnd.petstore+json"), "X-Rate-Limit", Set.of("10")),
-            headersOf(found));
-      assertEquals("application/vnd.petstore+json", found.getMediaType());
-
-      Response notFound = responses.get(1);
-      assertEquals("404", notFound.getStatus());
-      assertEquals("", notFound.getContent());
-      assertEquals("application/json", notFound.getMediaType());
-
-      // Request side: example headers, params and raw body, kept as written.
-      Request getTwo = requestsOf(importer, service, getById).get(0);
-      assertEquals("get-2", getTwo.getName());
-      assertEquals(Map.of("Accept", Set.of("application/json")), headersOf(getTwo));
-      assertEquals(List.of("petId=2"),
-            getTwo.getQueryParameters().stream().map(param -> param.getName() + "=" + param.getValue()).toList());
-      assertEquals("{\"name\":\"cat\"}", requestsOf(importer, service, addPet).get(0).getContent());
-
-      // Each operation with examples gets its path, verbatim, as resource path: '/pet/2' reaches 'GET /pet/:petId'.
-      assertEquals(Set.of("/pet/:petId"), getById.getResourcePaths());
-      assertEquals(Set.of("/pet"), addPet.getResourcePaths());
-   }
-
-   @Test
    void testIncompleteExamplesAreCompletedOrSkipped() {
       OpenCollectionImporter importer = importerFor("examples-incomplete.yml");
       Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
@@ -447,14 +401,14 @@ class OpenCollectionImporterTest {
    }
 
    @ParameterizedTest
-   @CsvSource({ "json,application/json", "xml,application/xml", "text,text/plain", "html,text/html",
-         "binary,application/octet-stream" })
-   void testMediaTypeComesFromBodyTypeWithoutContentTypeHeader(String bodyType, String mediaType) {
+   @CsvSource({ "content-type header,application/vnd.petstore+json", "json,application/json", "xml,application/xml",
+         "text,text/plain", "html,text/html", "binary,application/octet-stream" })
+   void testMediaTypeComesFromContentTypeHeaderThenBodyType(String example, String mediaType) {
       OpenCollectionImporter importer = importerFor("examples-media-type-from-body-type.yml");
       Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
 
       Response response = responsesOf(importer, service, service.getOperations().get(0)).stream()
-            .filter(example -> bodyType.equals(example.getName())).findFirst().orElseThrow();
+            .filter(candidate -> example.equals(candidate.getName())).findFirst().orElseThrow();
 
       assertEquals(mediaType, response.getMediaType());
    }
@@ -464,12 +418,12 @@ class OpenCollectionImporterTest {
             () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
    }
 
-   private static List<Response> responsesOf(OpenCollectionImporter importer, Service service, Operation operation) {
+   private static List<Response> responsesOf(MockRepositoryImporter importer, Service service, Operation operation) {
       List<Exchange> exchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, operation));
       return exchanges.stream().map(exchange -> ((RequestResponsePair) exchange).getResponse()).toList();
    }
 
-   private static List<Request> requestsOf(OpenCollectionImporter importer, Service service, Operation operation) {
+   private static List<Request> requestsOf(MockRepositoryImporter importer, Service service, Operation operation) {
       List<Exchange> exchanges = assertDoesNotThrow(() -> importer.getMessageDefinitions(service, operation));
       return exchanges.stream().map(exchange -> ((RequestResponsePair) exchange).getRequest()).toList();
    }
