@@ -34,10 +34,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * An implementation of MockRepositoryImporter that deals with OpenCollection specification files.
@@ -115,6 +118,9 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    /** The collection text exactly as uploaded: it is stored as the contract and never re-serialised. */
    private String collectionContent;
 
+   /** The http items found while collecting operations, by operation name: they hold the examples of each one. */
+   private final Map<String, List<JsonNode>> httpItemsByOperation = new LinkedHashMap<>();
+
    /**
     * Build a new importer.
     * @param collectionFilePath The path to OpenCollection file
@@ -160,7 +166,64 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
    @Override
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
-      return List.of();
+      List<Exchange> exchanges = new ArrayList<>();
+      Set<String> exampleNames = new HashSet<>();
+      for (JsonNode item : httpItemsByOperation.getOrDefault(operation.getName(), List.of())) {
+         exchanges.addAll(exchangesOfExamples(item, operation, exampleNames));
+      }
+      return exchanges;
+   }
+
+   /**
+    * Turn every <code>examples</code> entry of an http item into an exchange, in document order. An operation with
+    * examples gets its path as resource path, so that a concrete path like '/pet/2' reaches 'GET /pet/:petId'.
+    */
+   private static List<Exchange> exchangesOfExamples(JsonNode item, Operation operation, Set<String> exampleNames) {
+      List<Exchange> exchanges = new ArrayList<>();
+      JsonNode examples = item.path("examples");
+      for (int index = 0; index < examples.size(); index++) {
+         exchangeOfExample(item, index, operation, exampleNames).ifPresent(exchanges::add);
+      }
+      return exchanges;
+   }
+
+   /** The exchange of one example, or none when the example is skipped (see {@link #isSkipped}). */
+   private static Optional<Exchange> exchangeOfExample(JsonNode item, int index, Operation operation,
+         Set<String> exampleNames) {
+      JsonNode example = item.path("examples").get(index);
+      String name = example.path("name").asText(defaultExampleName(item, index));
+      if (isSkipped(example, name, operation, exampleNames)) {
+         return Optional.empty();
+      }
+      operation.addResourcePath(pathOf(operation));
+      return Optional.of(OpenCollectionHttpExampleMapper.exchangeOf(example, name));
+   }
+
+   /**
+    * Whether an example cannot be served, logging why: it has no response, or its name is already used by another
+    * example of the operation. A served example name is recorded in <code>exampleNames</code>.
+    */
+   private static boolean isSkipped(JsonNode example, String name, Operation operation, Set<String> exampleNames) {
+      if (!example.has("response")) {
+         log.warn("Example '{}' of operation '{}' is skipped: it has no response", name, operation.getName());
+         return true;
+      }
+      if (!exampleNames.add(name)) {
+         log.warn("Example '{}' of operation '{}' is skipped: its name is already used in the operation", name,
+               operation.getName());
+         return true;
+      }
+      return false;
+   }
+
+   /** The name of an example without name: the item name then the 1-based position of the example in the item. */
+   private static String defaultExampleName(JsonNode item, int index) {
+      return item.path("info").path("name").asText() + " " + (index + 1);
+   }
+
+   /** The path of an operation, kept verbatim: its name is its method, a space, then its path (ADR-001). */
+   private static String pathOf(Operation operation) {
+      return operation.getName().substring(operation.getMethod().length() + 1);
    }
 
    private void checkSpecVersion() throws MockRepositoryImportException {
@@ -229,7 +292,7 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       }
       switch (kindOf(item)) {
          case FOLDER -> collectOperations(item.path("items"), location, operations);
-         case HTTP -> addHttpOperation(item.path("http"), location, operations);
+         case HTTP -> addHttpOperation(item, location, operations);
          case UNSUPPORTED ->
             log.warn("Item '{}' of type '{}' is not supported yet, skipping", location, declaredTypeOf(item));
       }
@@ -270,14 +333,22 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       return item.has("items") ? ItemKind.FOLDER : ItemKind.UNSUPPORTED;
    }
 
-   private void addHttpOperation(JsonNode http, String location, Map<String, Operation> operations)
+   private void addHttpOperation(JsonNode item, String location, Map<String, Operation> operations)
          throws MockRepositoryImportException {
+      JsonNode http = item.path("http");
       String method = methodOf(http, location);
-      String name = method + " " + pathOf(urlOf(http, location), location);
+      String name = operationNameOf(method, http, location);
+      httpItemsByOperation.computeIfAbsent(name, operationName -> new ArrayList<>()).add(item);
       Operation operation = new Operation();
       operation.setName(name);
       operation.setMethod(method);
       operations.putIfAbsent(name, operation);
+   }
+
+   /** The operation name of an http item: its method then its path, kept verbatim (ADR-001). */
+   private static String operationNameOf(String method, JsonNode http, String location)
+         throws MockRepositoryImportException {
+      return method + " " + pathOf(urlOf(http, location), location);
    }
 
    private static String pathOf(String url, String location) throws MockRepositoryImportException {
