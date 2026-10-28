@@ -22,6 +22,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.HttpClientSettings;
+import org.springframework.boot.http.client.HttpRedirects;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -68,6 +71,8 @@ public abstract class AbstractBaseIT {
 
    protected RestTestClient restClient;
 
+   protected RestTestClient noRedirectRestClient;
+
    @Autowired
    protected ServiceRepository serviceRepository;
 
@@ -96,6 +101,10 @@ public abstract class AbstractBaseIT {
    @BeforeEach
    void initRestClient() {
       restClient = RestTestClient.bindToServer().baseUrl(getServerUrl()).build();
+
+      var noRedirectRequestFactory = ClientHttpRequestFactoryBuilder.jdk()
+            .build(HttpClientSettings.defaults().withRedirects(HttpRedirects.DONT_FOLLOW));
+      noRedirectRestClient = RestTestClient.bindToServer(noRedirectRequestFactory).baseUrl(getServerUrl()).build();
    }
 
    /** */
