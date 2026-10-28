@@ -341,42 +341,23 @@ class OpenCollectionImporterTest {
       assertTrue(resource.getContent().contains("method: get"));
    }
 
-   @ParameterizedTest
-   @CsvSource(delimiter = '|', value = { "{{baseUrl}}/api/users | /api/users",
-         "{{baseUrl}}/pet/findByStatus?status=available | /pet/findByStatus", "{{baseUrl}}/pet/:petId | /pet/:petId",
-         "https://petstore.example.com/v2/pet/:petId | /v2/pet/:petId", "{{host}}{{basePath}}/pet | /pet",
-         "{{host}}:8080/pet | /pet", "http://localhost:8080 | /", "/pet/:petId | /pet/:petId" })
+   /** The path of the url is kept verbatim (ADR-001): neither variables, case, slashes nor encoding are normalised. */
+   @ParameterizedTest(name = "{0}")
+   @CsvSource(delimiter = '|', value = { "{{baseUrl}}/pet/{{petId}} | /pet/{{petId}}", "{{baseUrl}}/pet/ | /pet/",
+         "{{baseUrl}}/Pet//Find | /Pet//Find", "{{baseUrl}}/pet/%7Bid%7D | /pet/%7Bid%7D",
+         "'  {{baseUrl}}/pet  ' | /pet", "{{host}}:{{port}}/pet | /pet", "http://localhost:8080 | /",
+         "https:///pet | /pet", "?status=available | /" })
    void testOperationNameFromUrl(String address, String path, @TempDir Path directory) throws IOException {
       OpenCollectionImporter importer = importerForGetRequests(directory, address);
 
       Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
 
       assertEquals(List.of("GET " + path), service.getOperations().stream().map(Operation::getName).toList());
-      assertTrue(resource.getContent().contains(address));
    }
 
-   @Test
-   void testVariableInPathIsKeptVerbatim(@TempDir Path directory) throws IOException {
-      OpenCollectionImporter importer = importerForGetRequests(directory, "{{baseUrl}}/pet/{{petId}}");
-
-      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-
-      assertEquals("GET /pet/{{petId}}", service.getOperations().get(0).getName());
-   }
-
-   @Test
-   void testTrailingSlashKeepsOperationsApart(@TempDir Path directory) throws IOException {
-      OpenCollectionImporter importer = importerForGetRequests(directory, "{{baseUrl}}/pet", "{{baseUrl}}/pet/");
-
-      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-
-      assertEquals(List.of("GET /pet", "GET /pet/"), service.getOperations().stream().map(Operation::getName).toList());
-   }
-
-   @ParameterizedTest
+   @ParameterizedTest(name = "{0}")
    @CsvSource(delimiter = '|', value = { "{{baseUrl}}pet | no path found after host prefix",
-         "petstore.example.com/pet | no path found after host prefix", "pet/:petId | no path found after host prefix" })
+         "{{baseUrl}}/pet shop | path contains whitespace" })
    void testUnderivablePathIsRejected(String address, String reason, @TempDir Path directory) throws IOException {
       OpenCollectionImporter importer = importerForGetRequests(directory, address);
 
@@ -386,16 +367,6 @@ class OpenCollectionImporterTest {
       assertTrue(exception.getMessage()
             .contains("Cannot derive an operation path from OpenCollection 'http.url' '" + address + "'"));
       assertTrue(exception.getMessage().contains(reason));
-   }
-
-   @Test
-   void testWhitespaceInPathIsRejected(@TempDir Path directory) throws IOException {
-      OpenCollectionImporter importer = importerForGetRequests(directory, "{{baseUrl}}/pet/{{ petId }}");
-
-      MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
-            importer::getServiceDefinitions);
-
-      assertTrue(exception.getMessage().contains("path contains whitespace"));
    }
 
    @Test

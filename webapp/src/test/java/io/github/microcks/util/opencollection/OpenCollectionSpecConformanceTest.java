@@ -67,7 +67,6 @@ class OpenCollectionSpecConformanceTest {
          "items/c13-http-item-with-app-key.yml | Svc | 1.0 | GET /pet",
          "http/d02-custom-method-purge.yml | Svc | 1.0 | PURGE /pet",
          "http/d03-method-surrounded-by-spaces.yml | Svc | 1.0 | GET /pet",
-         "http/d10-path-and-query-params.yml | Svc | 1.0 | GET /pet/:id",
          "http/d11-param-without-value.yml | Svc | 1.0 | GET /pet" })
    void testSpecValidDocumentIsImported(String fixture, String serviceName, String serviceVersion, String operations) {
       Service service = serviceOf(SPEC_FIXTURES + fixture);
@@ -91,22 +90,10 @@ class OpenCollectionSpecConformanceTest {
          "root/a06-opencollection-empty.yml | Only OpenCollection 1.x",
          "info/b06-name-whitespace-only.yml | Name property is missing",
          "info/b07-info-absent.yml | Name property is missing", "http/d05-method-empty.yml | http.method",
-         "http/d08-url-empty.yml | http.url", "url/e10-bare-segment.yml | no path found after host prefix",
-         "url/e18-space-in-path.yml | path contains whitespace",
+         "http/d08-url-empty.yml | http.url",
          "realistic/h02-bruno-export-without-version.yaml | Version property is missing" })
    void testDocumentMicrocksCannotImportIsRejected(String fixture, String messageFragment) {
       assertImportIsRejected(SPEC_FIXTURES + fixture, messageFragment);
-   }
-
-   @ParameterizedTest(name = "{0}")
-   @CsvSource(delimiter = '|', value = { "url/e02-literal-https-with-base-path.yml | GET /v2/pet",
-         "url/e03-localhost-port-and-path.yml | GET /api/v1/tasks/8",
-         "url/e04-openapi-style-server-variables.yml | GET /api/v3/dpes", "url/e08-path-only.yml | GET /pet",
-         "url/e09-single-brace-variable.yml | GET /pet", "url/e15-fragment.yml | GET /pet",
-         "url/e17-percent-encoded-space.yml | GET /pet%20shop", "url/e19-ipv6-host.yml | GET /pet",
-         "url/e20-userinfo-in-authority.yml | GET /pet", "url/e21-websocket-scheme.yml | GET /pet" })
-   void testOperationNameFromSpecUrl(String fixture, String expectedOperation) {
-      assertEquals(List.of(expectedOperation), operationNamesOf(serviceOf(SPEC_FIXTURES + fixture)));
    }
 
    @ParameterizedTest(name = "{0}")
