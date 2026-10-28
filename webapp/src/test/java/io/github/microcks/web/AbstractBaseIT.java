@@ -25,16 +25,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.boot.http.client.HttpRedirects;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -43,6 +41,7 @@ import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
 import org.testcontainers.mongodb.MongoDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -55,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author laurent
  */
 @SpringBootTest(classes = MicrocksApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestRestTemplate
 @ActiveProfiles("it")
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 public abstract class AbstractBaseIT {
@@ -66,12 +64,11 @@ public abstract class AbstractBaseIT {
    @LocalServerPort
    private int port;
 
-   @Autowired
-   protected TestRestTemplate restTemplate;
-
    protected RestTestClient restClient;
 
    protected RestTestClient noRedirectRestClient;
+
+   protected RestClient streamingRestClient;
 
    @Autowired
    protected ServiceRepository serviceRepository;
@@ -105,6 +102,8 @@ public abstract class AbstractBaseIT {
       var noRedirectRequestFactory = ClientHttpRequestFactoryBuilder.jdk()
             .build(HttpClientSettings.defaults().withRedirects(HttpRedirects.DONT_FOLLOW));
       noRedirectRestClient = RestTestClient.bindToServer(noRedirectRequestFactory).baseUrl(getServerUrl()).build();
+
+      streamingRestClient = RestClient.builder().baseUrl(getServerUrl()).build();
    }
 
    /** */
@@ -117,15 +116,15 @@ public abstract class AbstractBaseIT {
 
       HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-      ResponseEntity<String> response;
+      EntityExchangeResult<String> response;
       if (isMainArtifact) {
-         response = restTemplate.postForEntity("/api/artifact/upload", requestEntity, String.class);
+         response = postForEntity("/api/artifact/upload", requestEntity, String.class);
       } else {
-         response = restTemplate.postForEntity("/api/artifact/upload?mainArtifact=false", requestEntity, String.class);
+         response = postForEntity("/api/artifact/upload?mainArtifact=false", requestEntity, String.class);
       }
 
-      assertEquals(201, response.getStatusCode().value());
-      log.info("Just uploaded: {}", response.getBody());
+      assertEquals(201, response.getStatus().value());
+      log.info("Just uploaded: {}", response.getResponseBody());
    }
 
    protected <T> EntityExchangeResult<T> postForEntity(String uri, HttpEntity<?> entity, Class<T> responseType) {
@@ -139,6 +138,11 @@ public abstract class AbstractBaseIT {
 
    protected <T> EntityExchangeResult<T> exchange(String uri, HttpMethod method, HttpEntity<?> entity,
          Class<T> responseType) {
+      return exchange(uri, method, entity, ParameterizedTypeReference.forType(responseType));
+   }
+
+   protected <T> EntityExchangeResult<T> exchange(String uri, HttpMethod method, HttpEntity<?> entity,
+         ParameterizedTypeReference<T> responseType) {
       HttpEntity<?> request = entity != null ? entity : HttpEntity.EMPTY;
       RestTestClient.RequestBodySpec spec = restClient.method(method).uri(uri)
             .headers(headers -> headers.addAll(request.getHeaders()));
@@ -157,9 +161,4 @@ public abstract class AbstractBaseIT {
       assertTrue(response.getResponseBody().contains(substring));
    }
 
-   protected void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
-      assertTrue(response.getBody().contains(substring));
-   }
 }
