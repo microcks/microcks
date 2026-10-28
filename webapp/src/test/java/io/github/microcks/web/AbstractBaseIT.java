@@ -123,6 +123,10 @@ public abstract class AbstractBaseIT {
             .exchange().expectBody(responseType).returnResult();
    }
 
+   protected <T> EntityExchangeResult<T> postForEntity(String uri, Object body, Class<T> responseType) {
+      return restClient.post().uri(uri).body(body).exchange().expectBody(responseType).returnResult();
+   }
+
    protected void assertResponseIsOkAndContains(EntityExchangeResult<String> response, String substring) {
       assertEquals(200, response.getStatus().value());
       assertNotNull(response.getResponseBody());
