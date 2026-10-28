@@ -1,0 +1,25 @@
+# Keys and values the schema allows and the importer does not read: none of them blocks the import.
+opencollection: "1.0.0"
+info:
+  name: "Svc"
+  # b01: a version that is not a number.
+  version: "v3"
+  # b09: known info keys the importer does not read.
+  summary: "s"
+  authors:
+    - name: "a"
+  # b10: an unknown info key.
+  x-foo: "a"
+items:
+  - info:
+      name: "op"
+      type: "http"
+    http:
+      # d02: a custom method.
+      method: "PURGE"
+      url: "{{baseUrl}}/pet"
+    # c13: an app key on an http item.
+    app:
+      x: 1
+# a13: an unknown root key.
+x-tool: "a"

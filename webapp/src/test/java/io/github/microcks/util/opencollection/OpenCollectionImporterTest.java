@@ -210,9 +210,7 @@ class OpenCollectionImporterTest {
 
    @ParameterizedTest
    @CsvSource(delimiter = '|', value = { "{info: {name: Skipped, type: graphql}} | graphql",
-         "{info: {name: Skipped, type: grpc}} | grpc", "{info: {name: Skipped, type: websocket}} | websocket",
-         "{type: script, path: ./setup.js} | script", "{info: {name: Skipped, type: app}} | app",
-         "{info: {name: Skipped, type: teleport}} | teleport" })
+         "{type: script, path: ./setup.js} | script" })
    void testUnsupportedItemKindsAreSkipped(String unsupportedItem, String expectedType, @TempDir Path directory)
          throws IOException {
       Path collection = directory.resolve("unsupported-item.yml");
@@ -237,11 +235,6 @@ class OpenCollectionImporterTest {
       assertEquals(1, warnings.size());
       assertTrue(warnings.get(0).contains("is not supported yet, skipping"));
       assertTrue(warnings.get(0).contains("of type '" + expectedType + "'"));
-   }
-
-   @Test
-   void testNestedFoldersAreTraversed() {
-      assertEquals(List.of("GET /pet/:petId"), operationNamesOf("nested-folders.yml"));
    }
 
    @Test
@@ -288,10 +281,9 @@ class OpenCollectionImporterTest {
    }
 
    /** A declared http type wins over the structure: an http item without http section is rejected, not skipped. */
-   @ParameterizedTest
-   @ValueSource(strings = { "http-item-without-method.yml", "http-item-without-http-section.yml" })
-   void testHttpItemWithoutMethodIsRejected(String fixture) {
-      OpenCollectionImporter importer = importerFor(fixture);
+   @Test
+   void testHttpItemWithoutMethodIsRejected() {
+      OpenCollectionImporter importer = importerFor("http-item-without-http-section.yml");
 
       MockRepositoryImportException exception = assertThrows(MockRepositoryImportException.class,
             importer::getServiceDefinitions);

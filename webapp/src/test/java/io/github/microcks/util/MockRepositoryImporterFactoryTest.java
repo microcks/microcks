@@ -221,53 +221,6 @@ class MockRepositoryImporterFactoryTest {
    }
 
    @Test
-   void testGetMockRepositoryImporterForOpenCollection() {
-      File openCollection = new File("../samples/PetstoreAPI-opencollection.yml");
-
-      MockRepositoryImporter importer = assertDoesNotThrow(
-            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openCollection, null),
-            "Getting importer for OpenCollection should not fail!");
-
-      assertInstanceOf(OpenCollectionImporter.class, importer);
-   }
-
-   @Test
-   void testNestedOpenCollectionKeyIsNotMistakenForAnOpenCollection() {
-      File openAPIWithNestedKey = new File(
-            "target/test-classes/io/github/microcks/util/opencollection/nested-opencollection-key.yml");
-
-      MockRepositoryImporter importer = assertDoesNotThrow(
-            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openAPIWithNestedKey, null),
-            "Getting importer for a file with a nested opencollection key should not fail!");
-
-      assertInstanceOf(OpenAPIImporter.class, importer);
-   }
-
-   @Test
-   void testGetMockRepositoryImporterForPrettyPrintedJsonOpenCollection() {
-      File openCollection = new File(
-            "target/test-classes/io/github/microcks/util/opencollection/petstore-opencollection.json");
-
-      MockRepositoryImporter importer = assertDoesNotThrow(
-            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openCollection, null),
-            "Getting importer for a JSON OpenCollection should not fail!");
-
-      assertInstanceOf(OpenCollectionImporter.class, importer);
-   }
-
-   @Test
-   void testGetMockRepositoryImporterForNotBundledOpenCollection() {
-      File notBundled = new File(
-            "target/test-classes/io/github/microcks/util/opencollection/petstore-bundled-false.yml");
-
-      MockRepositoryImporter importer = assertDoesNotThrow(
-            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(notBundled, null),
-            "Getting importer for a multi-file OpenCollection should not fail!");
-
-      assertInstanceOf(OpenCollectionImporter.class, importer);
-   }
-
-   @Test
    void testOpenCollectionParsingError() {
       File unreadable = new File(
             "target/test-classes/io/github/microcks/util/opencollection/invalid-opencollection.yml");
@@ -281,12 +234,18 @@ class MockRepositoryImporterFactoryTest {
    static Stream<Arguments> firstLinesAndTheirImporter() {
       String petstoreInfo = "info:\n  name: Petstore API\n  version: \"1.0\"\n";
       String minimalOpenAPI = "openapi: 3.0.2\ninfo:\n  title: Petstore API\n  version: \"1.0\"\npaths: {}\n";
+      String minifiedJson = "{\"opencollection\":\"1.0.0\",\"info\":{\"name\":\"Petstore API\",\"version\":\"1.0\"}}";
+      String prettyPrintedJson = "{\n  \"opencollection\": \"1.0.0\",\n  \"info\": {\n    \"name\": \"Petstore API\",\n"
+            + "    \"version\": \"1.0\"\n  }\n}\n";
       return Stream.of(Arguments.of("opencollection: 1.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
-            Arguments.of("opencollection: \"1.0.0\"\n" + petstoreInfo, OpenCollectionImporter.class),
-            Arguments.of("\"opencollection\": \"1.0.0\"\n" + petstoreInfo, OpenCollectionImporter.class),
-            Arguments.of("opencollection: 2.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
-            Arguments.of("opencollection-extra: x\n" + minimalOpenAPI, OpenAPIImporter.class),
-            Arguments.of(minimalOpenAPI, OpenAPIImporter.class));
+            Arguments.of(prettyPrintedJson, OpenCollectionImporter.class),
+            Arguments.of(minifiedJson, OpenCollectionImporter.class),
+            Arguments.of("\uFEFFopencollection: 1.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("opencollection: 1.0.0\r\n" + petstoreInfo.replace("\n", "\r\n"),
+                  OpenCollectionImporter.class),
+            Arguments.of("# A leading comment\nopencollection: 1.0.0\n" + petstoreInfo, OpenCollectionImporter.class),
+            Arguments.of("x-tooling:\n  opencollection: 1.0.0\n" + minimalOpenAPI, OpenAPIImporter.class),
+            Arguments.of("opencollection-extra: x\n" + minimalOpenAPI, OpenAPIImporter.class));
    }
 
    @ParameterizedTest

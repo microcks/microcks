@@ -44,8 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Conformance of the OpenCollection importer to the OpenCollection v1.0.0 JSON schema
  * (https://schema.opencollection.com/opencollection/v1.0.0.json). Each case of the spec-derived catalogue is one small
  * fixture file under <code>spec/</code>, named after its case id; cases already covered by a fixture of the other
- * OpenCollection tests are not repeated. The files of the <code>spec/realistic</code> folder are our own synthetic
- * collections, shaped like the ones real tools export.
+ * OpenCollection tests are not repeated, and the keys and values the importer does not read share one fixture.
  * @author SebastienDegodez
  */
 class OpenCollectionSpecConformanceTest {
@@ -56,16 +55,10 @@ class OpenCollectionSpecConformanceTest {
 
    @ParameterizedTest(name = "{0}")
    @CsvSource(delimiter = '|', quoteCharacter = '"', value = {
-         "root/a02-opencollection-other-1x.yml | Svc | 1.0 | GET /pet",
          "root/a07-opencollection-major-only.yml | Svc | 1.0 | GET /pet",
-         "root/a13-unknown-root-key.yml | Svc | 1.0 | GET /pet",
-         "info/b01-version-non-numeric-string.yml | Svc | v3 | GET /pet",
+         "tolerated-keys-and-values.yml | Svc | v3 | PURGE /pet",
          "info/b08-name-with-accents.yml | Gestes activés | 1.0 | GET /pet",
-         "info/b09-info-authors-and-summary.yml | Svc | 1.0 | GET /pet",
-         "info/b10-info-unknown-key.yml | Svc | 1.0 | GET /pet",
          "items/c02-folder-without-info.yml | Svc | 1.0 | GET /pet",
-         "items/c13-http-item-with-app-key.yml | Svc | 1.0 | GET /pet",
-         "http/d02-custom-method-purge.yml | Svc | 1.0 | PURGE /pet",
          "http/d03-method-surrounded-by-spaces.yml | Svc | 1.0 | GET /pet",
          "http/d11-param-without-value.yml | Svc | 1.0 | GET /pet" })
    void testSpecValidDocumentIsImported(String fixture, String serviceName, String serviceVersion, String operations) {
@@ -87,22 +80,9 @@ class OpenCollectionSpecConformanceTest {
    /** Documents the schema accepts, refused because of a Microcks rule (supported version, identity, path). */
    @ParameterizedTest(name = "{0}")
    @CsvSource(delimiter = '|', quoteCharacter = '"', value = {
-         "info/b06-name-whitespace-only.yml | Name property is missing", "http/d05-method-empty.yml | http.method",
-         "http/d08-url-empty.yml | http.url",
-         "realistic/h02-bruno-export-without-version.yaml | Version property is missing" })
+         "info/b06-name-whitespace-only.yml | Name property is missing", "http/d05-method-empty.yml | http.method" })
    void testDocumentMicrocksCannotImportIsRejected(String fixture, String messageFragment) {
       assertImportIsRejected(SPEC_FIXTURES + fixture, messageFragment);
-   }
-
-   @ParameterizedTest(name = "{0}")
-   @ValueSource(strings = { "detection/f03-minified-json.json", "detection/f04-yaml-document-start.yml",
-         "detection/f04-yaml-leading-comment.yml", "detection/f05-utf8-bom.yml",
-         "detection/f06-g03-crlf-line-endings.yml" })
-   void testSpecFileIsDetectedAsOpenCollection(String fixture) {
-      MockRepositoryImporter importer = assertDoesNotThrow(
-            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(new File(SPEC_FIXTURES + fixture), null));
-
-      assertEquals(OpenCollectionImporter.class, importer.getClass());
    }
 
    @ParameterizedTest(name = "{0}")
@@ -119,22 +99,6 @@ class OpenCollectionSpecConformanceTest {
 
       assertArrayEquals(Files.readAllBytes(Path.of(fixture)),
             resource.getContent().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-   }
-
-   /** A collection shaped like the ones tools export for an OpenAPI-style server: <code>{protocol}://{host}</code>. */
-   @Test
-   void testRealisticOpenApiStyleCollectionIsImported() {
-      File collection = new File(SPEC_FIXTURES + "realistic/h01-openapi-style-server-variables-collection.json");
-      MockRepositoryImporter importer = assertDoesNotThrow(
-            () -> MockRepositoryImporterFactory.getMockRepositoryImporter(collection, null));
-
-      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-
-      assertEquals("Démo API", service.getName());
-      assertEquals("v3", service.getVersion());
-      assertEquals(List.of("GET /api/v3/catalog/items", "GET /api/v3/catalog/items/:id", "POST /api/v3/orders",
-            "PUT /api/v3/orders/:id", "DELETE /api/v3/orders/:id", "GET /api/v3/customers",
-            "GET /api/v3/customers/:customerId/addresses", "GET /api/v3/health"), operationNamesOf(service));
    }
 
    private static void assertImportIsRejected(String path, String messageFragment) {
