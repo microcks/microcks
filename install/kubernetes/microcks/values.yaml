@@ -97,7 +97,7 @@ microcks:
     #  value: "30"
 
   # Secrets or config maps whose keys are all added as environment variables on Microcks container.
-  envFrom: []
+  #envFrom:
     #- secretRef:
     #    name: microcks-extra-env
     #- configMapRef:
@@ -288,7 +288,7 @@ features:
       #  value: <kafka-oauth-endpoint-uri>
 
     # Secrets or config maps whose keys are all added as environment variables on async-minion container.
-    envFrom: []
+    #envFrom:
       #- secretRef:
       #    name: async-minion-extra-env
 
