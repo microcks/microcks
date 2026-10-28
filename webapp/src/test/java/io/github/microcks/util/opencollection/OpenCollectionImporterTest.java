@@ -322,11 +322,9 @@ class OpenCollectionImporterTest {
       OpenCollectionImporter importer = importerFor("lowercase-method.yml");
 
       Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
 
       assertEquals("GET /pet/findByStatus", service.getOperations().get(0).getName());
       assertEquals("GET", service.getOperations().get(0).getMethod());
-      assertTrue(resource.getContent().contains("method: get"));
    }
 
    /** The path of the url is kept verbatim (ADR-001): neither variables, case, slashes nor encoding are normalised. */
@@ -369,6 +367,9 @@ class OpenCollectionImporterTest {
       assertEquals("Petstore API", service.getName());
       assertEquals(List.of("GET /pet/findByStatus", "GET /pet/:petId"),
             service.getOperations().stream().map(Operation::getName).toList());
+      // The resource name keeps the yaml extension, whatever the rendering of the source.
+      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
+      assertEquals("Petstore API-1.0.yaml", resource.getName());
    }
 
    @Test

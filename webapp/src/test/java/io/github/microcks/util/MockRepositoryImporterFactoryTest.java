@@ -246,7 +246,7 @@ class MockRepositoryImporterFactoryTest {
    @Test
    void testGetMockRepositoryImporterForPrettyPrintedJsonOpenCollection() {
       File openCollection = new File(
-            "target/test-classes/io/github/microcks/util/opencollection/pretty-printed-opencollection.json");
+            "target/test-classes/io/github/microcks/util/opencollection/petstore-opencollection.json");
 
       MockRepositoryImporter importer = assertDoesNotThrow(
             () -> MockRepositoryImporterFactory.getMockRepositoryImporter(openCollection, null),

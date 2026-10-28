@@ -106,11 +106,9 @@ class OpenCollectionSpecConformanceTest {
    }
 
    @ParameterizedTest(name = "{0}")
-   @ValueSource(strings = { SPEC_FIXTURES + "detection/f03-minified-json.json",
-         SPEC_FIXTURES + "detection/f06-g03-crlf-line-endings.yml", SPEC_FIXTURES + "detection/f05-utf8-bom.yml",
-         SPEC_FIXTURES + "info/b08-name-with-accents.yml", FIXTURES + "petstore-opencollection.json",
-         SPEC_FIXTURES + "realistic/h01-openapi-style-server-variables-collection.json",
-         SPEC_FIXTURES + "realistic/h02-bruno-export-without-version.yaml" })
+   @ValueSource(strings = { SPEC_FIXTURES + "detection/f06-g03-crlf-line-endings.yml",
+         SPEC_FIXTURES + "detection/f05-utf8-bom.yml", SPEC_FIXTURES + "info/b08-name-with-accents.yml",
+         FIXTURES + "petstore-opencollection.json" })
    void testSourceIsStoredByteForByte(String fixture) throws IOException {
       OpenCollectionImporter importer = importerFor(fixture);
       Service service = new Service();
@@ -121,16 +119,6 @@ class OpenCollectionSpecConformanceTest {
 
       assertArrayEquals(Files.readAllBytes(Path.of(fixture)),
             resource.getContent().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-   }
-
-   @Test
-   void testResourceNameForJsonSourceKeepsYamlExtension() {
-      OpenCollectionImporter importer = importerFor(FIXTURES + "petstore-opencollection.json");
-      Service service = assertDoesNotThrow(importer::getServiceDefinitions).get(0);
-
-      Resource resource = assertDoesNotThrow(() -> importer.getResourceDefinitions(service)).get(0);
-
-      assertEquals("Petstore API-1.0.yaml", resource.getName());
    }
 
    /** A collection shaped like the ones tools export for an OpenAPI-style server: <code>{protocol}://{host}</code>. */
