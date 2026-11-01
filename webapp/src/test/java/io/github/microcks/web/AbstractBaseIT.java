@@ -46,6 +46,7 @@ import org.testcontainers.mongodb.MongoDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -103,7 +104,10 @@ public abstract class AbstractBaseIT {
             .build(HttpClientSettings.defaults().withRedirects(HttpRedirects.DONT_FOLLOW));
       noRedirectRestClient = RestTestClient.bindToServer(noRedirectRequestFactory).baseUrl(getServerUrl()).build();
 
-      streamingRestClient = RestClient.builder().baseUrl(getServerUrl()).build();
+      var streamingRequestFactory = ClientHttpRequestFactoryBuilder.jdk()
+            .build(HttpClientSettings.defaults().withReadTimeout(Duration.ofSeconds(5)));
+      streamingRestClient = RestClient.builder().baseUrl(getServerUrl()).requestFactory(streamingRequestFactory)
+            .build();
    }
 
    /** */
