@@ -48,6 +48,19 @@ class DispatchCriteriaHelperTest {
          String dispatchCriteria = DispatchCriteriaHelper.extractParamsFromURI(requestPath);
          assertEquals("user_key && status", dispatchCriteria);
       }
+
+      @Test
+      void test() {
+         Multimap<String, String> headers = ArrayListMultimap.create();
+         headers.put("tenant", "myTenant");
+         headers.put("version", "1.2");
+         String result = DispatchCriteriaHelper.buildFromParamsMap("tenant && version", headers);
+         System.err.println(result);
+
+         Map<String, String> headersMap = Map.of("tenant", "myTenant", "version", "1.2");
+         result = DispatchCriteriaHelper.extractFromParamMap("tenant && version", headersMap);
+         System.err.println(result);
+      }
    }
 
    @Nested

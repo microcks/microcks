@@ -21,11 +21,11 @@ import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.ObjectMapperFactory;
+import io.github.microcks.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,8 +195,64 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       if (isSkipped(example, name, operation, exampleNames)) {
          return Optional.empty();
       }
-      operation.addResourcePath(pathOf(operation));
-      return Optional.of(OpenCollectionHttpExampleMapper.exchangeOf(example, name));
+      String dispatchCriteria = completeOperationAndBuildCriteria(operation, example.path("request"));
+      return Optional.of(OpenCollectionHttpExampleMapper.exchangeOf(example, name, dispatchCriteria));
+   }
+
+   /**
+    * Build the dispatch criteria of an example from its request, according to the operation dispatcher, and complete
+    * the operation resource paths (with the concrete path when the operation has path parts).
+    */
+   private static String completeOperationAndBuildCriteria(Operation operation, JsonNode exampleRequest) {
+      // If the dispatcher was overridden with a Fallback, we must consider the wrapped elements.
+      DispatchCriteriaHelper.DispatcherDetails details = DispatchCriteriaHelper.extractDispatcherWithRules(operation);
+      String rootDispatcher = details.rootDispatcher();
+      String rules = details.rootDispatcherRules();
+
+      String pattern = pathOf(operation);
+      String dispatchCriteria = null;
+      if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
+         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rules, paramsOf(exampleRequest, "query"));
+         operation.addResourcePath(pattern);
+      } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
+         Map<String, String> parts = partsOf(exampleRequest);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rules, parts);
+         operation.addResourcePath(URIBuilder.buildURIFromPattern(pattern, parts));
+      } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
+         Map<String, String> parts = partsOf(exampleRequest);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rules, parts)
+               + DispatchCriteriaHelper.buildFromParamsMap(rules, paramsOf(exampleRequest, "query"));
+         operation.addResourcePath(URIBuilder.buildURIFromPattern(pattern, parts));
+      } else if (DispatchStyles.QUERY_HEADER.equals(rootDispatcher)) {
+         Map<String, String> headers = new LinkedHashMap<>();
+         for (JsonNode header : exampleRequest.path("headers")) {
+            headers.put(header.path("name").asText(), header.path("value").asText());
+         }
+         dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(rules, headers);
+         operation.addResourcePath(pattern);
+      } else {
+         // Overridden dispatcher (SCRIPT for example): keep a generic resource path to force operation matching.
+         operation.addResourcePath(pattern);
+      }
+      return dispatchCriteria;
+   }
+
+   /** The path params of an example request, by name. */
+   private static Map<String, String> partsOf(JsonNode exampleRequest) {
+      Map<String, String> parts = new LinkedHashMap<>();
+      paramsOf(exampleRequest, "path").entries().forEach(entry -> parts.put(entry.getKey(), entry.getValue()));
+      return parts;
+   }
+
+   /** The params of the given type ('query' or 'path') of an example request. */
+   private static Multimap<String, String> paramsOf(JsonNode exampleRequest, String type) {
+      Multimap<String, String> params = ArrayListMultimap.create();
+      for (JsonNode param : exampleRequest.path("params")) {
+         if (type.equals(param.path("type").asText("query"))) {
+            params.put(param.path("name").asText(), param.path("value").asText());
+         }
+      }
+      return params;
    }
 
    /**
@@ -342,6 +398,26 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       Operation operation = new Operation();
       operation.setName(name);
       operation.setMethod(method);
+
+      // Deal with dispatcher stuffs.
+      String url = urlOf(http, location);
+
+      if (urlHasParameters(url) && urlHasParts(url)) {
+         operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url) + " ?? "
+               + DispatchCriteriaHelper.extractParamsFromURI(url));
+         operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
+      } else if (urlHasParameters(url)) {
+         operation.setDispatcherRules(DispatchCriteriaHelper.extractParamsFromURI(url));
+         operation.setDispatcher(DispatchStyles.URI_PARAMS);
+         operation.addResourcePath(pathOf(url, location));
+      } else if (urlHasParts(url)) {
+         operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url));
+         operation.setDispatcher(DispatchStyles.URI_PARTS);
+      } else {
+         operation.addResourcePath(pathOf(url, location));
+         log.debug("Added operation generic resource path: {}", operation.getResourcePaths());
+      }
+
       operations.putIfAbsent(name, operation);
    }
 
@@ -378,6 +454,17 @@ public class OpenCollectionImporter implements MockRepositoryImporter {
       }
       return http.path("url").textValue();
    }
+
+   /** Check parameters presence into given url. */
+   private static boolean urlHasParameters(String url) {
+      return url.indexOf('?') != -1 && url.indexOf('=') != -1;
+   }
+
+   /** Check variables parts presence into given url. */
+   private static boolean urlHasParts(String url) {
+      return url.indexOf("/:") != -1;
+   }
+
 
    /** The kinds of items the importer distinguishes. */
    private enum ItemKind {
