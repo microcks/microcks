@@ -214,6 +214,25 @@ class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
+   void testOpenCollectionMocking() {
+      // Issue #2365: OpenCollection examples are served as mock responses, without dispatcher for now.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/opencollection/petstore-mock-opencollection.yml",
+            true);
+
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/Petstore+Mock+API/1.0/pet/findByStatus?status=available", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()));
+      assertEquals("[{\"id\":190192062,\"name\":\"doggie\",\"status\":\"available\"}]", response.getBody());
+
+      // '/pet/2' reaches 'GET /pet/:petId' through its resource path.
+      response = restTemplate.getForEntity("/rest/Petstore+Mock+API/1.0/pet/2", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()));
+      assertEquals("{\"id\":2,\"name\":\"cat\"}", response.getBody());
+   }
+
+   @Test
    void testHeadersTemplating() {
       // Upload modified pastry-with-headers-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);

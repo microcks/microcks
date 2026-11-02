@@ -1,0 +1,40 @@
+opencollection: 1.0.0
+info:
+  name: Petstore Mock API
+  version: "1.0"
+items:
+  - info:
+      name: pet
+      type: folder
+    items:
+      - info:
+          name: Finds Pets by status
+          type: http
+        http:
+          method: GET
+          url: "{{baseUrl}}/pet/findByStatus?status=available"
+        examples:
+          - name: available response
+            response:
+              status: 200
+              headers:
+                - name: Content-Type
+                  value: application/json
+              body:
+                type: json
+                data: '[{"id":190192062,"name":"doggie","status":"available"}]'
+      # A single example: served without dispatcher, as the operation path pattern matches '/pet/2'.
+      - info:
+          name: Find pet by ID
+          type: http
+        http:
+          method: GET
+          url: "{{baseUrl}}/pet/:petId"
+        examples:
+          - name: get-2
+            response:
+              status: 200
+              body:
+                type: json
+                data: '{"id":2,"name":"cat"}'
+bundled: true

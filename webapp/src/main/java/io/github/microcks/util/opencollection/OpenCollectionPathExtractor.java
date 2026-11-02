@@ -40,11 +40,7 @@ public final class OpenCollectionPathExtractor {
     * @throws IllegalArgumentException with a human-readable reason when no path can be derived
     */
    public static String extractPath(String url) {
-      String trimmedUrl = url.strip();
-      if (trimmedUrl.isEmpty()) {
-         throw new IllegalArgumentException("url is empty");
-      }
-      String path = withoutHostPrefix(withoutQueryAndFragment(trimmedUrl));
+      String path = withoutHostPrefix(withoutQueryAndFragment(url.strip()));
       if (path.isEmpty()) {
          return "/";
       }
