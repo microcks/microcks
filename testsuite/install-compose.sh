@@ -68,7 +68,12 @@ case $MODE in
 esac
 
 # Start building the command with the main compose file
-CMD="${METHOD} -f ${MAIN_COMPOSE}"
+COMPOSE_BIN="${METHOD}"
+# Recent distributions only ship the Compose v2 plugin ("docker compose") instead of the "docker-compose" binary
+if [[ "$METHOD" == "docker-compose" ]] && ! command -v docker-compose >/dev/null 2>&1; then
+  COMPOSE_BIN="docker compose"
+fi
+CMD="${COMPOSE_BIN} -f ${MAIN_COMPOSE}"
 
 for addon in "${ADDONS[@]}"; do
   addon=$(echo "$addon" | xargs)  # trim whitespace
