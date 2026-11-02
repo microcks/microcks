@@ -76,7 +76,11 @@ jobs:
         if: always()
         run: |
           cd install/${{ matrix.method }}-compose
-          ${{ matrix.method }}-compose down -v --remove-orphans
+          if [ "${{ matrix.method }}" = "docker" ]; then
+            docker compose down -v --remove-orphans
+          else
+            podman-compose down -v --remove-orphans
+          fi
 
   check-helm:
     permissions:
