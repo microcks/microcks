@@ -114,6 +114,10 @@ public class AsyncAPICommons {
                   }
                }
                break;
+            case "pulsar":
+               b = retrieveOrInitBinding(holder, BindingType.PULSAR);
+               b.setPersistent(!"non-persistent".equals(bindingNode.path("persistence").asText()));
+               break;
             default:
                break;
          }

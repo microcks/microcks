@@ -737,4 +737,30 @@ class AsyncAPI3ImporterTest {
       assertEquals("queue", binding.getDestinationType());
       assertEquals("myQueueName", binding.getDestinationName());
    }
+
+   @Test
+   void testAsyncAPI3WithPulsarBinding() {
+      AsyncAPI3Importer importer = null;
+      try {
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-3.0-pulsar.yaml", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Operation operation = services.get(0).getOperations().get(0);
+      assertEquals("RECEIVE onUserSignedUp", operation.getName());
+
+      // Check that Pulsar channel binding has been parsed.
+      Binding binding = operation.getBindings().get(BindingType.PULSAR.name());
+      assertNotNull(binding);
+      assertFalse(binding.isPersistent());
+   }
 }

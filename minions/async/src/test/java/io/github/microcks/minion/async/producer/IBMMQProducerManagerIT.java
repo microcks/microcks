@@ -185,7 +185,8 @@ class IBMMQProducerManagerIT {
       ibmmqProducerManager.create();
 
       ProducerManager producerManager = new ProducerManager(mockRepository, null,
-            new ProducerManager.ProducerDependencies(null, null, null, null, null, null, null, ibmmqProducerManager),
+            new ProducerManager.ProducerDependencies(null, null, null, null, null, null, null, ibmmqProducerManager,
+                  null),
             null);
 
       return new TestContext(producerManager, ibmmqProducerManager, mockDefinition, aliceEvent, bobEvent);
