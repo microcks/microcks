@@ -28,7 +28,9 @@ import io.github.microcks.minion.async.SchemaRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,7 +51,7 @@ class RequestReplyHandlerManagerTest {
       // Create simple in-memory implementations for testing
       mockRepository = new AsyncMockRepository();
       kafkaHandlerFactory = new TestKafkaHandlerFactory();
-      handlerManager = new RequestReplyHandlerManager(mockRepository, kafkaHandlerFactory);
+      handlerManager = new RequestReplyHandlerManager(mockRepository, kafkaHandlerFactory, null);
 
       // Inject supported bindings via reflection (since it's normally from
       // ConfigProperty)

@@ -25,9 +25,6 @@ import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -39,7 +36,6 @@ import org.eclipse.microprofile.config.Config;
 import org.jboss.logging.Logger;
 
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,9 +57,6 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   /** Standard header name for message correlation ID, as per AsyncAPI spec. */
-   static final String CORRELATION_ID_HEADER = "correlationId";
-
    private final AsyncMockDefinition mockDefinition;
    private final Binding binding;
    private final KafkaProducerManager producerManager;
@@ -73,9 +66,6 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
    private KafkaConsumer<String, byte[]> consumer;
    private Thread consumerThread;
    private final AtomicBoolean running = new AtomicBoolean(false);
-
-   /** Holds the current request record so reply-topic resolution can access headers/payload. */
-   private ConsumerRecord<String, byte[]> currentRequestRecord;
 
    /**
     * Create a new Kafka request-reply handler.
@@ -182,7 +172,6 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
    /** Handle a single request message and send the corresponding reply. */
    private void handleRequest(ConsumerRecord<String, byte[]> record) {
       logger.debugf("Received request message on %s", getRequestTopic());
-      currentRequestRecord = record;
 
       // Build an EvaluableRequest from the incoming Kafka request record.
       String requestBody = new String(record.value(), StandardCharsets.UTF_8);
@@ -195,10 +184,8 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
       }
       evaluableRequest.setHeaders(requestHeaders);
 
-      // Extract correlationId from the request headers if present, otherwise generate one.
-      // This follows the AsyncAPI spec correlation ID object, which allows defining a header
-      // location (e.g. "$message.header#/correlationId") to link requests and replies.
-      String correlationId = requestHeaders.getOrDefault(CORRELATION_ID_HEADER, UUID.randomUUID().toString());
+      // Resolve the correlation ID from the request headers, following the AsyncAPI correlation ID convention.
+      String correlationId = CorrelationIdSupport.resolveCorrelationId(requestHeaders);
       logger.debugf("Using correlationId '%s' for this request-reply exchange", correlationId);
 
       // Find matching request-reply pair
@@ -212,7 +199,7 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
       String replyContent = renderReplyContent(replyMessage, evaluableRequest);
 
       // Publish reply
-      String replyTopic = getReplyTopic(replyMessage);
+      String replyTopic = getReplyTopic(replyMessage, requestHeaders, requestBody);
       String key = String.valueOf(System.currentTimeMillis());
 
       logger.debugf("Sending reply to %s", replyTopic);
@@ -277,7 +264,7 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
 
       // Propagate the correlation ID so consumers can match this reply to their original request.
       // This implements the AsyncAPI correlation ID object specification.
-      headers.add(new org.apache.kafka.common.header.internals.RecordHeader(CORRELATION_ID_HEADER,
+      headers.add(new org.apache.kafka.common.header.internals.RecordHeader(CorrelationIdSupport.CORRELATION_ID_HEADER,
             correlationId.getBytes(StandardCharsets.UTF_8)));
 
       // Add any headers defined in the reply message definition.
@@ -301,8 +288,11 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
       return producerManager.getTopicName(mockDefinition, mockDefinition.getEventMessages().get(0));
    }
 
-   /** Get the reply topic name. */
-   private String getReplyTopic(EventMessage replyMessage) {
+   /**
+    * Get the reply topic name, resolving a dynamic {@code addressLocation} runtime expression against the incoming
+    * request headers/payload if specified, otherwise falling back to the static {@code channelAddress}.
+    */
+   private String getReplyTopic(EventMessage replyMessage, Map<String, String> requestHeaders, String requestBody) {
       if (mockDefinition.getOperation().getReply() == null) {
          throw new IllegalStateException(
                "Request-reply operation must have reply information, but none found for operation: "
@@ -313,16 +303,16 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
       // Supports AsyncAPI Runtime Expression syntax:
       //   $message.header#/<headerName>  - reads from a Kafka request header
       //   $message.payload#/<jsonPointer> - reads from the JSON request body
-      if (mockDefinition.getOperation().getReply().getAddressLocation() != null) {
-         String resolved = resolveAddressLocation(mockDefinition.getOperation().getReply().getAddressLocation(),
-               currentRequestRecord);
+      String addressLocation = mockDefinition.getOperation().getReply().getAddressLocation();
+      if (addressLocation != null) {
+         String resolved = RuntimeExpressionResolver.resolve(addressLocation, requestHeaders, requestBody);
          if (resolved != null && !resolved.isBlank()) {
             logger.debugf("Resolved dynamic reply topic '%s' from addressLocation expression '%s'", resolved,
-                  mockDefinition.getOperation().getReply().getAddressLocation());
+                  addressLocation);
             return resolved;
          }
-         throw new IllegalStateException("Could not resolve reply topic from addressLocation expression: "
-               + mockDefinition.getOperation().getReply().getAddressLocation());
+         throw new IllegalStateException(
+               "Could not resolve reply topic from addressLocation expression: " + addressLocation);
       }
 
       // Use the channelAddress as the raw topic name
@@ -331,58 +321,6 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
       }
 
       throw new IllegalStateException("Reply information must specify either channelAddress or addressLocation.");
-   }
-
-   /**
-    * Resolves an AsyncAPI Runtime Expression for an addressLocation field against the incoming Kafka request record.
-    * <p>
-    * Supported expression prefixes:
-    * <ul>
-    * <li>{@code $message.header#/<name>} - reads the named header from the Kafka request.</li>
-    * <li>{@code $message.payload#/<jsonPointer>} - applies a JSON Pointer to the request body.</li>
-    * </ul>
-    *
-    * @param expression The runtime expression string (e.g. {@code $message.header#/replyTo}).
-    * @param record     The incoming Kafka {@link ConsumerRecord} providing headers and payload.
-    * @return The resolved string value, or {@code null} if the expression could not be resolved.
-    */
-   private String resolveAddressLocation(String expression, ConsumerRecord<String, byte[]> record) {
-      if (expression == null || record == null) {
-         return null;
-      }
-
-      if (expression.startsWith("$message.header#/")) {
-         String headerName = expression.substring("$message.header#/".length());
-         for (org.apache.kafka.common.header.Header h : record.headers()) {
-            if (h.key().equals(headerName)) {
-               return new String(h.value(), StandardCharsets.UTF_8);
-            }
-         }
-         logger.warnf("Header '%s' not found in request message for addressLocation expression '%s'", headerName,
-               expression);
-         return null;
-      }
-
-      if (expression.startsWith("$message.payload#/")) {
-         String jsonPointer = expression.substring("$message.payload#".length());
-         try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(record.value());
-            JsonNode node = root.at(jsonPointer);
-            if (!node.isMissingNode() && !node.isNull()) {
-               return node.asText();
-            }
-            logger.warnf("JSON Pointer '%s' yielded no value in request payload for expression '%s'", jsonPointer,
-                  expression);
-         } catch (Exception e) {
-            logger.errorf(e, "Failed to parse request payload as JSON for addressLocation expression '%s'", expression);
-         }
-         return null;
-      }
-
-      logger.warnf("Unsupported addressLocation expression format (expected $message.header or $message.payload): '%s'",
-            expression);
-      return null;
    }
 
    /** Create and configure the Kafka consumer. */
