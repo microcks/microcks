@@ -61,7 +61,7 @@ import java.util.regex.Pattern;
  * <code>sns://{region}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
-public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
+public class AmazonSNSMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -119,6 +119,9 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
          initializeSubscription();
       }
       List<ConsumedMessage> messages = new ArrayList<>();
+
+      // Subscription is established: the consumer is connected and ready to receive messages.
+      notifyWaitingForMessage();
 
       long timeoutTime = startTime + specification.getTimeoutMS();
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
