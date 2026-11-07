@@ -45,6 +45,7 @@ export type TestRequest = {
   runnerType: TestRunnerType;
   operationsHeaders: any;
   oAuth2Context: OAuth2ClientContext | undefined;
+  responseExampleComparison?: ResponseExampleComparisonMode;
 }
 
 export type TestResult = {
@@ -90,4 +91,9 @@ export enum TestRunnerType {
   ASYNC_API_SCHEMA = 'ASYNC_API_SCHEMA',
   GRPC_PROTOBUF = 'GRPC_PROTOBUF',
   GRAPHQL_SCHEMA = 'GRAPHQL_SCHEMA'
+}
+
+export enum ResponseExampleComparisonMode {
+  STRICT = 'STRICT',
+  LENIENT = 'LENIENT'
 }
