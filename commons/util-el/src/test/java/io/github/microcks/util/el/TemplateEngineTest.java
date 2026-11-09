@@ -152,4 +152,21 @@ class TemplateEngineTest {
       result = engine.getValue("{ \"result\": \"{{ request.params[bar] || 'default' }}\" }");
       assertEquals("{ \"result\": \"default\" }", result);
    }
+
+   @Test
+   void testNullPropertyTemplate() {
+      TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+      engine.getContext().setVariable("request", new EvaluableRequest(null, null));
+
+      // Case 1: no default provided, renders string "null".
+      String result = engine.getValue("{ \"id\": {{ request.body/id }} }");
+      assertEquals("{ \"id\": null }", result);
+
+      result = engine.getValue("{{ request.body/id }}");
+      assertEquals("null", result);
+
+      // Case 2: default value provided after ||.
+      result = engine.getValue("{ \"id\": \"{{ request.body/id || 'default' }}\" }");
+      assertEquals("{ \"id\": \"default\" }", result);
+   }
 }
