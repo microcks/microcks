@@ -156,14 +156,30 @@ public class KafkaRequestReplyHandler implements RequestReplyHandler {
             ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(1000));
 
             for (ConsumerRecord<String, byte[]> record : records) {
-               handleRequest(record);
+               // Isolate failures to a single record so that one bad request cannot stop the whole
+               // consume loop and leave later valid requests without a reply.
+               try {
+                  handleRequest(record);
+               } catch (Exception e) {
+                  logger.errorf(e, "Failed to handle request message on %s, skipping it", getRequestTopic());
+               }
             }
          }
       } catch (org.apache.kafka.common.errors.WakeupException e) {
          // Expected on shutdown
          logger.debug("Consumer wakeup called, shutting down");
       } catch (Exception e) {
-         logger.errorf(e, "Unexpected error in consume loop for %s", getRequestTopic());
+         logger.errorf(e, "Unexpected error in consume loop for %s, handler is stopping", getRequestTopic());
+         // The loop is exiting abnormally (not through a regular stop() call), so stop() will neve be invoked to clean
+         // up the consumer. Close it here and make sure isRunning() reflect that the handler is no longer operating.
+         running.set(false);
+         if (consumer != null) {
+            try {
+               consumer.close();
+            } catch (Exception closeException) {
+               logger.warnf(closeException, "Failed to close Kafka consumer for %s", getRequestTopic());
+            }
+         }
       } finally {
          logger.debugf("Exiting consume loop for %s", getRequestTopic());
       }
