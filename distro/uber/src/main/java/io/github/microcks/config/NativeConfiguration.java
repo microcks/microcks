@@ -30,6 +30,7 @@ import io.github.microcks.event.AsyncAPITriggerCommand;
 import io.github.microcks.event.AsyncAPITriggerCommandSerializer;
 import io.github.microcks.event.ServiceViewChangeEvent;
 import io.github.microcks.event.ServiceViewChangeEventSerializer;
+import io.github.microcks.service.ImportExportService;
 import io.github.microcks.util.dispatcher.DispatchCases;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
@@ -79,6 +80,9 @@ public class NativeConfiguration {
                MemberCategory.ACCESS_DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
          hints.reflection().registerType(TypeReference.of(UnidirectionalEvent.class),
+               MemberCategory.ACCESS_DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
+               MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(ImportExportService.ImportExportModel.class),
                MemberCategory.ACCESS_DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
