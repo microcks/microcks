@@ -27,10 +27,7 @@ import io.github.microcks.util.el.TemplateEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class holds commons, utility handlers for different test runner implements (whether it be Soap, OpenAPI,
@@ -95,23 +92,33 @@ public class TestRunnerCommons {
     * @return A set of headers for the given operation
     */
    public static Set<Header> collectHeaders(TestResult testResult, Request request, Operation operation) {
-      Set<Header> headers = new HashSet<>();
+      // Use a Map keyed by header name so that a header defined at a higher precedence level
+      // (operation-specific, then globals) fully replaces any earlier header with the same name
+      // instead of being added alongside it (see issue #2419).
+      Map<String, Header> headers = new LinkedHashMap<>();
 
       // Set headers to request if any. Start with those coming from request itself.
       if (request.getHeaders() != null) {
-         headers.addAll(request.getHeaders());
+         addOrReplaceHeaders(headers, request.getHeaders());
       }
 
       // Add or override existing headers with test specific ones for operation and globals.
       if (testResult.getOperationsHeaders() != null) {
          if (testResult.getOperationsHeaders().getGlobals() != null) {
-            headers.addAll(testResult.getOperationsHeaders().getGlobals());
+            addOrReplaceHeaders(headers, testResult.getOperationsHeaders().getGlobals());
          }
          if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
-            headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
+            addOrReplaceHeaders(headers, testResult.getOperationsHeaders().get(operation.getName()));
          }
       }
 
-      return headers;
+      return new HashSet<>(headers.values());
+   }
+
+   /** Add headers into the map keyed by name, replacing any existing header sharing the same name. */
+   private static void addOrReplaceHeaders(Map<String, Header> headers, Set<Header> newHeaders) {
+      for (Header header : newHeaders) {
+         headers.put(header.getName(), header);
+      }
    }
 }
