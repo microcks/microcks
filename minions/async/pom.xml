@@ -28,6 +28,7 @@
     <apache-httpcore.version>5.4.3</apache-httpcore.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.25.3</nats.version>
+    <pulsar.version>4.2.4</pulsar.version>
     <rabbitmq.version>5.37.0</rabbitmq.version>
     <ibmmq.version>9.3.4.1</ibmmq.version>
     <apicurio-registry.version>2.6.13.Final</apicurio-registry.version>
@@ -146,6 +147,13 @@
       <version>${nats.version}</version>
     </dependency>
 
+    <!-- Pulsar related dependencies -->
+    <dependency>
+      <groupId>org.apache.pulsar</groupId>
+      <artifactId>pulsar-client-original</artifactId>
+      <version>${pulsar.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>io.quarkiverse.googlecloudservices</groupId>
       <artifactId>quarkus-google-cloud-pubsub</artifactId>
@@ -259,6 +267,11 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-gcloud</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-pulsar</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
