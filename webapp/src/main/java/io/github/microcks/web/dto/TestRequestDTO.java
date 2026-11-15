@@ -16,6 +16,7 @@
 package io.github.microcks.web.dto;
 
 import io.github.microcks.domain.OAuth2ClientContext;
+import io.github.microcks.domain.ResponseExampleComparisonMode;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -35,6 +36,7 @@ public class TestRequestDTO {
    private Long timeout;
    private List<String> filteredOperations;
    private Map<String, List<HeaderDTO>> operationsHeaders;
+   private ResponseExampleComparisonMode responseExampleComparison;
    @JsonProperty("oAuth2Context")
    private OAuth2ClientContext oAuth2Context;
 
@@ -64,6 +66,10 @@ public class TestRequestDTO {
 
    public Map<String, List<HeaderDTO>> getOperationsHeaders() {
       return operationsHeaders;
+   }
+
+   public ResponseExampleComparisonMode getResponseExampleComparison() {
+      return responseExampleComparison;
    }
 
    public OAuth2ClientContext getOAuth2Context() {

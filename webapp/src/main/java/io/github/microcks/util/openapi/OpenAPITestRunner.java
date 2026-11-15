@@ -20,6 +20,7 @@ import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Response;
+import io.github.microcks.domain.ResponseExampleComparisonMode;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.repository.ResourceRepository;
@@ -53,6 +54,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
    private final ResponseRepository responseRepository;
 
    private final boolean validateResponseCode;
+   private final ResponseExampleComparisonMode responseExampleComparison;
 
 
    /** The URL of resources used for validation. */
@@ -68,9 +70,22 @@ public class OpenAPITestRunner extends HttpTestRunner {
     */
    public OpenAPITestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository,
          boolean validateResponseCode) {
+      this(resourceRepository, responseRepository, validateResponseCode, null);
+   }
+
+   /**
+    * Build a new OpenAPITestRunner.
+    * @param resourceRepository        Access to resources repository
+    * @param responseRepository        Access to response repository
+    * @param validateResponseCode      whether to validate response code
+    * @param responseExampleComparison optional comparison mode for response examples
+    */
+   public OpenAPITestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository,
+         boolean validateResponseCode, ResponseExampleComparisonMode responseExampleComparison) {
       this.resourceRepository = resourceRepository;
       this.responseRepository = responseRepository;
       this.validateResponseCode = validateResponseCode;
+      this.responseExampleComparison = responseExampleComparison;
    }
 
    /**
@@ -118,9 +133,13 @@ public class OpenAPITestRunner extends HttpTestRunner {
          log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType());
       }
 
+      Response expectedResponse = null;
+      if ((validateResponseCode || responseExampleComparison != null) && request.getResponseId() != null) {
+         expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
+      }
+
       // If required, compare response code and content-type to expected ones.
       if (validateResponseCode) {
-         Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
          if (expectedResponse != null) {
             log.debug("Response expected status code: {}", expectedResponse.getStatus());
             if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
@@ -200,6 +219,30 @@ public class OpenAPITestRunner extends HttpTestRunner {
             return TestReturn.FAILURE_CODE;
          }
          log.debug("OpenAPI schema validation of response is successful !");
+
+         if (responseExampleComparison != null) {
+            if (expectedResponse == null || expectedResponse.getContent() == null
+                  || expectedResponse.getContent().isBlank()) {
+               lastValidationErrors = List.of("No response example is available for JSON response body comparison");
+               return TestReturn.FAILURE_CODE;
+            }
+
+            JsonNode expectedContentNode;
+            try {
+               expectedContentNode = OpenAPISchemaValidator.getJsonNode(expectedResponse.getContent());
+            } catch (IOException ioe) {
+               log.debug("Response example cannot be transformed as Json, returning failure");
+               lastValidationErrors = List.of("Response example cannot be transformed as JSON");
+               return TestReturn.FAILURE_CODE;
+            }
+
+            if (!JsonExampleComparator.matches(expectedContentNode, contentNode, responseExampleComparison)) {
+               lastValidationErrors = List.of(String.format(
+                     "Response body does not match response example using %s comparison", responseExampleComparison));
+               return TestReturn.FAILURE_CODE;
+            }
+            log.debug("Response body matches response example using {} comparison", responseExampleComparison);
+         }
       }
       return code;
    }

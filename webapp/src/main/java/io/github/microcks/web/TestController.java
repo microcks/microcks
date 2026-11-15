@@ -134,7 +134,7 @@ public class TestController {
       }
 
       TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(),
-            operationsHeaders, test.getOAuth2Context());
+            operationsHeaders, test.getOAuth2Context(), test.getResponseExampleComparison());
       TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, testOptionals);
       return new ResponseEntity<>(testResult, HttpStatus.CREATED);
    }
