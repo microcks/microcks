@@ -16,6 +16,10 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +35,12 @@ public interface CustomServiceRepository {
    List<Service> findByLabels(Map<String, String> labels);
 
    List<Service> findByLabelsAndNameLike(Map<String, String> labels, String name);
+
+   List<Service> search(String name, Map<String, String> labels, String version, ServiceType type, Pageable pageable);
+
+   List<Service> search(String name, Map<String, String> labels, String version, ServiceType type, Sort sort);
+
+   long countSearch(String name, Map<String, String> labels, String version, ServiceType type);
 
    List<ServiceCount> countServicesByType();
 
