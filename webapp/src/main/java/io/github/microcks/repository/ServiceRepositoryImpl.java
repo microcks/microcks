@@ -16,8 +16,11 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -73,6 +76,50 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
          query.addCriteria(Criteria.where("metadata.labels." + entry.getKey()).is(entry.getValue()));
       }
       return template.find(query, Service.class);
+   }
+
+   @Override
+   public List<Service> search(String name, Map<String, String> labels, String version, ServiceType type,
+         Pageable pageable) {
+      Query query = buildSearchQuery(name, labels, version, type);
+      if (pageable != null) {
+         query.with(pageable);
+      }
+      return template.find(query, Service.class);
+   }
+
+   @Override
+   public List<Service> search(String name, Map<String, String> labels, String version, ServiceType type, Sort sort) {
+      Query query = buildSearchQuery(name, labels, version, type);
+      if (sort != null) {
+         query.with(sort);
+      }
+      return template.find(query, Service.class);
+   }
+
+   @Override
+   public long countSearch(String name, Map<String, String> labels, String version, ServiceType type) {
+      Query query = buildSearchQuery(name, labels, version, type);
+      return template.count(query, Service.class);
+   }
+
+   private Query buildSearchQuery(String name, Map<String, String> labels, String version, ServiceType type) {
+      Query query = new Query();
+      if (name != null && !name.trim().isEmpty()) {
+         query.addCriteria(Criteria.where("name").regex(name.trim(), "i"));
+      }
+      if (labels != null && !labels.isEmpty()) {
+         for (Map.Entry<String, String> entry : labels.entrySet()) {
+            query.addCriteria(Criteria.where("metadata.labels." + entry.getKey()).is(entry.getValue()));
+         }
+      }
+      if (version != null && !version.trim().isEmpty()) {
+         query.addCriteria(Criteria.where("version").is(version.trim()));
+      }
+      if (type != null) {
+         query.addCriteria(Criteria.where("type").is(type));
+      }
+      return query;
    }
 
    public List<ServiceCount> countServicesByType() {
