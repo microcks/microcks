@@ -24,19 +24,19 @@ import io.github.microcks.domain.Service;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.boot.http.client.HttpRedirects;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -56,21 +56,21 @@ class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
 
       // Check its different mocked operations.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets", String.class);
-      assertEquals(200, response.getStatusCode().value());
+      EntityExchangeResult<String> response = restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets").exchange()
+            .expectStatus().isOk().expectBody(String.class).returnResult();
       try {
-         JSONAssert.assertEquals("[4]", response.getBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
+         JSONAssert.assertEquals("[4]", response.getResponseBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
          JSONAssert.assertEquals(
                "[{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"},{\"id\":2,\"name\":\"Tigresse\",\"tag\":\"cat\"},{\"id\":3,\"name\":\"Maki\",\"tag\":\"cat\"},{\"id\":4,\"name\":\"Toufik\",\"tag\":\"cat\"}]",
-               response.getBody(), JSONCompareMode.LENIENT);
+               response.getResponseBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
 
-      response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets/1", String.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets/1").exchange().expectStatus().isOk()
+            .expectBody(String.class).returnResult();
       try {
-         JSONAssert.assertEquals("{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"}", response.getBody(),
+         JSONAssert.assertEquals("{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"}", response.getResponseBody(),
                JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
@@ -82,31 +82,26 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload PetStore reference artifact.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
       // Check its validation endpoint with correct payload
       String patchedPastry = "{\"price\":2.6}";
-      HttpEntity<String> requestEntity = new HttpEntity<>(patchedPastry, headers);
-      ResponseEntity<String> response = restTemplate.exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe",
-            HttpMethod.PATCH, requestEntity, String.class);
-      assertEquals(200, response.getStatusCode().value());
+      EntityExchangeResult<String> response = restTestClient.patch()
+            .uri("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe").contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON).body(patchedPastry).exchange().expectStatus().isOk()
+            .expectBody(String.class).returnResult();
       try {
          JSONAssert.assertEquals(
                "{\"name\":\"Eclair Cafe\",\"description\":\"Delicieux Eclair au Cafe pas calorique du tout\",\"size\":\"M\",\"price\":2.6,\"status\":\"available\"}",
-               response.getBody(), JSONCompareMode.LENIENT);
+               response.getResponseBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
 
       // Check its validation endpoint with invalid payload
       patchedPastry = "{\"price\":\"2.6\"}";
-      requestEntity = new HttpEntity<>(patchedPastry, headers);
-      response = restTemplate.exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe", HttpMethod.PATCH,
-            requestEntity, String.class);
-      assertEquals(400, response.getStatusCode().value());
-      assertEquals("[string found, number expected]", response.getBody());
+      response = restTestClient.patch().uri("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe")
+            .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).body(patchedPastry).exchange()
+            .expectStatus().isBadRequest().expectBody(String.class).returnResult();
+      assertEquals("[string found, number expected]", response.getResponseBody());
    }
 
    @Test
@@ -116,21 +111,20 @@ class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-collection.json", false);
 
       // Check its different mocked operations.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0",
-            String.class);
-      assertEquals(200, response.getStatusCode().value());
+      EntityExchangeResult<String> response = restTestClient.get().uri("/rest/Beer+Catalog+API/0.9/beer?page=0")
+            .exchange().expectStatus().isOk().expectBody(String.class).returnResult();
       try {
-         JSONAssert.assertEquals("[3]", response.getBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
+         JSONAssert.assertEquals("[3]", response.getResponseBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
 
-      response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer/Weissbier", String.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = restTestClient.get().uri("/rest/Beer+Catalog+API/0.9/beer/Weissbier").exchange().expectStatus().isOk()
+            .expectBody(String.class).returnResult();
       try {
          JSONAssert.assertEquals("{\n" + "    \"name\": \"Weissbier\",\n" + "    \"country\": \"Germany\",\n"
                + "    \"type\": \"Wheat\",\n" + "    \"rating\": 4.1,\n" + "    \"status\": \"out_of_stock\"\n" + "}",
-               response.getBody(), JSONCompareMode.LENIENT);
+               response.getResponseBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
@@ -144,11 +138,11 @@ class RestControllerIT extends AbstractBaseIT {
       ObjectMapper mapper = new ObjectMapper();
 
       // Check operation with a defined mock (name: 'Millefeuille')
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/rest/pastry-details/1.0.0/pastry/Millefeuille/details", String.class);
-      assertEquals(200, response.getStatusCode().value());
+      EntityExchangeResult<String> response = restTestClient.get()
+            .uri("/rest/pastry-details/1.0.0/pastry/Millefeuille/details").exchange().expectStatus().isOk()
+            .expectBody(String.class).returnResult();
       try {
-         JsonNode details = mapper.readTree(response.getBody());
+         JsonNode details = mapper.readTree(response.getResponseBody());
          String description = details.get("description").asText();
          assertTrue(description.startsWith("Detail -"));
       } catch (Exception e) {
@@ -157,8 +151,8 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check operation with an undefined defined mock (name: 'Dummy'), should now return a 400 error as
       // per issue #819 and #1132 to have a consistent behaviour, allow proxying support and this kind of stuff.
-      response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
-      assertEquals(400, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/pastry-details/1.0.0/pastry/Dummy/details").exchange().expectStatus()
+            .isBadRequest();
    }
 
    @Test
@@ -170,14 +164,11 @@ class RestControllerIT extends AbstractBaseIT {
             "target/test-classes/io/github/microcks/util/postman/pets-double-brace-postman-collection.json", true);
 
       // '{{petId}}' is a literal segment, so '/pets/2/owner' matches no operation: 404, not 500.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Pets+Double+Brace+API/1.0/pets/2/owner",
-            String.class);
-      assertEquals(404, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/Pets+Double+Brace+API/1.0/pets/2/owner").exchange().expectStatus().isNotFound();
 
       // ':toyId' remains a path parameter: request reaches 'GET /toys/:toyId' that has no example for toyId=3,
       // hence the 400 as per #819 and #1132 (and no more 500 caused by the other operation of the service).
-      response = restTemplate.getForEntity("/rest/Pets+Double+Brace+API/1.0/toys/3", String.class);
-      assertEquals(400, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/Pets+Double+Brace+API/1.0/toys/3").exchange().expectStatus().isBadRequest();
    }
 
    @Test
@@ -187,17 +178,15 @@ class RestControllerIT extends AbstractBaseIT {
       // Operations are 'GET /files/report.pdf' and 'GET /emoticons/smile:-)'.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/regex-metachar-path-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/rest/Regex+Metachar+Path+API/1.0.0/files/report.pdf", String.class);
-      assertEquals(200, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/Regex+Metachar+Path+API/1.0.0/files/report.pdf").exchange().expectStatus().isOk();
 
       // '.' is a literal dot, not a wildcard: 'reportXpdf' used to be served by 'GET /files/report.pdf'.
-      response = restTemplate.getForEntity("/rest/Regex+Metachar+Path+API/1.0.0/files/reportXpdf", String.class);
-      assertEquals(404, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/Regex+Metachar+Path+API/1.0.0/files/reportXpdf").exchange().expectStatus()
+            .isNotFound();
 
       // The unbalanced ')' of 'smile:-)' used to break the regex compilation and return a 500.
-      response = restTemplate.getForEntity("/rest/Regex+Metachar+Path+API/1.0.0/emoticons/wink", String.class);
-      assertEquals(404, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/Regex+Metachar+Path+API/1.0.0/emoticons/wink").exchange().expectStatus()
+            .isNotFound();
    }
 
    @Test
@@ -208,9 +197,8 @@ class RestControllerIT extends AbstractBaseIT {
       // Operation is 'GET /pastry/{name}?api-version=2024-06-01'.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-query-path-openapi.json", true);
 
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/rest/API+Pastry+Query+Path/1.0.0/pastry/Eclairapi-version=2024-06-01", String.class);
-      assertEquals(404, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/API+Pastry+Query+Path/1.0.0/pastry/Eclairapi-version=2024-06-01").exchange()
+            .expectStatus().isNotFound();
    }
 
    @Test
@@ -219,17 +207,17 @@ class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/opencollection/petstore-mock-opencollection.yml",
             true);
 
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/rest/Petstore+Mock+API/1.0/pet/findByStatus?status=available", String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()));
-      assertEquals("[{\"id\":190192062,\"name\":\"doggie\",\"status\":\"available\"}]", response.getBody());
+      EntityExchangeResult<String> response = restTestClient.get()
+            .uri("/rest/Petstore+Mock+API/1.0/pet/findByStatus?status=available").exchange().expectStatus().isOk()
+            .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON).expectBody(String.class)
+            .returnResult();
+      assertEquals("[{\"id\":190192062,\"name\":\"doggie\",\"status\":\"available\"}]", response.getResponseBody());
 
       // '/pet/2' reaches 'GET /pet/:petId' through its resource path.
-      response = restTemplate.getForEntity("/rest/Petstore+Mock+API/1.0/pet/2", String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()));
-      assertEquals("{\"id\":2,\"name\":\"cat\"}", response.getBody());
+      response = restTestClient.get().uri("/rest/Petstore+Mock+API/1.0/pet/2").exchange().expectStatus().isOk()
+            .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON).expectBody(String.class)
+            .returnResult();
+      assertEquals("{\"id\":2,\"name\":\"cat\"}", response.getResponseBody());
    }
 
    @Test
@@ -237,16 +225,15 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload modified pastry-with-headers-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry", String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertEquals("some-static-header", response.getHeaders().getFirst("x-some-static-header"));
+      EntityExchangeResult<String> response = restTestClient.get().uri("/rest/pastry-headers/1.0.0/pastry").exchange()
+            .expectStatus().isOk().expectHeader().valueEquals("x-some-static-header", "some-static-header")
+            .expectBody(String.class).returnResult();
 
-      String someGenericHeader = response.getHeaders().getFirst("x-some-generic-header");
+      String someGenericHeader = response.getResponseHeaders().getFirst("x-some-generic-header");
       assertDoesNotThrow(() -> UUID.fromString(someGenericHeader));
 
-      response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry?size=XL", String.class);
-      String requestBasedHeader = response.getHeaders().getFirst("x-request-based-header");
-      assertEquals("XL size", requestBasedHeader);
+      response = restTestClient.get().uri("/rest/pastry-headers/1.0.0/pastry?size=XL").exchange().expectStatus().isOk()
+            .expectHeader().valueEquals("x-request-based-header", "XL size").expectBody(String.class).returnResult();
    }
 
    @Test
@@ -254,16 +241,18 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload simple-oidc-redirect-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate.withRedirects(HttpRedirects.DONT_FOLLOW)
-            .getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
-                  + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
-                  String.class);
-      assertEquals(302, response.getStatusCode().value());
+      ClientHttpRequestFactory requestFactory = ClientHttpRequestFactoryBuilder.detect()
+            .build(HttpClientSettings.defaults().withRedirects(HttpRedirects.DONT_FOLLOW));
+      RestTestClient noRedirectClient = RestTestClient.bindToServer(requestFactory).baseUrl(getServerUrl()).build();
 
-      String content = response.getBody();
+      EntityExchangeResult<String> response = noRedirectClient.get().uri("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
+            + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86")
+            .exchange().expectStatus().isEqualTo(HttpStatus.FOUND).expectBody(String.class).returnResult();
+
+      String content = response.getResponseBody();
       assertNull(content);
 
-      String location = response.getHeaders().getFirst("location");
+      String location = response.getResponseHeaders().getFirst("location");
       assertNotNull(location);
       assertTrue(location.startsWith("http://localhost:8080/Login/githubLoginSuccess?"));
       assertTrue(location.contains("state=e956e017-5e13-4c9d-b83b-6dd6337a6a86"));
@@ -284,20 +273,20 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // If we have the mock, we should get the response from the mock.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
-            String.class);
-      assertEquals(200, response.getStatusCode().value());
+      EntityExchangeResult<String> response = restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=donut")
+            .exchange().expectStatus().isOk().expectBody(String.class).returnResult();
       try {
-         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getResponseBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
 
       // If we don't have the mock, we should get the response from real backend.
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=croissant").exchange().expectStatus()
+            .isOk().expectBody(String.class).returnResult();
       try {
-         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getResponseBody(),
+               JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
@@ -317,25 +306,28 @@ class RestControllerIT extends AbstractBaseIT {
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
       serviceRepository.save(service);
 
+      // Warmup call to avoid cold-start initialization skewing latency comparison.
+      restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=donut").exchange().expectStatus().isOk();
+
       // If we have the mock, we should get the response from the mock.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
-            String.class);
+      EntityExchangeResult<String> response = restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=donut")
+            .exchange().expectStatus().isOk().expectBody(String.class).returnResult();
       long mockedResponseTime = System.currentTimeMillis() - startTime;
-      assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getResponseBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
 
       // If we don't have the mock, we should get the response from real backend.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
+      response = restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=croissant").exchange().expectStatus()
+            .isOk().expectBody(String.class).returnResult();
       long realResponseTime = System.currentTimeMillis() - startTime;
-      assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getResponseBody(),
+               JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
@@ -348,31 +340,32 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we have the mock, we should get the response from the mock.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut", String.class);
+      response = restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=donut").exchange().expectStatus().isOk()
+            .expectBody(String.class).returnResult();
       long mockedResponseTimeDelayed = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTimeDelayed >= delay,
             "mocked response time delayed: " + mockedResponseTimeDelayed + "ms");
       assertTrue(mockedResponseTimeDelayed >= mockedResponseTime,
             "mocked response time: " + mockedResponseTime + "ms, delayed: " + mockedResponseTimeDelayed + "ms");
-      assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getResponseBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
 
       // If we don't have the mock, we should get the response from real backend.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
+      response = restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=croissant").exchange().expectStatus()
+            .isOk().expectBody(String.class).returnResult();
       long realResponseTimeDelayed = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(realResponseTimeDelayed >= delay, "real response time delayed: " + realResponseTimeDelayed + "ms");
       assertTrue(realResponseTimeDelayed >= realResponseTime,
             "real response time: " + mockedResponseTime + "ms, delayed: " + realResponseTimeDelayed + "ms");
-      assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getResponseBody(),
+               JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
@@ -394,9 +387,12 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // Check that we don't fall into infinite loop and that we can't locally handle the call (error 400)
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
-            String.class);
-      assertEquals(400, response.getStatusCode().value());
+      ClientHttpRequestFactory requestFactory = ClientHttpRequestFactoryBuilder.detect()
+            .build(HttpClientSettings.defaults().withRedirects(HttpRedirects.DONT_FOLLOW));
+      RestTestClient noRedirectClient = RestTestClient.bindToServer(requestFactory).baseUrl(getServerUrl()).build();
+
+      noRedirectClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=realDonut").exchange().expectStatus()
+            .isBadRequest();
       verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any(), any());
    }
 
@@ -415,9 +411,7 @@ class RestControllerIT extends AbstractBaseIT {
             .replaceFirst("pastry-real", "not-found"));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
-            String.class);
-      assertEquals(404, response.getStatusCode().value());
+      restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry?name=realDonut").exchange().expectStatus().isNotFound();
    }
 
    @Test
@@ -434,11 +428,10 @@ class RestControllerIT extends AbstractBaseIT {
       serviceRepository.save(service);
 
       // Event if `donut` is defined on our mock, we should always have the response coming for real backend.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
-            String.class);
-      assertEquals(200, response.getStatusCode().value());
+      EntityExchangeResult<String> response = restTestClient.get().uri("/rest/pastry-proxy/1.0.0/pastry/donut")
+            .exchange().expectStatus().isOk().expectBody(String.class).returnResult();
       try {
-         JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getResponseBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
@@ -449,23 +442,21 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload modified pastry spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-script-openapi.yaml", true);
 
-      ObjectMapper mapper = new ObjectMapper();
-
       // Check operation with a defined mock (name: 'Eclair Cafe')
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Eclair Cafe/taste",
-            String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertEquals("Delicious", response.getBody());
+      EntityExchangeResult<String> response = restTestClient.get()
+            .uri("/rest/pastry-script/1.0.0/pastry/Eclair Cafe/taste").exchange().expectStatus().isOk()
+            .expectBody(String.class).returnResult();
+      assertEquals("Delicious", response.getResponseBody());
 
       // Check operation with a defined mock (name: 'Millefeuille')
-      response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Millefeuille/taste", String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertEquals("Awesome", response.getBody());
+      response = restTestClient.get().uri("/rest/pastry-script/1.0.0/pastry/Millefeuille/taste").exchange()
+            .expectStatus().isOk().expectBody(String.class).returnResult();
+      assertEquals("Awesome", response.getResponseBody());
 
       // Check operation with an undefined mock (name: 'Dummy')
-      response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Dummy/taste", String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertEquals("Ok", response.getBody());
+      response = restTestClient.get().uri("/rest/pastry-script/1.0.0/pastry/Dummy/taste").exchange().expectStatus()
+            .isOk().expectBody(String.class).returnResult();
+      assertEquals("Ok", response.getResponseBody());
    }
 
    @Test
@@ -475,27 +466,19 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check a delayed mocked operations.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200",
-            String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=200").exchange().expectStatus().isOk();
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTime >= 200, "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
 
       // Now use a header to specify mock response time.
-      HttpHeaders headers = new HttpHeaders();
-      headers.set("x-microcks-delay", "400");
-      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-
       startTime = System.currentTimeMillis();
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity,
-            String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=200").header("x-microcks-delay", "400").exchange()
+            .expectStatus().isOk();
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTime >= 400, "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
    }
-
 
    @Test
    void testDelayWithStrategyFixed() {
@@ -504,27 +487,21 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check a delayed mocked operations with fixed strategy.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed").exchange().expectStatus()
+            .isOk();
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTime >= 200, "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
 
       // Now use a header to specify mock response time with random strategy.
-      HttpHeaders headers = new HttpHeaders();
-      headers.set("x-microcks-delay", "400");
-      headers.set("x-microcks-delay-strategy", "fixed");
-      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set random here).
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", HttpMethod.GET,
-            requestEntity, String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random")
+            .header("x-microcks-delay", "400").header("x-microcks-delay-strategy", "fixed").exchange().expectStatus()
+            .isOk();
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTime >= 400, "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
    }
 
    @Test
@@ -535,31 +512,25 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check a delayed mocked operations with random strategy.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random").exchange().expectStatus()
+            .isOk();
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 0 and 200ms (random strategy)
       // Note: we can't be sure that the delay is <= 200 because of JVM scheduling but it's very likely.
       assertTrue(mockedResponseTime >= 0 && mockedResponseTime <= (200 + schedulingDelay),
             "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
 
       // Now use a header to specify mock response time with random strategy.
-      HttpHeaders headers = new HttpHeaders();
-      headers.set("x-microcks-delay", "400");
-      headers.set("x-microcks-delay-strategy", "random");
-      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
-
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
-            requestEntity, String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed")
+            .header("x-microcks-delay", "400").header("x-microcks-delay-strategy", "random").exchange().expectStatus()
+            .isOk();
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 0 and the delay.
       // Note: we can't be sure that the delay is <= 400 because of JVM scheduling but it's very likely.
       assertTrue(mockedResponseTime >= 0 && mockedResponseTime <= (400 + schedulingDelay),
             "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
    }
 
    @Test
@@ -570,29 +541,24 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check a delayed mocked operations with random strategy.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate
-            .getForEntity("/rest/PetStore+API/1.0.0/pets?delay=100&delayStrategy=random-20", String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=100&delayStrategy=random-20").exchange()
+            .expectStatus().isOk();
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 80 and 120 (100 + or - 20%).
       assertTrue(mockedResponseTime >= 80 && mockedResponseTime <= (120 + schedulingDelay),
             "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
 
       // Now use a header to specify mock response time with random strategy.
-      HttpHeaders headers = new HttpHeaders();
-      headers.set("x-microcks-delay", "400");
-      headers.set("x-microcks-delay-strategy", "random-20");
-      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
       startTime = System.currentTimeMillis();
       // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
-            requestEntity, String.class);
+      restTestClient.get().uri("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed")
+            .header("x-microcks-delay", "400").header("x-microcks-delay-strategy", "random-20").exchange()
+            .expectStatus().isOk();
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is between 320 and 480 (400 + or - 20%).
       // Note: we can't be sure that the delay is <= 480 because of JVM scheduling but it's very likely.
       assertTrue(mockedResponseTime >= 320 && mockedResponseTime <= (480 + schedulingDelay),
             "mocked response time delayed: " + mockedResponseTime + "ms");
-      assertEquals(200, response.getStatusCode().value());
    }
 
 }

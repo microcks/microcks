@@ -20,11 +20,8 @@ import io.github.microcks.util.ai.McpSchema;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClient;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
@@ -67,19 +64,21 @@ class McpControllerIT extends AbstractBaseIT {
       // Update Petstore from the tutorial reference artifact.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-1.0.0-openapi.yaml", true);
 
+      RestClient restClient = RestClient.builder().baseUrl(getServerUrl()).build();
+
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
          try {
-            restTemplate.execute("/mcp/Petstore+API/1.0.0/sse", HttpMethod.GET, request -> {}, response -> {
+            restClient.get().uri("/mcp/Petstore+API/1.0.0/sse").exchange((request, response) -> {
                String line;
-               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()));) {
+               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()))) {
                   while ((line = bufferedReader.readLine()) != null) {
                      parseAndStoreMcpSseFrame(line, sseFrames);
                   }
                } catch (IOException e) {
                   System.err.println("Caught exception while reading SSE response: " + e.getMessage());
                }
-               return response;
+               return null;
             });
          } catch (Exception e) {
             System.err.println("Caught exception while executing SSE client: " + e.getMessage());
@@ -124,12 +123,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      headers.setAccept(List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM));
-
-      ResponseEntity<String> response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(initializeRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(initializeRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -162,7 +158,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(toolsListRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -200,7 +198,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(toolsCallRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -231,22 +231,22 @@ class McpControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/petstore-v1.proto", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/petstore-v1-examples.yaml", false);
 
+      RestClient restClient = RestClient.builder().baseUrl(getServerUrl()).build();
+
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
          try {
-            restTemplate.execute("/mcp/org.acme.petstore.v1.PetstoreService/v1/sse", HttpMethod.GET, request -> {},
-                  response -> {
-                     String line;
-                     try (BufferedReader bufferedReader = new BufferedReader(
-                           new InputStreamReader(response.getBody()));) {
-                        while ((line = bufferedReader.readLine()) != null) {
-                           parseAndStoreMcpSseFrame(line, sseFrames);
-                        }
-                     } catch (IOException e) {
-                        System.err.println("Caught exception while reading SSE response: " + e.getMessage());
-                     }
-                     return response;
-                  });
+            restClient.get().uri("/mcp/org.acme.petstore.v1.PetstoreService/v1/sse").exchange((request, response) -> {
+               String line;
+               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()))) {
+                  while ((line = bufferedReader.readLine()) != null) {
+                     parseAndStoreMcpSseFrame(line, sseFrames);
+                  }
+               } catch (IOException e) {
+                  System.err.println("Caught exception while reading SSE response: " + e.getMessage());
+               }
+               return null;
+            });
          } catch (Exception e) {
             System.err.println("Caught exception while executing SSE client: " + e.getMessage());
          }
@@ -290,12 +290,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      headers.setAccept(List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM));
-
-      ResponseEntity<String> response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(initializeRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(initializeRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -328,7 +325,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(toolsListRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -366,7 +365,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(toolsCallRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -399,19 +400,21 @@ class McpControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/petstore-1.0.graphql", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/petstore-1.0-examples.yaml", false);
 
+      RestClient restClient = RestClient.builder().baseUrl(getServerUrl()).build();
+
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
          try {
-            restTemplate.execute("/mcp/Petstore+Graph+API/1.0/sse", HttpMethod.GET, request -> {}, response -> {
+            restClient.get().uri("/mcp/Petstore+Graph+API/1.0/sse").exchange((request, response) -> {
                String line;
-               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()));) {
+               try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()))) {
                   while ((line = bufferedReader.readLine()) != null) {
                      parseAndStoreMcpSseFrame(line, sseFrames);
                   }
                } catch (IOException e) {
                   System.err.println("Caught exception while reading SSE response: " + e.getMessage());
                }
-               return response;
+               return null;
             });
          } catch (Exception e) {
             System.err.println("Caught exception while executing SSE client: " + e.getMessage());
@@ -456,12 +459,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      headers.setAccept(List.of(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM));
-
-      ResponseEntity<String> response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(initializeRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(initializeRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -491,7 +491,9 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(toolsListRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -524,15 +526,17 @@ class McpControllerIT extends AbstractBaseIT {
                   "name": "createPet",
                   "arguments": {
                      "newPet": {
-                        "name": "Rusty",
-                        "color": "stripped"
-                     }
+                     "name": "Rusty",
+                     "color": "stripped"
                   }
                }
             }
+            }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
+      restTestClient.post().uri(messageEndpoint).contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM).body(toolsCallRequest).exchange()
+            .expectStatus().isOk();
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
