@@ -18,22 +18,21 @@ package io.github.microcks.web;
 import io.github.microcks.MicrocksApplication;
 import io.github.microcks.repository.ServiceRepository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
+import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.testcontainers.mongodb.MongoDBContainer;
@@ -45,10 +44,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Base class for Integration tests using Http layers as well as testcontainers for MongoDB persistence.
+ * 
  * @author laurent
  */
 @SpringBootTest(classes = MicrocksApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestRestTemplate
 @ActiveProfiles("it")
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 public abstract class AbstractBaseIT {
@@ -59,8 +58,7 @@ public abstract class AbstractBaseIT {
    @LocalServerPort
    private int port;
 
-   @Autowired
-   protected TestRestTemplate restTemplate;
+   protected RestTestClient restTestClient;
 
    @Autowired
    protected ServiceRepository serviceRepository;
@@ -79,6 +77,13 @@ public abstract class AbstractBaseIT {
       registry.add("spring.mongodb.uri", () -> url);
    }
 
+   @BeforeEach
+   public void setUpRestTestClient() {
+      if (this.restTestClient == null) {
+         this.restTestClient = RestTestClient.bindToServer().baseUrl(getServerUrl()).build();
+      }
+   }
+
    public int getServerPort() {
       return port;
    }
@@ -89,23 +94,21 @@ public abstract class AbstractBaseIT {
 
    /** */
    protected void uploadArtifactFile(String artifactFilePath, boolean isMainArtifact) {
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
       MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
       body.add("file", new FileSystemResource(new File(artifactFilePath)));
 
-      HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+      String uri = isMainArtifact ? "/api/artifact/upload" : "/api/artifact/upload?mainArtifact=false";
 
-      ResponseEntity<String> response;
-      if (isMainArtifact) {
-         response = restTemplate.postForEntity("/api/artifact/upload", requestEntity, String.class);
-      } else {
-         response = restTemplate.postForEntity("/api/artifact/upload?mainArtifact=false", requestEntity, String.class);
-      }
+      var response = restTestClient.post().uri(uri).contentType(MediaType.MULTIPART_FORM_DATA).body(body).exchange()
+            .expectStatus().isCreated().returnResult(String.class);
 
-      assertEquals(201, response.getStatusCode().value());
-      log.info("Just uploaded: {}", response.getBody());
+      log.info("Just uploaded: {}", response.getResponseBody());
+   }
+
+   protected void assertResponseIsOkAndContains(EntityExchangeResult<String> response, String substring) {
+      assertEquals(200, response.getStatus().value());
+      assertNotNull(response.getResponseBody());
+      assertTrue(response.getResponseBody().contains(substring));
    }
 
    protected void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
