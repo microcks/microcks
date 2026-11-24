@@ -36,8 +36,10 @@ import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.EvaluableResponse;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
+import io.github.microcks.util.protobuf.ProtobufUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.protobuf.Descriptors;
 import io.nats.client.impl.Headers;
 import io.quarkus.arc.Unremovable;
 import org.apache.avro.Schema;
@@ -292,6 +294,12 @@ public class ProducerManager {
       // Check it Avro binary is expected, we should convert to bytes.
       if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
          produceKafkaAvroMockMessage(definition, eventMessage, topic, message, key);
+      } else if (Constants.PROTOBUF_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
+         byte[] protobufBinary = encodeProtobufMockMessage(definition, message);
+         if (protobufBinary != null) {
+            kafkaProducerManager.publishMessage(topic, key, protobufBinary, kafkaProducerManager
+                  .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         }
       } else {
          kafkaProducerManager.publishMessage(topic, key, message, kafkaProducerManager
                .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
@@ -351,6 +359,40 @@ public class ProducerManager {
       return schema;
    }
 
+   /**
+    * Encode a mock message into Protobuf binary, using the Protobuf schema referenced as payload of the operation
+    * message in the AsyncAPI specification. Protocol agnostic on purpose: every binding publishing Protobuf needs
+    * exactly this.
+    *
+    * @param definition The mock definition to encode a message for
+    * @param message    The rendered JSON representation of message
+    * @return The Protobuf binary encoding of message, or null if it cannot be encoded
+    */
+   protected byte[] encodeProtobufMockMessage(AsyncMockDefinition definition, String message) {
+      List<SchemaRegistry.SchemaEntry> entries = schemaRegistry.getSchemaEntries(definition.getOwnerService());
+      SchemaRegistry.SchemaEntry specEntry = entries.stream()
+            .filter(entry -> ResourceType.ASYNC_API_SPEC.equals(entry.getType())).findFirst().orElse(null);
+      if (specEntry == null) {
+         logger.warnf("No AsyncAPI specification found for the '%s' operation. No publication done.",
+               definition.getOperation().getName());
+         return null;
+      }
+
+      SchemaMap schemaMap = new SchemaMap();
+      SchemaRegistry.putProtobufDescriptors(entries, schemaMap);
+      try {
+         JsonNode specificationNode = AsyncAPISchemaValidator.getJsonNodeForSchema(specEntry.getContent());
+         Descriptors.Descriptor descriptor = AsyncAPISchemaUtil.retrieveMessageProtobufDescriptor(specificationNode,
+               AsyncAPISchemaUtil.findMessagePathPointer(specificationNode, definition.getOperation().getName()),
+               schemaMap);
+         return ProtobufUtil.jsonToProtobuf(message, descriptor);
+      } catch (Exception e) {
+         logger.errorf("Exception while converting {%s} to Protobuf for the '%s' operation", message,
+               definition.getOperation().getName(), e);
+         return null;
+      }
+   }
+
    /** Take care publishing Kafka Avro mock message for definition. */
    protected void produceKafkaAvroMockMessage(AsyncMockDefinition definition, EventMessage eventMessage, String topic,
          String message, String key) {
@@ -393,6 +435,11 @@ public class ProducerManager {
       // Check if Avro binary is expected, we should convert to bytes.
       if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
          produceNatsAvroMockMessage(definition, topic, renderedContent, headers);
+      } else if (Constants.PROTOBUF_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
+         byte[] protobufBinary = encodeProtobufMockMessage(definition, renderedContent);
+         if (protobufBinary != null) {
+            natsProducerManager.publishMessage(topic, protobufBinary, headers);
+         }
       } else {
          natsProducerManager.publishMessage(topic, renderedContent, headers);
       }

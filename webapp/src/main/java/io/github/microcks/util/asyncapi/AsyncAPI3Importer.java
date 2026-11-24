@@ -37,6 +37,7 @@ import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
+import io.github.microcks.util.protobuf.ProtobufSchemaCompiler;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -128,6 +129,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
 
       // Add the external resources that were imported during service discovery.
       results.addAll(externalResources);
+      // Compile Protobuf schemas so that the async minion can encode/decode binary messages.
+      results.addAll(ProtobufSchemaCompiler.buildDescriptorResources(externalResources));
 
       return results;
    }

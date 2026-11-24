@@ -1,0 +1,45 @@
+asyncapi: '2.6.0'
+id: 'urn:io.microcks.example.user-signedup-protobuf'
+info:
+  title: User signed-up Protobuf API
+  version: 0.1.0
+  description: Sample AsyncAPI for user signedup events defined using Protobuf
+defaultContentType: application/json
+channels:
+  user/signedup:
+    description: The topic on which user signed up events may be consumed
+    subscribe:
+      summary: Receive informations about user signed up
+      message:
+        description: An event describing that a user just signed up.
+        contentType: application/x-protobuf
+        schemaFormat: application/vnd.google.protobuf;version=3
+        payload:
+          $ref: './user-signedup.proto#io.github.microcks.event.user.UserSignedUp'
+        examples:
+          - laurent:
+              summary: Example for Laurent user
+              payload:
+                fullName: Laurent Broudoux
+                email: laurent@microcks.io
+                age: 41
+          - john:
+              summary: Example for John Doe user
+              payload:
+                fullName: John Doe
+                email: john@microcks.io
+                age: 36
+  user/signedup/replay:
+    description: The topic on which past user signed up events are replayed
+    subscribe:
+      message:
+        contentType: application/x-protobuf
+        schemaFormat: application/vnd.google.protobuf;version=3
+        payload:
+          $ref: './user-signedup.proto#io.github.microcks.event.user.UserSignedUp'
+        examples:
+          - laurent:
+              payload:
+                fullName: Laurent Broudoux
+                email: laurent@microcks.io
+                age: 41

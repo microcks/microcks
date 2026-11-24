@@ -737,4 +737,32 @@ class AsyncAPI3ImporterTest {
       assertEquals("queue", binding.getDestinationType());
       assertEquals("myQueueName", binding.getDestinationName());
    }
+
+   @Test
+   void testProtobufRelativeRefAsyncAPI3ImportYAML() throws Exception {
+      String specPath = "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-protobuf-ref.yaml";
+      ReferenceResolver resolver = new ReferenceResolver(specPath, null, true);
+      resolver.setCleanResolvedFiles(false);
+      AsyncAPI3Importer importer = new AsyncAPI3Importer(specPath, resolver);
+
+      List<Service> services = importer.getServiceDefinitions();
+      assertEquals(1, services.size());
+      Service service = services.getFirst();
+
+      // Resources: spec, referenced Protobuf schema and its compiled descriptor.
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(3, resources.size());
+      assertEquals(ResourceType.ASYNC_API_SPEC, resources.get(0).getType());
+      assertEquals(ResourceType.PROTOBUF_SCHEMA, resources.get(1).getType());
+      assertEquals(ResourceType.PROTOBUF_DESCRIPTOR, resources.get(2).getType());
+      assertEquals(resources.get(1).getName() + ".pbb", resources.get(2).getName());
+      assertNotNull(io.github.microcks.util.protobuf.ProtobufUtil.findMessageDescriptor(resources.get(2).getContent(),
+            "io.github.microcks.event.user.UserSignedUp"));
+
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, service.getOperations().getFirst());
+      assertEquals(2, exchanges.size());
+      for (Exchange exchange : exchanges) {
+         assertEquals("application/x-protobuf", ((UnidirectionalEvent) exchange).getEventMessage().getMediaType());
+      }
+   }
 }

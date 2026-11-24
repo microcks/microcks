@@ -30,6 +30,7 @@ import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.SchemaRegistry;
 import io.github.microcks.util.AvroUtil;
+import io.github.microcks.util.protobuf.ProtobufUtil;
 
 import org.apache.avro.Schema;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,6 +74,24 @@ class ProducerManagerTest {
          {"name":"fullName","type":"string"},{"name":"age","type":"int"}]}""";
 
    private static final String USER_JSON = "{\"fullName\": \"Laurent Broudoux\", \"age\": 41}";
+
+   /** Compiled descriptor set of samples/hello-v1.proto (also used by GrpcUtilTest). */
+   private static final String HELLO_DESCRIPTOR = "CrICCg5oZWxsby12MS5wcm90bxIgaW8uZ2l0aHViLm1pY3JvY2tzLmdycGMuaGVsbG8udjEiSAoMSGVsbG9SZXF1ZXN0EhwKCWZpcnN0bmFtZRgBIAEoCVIJZmlyc3RuYW1lEhoKCGxhc3RuYW1lGAIgASgJUghsYXN0bmFtZSIrCg1IZWxsb1Jlc3BvbnNlEhoKCGdyZWV0aW5nGAEgASgJUghncmVldGluZzJ7CgxIZWxsb1NlcnZpY2USawoIZ3JlZXRpbmcSLi5pby5naXRodWIubWljcm9ja3MuZ3JwYy5oZWxsby52MS5IZWxsb1JlcXVlc3QaLy5pby5naXRodWIubWljcm9ja3MuZ3JwYy5oZWxsby52MS5IZWxsb1Jlc3BvbnNlQgJQAWIGcHJvdG8z";
+   private static final String HELLO_ASYNCAPI = """
+         asyncapi: '2.6.0'
+         info:
+           title: Hello API
+           version: 1.0.0
+         channels:
+           hello:
+             subscribe:
+               message:
+                 contentType: application/x-protobuf
+                 schemaFormat: application/vnd.google.protobuf;version=3
+                 payload:
+                   $ref: './hello-v1.proto#io.github.microcks.grpc.hello.v1.HelloRequest'
+         """;
+   private static final String HELLO_JSON = "{\"firstname\":\"John\",\"lastname\":\"Doe\"}";
 
    @BeforeEach
    void setUp() throws Exception {
@@ -635,6 +654,96 @@ class ProducerManagerTest {
       when(schemaRegistry.getSchemaEntries(definition.getOwnerService())).thenReturn(Collections.emptyList());
 
       assertNull(producerManager.retrieveAvroSchema(definition));
+   }
+
+   // -----------------------------------------------------------------------
+   // Tests for Protobuf binary publication on Kafka and NATS bindings
+   // -----------------------------------------------------------------------
+
+   @Test
+   void testProduceAsyncMockMessagesAt_protobufIsPublishedAsBinaryOnKafka() throws Exception {
+      AsyncMockDefinition definition = buildProtobufMockDefinition("KAFKA");
+      when(mockRepository.getMockDefinitionsByFrequency(40L)).thenReturn(Set.of(definition));
+      when(kafkaProducerManager.getTopicName(any(), any())).thenReturn("kafka-topic");
+      when(schemaRegistry.getSchemaEntries(definition.getOwnerService())).thenReturn(protobufSchemaEntries());
+
+      producerManager.produceAsyncMockMessagesAt(40L);
+
+      verify(kafkaProducerManager, never()).publishMessage(anyString(), anyString(), anyString(), any());
+      ArgumentCaptor<byte[]> published = ArgumentCaptor.forClass(byte[].class);
+      verify(kafkaProducerManager).publishMessage(eq("kafka-topic"), anyString(), published.capture(), any());
+      assertEquals(HELLO_JSON, decodeHelloRequest(published.getValue()));
+   }
+
+   @Test
+   void testProduceAsyncMockMessagesAt_protobufIsPublishedAsBinaryOnNATS() throws Exception {
+      AsyncMockDefinition definition = buildProtobufMockDefinition("NATS");
+      when(mockRepository.getMockDefinitionsByFrequency(40L)).thenReturn(Set.of(definition));
+      when(natsProducerManager.getTopicName(any(), any())).thenReturn("nats-topic");
+      when(schemaRegistry.getSchemaEntries(definition.getOwnerService())).thenReturn(protobufSchemaEntries());
+
+      producerManager.produceAsyncMockMessagesAt(40L);
+
+      verify(natsProducerManager, never()).publishMessage(anyString(), anyString(), any());
+      ArgumentCaptor<byte[]> published = ArgumentCaptor.forClass(byte[].class);
+      verify(natsProducerManager).publishMessage(eq("nats-topic"), published.capture(), any());
+      assertEquals(HELLO_JSON, decodeHelloRequest(published.getValue()));
+   }
+
+   @Test
+   void testProduceAsyncMockMessagesAt_protobufWithoutDescriptorPublishesNothing() {
+      AsyncMockDefinition definition = buildProtobufMockDefinition("NATS");
+      when(mockRepository.getMockDefinitionsByFrequency(40L)).thenReturn(Set.of(definition));
+      when(natsProducerManager.getTopicName(any(), any())).thenReturn("nats-topic");
+      when(schemaRegistry.getSchemaEntries(definition.getOwnerService()))
+            .thenReturn(List.of(protobufSchemaEntries().getFirst()));
+
+      producerManager.produceAsyncMockMessagesAt(40L);
+
+      // Publishing the JSON text on a channel declared as Protobuf would be worse than publishing nothing.
+      verify(natsProducerManager, never()).publishMessage(anyString(), anyString(), any());
+      verify(natsProducerManager, never()).publishMessage(anyString(), any(byte[].class), any());
+   }
+
+   /** The AsyncAPI spec referencing the Protobuf schema and the descriptor compiled from it. */
+   private List<SchemaRegistry.SchemaEntry> protobufSchemaEntries() {
+      Resource spec = new Resource();
+      spec.setName("Hello API-1.0.0.yaml");
+      spec.setType(ResourceType.ASYNC_API_SPEC);
+      spec.setContent(HELLO_ASYNCAPI);
+
+      Resource descriptor = new Resource();
+      descriptor.setName("Hello API-1.0.0-hello-v1.proto.pbb");
+      descriptor.setPath("./hello-v1.proto");
+      descriptor.setType(ResourceType.PROTOBUF_DESCRIPTOR);
+      descriptor.setContent(HELLO_DESCRIPTOR);
+      return List.of(schemaRegistry.new SchemaEntry(spec), schemaRegistry.new SchemaEntry(descriptor));
+   }
+
+   private AsyncMockDefinition buildProtobufMockDefinition(String bindingName) {
+      Service service = new Service();
+      service.setId("test-svc-protobuf");
+      service.setName("Hello API");
+      service.setVersion("1.0.0");
+
+      Operation operation = new Operation();
+      operation.setName("SUBSCRIBE hello");
+      operation.setBindings(Map.of(bindingName, new Binding(BindingType.valueOf(bindingName))));
+      service.addOperation(operation);
+
+      EventMessage eventMessage = new EventMessage();
+      eventMessage.setName("John");
+      eventMessage.setContent(HELLO_JSON);
+      eventMessage.setMediaType("application/x-protobuf");
+
+      return new AsyncMockDefinition(service, operation, List.of(eventMessage));
+   }
+
+   private static String decodeHelloRequest(byte[] bytes) throws Exception {
+      return ProtobufUtil
+            .protobufToJson(bytes,
+                  ProtobufUtil.findMessageDescriptor(HELLO_DESCRIPTOR, "io.github.microcks.grpc.hello.v1.HelloRequest"))
+            .replaceAll("\\s", "");
    }
 
    private AsyncMockDefinition buildMockDefinition(String bindingName, String messageContent) {

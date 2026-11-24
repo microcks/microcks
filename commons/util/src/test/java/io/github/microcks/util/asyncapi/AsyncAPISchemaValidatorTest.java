@@ -16,6 +16,7 @@
 package io.github.microcks.util.asyncapi;
 
 import io.github.microcks.util.SchemaMap;
+import io.github.microcks.util.protobuf.ProtobufUtilTest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.Schema;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -1050,5 +1052,41 @@ class AsyncAPISchemaValidatorTest {
             new byte[] { 0x00 }, "/channels/test/subscribe/message", null));
       assertFalse(errors.isEmpty(), "Malformed Avro schema should produce a validation error, not throw");
       assertTrue(errors.get(0).contains("cannot be parsed"));
+   }
+
+   @Test
+   void testValidateProtobufMessage() throws Exception {
+      String asyncAPI = """
+            asyncapi: '2.6.0'
+            info:
+              title: Hello API
+              version: 1.0.0
+            channels:
+              hello:
+                subscribe:
+                  message:
+                    contentType: application/x-protobuf
+                    schemaFormat: application/vnd.google.protobuf;version=3
+                    payload:
+                      $ref: 'Hello+API-1.0.0-hello-v1.proto#io.github.microcks.grpc.hello.v1.HelloRequest'
+            """;
+      JsonNode specificationNode = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPI);
+      SchemaMap schemaMap = new SchemaMap();
+      // Relative refs are replaced by URL encoded resource names at import, so descriptor is found by its name.
+      schemaMap.putSchemaEntry("Hello API-1.0.0-hello-v1.proto", ProtobufUtilTest.HELLO_DESCRIPTOR);
+
+      List<String> errors = AsyncAPISchemaValidator.validateProtobufMessage(specificationNode,
+            HexFormat.of().parseHex("0a074c617572656e74"), "/channels/hello/subscribe/message", schemaMap);
+      assertTrue(errors.isEmpty());
+
+      errors = AsyncAPISchemaValidator.validateProtobufMessage(specificationNode,
+            "{\"firstname\":\"Laurent\"}".getBytes(StandardCharsets.UTF_8), "/channels/hello/subscribe/message",
+            schemaMap);
+      assertEquals(1, errors.size());
+
+      errors = AsyncAPISchemaValidator.validateProtobufMessage(specificationNode,
+            HexFormat.of().parseHex("0a074c617572656e74"), "/channels/hello/subscribe/message", new SchemaMap());
+      assertEquals(1, errors.size());
+      assertTrue(errors.getFirst().contains("no Protobuf descriptor found"));
    }
 }

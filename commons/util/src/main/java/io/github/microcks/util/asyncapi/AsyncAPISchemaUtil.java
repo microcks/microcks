@@ -17,13 +17,19 @@ package io.github.microcks.util.asyncapi;
 
 import io.github.microcks.util.AvroUtil;
 import io.github.microcks.util.SchemaMap;
+import io.github.microcks.util.protobuf.ProtobufUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Helper class for extracting information from AsyncAPI schema. Supported version of AsyncAPI schema are
@@ -181,5 +187,65 @@ public class AsyncAPISchemaUtil {
          return followRefIfAny(documentRoot.at(ref.substring(1)), documentRoot);
       }
       return referencableNode;
+   }
+
+   /**
+    * Retrieve the Protobuf descriptor of the message type expected for an AsyncAPI message. Message payload must be a
+    * reference to a Protobuf schema like {@code ./user-signedup.proto#microcks.UserSignedUp} where the optional
+    * fragment designates the message type (first message of the schema is used if none). Compiled descriptors are
+    * looked up into {@code schemaMap} using the reference path, without its fragment.
+    * @param specificationNode  The AsyncAPI full specification as a Jackson node
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param schemaMap          A map of Base64 encoded Protobuf descriptors, indexed by their schema reference path
+    * @return The Protobuf message descriptor
+    * @throws AsyncAPISchemaException if descriptor cannot be found or built
+    */
+   public static Descriptors.Descriptor retrieveMessageProtobufDescriptor(JsonNode specificationNode,
+         String messagePathPointer, SchemaMap schemaMap) throws AsyncAPISchemaException {
+      JsonNode messageNode = specificationNode.at(messagePathPointer);
+      if (messageNode == null || messageNode.isMissingNode()) {
+         throw new AsyncAPISchemaException(
+               "messagePathPointer does not represent a valid JSON Pointer in AsyncAPI specification");
+      }
+      messageNode = followRefIfAny(messageNode, specificationNode);
+
+      // In the case of AsyncAPI v3, we always got messages even if there's just one element.
+      if (messageNode.isArray()) {
+         if (messageNode.size() != 1) {
+            throw new AsyncAPISchemaException("Protobuf payloads are only supported for single message operations");
+         }
+         messageNode = followRefIfAny(messageNode.get(0), specificationNode);
+      }
+
+      // AsyncAPI v3 payload may be expressed as a Multi Format Schema Object.
+      JsonNode payloadNode = messageNode.path(ASYNC_SCHEMA_PAYLOAD_ELEMENT);
+      if (payloadNode.has(ASYNC_SCHEMA_SCHEMA_FORMAT_ELEMENT) && payloadNode.has(ASYNC_SCHEMA_SCHEMA_ELEMENT)) {
+         payloadNode = payloadNode.path(ASYNC_SCHEMA_SCHEMA_ELEMENT);
+      }
+      if (!payloadNode.has("$ref")) {
+         throw new AsyncAPISchemaException("Protobuf message payload must be a reference to a Protobuf schema");
+      }
+
+      // './user-signedup.proto#microcks.UserSignedUp' => './user-signedup.proto' + 'microcks.UserSignedUp'
+      String ref = payloadNode.path("$ref").asText();
+      String typeName = null;
+      if (ref.contains("#")) {
+         typeName = ref.substring(ref.indexOf('#') + 1);
+         ref = ref.substring(0, ref.indexOf('#'));
+      }
+      String base64Descriptor = schemaMap != null ? schemaMap.getSchemaEntry(ref) : null;
+      if (base64Descriptor == null && schemaMap != null) {
+         // Relative references have been replaced by URL encoded resource names at import time.
+         base64Descriptor = schemaMap.getSchemaEntry(URLDecoder.decode(ref, StandardCharsets.UTF_8));
+      }
+      if (base64Descriptor == null) {
+         throw new AsyncAPISchemaException("no Protobuf descriptor found for " + ref + " in used SchemaMap.");
+      }
+      try {
+         return ProtobufUtil.findMessageDescriptor(base64Descriptor, typeName);
+      } catch (InvalidProtocolBufferException | Descriptors.DescriptorValidationException
+            | IllegalArgumentException e) {
+         throw new AsyncAPISchemaException("Protobuf descriptor cannot be used: " + e.getMessage(), e);
+      }
    }
 }

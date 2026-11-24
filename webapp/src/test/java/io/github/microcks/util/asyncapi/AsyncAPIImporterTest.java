@@ -1126,4 +1126,41 @@ class AsyncAPIImporterTest {
          }
       }
    }
+
+   @Test
+   void testProtobufRelativeRefAsyncAPIImportYAML() throws Exception {
+      String specPath = "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-protobuf-ref-asyncapi.yaml";
+      ReferenceResolver resolver = new ReferenceResolver(specPath, null, true);
+      resolver.setCleanResolvedFiles(false);
+      AsyncAPIImporter importer = new AsyncAPIImporter(specPath, resolver);
+
+      List<Service> services = importer.getServiceDefinitions();
+      assertEquals(1, services.size());
+      Service service = services.getFirst();
+      assertEquals("User signed-up Protobuf API", service.getName());
+
+      // Resources: spec, referenced Protobuf schema and its compiled descriptor.
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(3, resources.size());
+      assertEquals(ResourceType.ASYNC_API_SPEC, resources.get(0).getType());
+      assertEquals(ResourceType.PROTOBUF_SCHEMA, resources.get(1).getType());
+      assertEquals("User signed-up Protobuf API-0.1.0-user-signedup.proto", resources.get(1).getName());
+      assertEquals(ResourceType.PROTOBUF_DESCRIPTOR, resources.get(2).getType());
+      assertEquals("User signed-up Protobuf API-0.1.0-user-signedup.proto.pbb", resources.get(2).getName());
+      assertEquals("./user-signedup.proto", resources.get(2).getPath());
+      // Schema is shared by both operations: it must be stored and compiled only once.
+      assertEquals(2, resources.get(2).getOperations().size());
+      assertNotNull(io.github.microcks.util.protobuf.ProtobufUtil.findMessageDescriptor(resources.get(2).getContent(),
+            "io.github.microcks.event.user.UserSignedUp"));
+
+      // Examples are kept as JSON with the Protobuf media type.
+      Operation operation = service.getOperations().stream()
+            .filter(op -> "SUBSCRIBE user/signedup".equals(op.getName())).findFirst().orElseThrow();
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+      assertEquals(2, exchanges.size());
+      for (Exchange exchange : exchanges) {
+         EventMessage eventMessage = ((UnidirectionalEvent) exchange).getEventMessage();
+         assertEquals("application/x-protobuf", eventMessage.getMediaType());
+      }
+   }
 }
