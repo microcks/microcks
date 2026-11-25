@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -165,10 +166,6 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          String pathName = path.getKey();
          JsonNode pathValue = followRefIfAny(path.getValue());
 
-         // Find examples fragments defined at the path level.
-         Map<String, Multimap<String, String>> pathPathParametersByExample = extractParametersByExample(pathValue,
-               "path");
-
          // Iterate on specification path, "verbs" nodes.
          Set<Entry<String, JsonNode>> verbs = pathValue.properties();
          for (Entry<String, JsonNode> verb : verbs) {
@@ -176,14 +173,13 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
             // Find the correct operation.
             if (operation.getName().equals(verbName.toUpperCase() + " " + pathName.trim())) {
-               // Find examples fragments defined at the verb level.
-               Map<String, Multimap<String, String>> pathParametersByExample = extractParametersByExample(
-                     verb.getValue(), "path");
-               pathParametersByExample.putAll(pathPathParametersByExample);
-               Map<String, Multimap<String, String>> queryParametersByExample = extractParametersByExample(
-                     verb.getValue(), PARAMETERS_QUERY_VALUE);
-               Map<String, Multimap<String, String>> headerParametersByExample = extractParametersByExample(
-                     verb.getValue(), "header");
+               List<EffectiveParameter> parameters = getEffectiveParameters(pathValue, verb.getValue());
+               Map<String, Multimap<String, String>> pathParametersByExample = extractParametersByExample(parameters,
+                     "path");
+               Map<String, Multimap<String, String>> queryParametersByExample = extractParametersByExample(parameters,
+                     PARAMETERS_QUERY_VALUE);
+               Map<String, Multimap<String, String>> headerParametersByExample = extractParametersByExample(parameters,
+                     "header");
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
 
                // No need to go further if no examples.
@@ -272,11 +268,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                         verb.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
                }
 
-               // Deal with dispatcher stuffs if needed.
-               completeOperationWithDispatcher(operation, verb, pathName);
-
-               // Deal with parameter constraints if required parameters.
-               completeOperationWithParameterConstraints(operation, verb.getValue());
+               List<EffectiveParameter> parameters = getEffectiveParameters(pathValue, verb.getValue());
+               completeOperationWithDispatcher(operation, parameters, verb.getValue(), pathName);
+               completeOperationWithParameterConstraints(operation, parameters);
 
                results.add(operation);
             }
@@ -315,15 +309,84 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       return results;
    }
 
+   /** An operation parameter overrides the path item parameter with the same name and location. */
+   private List<EffectiveParameter> getEffectiveParameters(JsonNode pathItem, JsonNode operation) {
+      Map<ParameterIdentity, EffectiveParameter> parameters = new LinkedHashMap<>();
+      for (JsonNode node : List.of(operation, pathItem)) {
+         for (JsonNode parameterNode : node.path(PARAMETERS_NODE)) {
+            JsonNode parameter = followRefIfAny(parameterNode);
+            if (parameter != null) {
+               ParameterIdentity identity = new ParameterIdentity(parameter.path("name").asText(),
+                     parameter.path("in").asText());
+               parameters.putIfAbsent(identity, new EffectiveParameter(parameter, node == pathItem));
+            }
+         }
+      }
+      return List.copyOf(parameters.values());
+   }
+
+   private record ParameterIdentity(String name, String location) {
+   }
+
+   private record EffectiveParameter(JsonNode definition, boolean inherited) {
+      boolean isInheritedQueryWithExamples() {
+         JsonNode examples = definition.path(EXAMPLES_NODE);
+         return inherited && PARAMETERS_QUERY_VALUE.equals(definition.path("in").asText()) && examples.isObject()
+               && !examples.isEmpty();
+      }
+   }
+
+   private List<JsonNode> getDispatchParameters(List<EffectiveParameter> parameters, JsonNode operation,
+         String pathName) {
+      Set<String> responseExamples = new HashSet<>();
+      if (parameters.stream().anyMatch(EffectiveParameter::isInheritedQueryWithExamples)) {
+         responseExamples.addAll(getResponseExampleNames(operation));
+         if (urlHasParts(pathName)) {
+            responseExamples.retainAll(extractParametersByExample(parameters, "path").keySet());
+         }
+      }
+
+      // Keep existing operation-level rules. Inherited parameters need a usable sample for this operation.
+      return parameters.stream().filter(parameter -> !parameter.inherited() || (parameter.isInheritedQueryWithExamples()
+            && extractParametersByExample(List.of(parameter), PARAMETERS_QUERY_VALUE).entrySet().stream()
+                  .anyMatch(example -> responseExamples.contains(example.getKey()) && !example.getValue().isEmpty())))
+            .map(EffectiveParameter::definition).toList();
+   }
+
+   private Set<String> getResponseExampleNames(JsonNode operation) {
+      Set<String> exampleNames = new HashSet<>();
+      for (JsonNode response : operation.path(RESPONSES_NODE)) {
+         JsonNode content = getResponseContent(response);
+         if (content.properties().isEmpty()) {
+            JsonNode requestRefs = followRefIfAny(response).path(X_MICROCKS_REFS);
+            if (requestRefs.isArray()) {
+               for (JsonNode requestRef : requestRefs) {
+                  if (requestRef.isTextual()) {
+                     exampleNames.add(requestRef.textValue());
+                  }
+               }
+            }
+         }
+         for (JsonNode mediaType : content) {
+            followRefIfAny(mediaType.path(EXAMPLES_NODE)).fieldNames().forEachRemaining(exampleNames::add);
+         }
+      }
+      return exampleNames;
+   }
+
    /** Complete operation with dispatcher rules if not already set. */
-   private void completeOperationWithDispatcher(Operation operation, Entry<String, JsonNode> verb, String pathName) {
+   private void completeOperationWithDispatcher(Operation operation, List<EffectiveParameter> effectiveParameters,
+         JsonNode operationNode, String pathName) {
       if (operation.getDispatcher() == null) {
-         if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE) && urlHasParts(pathName)) {
+         List<JsonNode> parameters = getDispatchParameters(effectiveParameters, operationNode, pathName);
+         boolean hasQueryParameters = parameters.stream()
+               .anyMatch(parameter -> PARAMETERS_QUERY_VALUE.equals(parameter.path("in").asText()));
+         if (hasQueryParameters && urlHasParts(pathName)) {
             operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName) + " ?? "
-                  + extractOperationParams(verb.getValue()));
+                  + extractOperationParams(parameters));
             operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
-         } else if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE)) {
-            operation.setDispatcherRules(extractOperationParams(verb.getValue()));
+         } else if (hasQueryParameters) {
+            operation.setDispatcherRules(extractOperationParams(parameters));
             operation.setDispatcher(DispatchStyles.URI_PARAMS);
          } else if (urlHasParts(pathName)) {
             operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName));
@@ -339,34 +402,56 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /** Add ParameterConstraints to operation if required parameters are found. */
-   private void completeOperationWithParameterConstraints(Operation operation, JsonNode operationNode) {
-      Iterator<JsonNode> parameters = operationNode.path(PARAMETERS_NODE).elements();
-      while (parameters.hasNext()) {
-         JsonNode parameter = followRefIfAny(parameters.next());
+   private void completeOperationWithParameterConstraints(Operation operation, List<EffectiveParameter> parameters) {
+      for (EffectiveParameter effective : parameters) {
+         JsonNode parameter = effective.definition();
          boolean required = parameter.path("required").asBoolean(false);
          String location = parameter.path("in").asText();
 
          if (required && !"path".equals(location)) {
-            ParameterConstraint constraint = new ParameterConstraint();
-            constraint.setRequired(true);
-            constraint.setName(parameter.path("name").asText());
-            constraint.setIn(ParameterLocation.valueOf(parameter.path("in").asText()));
-            operation.addParameterConstraint(constraint);
+            ParameterLocation parameterLocation = ParameterLocation.valueOf(location);
+            if (parameterLocation == ParameterLocation.query && effective.inherited()
+                  && "deepObject".equals(parameter.path("style").asText())) {
+               // Deep objects use bracketed property names, so a bare-name constraint would reject valid requests.
+               continue;
+            }
+            JsonNode schema = parameterLocation == ParameterLocation.query ? followRefIfAny(parameter.path("schema"))
+                  : null;
+            if (isExplodedFormObject(parameter, schema)) {
+               // An exploded form object sends its properties as individual query keys.
+               for (JsonNode property : schema.path("required")) {
+                  addRequiredParameterConstraint(operation, parameterLocation, property.asText());
+               }
+            } else {
+               addRequiredParameterConstraint(operation, parameterLocation, parameter.path("name").asText());
+            }
          }
       }
    }
 
+   private boolean isExplodedFormObject(JsonNode parameter, JsonNode schema) {
+      return schema != null && "object".equals(schema.path("type").asText())
+            && "form".equals(parameter.path("style").asText("form")) && parameter.path("explode").asBoolean(true);
+   }
+
+   private void addRequiredParameterConstraint(Operation operation, ParameterLocation location, String name) {
+      ParameterConstraint constraint = new ParameterConstraint();
+      constraint.setRequired(true);
+      constraint.setName(name);
+      constraint.setIn(location);
+      operation.addParameterConstraint(constraint);
+   }
+
    /**
-    * Extract parameters within a specification node and organize them by example. Parameter can be of type 'path',
-    * 'query', 'header' or 'cookie'. Allow to filter them using parameterType. Key of returned map is example name. Key
-    * of value map is param name. Value of value map is param value ;-)
+    * Extract examples for parameters in the given location. The outer map is keyed by example name and the inner
+    * multimap is keyed by parameter name.
     */
-   private Map<String, Multimap<String, String>> extractParametersByExample(JsonNode node, String parameterType) {
+   private Map<String, Multimap<String, String>> extractParametersByExample(List<EffectiveParameter> parameters,
+         String parameterType) {
       Map<String, Multimap<String, String>> results = new HashMap<>();
 
-      Iterator<JsonNode> parameters = node.path(PARAMETERS_NODE).elements();
-      while (parameters.hasNext()) {
-         JsonNode parameter = followRefIfAny(parameters.next());
+      for (EffectiveParameter effective : parameters) {
+         JsonNode parameter = effective.definition();
          String parameterName = parameter.path("name").asText();
 
          if (parameter.has("in") && parameter.path("in").asText().equals(parameterType)
@@ -379,6 +464,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
                if (exampleValue == null) {
                   log.warn("Couldn't find example value for example node: name: {}, data: {}", exampleName, example);
+                  continue;
+               }
+
+               if (effective.inherited() && PARAMETERS_QUERY_VALUE.equals(parameterType)
+                     && !supportsInheritedQueryExample(parameter, exampleValue)) {
                   continue;
                }
 
@@ -403,6 +493,47 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          }
       }
       return results;
+   }
+
+   private boolean supportsInheritedQueryExample(JsonNode parameter, JsonNode example) {
+      if (!"form".equals(parameter.path("style").asText("form"))) {
+         return false;
+      }
+      if (example.isValueNode()) {
+         return isNonemptyQueryValue(example);
+      }
+      if (!parameter.path("explode").asBoolean(true)) {
+         return false;
+      }
+      if (example.isObject()) {
+         JsonNode schema = followRefIfAny(parameter.path("schema"));
+         if (!isExplodedFormObject(parameter, schema)) {
+            return false;
+         }
+
+         // Automatic dispatch only includes keys declared in the schema's properties.
+         JsonNode properties = schema.path("properties");
+         Iterator<String> exampleKeys = example.fieldNames();
+         while (exampleKeys.hasNext()) {
+            if (!properties.has(exampleKeys.next())) {
+               return false;
+            }
+         }
+      }
+
+      // Exploded form can reuse the existing repeated-key array and flat object handling.
+      // Nested arrays and objects have no representation in these query examples.
+      for (JsonNode value : example) {
+         if (!isNonemptyQueryValue(value)) {
+            return false;
+         }
+      }
+      return example.isContainerNode();
+   }
+
+   private boolean isNonemptyQueryValue(JsonNode value) {
+      // URI dispatch treats empty query values as absent.
+      return value.isValueNode() && !value.isNull() && !value.asText().isEmpty();
    }
 
    /**
@@ -914,11 +1045,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2) */
-   private String extractOperationParams(JsonNode operation) {
+   private String extractOperationParams(List<JsonNode> parameters) {
       StringBuilder params = new StringBuilder();
-      Iterator<JsonNode> parameters = operation.path(PARAMETERS_NODE).elements();
-      while (parameters.hasNext()) {
-         JsonNode parameter = followRefIfAny(parameters.next());
+      for (JsonNode parameter : parameters) {
          String parameterIn = parameter.path("in").asText();
          String parameterType = followRefIfAny(parameter.path("schema")).path("type").asText();
          if (!"path".equals(parameterIn)) {
@@ -935,23 +1064,6 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          }
       }
       return params.toString();
-   }
-
-   /** Check parameters presence into given operation node. */
-   private boolean operationHasParameters(JsonNode operation, String parameterType) {
-      if (!operation.has(PARAMETERS_NODE)) {
-         return false;
-      }
-      Iterator<JsonNode> parameters = operation.path(PARAMETERS_NODE).elements();
-      while (parameters.hasNext()) {
-         JsonNode parameter = followRefIfAny(parameters.next());
-
-         String parameterIn = parameter.path("in").asText();
-         if (parameterIn.equals(parameterType)) {
-            return true;
-         }
-      }
-      return false;
    }
 
    /** Check variables parts presence into given url. */

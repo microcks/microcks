@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -295,6 +296,191 @@ class OpenAPIImporterTest {
             fail("Unknown operation name: " + operation.getName());
          }
       }
+   }
+
+   @Test
+   void testPathItemQueryAndHeaderParameters() throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation operation = service.getOperations().stream().filter(op -> "GET /stock".equals(op.getName())).findFirst()
+            .orElseThrow();
+
+      assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+      assertEquals("warehouse", operation.getDispatcherRules());
+      assertEquals(2, operation.getParameterConstraints().size());
+      assertTrue(operation.getParameterConstraints().stream().anyMatch(constraint -> constraint.isRequired()
+            && constraint.getIn() == ParameterLocation.query && "warehouse".equals(constraint.getName())));
+      assertTrue(operation.getParameterConstraints().stream().anyMatch(constraint -> constraint.isRequired()
+            && constraint.getIn() == ParameterLocation.header && "x-stock-source".equals(constraint.getName())));
+
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+      assertEquals(2, exchanges.size());
+      for (Exchange exchange : exchanges) {
+         RequestResponsePair pair = assertInstanceOf(RequestResponsePair.class, exchange);
+         assertEquals("?warehouse=" + pair.getRequest().getName(), pair.getResponse().getDispatchCriteria());
+         assertTrue(pair.getRequest().getHeaders().stream()
+               .anyMatch(header -> "x-stock-source".equals(header.getName()) && header.getValues().contains("test")));
+      }
+   }
+
+   @Test
+   void testPathItemQueryExamplesOnlyDispatchOperationsWithMatchingResponses()
+         throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation put = service.getOperations().stream().filter(op -> "PUT /stock".equals(op.getName())).findFirst()
+            .orElseThrow();
+
+      assertNull(put.getDispatcher());
+      assertTrue(put.getParameterConstraints().stream().anyMatch(constraint -> constraint.isRequired()
+            && constraint.getIn() == ParameterLocation.query && "warehouse".equals(constraint.getName())));
+      List<Exchange> putExchanges = importer.getMessageDefinitions(service, put);
+      assertEquals(1, putExchanges.size());
+      RequestResponsePair putPair = assertInstanceOf(RequestResponsePair.class, putExchanges.getFirst());
+      assertEquals("updated", putPair.getResponse().getName());
+      assertNull(putPair.getResponse().getDispatchCriteria());
+
+      Operation patch = service.getOperations().stream().filter(op -> "PATCH /stock".equals(op.getName())).findFirst()
+            .orElseThrow();
+      assertEquals(DispatchStyles.URI_PARAMS, patch.getDispatcher());
+      assertEquals("warehouse", patch.getDispatcherRules());
+      List<Exchange> patchExchanges = importer.getMessageDefinitions(service, patch);
+      assertEquals(1, patchExchanges.size());
+      RequestResponsePair patchPair = assertInstanceOf(RequestResponsePair.class, patchExchanges.getFirst());
+      assertEquals("204", patchPair.getResponse().getStatus());
+      assertEquals("?warehouse=outlet", patchPair.getResponse().getDispatchCriteria());
+   }
+
+   @Test
+   void testRequiredExplodedQueryObjectsConstrainRequiredProperties()
+         throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation operation = service.getOperations().stream().filter(op -> "GET /items".equals(op.getName())).findFirst()
+            .orElseThrow();
+
+      assertEquals(List.of("category", "packedFilter", "page", "warehouse"),
+            operation.getParameterConstraints().stream().map(ParameterConstraint::getName).sorted().toList());
+      assertTrue(operation.getParameterConstraints().stream()
+            .allMatch(constraint -> constraint.isRequired() && constraint.getIn() == ParameterLocation.query));
+
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+      assertEquals(1, exchanges.size());
+      RequestResponsePair pair = assertInstanceOf(RequestResponsePair.class, exchanges.getFirst());
+      assertEquals("?category=books?tags=a?tags=b", pair.getResponse().getDispatchCriteria());
+   }
+
+   @Test
+   void testUnsupportedInheritedQueryStylesKeepConstantResponses() throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation operation = service.getOperations().stream().filter(op -> "GET /packed-items".equals(op.getName()))
+            .findFirst().orElseThrow();
+
+      assertNull(operation.getDispatcher());
+      assertEquals(Set.of("/packed-items"), operation.getResourcePaths());
+      assertEquals(List.of("filter", "labels", "tags"),
+            operation.getParameterConstraints().stream().map(ParameterConstraint::getName).sorted().toList());
+      assertTrue(operation.getParameterConstraints().stream()
+            .allMatch(constraint -> constraint.isRequired() && constraint.getIn() == ParameterLocation.query));
+
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+      assertEquals(1, exchanges.size());
+      RequestResponsePair pair = assertInstanceOf(RequestResponsePair.class, exchanges.getFirst());
+      assertEquals("outlet", pair.getResponse().getName());
+      assertNull(pair.getResponse().getDispatchCriteria());
+      assertNull(pair.getRequest().getQueryParameters());
+   }
+
+   @Test
+   void testInheritedQueryExamplesWithUndeclaredObjectKeysKeepConstantResponse()
+         throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation operation = service.getOperations().stream().filter(op -> "GET /dictionary-items".equals(op.getName()))
+            .findFirst().orElseThrow();
+
+      assertNull(operation.getDispatcher());
+      assertEquals(Set.of("/dictionary-items"), operation.getResourcePaths());
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+      assertEquals(1, exchanges.size());
+      RequestResponsePair pair = assertInstanceOf(RequestResponsePair.class, exchanges.getFirst());
+      assertEquals("outlet", pair.getResponse().getName());
+      assertNull(pair.getResponse().getDispatchCriteria());
+      assertNull(pair.getRequest().getQueryParameters());
+   }
+
+   @Test
+   void testInheritedQueryExamplesWithEmptyValuesKeepConstantResponse()
+         throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation operation = service.getOperations().stream().filter(op -> "GET /empty-items".equals(op.getName()))
+            .findFirst().orElseThrow();
+
+      assertNull(operation.getDispatcher());
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+      assertEquals(1, exchanges.size());
+      RequestResponsePair pair = assertInstanceOf(RequestResponsePair.class, exchanges.getFirst());
+      assertNull(pair.getResponse().getDispatchCriteria());
+      assertNull(pair.getRequest().getQueryParameters());
+   }
+
+   @Test
+   void testPathItemQueryParameterWithoutExamplesPreservesConstantResponse()
+         throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation operation = service.getOperations().stream().filter(op -> "GET /stock/status".equals(op.getName()))
+            .findFirst().orElseThrow();
+
+      assertNull(operation.getDispatcher());
+      assertEquals(Set.of("/stock/status"), operation.getResourcePaths());
+      assertEquals(1, operation.getParameterConstraints().size());
+      ParameterConstraint constraint = operation.getParameterConstraints().iterator().next();
+      assertEquals("warehouse", constraint.getName());
+      assertEquals(ParameterLocation.query, constraint.getIn());
+      assertTrue(constraint.isRequired());
+
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+      assertEquals(1, exchanges.size());
+      RequestResponsePair pair = assertInstanceOf(RequestResponsePair.class, exchanges.getFirst());
+      assertEquals("outlet", pair.getResponse().getName());
+      assertNull(pair.getResponse().getDispatchCriteria());
+   }
+
+   @Test
+   void testOperationParametersOverridePathItemParametersByNameAndLocation()
+         throws IOException, MockRepositoryImportException {
+      OpenAPIImporter importer = new OpenAPIImporter(
+            "target/test-classes/io/github/microcks/util/openapi/shared-parameters-openapi.yaml", null);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation get = service.getOperations().stream().filter(op -> "GET /stock/{sku}".equals(op.getName())).findFirst()
+            .orElseThrow();
+
+      assertEquals(DispatchStyles.URI_ELEMENTS, get.getDispatcher());
+      assertEquals("sku ?? sku && warehouse", get.getDispatcherRules());
+      List<Exchange> getExchanges = importer.getMessageDefinitions(service, get);
+      assertEquals(1, getExchanges.size());
+      RequestResponsePair getPair = assertInstanceOf(RequestResponsePair.class, getExchanges.getFirst());
+      assertEquals("/sku=operation-sku?sku=query-sku?warehouse=outlet", getPair.getResponse().getDispatchCriteria());
+      assertEquals(Set.of("/stock/operation-sku"), get.getResourcePaths());
+
+      Operation put = service.getOperations().stream().filter(op -> "PUT /stock/{sku}".equals(op.getName())).findFirst()
+            .orElseThrow();
+      assertTrue(put.getParameterConstraints() == null || put.getParameterConstraints().isEmpty());
+      List<Exchange> putExchanges = importer.getMessageDefinitions(service, put);
+      assertEquals(1, putExchanges.size());
+      RequestResponsePair putPair = assertInstanceOf(RequestResponsePair.class, putExchanges.getFirst());
+      assertEquals("/sku=shared-sku?sku=query-sku", putPair.getResponse().getDispatchCriteria());
+      assertEquals(Set.of("/stock/shared-sku"), put.getResourcePaths());
    }
 
    @Test
