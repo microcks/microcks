@@ -163,7 +163,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       Set<Entry<String, JsonNode>> paths = rootSpecification.path("paths").properties();
       for (Entry<String, JsonNode> path : paths) {
          String pathName = path.getKey();
-         JsonNode pathValue = followRefIfAny(path.getValue());
+         ResolvedReference pathItem = followRefIfAny(path.getValue(), rootSpecification);
+         if (pathItem == null) {
+            continue;
+         }
+         JsonNode pathValue = pathItem.node();
 
          // Find examples fragments defined at the path level.
          Map<String, Multimap<String, String>> pathPathParametersByExample = extractParametersByExample(pathValue,
@@ -184,7 +188,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                      verb.getValue(), PARAMETERS_QUERY_VALUE);
                Map<String, Multimap<String, String>> headerParametersByExample = extractParametersByExample(
                      verb.getValue(), "header");
-               Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
+               Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue(), pathItem.document());
 
                // No need to go further if no examples.
                if (verb.getValue().has(RESPONSES_NODE)) {
@@ -214,7 +218,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                }
 
                if (verb.getValue().has("callbacks")) {
-                  callbacks = extractCallbackExchanges(verb.getValue().get("callbacks"), operation);
+                  callbacks = extractCallbackExchanges(verb.getValue().get("callbacks"), operation,
+                        pathItem.document());
                }
             }
          }
@@ -223,7 +228,10 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       // Iterate on specification "webhooks" nodes.
       Set<Entry<String, JsonNode>> webhooks = rootSpecification.path("webhooks").properties();
       for (Entry<String, JsonNode> webhook : webhooks) {
-         result.putAll(extractWebhookRequestResponses(webhook.getKey(), followRefIfAny(webhook.getValue()), operation));
+         ResolvedReference pathItem = followRefIfAny(webhook.getValue(), rootSpecification);
+         if (pathItem != null) {
+            result.putAll(extractWebhookRequestResponses(webhook.getKey(), pathItem, operation));
+         }
       }
 
       // If we have callbacks, use a RequestResponsePair with callbacks.
@@ -409,21 +417,25 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
     * Extract request bodies within verb specification and organize them by example. Key of returned map is example
     * name. Value is basic Microcks Request object (no query params, no headers)
     */
-   private Map<String, Request> extractRequestBodies(JsonNode verbNode) {
+   private Map<String, Request> extractRequestBodies(JsonNode verbNode, JsonNode document) {
       Map<String, Request> results = new HashMap<>();
 
-      JsonNode requestBody = verbNode.path("requestBody");
-      Iterator<String> contentTypeNames = requestBody.path(CONTENT_NODE).fieldNames();
+      ResolvedReference body = resolveReferenceChain(verbNode.path("requestBody"), document);
+      if (body == null) {
+         return results;
+      }
+      JsonNode content = body.node().path(CONTENT_NODE);
+      Iterator<String> contentTypeNames = content.fieldNames();
       while (contentTypeNames.hasNext()) {
          String contentTypeName = contentTypeNames.next();
-         JsonNode contentType = requestBody.path(CONTENT_NODE).path(contentTypeName);
+         JsonNode contentType = content.path(contentTypeName);
 
          if (contentType.has(EXAMPLES_NODE)) {
             Iterator<String> exampleNames = contentType.path(EXAMPLES_NODE).fieldNames();
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
                JsonNode example = contentType.path(EXAMPLES_NODE).path(exampleName);
-               String exampleValue = getSerializedExampleValue(example);
+               String exampleValue = getSerializedExampleValue(example, body.document());
 
                // Build and store a request object.
                Request request = new Request();
@@ -448,7 +460,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /**
     * Extract callback exchanges within callbacks specification node.
     */
-   private List<RequestResponsePair> extractCallbackExchanges(JsonNode callbacksNode, Operation operation) {
+   private List<RequestResponsePair> extractCallbackExchanges(JsonNode callbacksNode, Operation operation,
+         JsonNode document) {
       List<RequestResponsePair> results = new ArrayList<>();
 
       for (Entry<String, JsonNode> callbackNode : callbacksNode.properties()) {
@@ -471,7 +484,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
                // Initialize new structure for storing results of this callback verb.
                Map<Request, Response> requestResponseMap = new HashMap<>();
-               Map<String, Request> requestBodiesByExample = extractRequestBodies(callbackVerb.getValue());
+               Map<String, Request> requestBodiesByExample = extractRequestBodies(callbackVerb.getValue(), document);
 
                // Update the request with the name of the callback as the exchange reference.
                for (Request request : requestBodiesByExample.values()) {
@@ -509,17 +522,17 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /**
     * Extract webhook request/response pairs with a webhook specification node.
     */
-   private Map<Request, Response> extractWebhookRequestResponses(String webhookName, JsonNode webhookNode,
+   private Map<Request, Response> extractWebhookRequestResponses(String webhookName, ResolvedReference pathItem,
          Operation operation) {
       Map<Request, Response> results = new HashMap<>();
 
       // Iterate on specification path, "verbs" nodes.
-      Set<Entry<String, JsonNode>> verbs = webhookNode.properties();
+      Set<Entry<String, JsonNode>> verbs = pathItem.node().properties();
       for (Entry<String, JsonNode> verb : verbs) {
 
          // Find the correct operation.
          if (operation.getName().equals(webhookName.trim() + " WEBHOOK")) {
-            Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
+            Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue(), pathItem.document());
 
             // No need to go further if no examples.
             if (verb.getValue().has(RESPONSES_NODE)) {
@@ -879,8 +892,24 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    /** Get the value of an example. This can be direct value field or those of followed $ref */
    private JsonNode getExampleValue(JsonNode example) {
+      return getExampleValue(example, rootSpecification);
+   }
+
+   private JsonNode getExampleValue(JsonNode example, JsonNode document) {
+      if (!example.has(EXAMPLE_VALUE_NODE) && !example.has(EXAMPLE_EXTERNAL_VALUE_NODE) && example.has("$ref")) {
+         ResolvedReference resolved = resolveReferenceChain(example, document);
+         if (resolved == null) {
+            return null;
+         }
+         example = resolved.node();
+         document = resolved.document();
+      }
       if (example.has(EXAMPLE_VALUE_NODE)) {
-         return followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
+         JsonNode value = example.path(EXAMPLE_VALUE_NODE);
+         if (value.has("$ref")) {
+            return getNodeForRef(value.path("$ref").asText(), document);
+         }
+         return value;
       }
       if (example.has(EXAMPLE_EXTERNAL_VALUE_NODE)) {
          // if the externalValue node does not start with "data:" it is a remote or relative URL so we must getNodeForRef for it else just return the node
@@ -888,19 +917,19 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          if (externalValue.startsWith("data:")) {
             return example.path(EXAMPLE_EXTERNAL_VALUE_NODE);
          } else {
-            return getNodeForRef(externalValue);
+            return getNodeForRef(externalValue, document);
          }
-      }
-      if (example.has("$ref")) {
-         JsonNode component = followRefIfAny(example);
-         return getExampleValue(component);
       }
       return null;
    }
 
    /** Get the serialized value of an example. This can be direct value field or those of followed $ref */
    private String getSerializedExampleValue(JsonNode example) {
-      JsonNode exampleValue = getExampleValue(example);
+      return getSerializedExampleValue(example, rootSpecification);
+   }
+
+   private String getSerializedExampleValue(JsonNode example, JsonNode document) {
+      JsonNode exampleValue = getExampleValue(example, document);
       return exampleValue != null ? getValueString(exampleValue) : null;
    }
 

@@ -1,0 +1,60 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      requestBody:
+        $ref: '#/components/requestBodies/CreateOrder'
+      responses:
+        '201':
+          $ref: '#/components/responses/OrderCreated'
+  /orders-via-alias:
+    post:
+      requestBody:
+        $ref: '#/components/requestBodies/CreateOrderAlias'
+      responses:
+        '201':
+          $ref: '#/components/responses/OrderCreated'
+  /orders-from-companion:
+    post:
+      requestBody:
+        $ref: '#/components/requestBodies/ExternalOrder'
+      responses:
+        '201':
+          $ref: '#/components/responses/OrderCreated'
+  /orders-companion-path:
+    $ref: './request-body-ref-companion.yaml#/paths/~1orders'
+components:
+  requestBodies:
+    ExternalOrder:
+      $ref: './request-body-ref-companion.yaml#/components/requestBodies/CreateOrderAlias'
+    CreateOrderAlias:
+      $ref: '#/components/requestBodies/CreateOrder'
+    CreateOrder:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sku:
+                type: string
+          examples:
+            cakeOrder:
+              value:
+                sku: cake
+  examples:
+    CakeOrder:
+      value:
+        sku: primary-cake
+  responses:
+    OrderCreated:
+      description: Order created
+      content:
+        application/json:
+          examples:
+            cakeOrder:
+              value:
+                id: 123
