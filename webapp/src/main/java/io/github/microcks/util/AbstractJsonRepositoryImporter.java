@@ -36,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -286,23 +287,50 @@ public abstract class AbstractJsonRepositoryImporter {
 
    /** Get the JsonNode for reference within the specification. */
    protected JsonNode getNodeForRef(String reference) {
-      if (reference.startsWith("#/")) {
-         return rootSpecification.at(reference.substring(1));
-      }
-      return getNodeForExternalRef(reference);
+      return getNodeForRef(reference, rootSpecification);
    }
 
-   /** Get the JsonNode for reference that is localed in external resource. */
-   private JsonNode getNodeForExternalRef(String externalReference) {
-      String path = externalReference;
+   protected JsonNode getNodeForRef(String reference, JsonNode document) {
+      ResolvedReference resolved = resolveReference(reference, document);
+      return resolved == null ? null : resolved.node();
+   }
 
-      // We may have a Json pointer to a specific place in external reference.
-      String pointerInFile = null;
-      if (externalReference.indexOf("#/") != -1) {
-         path = externalReference.substring(0, externalReference.indexOf("#/"));
-         pointerInFile = externalReference.substring(externalReference.indexOf("#/"));
+   /** A resolved node and the document against which its local references are evaluated. */
+   protected record ResolvedReference(JsonNode node, JsonNode document) {
+   }
+
+   /** Follow one reference and retain the target document. */
+   protected ResolvedReference followRefIfAny(JsonNode node, JsonNode document) {
+      return node.has("$ref") ? resolveReference(node.path("$ref").asText(), document)
+            : new ResolvedReference(node, document);
+   }
+
+   /** Follow aliases in the document that contains each reference. */
+   protected ResolvedReference resolveReferenceChain(JsonNode node, JsonNode document) {
+      ResolvedReference current = new ResolvedReference(node, document);
+      if (!node.has("$ref")) {
+         return current;
       }
 
+      Map<JsonNode, Set<String>> visited = new IdentityHashMap<>();
+      while (current != null && current.node().has("$ref")) {
+         String reference = current.node().path("$ref").asText();
+         if (!visited.computeIfAbsent(current.document(), key -> new HashSet<>()).add(reference)) {
+            return null;
+         }
+         current = resolveReference(reference, current.document());
+      }
+      return current;
+   }
+
+   /** Resolve an internal or external reference and retain the target document. */
+   private ResolvedReference resolveReference(String reference, JsonNode document) {
+      if (reference.startsWith("#/")) {
+         return new ResolvedReference(document.at(reference.substring(1)), document);
+      }
+
+      int fragmentStart = reference.indexOf("#/");
+      String path = fragmentStart < 0 ? reference : reference.substring(0, fragmentStart);
       for (Resource resource : externalResources) {
          // Path direct equality is for absolute ref ("http://raw.githubusercontent.com/...")
          // Path equality with resource name if for relative refs that have been re-normalized ("Service name+Service version+...))
@@ -312,17 +340,14 @@ public abstract class AbstractJsonRepositoryImporter {
                try {
                   return ObjectMapperFactory.getYamlObjectMapper().readTree(resource.getContent());
                } catch (JsonProcessingException e) {
-                  throw new JsonRepositoryParsingException("Get a JSON processing exception on " + externalReference,
-                        e);
+                  throw new JsonRepositoryParsingException("Get a JSON processing exception on " + reference, e);
                }
             });
-            if (pointerInFile != null) {
-               return resourceNode.at(pointerInFile.substring(1));
-            }
-            return resourceNode;
+            JsonNode node = fragmentStart < 0 ? resourceNode : resourceNode.at(reference.substring(fragmentStart + 1));
+            return new ResolvedReference(node, resourceNode);
          }
       }
-      log.warn("Found no resource for reference {}", externalReference);
+      log.warn("Found no resource for reference {}", reference);
       return null;
    }
 

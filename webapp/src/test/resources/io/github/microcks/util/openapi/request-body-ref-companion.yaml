@@ -1,0 +1,52 @@
+paths:
+  /orders:
+    post:
+      requestBody:
+        $ref: '#/components/requestBodies/CreateOrder'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              examples:
+                cakeOrder:
+                  value:
+                    id: 123
+    put:
+      requestBody:
+        content:
+          application/json:
+            examples:
+              cakeOrder:
+                $ref: '#/components/examples/CakeOrder'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              examples:
+                cakeOrder:
+                  value:
+                    id: 123
+components:
+  requestBodies:
+    CreateOrder:
+      $ref: '#/components/requestBodies/ExternalOrder'
+    CreateOrderAlias:
+      $ref: '#/components/requestBodies/ExternalOrder'
+    ExternalOrder:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              sku:
+                type: string
+          examples:
+            cakeOrder:
+              $ref: '#/components/examples/CakeOrder'
+  examples:
+    CakeOrder:
+      value:
+        sku: companion-cake

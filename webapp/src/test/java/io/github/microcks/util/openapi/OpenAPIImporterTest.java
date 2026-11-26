@@ -38,6 +38,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
@@ -947,6 +948,32 @@ class OpenAPIImporterTest {
             fail("Unknown operation name: " + operation.getName());
          }
       }
+   }
+
+   @ParameterizedTest
+   @CsvSource({ "POST /orders, cake", "POST /orders-via-alias, cake", "POST /orders-from-companion, companion-cake",
+         "POST /orders-companion-path, companion-cake", "PUT /orders-companion-path, companion-cake" })
+   void testRequestBodyRefOpenAPIImport(String operationName, String sku)
+         throws IOException, MockRepositoryImportException {
+      File specification = new File(
+            "target/test-classes/io/github/microcks/util/openapi/request-body-ref-openapi.yaml");
+      ReferenceResolver resolver = new ReferenceResolver(specification.toPath().toAbsolutePath().toUri().toString(),
+            null, false);
+      resolver.setCleanResolvedFiles(false);
+      OpenAPIImporter importer = new OpenAPIImporter(specification.getPath(), resolver);
+      Service service = importer.getServiceDefinitions().getFirst();
+      Operation operation = service.getOperations().stream().filter(op -> operationName.equals(op.getName()))
+            .findFirst().orElseThrow();
+      List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+
+      assertEquals(1, exchanges.size());
+      RequestResponsePair pair = assertInstanceOf(RequestResponsePair.class, exchanges.getFirst());
+      Request request = pair.getRequest();
+      assertEquals("cakeOrder", request.getName());
+      assertEquals("{\"sku\":\"" + sku + "\"}", request.getContent());
+      assertTrue(request.getHeaders().stream().anyMatch(
+            header -> "Content-Type".equals(header.getName()) && header.getValues().contains("application/json")));
+      assertEquals("201", pair.getResponse().getStatus());
    }
 
    @Test
