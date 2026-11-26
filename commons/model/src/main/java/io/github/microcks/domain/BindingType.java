@@ -29,5 +29,6 @@ public enum BindingType {
    GOOGLEPUBSUB,
    SQS,
    SNS,
-   IBMMQ
+   IBMMQ,
+   PULSAR
 }

@@ -214,7 +214,8 @@ class NATSProducerManagerIT {
 
       // Act.
       ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry,
-            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null),
+            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null,
+                  null),
             null);
       producerManager.produceNatsMockMessages(mockDefinition);
 
@@ -276,7 +277,8 @@ class NATSProducerManagerIT {
 
       // Act.
       ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry,
-            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null),
+            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null,
+                  null),
             null);
       producerManager.produceNatsMockMessages(mockDefinition);
 
@@ -343,7 +345,8 @@ class NATSProducerManagerIT {
 
       // Act - Publish messages using ProducerManager.
       ProducerManager producerManager = new ProducerManager(mockRepository, null,
-            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null),
+            new ProducerManager.ProducerDependencies(null, null, natsProducerManager, null, null, null, null, null,
+                  null),
             null);
       producerManager.produceNatsMockMessages(mockDefinition);
 
