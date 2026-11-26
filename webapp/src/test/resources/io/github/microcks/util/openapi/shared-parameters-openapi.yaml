@@ -1,0 +1,300 @@
+openapi: 3.0.3
+info:
+  title: Stock API
+  version: '1.0'
+paths:
+  /stock:
+    parameters:
+      - $ref: '#/components/parameters/warehouse'
+      - name: x-stock-source
+        in: header
+        required: true
+        schema:
+          type: string
+        examples:
+          main:
+            value: test
+          outlet:
+            value: test
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/stock'
+    put:
+      responses:
+        '200':
+          $ref: '#/components/responses/stockUpdated'
+    patch:
+      responses:
+        '204':
+          $ref: '#/components/responses/stockNoContent'
+  /stock/status:
+    parameters:
+      - name: warehouse
+        in: query
+        required: true
+        schema:
+          type: string
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/outletStock'
+  /stock/{sku}:
+    parameters:
+      - name: sku
+        in: path
+        required: true
+        schema:
+          type: string
+        examples:
+          outlet:
+            value: shared-sku
+      - name: sku
+        in: query
+        schema:
+          type: string
+        examples:
+          outlet:
+            value: query-sku
+      - $ref: '#/components/parameters/warehouse'
+    get:
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            outlet:
+              value: operation-sku
+      responses:
+        '200':
+          $ref: '#/components/responses/outletStock'
+    put:
+      parameters:
+        - name: warehouse
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/outletStock'
+  /items:
+    parameters:
+      - name: filter
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/ItemFilter'
+        examples:
+          books:
+            value:
+              category: books
+      - name: tags
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          books:
+            value: [a, b]
+      - name: paging
+        in: query
+        required: true
+        schema:
+          type: object
+          required: [page]
+          properties:
+            page:
+              type: integer
+            cursor:
+              type: string
+      - name: details
+        in: query
+        schema:
+          type: object
+          required: [format]
+          properties:
+            format:
+              type: string
+      - name: facets
+        in: query
+        required: true
+        schema:
+          type: object
+          properties:
+            owner:
+              type: string
+      - name: packedFilter
+        in: query
+        required: true
+        explode: false
+        schema:
+          $ref: '#/components/schemas/ItemFilter'
+      - $ref: '#/components/parameters/warehouse'
+    get:
+      responses:
+        '200':
+          description: Books
+          content:
+            application/json:
+              examples:
+                books:
+                  value: [Notebook]
+  /packed-items:
+    parameters:
+      - name: filter
+        in: query
+        required: true
+        explode: false
+        schema:
+          $ref: '#/components/schemas/ItemFilter'
+        examples:
+          outlet:
+            value: { category: books }
+      - name: tags
+        in: query
+        required: true
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          outlet:
+            value: [a, b]
+      - name: labels
+        in: query
+        required: true
+        style: pipeDelimited
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          outlet:
+            value: [a, b]
+      - name: deepFilter
+        in: query
+        required: true
+        style: deepObject
+        explode: true
+        schema:
+          $ref: '#/components/schemas/ItemFilter'
+        examples:
+          outlet:
+            value: { category: books }
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/outletStock'
+  /dictionary-items:
+    parameters:
+      - name: filters
+        in: query
+        schema:
+          type: object
+          additionalProperties:
+            type: string
+        examples:
+          outlet:
+            value: { material: paper }
+      - name: categories
+        in: query
+        schema:
+          type: object
+          properties:
+            category:
+              type: string
+          additionalProperties:
+            type: string
+        examples:
+          outlet:
+            value: { category: books, section: fiction }
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/outletStock'
+  /empty-items:
+    parameters:
+      - name: warehouse
+        in: query
+        schema:
+          type: string
+        examples:
+          outlet:
+            value: ''
+      - name: tags
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          outlet:
+            value: [sale, '']
+      - name: filter
+        in: query
+        schema:
+          $ref: '#/components/schemas/ItemFilter'
+        examples:
+          outlet:
+            value: { category: books, author: '' }
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/outletStock'
+components:
+  schemas:
+    ItemFilter:
+      type: object
+      required: [category]
+      properties:
+        category:
+          type: string
+        author:
+          type: string
+  parameters:
+    warehouse:
+      name: warehouse
+      in: query
+      required: true
+      schema:
+        type: string
+      examples:
+        main:
+          value: main
+        outlet:
+          value: outlet
+  responses:
+    stock:
+      description: Stock
+      content:
+        application/json:
+          examples:
+            main:
+              value: { warehouse: main }
+            outlet:
+              value: { warehouse: outlet }
+    outletStock:
+      description: Outlet stock
+      content:
+        application/json:
+          examples:
+            outlet:
+              value: { warehouse: outlet }
+    stockUpdated:
+      description: Updated stock
+      content:
+        application/json:
+          examples:
+            updated:
+              value: { status: updated }
+    stockNoContent:
+      description: Stock updated with no content
+      x-microcks-refs:
+        - outlet
