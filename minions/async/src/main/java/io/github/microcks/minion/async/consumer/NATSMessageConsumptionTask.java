@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * specified using the following form: <code>nats://{brokerhost[:port]}</code>
  * @author laurent
  */
-public class NATSMessageConsumptionTask implements MessageConsumptionTask {
+public class NATSMessageConsumptionTask extends AbstractMessageConsumptionTask {
 
    /**
     * Get a JBoss logging logger.
@@ -102,6 +102,9 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
       });
 
       d.subscribe(endpointTopic);
+
+      // Subscription is active: the consumer is connected and ready to receive messages.
+      notifyWaitingForMessage();
 
       Thread.sleep(specification.getTimeoutMS());
 

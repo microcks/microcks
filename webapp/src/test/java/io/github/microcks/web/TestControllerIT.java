@@ -17,6 +17,8 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.TestCasePhase;
+import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.domain.TestResult;
 import io.github.microcks.domain.TestStepResult;
 import io.github.microcks.service.TestRunnerService;
@@ -123,6 +125,65 @@ class TestControllerIT extends AbstractBaseIT {
       List<RequestResponsePair> pairs = testController.getMessagesForTestCase(testResult.getId(), testCaseId);
       assertEquals(1, pairs.size());
       assertEquals("pastries_json", pairs.get(0).getRequest().getName());
+   }
+
+   @Test
+   void testReportTestCasePhase() {
+      // Upload PetStore reference artifact and launch a test to get a real TestResult with test case results.
+      uploadArtifactFile("target/test-classes/io/github/microcks/web/pastry-for-test-openapi.yaml", true);
+
+      String testEndpoint = String.format("http://localhost:%d", pastryImpl.getMappedPort(8282));
+
+      StringBuilder testRequest = new StringBuilder("{").append("\"serviceId\": \"pastry-for-test:2.0.0\", ")
+            .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ")
+            .append("\"runnerType\": \"OPEN_API_SCHEMA\", ").append("\"timeout\": 2000").append("}");
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+
+      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatusCode().value());
+      TestResult testResult = response.getBody();
+      assertNotNull(testResult);
+
+      waitForTestCompletion(testResult, 3);
+
+      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      testResult = response.getBody();
+      assertNotNull(testResult);
+      assertFalse(testResult.getTestCaseResults().isEmpty());
+      String operationName = testResult.getTestCaseResults().get(0).getOperationName();
+
+      // Report a progress phase for an existing operation.
+      String phaseRequest = "{\"operationName\": \"" + operationName + "\", \"phase\": \"WAITING_FOR_MESSAGE\"}";
+      HttpEntity<String> phaseEntity = new HttpEntity<>(phaseRequest, headers);
+
+      ResponseEntity<TestCaseResult> phaseResponse = restTemplate
+            .postForEntity("/api/tests/" + testResult.getId() + "/testCasePhase", phaseEntity, TestCaseResult.class);
+      assertEquals(200, phaseResponse.getStatusCode().value());
+      assertNotNull(phaseResponse.getBody());
+      assertEquals(TestCasePhase.WAITING_FOR_MESSAGE, phaseResponse.getBody().getPhase());
+
+      // The phase must be persisted while completion indicators (inProgress, success) are left untouched.
+      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      TestResult refreshed = response.getBody();
+      assertNotNull(refreshed);
+      assertFalse(refreshed.isInProgress());
+      assertEquals(TestCasePhase.WAITING_FOR_MESSAGE, refreshed.getTestCaseResults().stream()
+            .filter(tcr -> tcr.getOperationName().equals(operationName)).findFirst().orElseThrow().getPhase());
+
+      // Reporting a phase for an unknown operation is rejected.
+      String unknownRequest = "{\"operationName\": \"UNKNOWN operation\", \"phase\": \"WAITING_FOR_MESSAGE\"}";
+      ResponseEntity<TestCaseResult> unknownResponse = restTemplate.postForEntity(
+            "/api/tests/" + testResult.getId() + "/testCasePhase", new HttpEntity<>(unknownRequest, headers),
+            TestCaseResult.class);
+      assertEquals(400, unknownResponse.getStatusCode().value());
+
+      // Reporting a phase for an unknown test result is rejected.
+      ResponseEntity<TestCaseResult> unknownTestResponse = restTemplate
+            .postForEntity("/api/tests/unknown-id/testCasePhase", phaseEntity, TestCaseResult.class);
+      assertEquals(400, unknownTestResponse.getStatusCode().value());
    }
 
    @Test

@@ -33,6 +33,7 @@ import io.github.microcks.service.ServiceService;
 import io.github.microcks.service.TestService;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.web.dto.HeaderDTO;
+import io.github.microcks.web.dto.TestCasePhaseDTO;
 import io.github.microcks.web.dto.TestCaseReturnDTO;
 import io.github.microcks.web.dto.TestRequestDTO;
 
@@ -173,6 +174,18 @@ public class TestController {
       log.debug("Reporting testCase results on test {}", testResultId);
       TestCaseResult testCaseResult = testService.reportTestCaseResult(testResultId, testCaseReturn.getOperationName(),
             testCaseReturn.getTestReturns());
+      if (testCaseResult != null) {
+         return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+   }
+
+   @PostMapping(value = "tests/{id}/testCasePhase")
+   public ResponseEntity<TestCaseResult> reportTestCasePhase(@PathVariable("id") String testResultId,
+         @RequestBody TestCasePhaseDTO testCasePhase) {
+      log.debug("Reporting testCase phase on test {}", testResultId);
+      TestCaseResult testCaseResult = testService.reportTestCasePhase(testResultId, testCasePhase.getOperationName(),
+            testCasePhase.getPhase());
       if (testCaseResult != null) {
          return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
       }
