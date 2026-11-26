@@ -20,6 +20,7 @@ import io.github.microcks.domain.OAuth2ClientContext;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Response;
+import io.github.microcks.domain.ResponseExampleComparisonMode;
 import io.github.microcks.domain.Secret;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.TestCaseResult;
@@ -142,6 +143,22 @@ public class TestRunnerService {
    @Async
    public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service,
          TestRunnerType runnerType, OAuth2ClientContext oAuth2Context) {
+      return launchTestsInternal(testResult, service, runnerType, oAuth2Context, null);
+   }
+
+   /**
+    * Launch tests using asynchronous/completable future pattern.
+    * @param testResult                TestResults to aggregate results within
+    * @param service                   Service to test
+    * @param runnerType                Type of runner for launching the tests
+    * @param oAuth2Context             An optional OAuth2ClientContext that may complement Secret information
+    * @param responseExampleComparison An optional comparison mode for OpenAPI response examples
+    * @return A Future wrapping test results
+    */
+   @Async
+   public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service,
+         TestRunnerType runnerType, OAuth2ClientContext oAuth2Context,
+         ResponseExampleComparisonMode responseExampleComparison) {
       // Found next build number for this test.
       List<TestResult> older = testResultRepository.findByServiceId(service.getId(),
             PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
@@ -187,7 +204,7 @@ public class TestRunnerService {
 
       // Initialize runner once as it is shared for each test.
       AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, secret, testResult.getTimeout(),
-            service.getId());
+            service.getId(), responseExampleComparison);
       if (testRunner == null) {
          // Set failure and stopped flags and save before exiting.
          testResult.setSuccess(false);
@@ -358,7 +375,7 @@ public class TestRunnerService {
 
    /** Retrieve correct test runner according given type. */
    private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, Secret secret, Long runnerTimeout,
-         String serviceId) {
+         String serviceId, ResponseExampleComparisonMode responseExampleComparison) {
       // TODO: remove this ugly initialization later.
       // Initialize new HttpComponentsClientHttpRequestFactory that supports https connections.
       SSLContext sslContext = null;
@@ -399,7 +416,8 @@ public class TestRunnerService {
             soapRunner.setSecret(secret);
             return soapRunner;
          case OPEN_API_SCHEMA:
-            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, true);
+            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, true,
+                  responseExampleComparison);
             openApiRunner.setClientHttpRequestFactory(factory);
             openApiRunner.setResourceUrl(validationResourceUrl);
             openApiRunner.setSecret(secret);

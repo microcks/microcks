@@ -106,7 +106,8 @@ public class TestService {
 
       // Launch test asynchronously before returning result.
       log.debug("Calling launchTestsInternal() marked as Async");
-      testRunnerService.launchTestsInternal(testResult, service, runnerType, testOptionals.getOAuth2Context());
+      testRunnerService.launchTestsInternal(testResult, service, runnerType, testOptionals.getOAuth2Context(),
+            testOptionals.getResponseExampleComparison());
       log.debug("Async launchTestsInternal() as now finished");
       return testResult;
    }
