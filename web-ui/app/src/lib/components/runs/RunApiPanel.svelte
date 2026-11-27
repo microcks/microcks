@@ -49,11 +49,12 @@
   {/if}
   <div class="wfr-api-mock">
     <h3 class="wfr-card-subtitle">Or play it on the mocks through its Mock URL</h3>
-    <p class="wfr-note">Microcks plays {workflowId} on its mocks and answers 200 with the workflow outputs. Each call creates a run with origin Mock URL.</p>
-    <CodeBlock class="wfr-pre" variant="plain" copy={false} language="bash" caption="curl command for the Mock URL" code={mockCurl} />
     {#if mockOn}
+      <p class="wfr-note">Microcks plays {workflowId} on its mocks and answers 200 with the workflow outputs. Each call creates a run with origin Mock URL.</p>
+      <CodeBlock class="wfr-pre" variant="plain" copy={false} language="bash" caption="curl command for the Mock URL" code={mockCurl} />
       <CopyButton value={mockOne} label="Copy command" variant="outline" class="wfr-copy" />
     {:else}
+      <p class="wfr-note">{unavailableReason('mock-url', proposed)}.</p>
       <Button size="sm" disabled title={unavailableReason('mock-url', proposed)} class="wfr-copy">Copy command</Button>
     {/if}
   </div>
