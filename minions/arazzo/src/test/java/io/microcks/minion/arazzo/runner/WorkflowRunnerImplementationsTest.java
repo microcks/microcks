@@ -170,9 +170,10 @@ class WorkflowRunnerImplementationsTest {
             secret);
    }
 
-   /** The headers of a call that are not about its content, sorted by name. */
+   /** The headers of a call that are not about its content nor its Live Traces baggage, sorted by name. */
    private static String authorizationOf(HttpCall call) {
-      return call.headers().entrySet().stream().filter(header -> !header.getKey().equals("Content-Type"))
+      return call.headers().entrySet().stream()
+            .filter(header -> !header.getKey().equals("Content-Type") && !header.getKey().equals("baggage"))
             .map(header -> header.getKey() + "=" + header.getValue()).sorted().reduce((a, b) -> a + ", " + b)
             .orElse("");
    }

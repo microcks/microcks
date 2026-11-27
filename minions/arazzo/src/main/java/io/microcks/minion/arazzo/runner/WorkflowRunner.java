@@ -102,12 +102,12 @@ public class WorkflowRunner {
       int slot = 0;
       for (int position = 0; position < steps.size(); position++) {
          ArazzoStep step = steps.get(position);
-         Attempt attempt = attempt(slot++, step, specification, stepOutputs, schemas);
+         Attempt attempt = attempt(slot++, 1, step, specification, stepOutputs, schemas);
          reporter.stepEnded(attempt.result());
          Optional<ArazzoAction> action = applyingAction(step, attempt);
          for (int retries = 0; isRetry(action) && retries < action.get().retryLimit(); retries++) {
             pause.pause(delayOf(action.get(), specification));
-            attempt = attempt(slot++, step, specification, stepOutputs, schemas);
+            attempt = attempt(slot++, retries + 2, step, specification, stepOutputs, schemas);
             reporter.stepEnded(attempt.result());
             action = applyingAction(step, attempt);
          }
@@ -187,13 +187,13 @@ public class WorkflowRunner {
       }
    }
 
-   private Attempt attempt(int index, ArazzoStep step, RunSpecification specification,
+   private Attempt attempt(int index, int number, ArazzoStep step, RunSpecification specification,
          Map<String, Map<String, Object>> stepOutputs, ResponseSchemaValidator schemas) {
-      StepResult result = execute(index, step, specification, stepOutputs, schemas);
+      StepResult result = execute(index, number, step, specification, stepOutputs, schemas);
       return new Attempt(result, new EvaluationContext(specification.inputs(), stepOutputs, result.response()));
    }
 
-   private StepResult execute(int index, ArazzoStep step, RunSpecification specification,
+   private StepResult execute(int index, int attempt, ArazzoStep step, RunSpecification specification,
          Map<String, Map<String, Object>> stepOutputs, ResponseSchemaValidator schemas) {
       StepOperation operation = operationOf(step, specification);
       Instant start = clock.instant();
@@ -204,7 +204,7 @@ public class WorkflowRunner {
       try {
          requireCallable(operation);
          parameters = resolve(step.parameters(), context);
-         HttpCall built = call(step, operation, parameters, specification, context);
+         HttpCall built = call(step, operation, parameters, specification, context, attempt);
          // The values of the secret are sent, never reported; the calls to the Microcks mocks never carry it.
          RunSecret secret = specification.sources().get(operation.sourceName()).mocks() ? RunSecret.NONE
                : specification.secret();
@@ -290,7 +290,7 @@ public class WorkflowRunner {
    }
 
    private HttpCall call(ArazzoStep step, StepOperation operation, List<ParameterValue> parameters,
-         RunSpecification specification, EvaluationContext context) {
+         RunSpecification specification, EvaluationContext context, int attempt) {
       String path = operation.path();
       StringJoiner query = new StringJoiner("&", "?", "").setEmptyValue("");
       Map<String, String> headers = new LinkedHashMap<>();
@@ -308,7 +308,12 @@ public class WorkflowRunner {
          body = body(requestBody, context);
          headers.put("Content-Type", requestBody.contentType());
       }
-      URI baseUrl = specification.sources().get(operation.sourceName()).baseUrl();
+      SourceTarget source = specification.sources().get(operation.sourceName());
+      if (source.mocks()) {
+         // The calls to the mocks tell Live Traces which run, step and attempt they come from.
+         RunBaggage.mark(headers, specification.runId(), specification.workflowId(), step.stepId(), attempt);
+      }
+      URI baseUrl = source.baseUrl();
       return new HttpCall(operation.method(), URI.create(baseUrl + path + query), headers, body);
    }
 

@@ -1,0 +1,44 @@
+# example: own-baggage - a step that sends its own W3C baggage header, which the run keeps and adds its entries to
+arazzo: 1.0.1
+info:
+  title: API Pastry with a baggage of its own
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readWithItsOwnBaggage
+    steps:
+      - stepId: readPastry
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: Eclair Cafe
+          - name: Baggage
+            in: header
+            value: tenant=bakery
+        successCriteria:
+          - condition: $statusCode == 200
+---
+# example: unusual-ids - a workflow and a step whose ids hold characters a W3C baggage value cannot carry as is
+arazzo: 1.0.1
+info:
+  title: API Pastry with unusual ids
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: read pastry;fast
+    steps:
+      - stepId: read,once
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: Eclair Cafe
+        successCriteria:
+          - condition: $statusCode == 200

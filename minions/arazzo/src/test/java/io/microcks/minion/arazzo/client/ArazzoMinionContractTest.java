@@ -140,7 +140,10 @@ class ArazzoMinionContractTest {
                         new ExpressionValue("$response.body#/status", "available")),
                   true)),
             outputs("name", "Eclair Cafe", "price", 2.5),
-            new HttpCall("GET", URI.create(MOCKS + "/pastry/Eclair%20Cafe"), Map.of("Accept", "application/json"),
+            new HttpCall("GET", URI.create(MOCKS + "/pastry/Eclair%20Cafe"),
+                  Map.of("Accept", "application/json", "baggage",
+                        "microcks-arazzo-run=6719f0c2a1b2c3d4e5f60718,microcks-arazzo-workflow=readThenReprice,"
+                              + "microcks-arazzo-step=readPastry,microcks-arazzo-attempt=1"),
                   null),
             new HttpOutcome(200, Map.of("Content-Type", List.of("application/json")),
                   "{\"name\":\"Eclair Cafe\",\"price\":2.5,\"status\":\"available\"}"),
