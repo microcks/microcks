@@ -74,6 +74,8 @@ export interface Source {
   error?: string;
   warning?: string;
   serviceIds: string[];
+  /** The Arazzo document this importer produced (instead of Services), when it imports one. */
+  arazzo?: { documentId: string; title: string; version: string; unlinkedSources: string[] };
   timeline: TimelineEntry[];
   diff?: { revision: string; lines: DiffLine[] };
 }

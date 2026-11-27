@@ -317,6 +317,8 @@ export interface BackendJob {
   metadata?: { labels?: Record<string, string>; annotations?: Record<string, string> };
   secretRef?: { secretId: string; name: string };
   serviceRefs?: { serviceId: string; name: string; version: string }[];
+  /** The Arazzo document the job imported, with the source descriptions it could not link. */
+  arazzoDocumentRef?: { documentId?: string | null; title: string; version: string; unlinkedSources?: string[] } | null;
 }
 
 const JSON_HEADERS = { 'content-type': 'application/json', accept: 'application/json' };

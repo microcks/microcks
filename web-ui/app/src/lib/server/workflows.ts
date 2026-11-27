@@ -11,6 +11,7 @@ import {
   seedSessions
 } from '#lib/placeholders/workflows.js';
 import type { WorkflowsPayload } from '#lib/workflows/list.js';
+import { documentOrigin, jobOfDocument } from '#lib/workflows/source-job.js';
 import type { ImportAnalysis } from '#lib/workflows/import-analysis.js';
 import { parse as parseYaml } from 'yaml';
 import { formatRelative } from '#lib/format.js';
@@ -18,6 +19,8 @@ import { MICROCKS_BASE } from '#lib/importing.js';
 import {
   BackendError,
   fetchArazzoDocuments,
+  fetchBackendJobs,
+  type BackendJob,
   fetchArazzoSource,
   fetchArazzoWorkflow,
   analyseImportedArazzoDocument,
@@ -247,11 +250,12 @@ export async function getDocumentOverlay(docId: string, token?: string): Promise
 function toDocument(
   summary: BackendArazzoDocumentSummary,
   details: BackendArazzoWorkflowDetail[],
-  content: string | undefined
+  content: string | undefined,
+  job: BackendJob | undefined
 ): ArazzoDocument {
   const described = sourceDescriptionsOf(content);
   const counts = new Map(details[0]?.sources.map((s) => [s.link.sourceName, s]) ?? []);
-  const imported = summary.importDate !== undefined ? new Date(summary.importDate).toISOString() : undefined;
+  const ago = (ms: number) => formatRelative(new Date(ms).toISOString());
   return {
     id: summary.id,
     apiId: summary.id,
@@ -259,7 +263,8 @@ function toDocument(
     title: summary.title,
     arazzoVersion: summary.arazzoVersion,
     version: summary.version,
-    origin: imported ? `Imported ${formatRelative(imported)}` : 'Imported',
+    origin: documentOrigin(job, summary.importDate === undefined ? undefined : Number(new Date(summary.importDate)), ago),
+    ...(job ? { job: { id: job.id, name: job.name } } : {}),
     sources: summary.sources.map((s) => {
       const sd = described.get(s.link.sourceName);
       const type = sd?.type ?? (s.apiType === 'EVENT' ? 'asyncapi' : 'openapi');
@@ -340,6 +345,7 @@ async function fetchReal(token?: string): Promise<{ documents: ArazzoDocument[];
   }
   const documents: ArazzoDocument[] = [];
   const workflows: Workflow[] = [];
+  const jobs = await fetchBackendJobs(token).catch(() => [] as BackendJob[]);
   await Promise.all(
     summaries.map(async (summary) => {
       const [content, ...details] = await Promise.all([
@@ -347,7 +353,7 @@ async function fetchReal(token?: string): Promise<{ documents: ArazzoDocument[];
         ...summary.workflows.map((w) => fetchArazzoWorkflow(summary.id, w.status.workflowId, token))
       ]);
       const found = details.filter((d): d is BackendArazzoWorkflowDetail => d !== undefined);
-      documents.push(toDocument(summary, found, content as string | undefined));
+      documents.push(toDocument(summary, found, content as string | undefined, jobOfDocument(jobs, summary.id)));
       for (const d of found) workflows.push(toWorkflow(d, summary.workflows.find((w) => w.status.workflowId === d.workflowId)));
     })
   );

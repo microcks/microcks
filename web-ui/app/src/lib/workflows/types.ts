@@ -49,6 +49,8 @@ export interface ArazzoDocument {
   version: string;
   /** Where the document comes from, e.g. "Synced 12 min ago from GitHub". */
   origin: string;
+  /** The importer (source job) that keeps the document in sync, when one does. */
+  job?: { id: string; name: string };
   /** Name of the ArazzoSources overlay file, when there is one. */
   overlay?: string;
   sources: SourceDescription[];

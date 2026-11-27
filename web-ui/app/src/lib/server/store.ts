@@ -1,3 +1,4 @@
+import { unlinkedWarning } from '#lib/workflows/source-job.js';
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { isWorkflowArtifact, parseArtifact } from './parser';
@@ -224,11 +225,13 @@ const asIso = (v: number | string | undefined) => (v === undefined ? undefined :
 /** Maps an ImportJob to a Source, keeping the in-memory timeline and diff the backend does not record (see IDEAS M2-029). */
 function sourceOfJob(job: BackendJob, previous: Source | undefined, formats: Map<string, string>): Source {
   const serviceIds = (job.serviceRefs ?? []).map((r) => r.serviceId);
+  const ref = job.arazzoDocumentRef?.documentId ? job.arazzoDocumentRef : undefined;
   const lastImportAt = asIso(job.lastImportDate);
+  const imported = ref ? `Arazzo document ${ref.title} ${ref.version}` : `${serviceIds.length} service${serviceIds.length === 1 ? '' : 's'}`;
   const timeline = previous?.timeline.length
     ? previous.timeline
     : lastImportAt
-      ? [{ at: lastImportAt, kind: job.lastImportError ? ('failure' as const) : ('import' as const), summary: job.lastImportError ? `Import failed: ${job.lastImportError}` : `Imported ${serviceIds.length} service${serviceIds.length === 1 ? '' : 's'}` }]
+      ? [{ at: lastImportAt, kind: job.lastImportError ? ('failure' as const) : ('import' as const), summary: job.lastImportError ? `Import failed: ${job.lastImportError}` : `Imported ${imported}` }]
       : [];
   return {
     id: job.id,
@@ -236,7 +239,7 @@ function sourceOfJob(job: BackendJob, previous: Source | undefined, formats: Map
     origin: (job.metadata?.annotations?.origin as SourceOrigin | undefined) ?? 'url',
     url: job.repositoryUrl,
     role: job.mainArtifact ? 'PRIMARY' : 'SECONDARY',
-    artifact: previous?.artifact ?? formats.get(serviceIds[0] ?? '') ?? '',
+    artifact: ref ? 'Arazzo' : (previous?.artifact ?? formats.get(serviceIds[0] ?? '') ?? ''),
     secret: job.secretRef?.name,
     tlsValidation: !job.repositoryDisableSSLValidation,
     labels: job.metadata?.labels ?? {},
@@ -244,8 +247,9 @@ function sourceOfJob(job: BackendJob, previous: Source | undefined, formats: Map
     createdAt: asIso(job.createdDate) ?? lastImportAt ?? new Date().toISOString(),
     lastImportAt,
     error: job.lastImportError || undefined,
-    warning: previous?.warning,
+    warning: ref ? unlinkedWarning(ref.unlinkedSources) : previous?.warning,
     serviceIds,
+    ...(ref ? { arazzo: { documentId: ref.documentId!, title: ref.title, version: ref.version, unlinkedSources: ref.unlinkedSources ?? [] } } : {}),
     timeline,
     diff: previous?.diff
   };

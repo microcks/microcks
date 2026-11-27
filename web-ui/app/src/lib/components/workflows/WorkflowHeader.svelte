@@ -21,6 +21,8 @@
   const lastRun = $derived(runs[0]);
   const used = $derived([...new Set(workflow.steps.map((s) => s.sourceName))]);
   const synced = $derived(syncedText(document));
+  /** The importer of the document (its page in Sources); the list of sources for the demo data. */
+  const sourceJobHref = $derived(document.job ? `/sources/${document.job.id}` : '/sources');
   const week = $derived(runs.filter((r) => r.status !== 'RUNNING' && Date.now() - new Date(r.startedAt).getTime() < WEEK_MS));
   const passed = $derived(week.filter((r) => r.status === 'SUCCESS').length);
   const lastWord = $derived(lastRun ? (lastRun.status === 'SUCCESS' ? 'passed' : lastRun.status === 'FAILURE' ? 'failed' : 'running') : undefined);
@@ -46,7 +48,7 @@
           }
         ]
       : []),
-    ...(synced ? [{ id: 'job', label: `Open source job ${document.title}`, href: '/sources' }] : []),
+    ...(synced ? [{ id: 'job', label: `Open source job ${document.job?.name ?? document.title}`, href: sourceJobHref }] : []),
     { id: 'reimport', label: 'Re-import the Arazzo document', href: '/sources/new' },
     { id: 'delete', label: 'Delete workflow', disabled: true, description: 'Workflows are removed with their Arazzo document.' }
   ]);
@@ -79,7 +81,7 @@
       <span class="wf-facts-mono">{document.file} · arazzo {document.arazzoVersion}</span>
       {#if document.overlay}<span>overlay <span class="wf-facts-mono">{document.overlay}</span></span>{/if}
       {#if synced}
-        <span>{synced} by source job <a href="/sources">{document.title}</a></span>
+        <span>{synced} by source job <a href={sourceJobHref}>{document.job?.name ?? document.title}</a></span>
       {:else}
         <span>{document.origin}</span>
       {/if}
