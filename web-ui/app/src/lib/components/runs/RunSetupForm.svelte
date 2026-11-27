@@ -28,6 +28,8 @@
 
   const { workflow, document, defaults } = untrack(() => setup);
   const sources = [...new Set(workflow.steps.map((s) => s.sourceName))];
+  /** The mockup's `size` input is a choice of S, M or L; an imported workflow's own `size` input is free text. */
+  const sized = (name: string) => name === 'size' && setup.demo !== false;
   const rawInputs = (id: string) => {
     const ex = setup.examples.find((e) => e.id === id);
     return ex ? Object.fromEntries(Object.entries(ex.inputs).map(([k, v]) => [k, String(v)])) : undefined;
@@ -318,9 +320,9 @@
           <div class="wfr-inputs">
             {#each workflow.inputs as input (input.name)}
               <Field class="wfr-field wfr-input-field" error={errorOf(`input.${input.name}`)} help={helpOf(input.name)}>
-                {#snippet label()}<span class="wfr-mono wfr-strong">{input.name}</span> <span class="wfr-label-type">{input.name === 'size' ? 'string · S | M | L' : input.type}</span>{/snippet}
+                {#snippet label()}<span class="wfr-mono wfr-strong">{input.name}</span> <span class="wfr-label-type">{sized(input.name) ? 'string · S | M | L' : input.type}</span>{/snippet}
                 {#snippet children(c)}
-                  {#if input.name === 'size'}
+                  {#if sized(input.name)}
                     <Select {...c} class="wfr-mono-control" value={inputs[input.name] ?? 'M'} onchange={(e) => setInput(input.name, e.currentTarget.value)}>
                       {#each ['S', 'M', 'L'] as s (s)}<option>{s}</option>{/each}
                     </Select>
