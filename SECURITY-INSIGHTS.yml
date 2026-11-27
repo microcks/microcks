@@ -1,10 +1,10 @@
 header:
   schema-version: 1.0.0
-  last-updated: '2026-05-04'
-  last-reviewed: '2026-05-04'
-  expiration-date: '2027-05-04T01:00:00.000Z'
+  last-updated: '2027-11-13'
+  last-reviewed: '2027-11-13'
+  expiration-date: '2027-11-13T01:00:00.000Z'
   project-url: https://github.com/microcks/microcks
-  project-release: '1.14.0'
+  project-release: '1.16.0'
   changelog: https://github.com/microcks/microcks/blob/main/CHANGELOG.md
   license: https://github.com/microcks/microcks/blob/main/LICENSE
 project-lifecycle:
@@ -52,6 +52,6 @@ dependencies:
   third-party-packages: true
   dependencies-lists:
     - https://github.com/microcks/microcks/network/dependencies
-    - https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks/refs/tag/1.14.0/aaaebd2b4d25dcebb4ff096d4f9e3686126161f4/browse/dependencies
+    - https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks/refs/branch/master/6546fe9cda6de516cbca6bef38501d83a91d4f50/browse/dependencies
   env-dependencies-policy:
     policy-url: https://github.com/microcks/microcks/blob/main/DEPENDENCY_POLICY.md

@@ -25,7 +25,7 @@ To get involved with our community, please familiarize yourself with the project
 
 ## Build Status
 
-The current development version is `1.16.0-SNAPSHOT`. 
+The current development version is `1.16.1-SNAPSHOT`. 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
@@ -61,8 +61,8 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch         | Container images tags |
 | ----------- |-------------------|----------------|-----------------------|
-| Stable      | `1.15.0`          | `release-1.15` | `1.15.0`, `latest`    |
-| Dev         | `1.16.0-SNAPSHOT` | `master`       | `nightly`             |
+| Stable      | `1.16.0`          | `release-1.16` | `1.16.0`, `latest`    |
+| Dev         | `1.16.1-SNAPSHOT` | `master`       | `nightly`             |
 | Maintenance | `1.14.1-SNAPSHOT` | `1.14.x`       | `maintenance`         |
 
 Have a look at our [tested configurations](TESTED_CONFIGURATIONS.md) to know more about the versions of dependencies 
