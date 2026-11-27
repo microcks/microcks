@@ -23,5 +23,7 @@ public enum WorkflowRunTarget {
    /** The Microcks mocks of the API linked to the source description of each step. */
    MOCKS,
    /** The implementations of the APIs, at the base URL set per source description for the run. */
-   IMPLEMENTATIONS
+   IMPLEMENTATIONS,
+   /** The mocks of some source descriptions and the implementations of the others, as set for the run (S31). */
+   MIXED
 }

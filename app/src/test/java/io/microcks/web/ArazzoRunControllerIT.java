@@ -187,6 +187,50 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       }
    }
 
+   @Test
+   void aMixedRunSaysWhereEachSourceGoesAsTheMockupLaunchesIt() throws Exception {
+      uploadArtifactFile(FIXTURES + "customer-api.openapi.yaml", true);
+      uploadArtifactFile(FIXTURES + "order-api.openapi.yaml", true);
+      uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo.yaml", true);
+      uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo-sources.yaml", false);
+      String documentId = JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody())
+            .get(0).get("id").asText();
+
+      ResponseEntity<String> launched = restTemplate.postForEntity(
+            "/api/arazzo/documents/" + documentId + "/workflows/placeOrder/runs",
+            json("{\"inputs\": {\"customerId\": \"c-42\"}, \"timeout\": 10000, "
+                  + "\"implementations\": {\"customerApi\": \"https://customers.staging.example\"}, "
+                  + "\"target\": {\"kind\": \"mixed\", "
+                  + "\"perSource\": {\"customerApi\": \"implementation\", \"orderApi\": \"mock\"}}}"),
+            String.class);
+
+      assertEquals(201, launched.getStatusCode().value(), launched.getBody());
+      JsonNode sources = JSON.readTree(MINION.runRequests().get(0)).get("sources");
+      assertEquals(List.of("https://customers.staging.example", "/rest/Order+API/1.0.0"),
+            List.of(sources.get("customerApi").get("baseUrl").asText(), sources.get("orderApi").get("baseUrl").asText()));
+      String runId = JSON.readTree(launched.getBody()).get("id").asText();
+      assertEquals("MIXED", run(runId).get("target").asText());
+      JsonNode mixedRuns = JSON.readTree(restTemplate
+            .getForEntity("/api/arazzo/documents/" + documentId + "/runs?target=MIXED", String.class).getBody());
+      assertEquals(List.of(runId), List.of(mixedRuns.get(0).get("id").asText()));
+   }
+
+   @Test
+   void aMixedRunToAnUnknownTargetIsABadRequest() throws Exception {
+      String documentId = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
+
+      ResponseEntity<String> refused = restTemplate.postForEntity(
+            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            json("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, "
+                  + "\"target\": {\"kind\": \"mixed\", \"perSource\": {\"pastryApi\": \"staging\"}}}"),
+            String.class);
+
+      assertEquals(400, refused.getStatusCode().value());
+      assertEquals("Workflow readThenReprice cannot run: source pastryApi is sent to staging, not to mock or "
+            + "implementation", refused.getBody());
+      assertEquals(List.of(), MINION.runRequests());
+   }
+
    private String pastryScenariosAreImported(String fixture) throws Exception {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + fixture, true);

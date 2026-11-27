@@ -167,6 +167,25 @@ class ArazzoRunHistoryTest {
    }
 
    @Test
+   void theHistoryKeepsMixedRunsApart() throws Exception {
+      runsOfPastryScenariosAre(PASTRY_SCENARIOS);
+      WorkflowResult mixed = new WorkflowResult();
+      mixed.setDocumentId(PASTRY_SCENARIOS);
+      mixed.setWorkflowId("readThenReprice");
+      mixed.setNumber(4L);
+      mixed.setTarget(WorkflowRunTarget.MIXED);
+      mixed.setStatus(WorkflowRunStatus.SUCCESS);
+      workflowResultRepository.save(mixed);
+
+      assertEquals(List.of(4L), numbers(arazzoRunHistoryService.getRuns(PASTRY_SCENARIOS,
+            new WorkflowRunFilter(null, WorkflowRunTarget.MIXED, null), 0, 20)));
+      assertEquals(new WorkflowRunCounts(1, 1, 0), arazzoRunHistoryService.countRuns(PASTRY_SCENARIOS,
+            new WorkflowRunFilter(null, WorkflowRunTarget.MIXED, null)));
+      assertEquals(List.of(2L), numbers(arazzoRunHistoryService.getRuns(PASTRY_SCENARIOS,
+            new WorkflowRunFilter(null, WorkflowRunTarget.IMPLEMENTATIONS, null), 0, 20)));
+   }
+
+   @Test
    void theHistoryIsReadPageByPage() throws Exception {
       runsOfPastryScenariosAre(PASTRY_SCENARIOS);
 

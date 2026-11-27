@@ -36,6 +36,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -66,8 +67,7 @@ public class ArazzoRunController {
          ArazzoRunLaunchDTO launch) {
       try {
          Optional<WorkflowResult> run = arazzoRunService.launchRun(documentId, workflowId, launch.inputs(),
-               launch.timeout(), launch.implementations() == null ? null
-                     : new ArazzoRunImplementations(launch.implementations(), launch.secretName()));
+               launch.timeout(), implementationsOf(launch));
          return run.map(launched -> Response.created(URI.create("/api/arazzo/runs/" + launched.getId()))
                .entity(launched).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
       } catch (ArazzoRunRefusedException arre) {
@@ -99,5 +99,15 @@ public class ArazzoRunController {
 
    private static Response noContentOrNotFound(Optional<WorkflowResult> run) {
       return Response.status(run.isPresent() ? Response.Status.NO_CONTENT : Response.Status.NOT_FOUND).build();
+   }
+
+   /** The mocks unless implementations are given, or a mixed target saying where each source goes. */
+   private static ArazzoRunImplementations implementationsOf(ArazzoRunLaunchDTO launch) {
+      if (launch.mixed()) {
+         Map<String, String> perSource = launch.target().perSource() == null ? Map.of() : launch.target().perSource();
+         return new ArazzoRunImplementations(launch.implementations(), launch.secretName(), perSource);
+      }
+      return launch.implementations() == null ? null
+            : new ArazzoRunImplementations(launch.implementations(), launch.secretName());
    }
 }

@@ -111,13 +111,14 @@ public class ArazzoRunService {
    }
 
    /**
-    * Run a workflow against the implementations of the APIs its source descriptions are linked to, or against their
-    * Microcks mocks.
+    * Run a workflow against the implementations of the APIs its source descriptions are linked to, against their
+    * Microcks mocks, or against the mocks of some of them and the implementations of the others (mixed run).
     * @param documentId      The id of the Arazzo document
     * @param workflowId      The id of the workflow in that document
     * @param inputs          The inputs of the workflow, by name
     * @param timeout         How long a step waits for its response, in milliseconds; null for 10 seconds
-    * @param implementations The base URL of each linked source and the secret of the calls; null for the mocks
+    * @param implementations The base URL of each source sent to its implementation, the secret of the calls to the
+    *                        implementations, and where each source goes in a mixed run; null for the mocks
     * @return The run, in progress; empty if the document or the workflow does not exist
     * @throws ArazzoRunRefusedException if the workflow cannot run, or cannot reach the implementations
     */
@@ -143,14 +144,14 @@ public class ArazzoRunService {
                (missingInputs.size() == 1 ? "Missing input: " : "Missing inputs: ") + String.join(", ", missingInputs));
       }
       List<ResolvedSource> linked = sources.values().stream().filter(source -> source.api() != null).toList();
-      Map<String, String> baseUrls = baseUrlsOf(workflowId, linked, implementations);
+      Map<String, String> baseUrls = baseUrlsOf(document, workflowId, linked, implementations);
       Secret secret = secretOf(implementations);
       WorkflowResult run = new WorkflowResult();
       run.setDocumentId(document.getId());
       run.setDocumentTitle(document.getTitle());
       run.setDocumentVersion(document.getVersion());
       run.setWorkflowId(workflowId);
-      run.setTarget(implementations == null ? WorkflowRunTarget.MOCKS : WorkflowRunTarget.IMPLEMENTATIONS);
+      run.setTarget(targetOf(implementations));
       run.setSources(linked.stream()
             .map(source -> new WorkflowSourceTarget(source.link().sourceName(), source.serviceId(),
                   source.link().apiName(), source.link().apiVersion(), baseUrls.get(source.link().sourceName())))
@@ -196,15 +197,63 @@ public class ArazzoRunService {
    }
 
    /** Where each linked source is called: its mocks, or the base URL of its implementation. */
-   private static Map<String, String> baseUrlsOf(String workflowId, List<ResolvedSource> linked,
-         ArazzoRunImplementations implementations) throws ArazzoRunRefusedException {
+   private static Map<String, String> baseUrlsOf(ArazzoDocument document, String workflowId,
+         List<ResolvedSource> linked, ArazzoRunImplementations implementations) throws ArazzoRunRefusedException {
+      if (implementations != null && implementations.mixed()) {
+         requireClearTargets(document, workflowId, linked, implementations);
+      }
       Map<String, String> baseUrls = new LinkedHashMap<>();
       for (ResolvedSource source : linked) {
          String sourceName = source.link().sourceName();
-         baseUrls.put(sourceName, implementations == null ? mocksOf(source)
+         baseUrls.put(sourceName, onMocks(sourceName, implementations) ? mocksOf(source)
                : implementationOf(workflowId, sourceName, implementations.baseUrls().get(sourceName)));
       }
       return baseUrls;
+   }
+
+   /** A source goes to its mocks in a run on the mocks, and in a mixed run unless it is sent to its implementation. */
+   private static boolean onMocks(String sourceName, ArazzoRunImplementations implementations) {
+      if (implementations == null) {
+         return true;
+      }
+      return implementations.mixed() && !ArazzoRunImplementations.IMPLEMENTATION
+            .equals(implementations.perSource().getOrDefault(sourceName, ArazzoRunImplementations.MOCK));
+   }
+
+   /**
+    * A mixed run must say clearly where each source goes: only linked sources, sent to {@code mock} or
+    * {@code implementation}, and no base URL for a source sent to its mocks.
+    */
+   private static void requireClearTargets(ArazzoDocument document, String workflowId, List<ResolvedSource> linked,
+         ArazzoRunImplementations implementations) throws ArazzoRunRefusedException {
+      String refusal = "Workflow " + workflowId + " cannot run: ";
+      List<String> linkedNames = linked.stream().map(source -> source.link().sourceName()).toList();
+      for (Map.Entry<String, String> target : implementations.perSource().entrySet()) {
+         String sourceName = target.getKey();
+         if (!linkedNames.contains(sourceName)) {
+            throw new ArazzoRunRefusedException(refusal + sourceName + " is not a linked source of "
+                  + document.getTitle() + " " + document.getVersion());
+         }
+         if (!ArazzoRunImplementations.MOCK.equals(target.getValue())
+               && !ArazzoRunImplementations.IMPLEMENTATION.equals(target.getValue())) {
+            throw new ArazzoRunRefusedException(refusal + "source " + sourceName + " is sent to " + target.getValue()
+                  + ", not to " + ArazzoRunImplementations.MOCK + " or " + ArazzoRunImplementations.IMPLEMENTATION);
+         }
+      }
+      for (String sourceName : linkedNames) {
+         if (onMocks(sourceName, implementations) && implementations.baseUrls().containsKey(sourceName)) {
+            throw new ArazzoRunRefusedException(refusal + "source " + sourceName
+                  + " is sent to its mocks and given the base URL of an implementation");
+         }
+      }
+   }
+
+   /** How the steps of a run reach their APIs. */
+   private static WorkflowRunTarget targetOf(ArazzoRunImplementations implementations) {
+      if (implementations == null) {
+         return WorkflowRunTarget.MOCKS;
+      }
+      return implementations.mixed() ? WorkflowRunTarget.MIXED : WorkflowRunTarget.IMPLEMENTATIONS;
    }
 
    /** The base URL set for the implementation of a source, without its trailing slashes. */

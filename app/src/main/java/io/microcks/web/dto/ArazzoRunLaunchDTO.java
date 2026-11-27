@@ -21,14 +21,17 @@ import java.util.Map;
  * What the API developer gives to run a workflow.
  * @param inputs          The inputs of the workflow, by name
  * @param timeout         How long a step waits for its response, in milliseconds; null for the default
- * @param implementations The base URL of the implementation of each linked source, by source name; null to run against
- *                        the Microcks mocks
- * @param secretName      The name of the secret whose authorization every call to the implementations carries; null for
+ * @param implementations The base URL of the implementation of each source sent to it, by source name; null to run
+ *                        against the Microcks mocks
+ * @param secretName      The name of the secret whose authorization the calls to the implementations carry; null for
  *                        none
+ * @param target          The mixed target of the Deep Ink mockup ({@code {"kind": "mixed", "perSource": {...}}}): where
+ *                        each source goes, {@code mock} or {@code implementation}; null when every source goes to the
+ *                        same place
  * @author SebastienDegodez
  */
 public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<String, String> implementations,
-      String secretName) {
+      String secretName, MixedTarget target) {
 
    /**
     * A run against the Microcks mocks.
@@ -36,6 +39,30 @@ public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<S
     * @param timeout How long a step waits for its response, in milliseconds; null for the default
     */
    public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout) {
-      this(inputs, timeout, null, null);
+      this(inputs, timeout, null, null, null);
+   }
+
+   /**
+    * A run against the implementations of every source, or against the mocks when no implementation is given.
+    * @param inputs          The inputs of the workflow, by name
+    * @param timeout         How long a step waits for its response, in milliseconds; null for the default
+    * @param implementations The base URL of the implementation of each source, by source name
+    * @param secretName      The name of the secret whose authorization the calls carry; null for none
+    */
+   public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<String, String> implementations,
+         String secretName) {
+      this(inputs, timeout, implementations, secretName, null);
+   }
+
+   /**
+    * @param kind      Always {@code mixed}
+    * @param perSource Where each source goes, by source name: {@code mock} or {@code implementation}
+    */
+   public record MixedTarget(String kind, Map<String, String> perSource) {
+   }
+
+   /** @return Whether the run sends some sources to their mocks and the others to their implementations. */
+   public boolean mixed() {
+      return target != null && "mixed".equals(target.kind());
    }
 }
