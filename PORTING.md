@@ -224,6 +224,13 @@ that brings an Arazzo document links to it both ways; examples feed the Examples
 all of them (`/api/runs/workflow-examples/{doc}/{wf}`) and shows Microcks's verdict; retries appear as attempts of the
 same step; the API snippet names the document `title:version`. The Source tab's Validate replays the analysis.
 
+Web UI of S27, S28, S29, S30: `PORTED['mock-url']` is on; `mockUrlOf` writes the title with `+`; runs with origin
+`MOCK_URL` show as Mock URL runs (history, run view, filters). AsyncAPI steps show their messaging and channel, and a
+workflow with async steps has its Run button disabled with the backend reason. The loom draws parallel branches from
+the closest `prerequisites`. A run step shows the baggage and `arazzo.*` span attributes of its mock calls; the link to
+Live traces stays on demo data, because the Live traces page does not read Microcks traces yet. A step without a
+response says "no response" instead of HTTP 0.
+
 In 2.0 the Arazzo code of the app sits in its own subpackages, tests included: `io.microcks.domain.arazzo`,
 `io.microcks.repository.arazzo`, `io.microcks.service.arazzo`, `io.microcks.web.arazzo` and `io.microcks.web.arazzo.dto`
 (1.x keeps them flat in `domain`, `repository`, `service`, `web`). The move is a pure-rename commit, so
@@ -306,7 +313,7 @@ and early ends (S17/S21).
 | S31 mixed run (new in 2.0, "Proposed · beyond POC" in the mockup): some sources on their mocks, the others on their implementation | done |
 | S10 missing mock examples (coherence), S9 schema validation of step responses | ported |
 | S14 import dialog and relink, S19 importers, S21 retries and early ends, S14 run through the API, recorded examples judged (S16/S20 part) | ported |
-| S20 recorded examples in the API description, S28 AsyncAPI steps (shown, not runnable yet), S29 Live Traces of a run's mock calls, S27 Mock URL, S30 step `dependsOn` | backend ported, UI to wire |
+| S20 recorded examples in the API description, S28 AsyncAPI steps (shown, not runnable yet), S29 Live Traces of a run's mock calls, S27 Mock URL, S30 step `dependsOn` | ported |
 | Session verification, sessions S15/S16/S17, race fix | to do |
 
 BE3 notes (S20, S28, S29, S27, S30):
