@@ -233,6 +233,16 @@ Runs (S5–S11):
 | `ArazzoRunController`, `ArazzoRunHistoryController` | JAX-RS; an unknown `target`/`result` filter still answers 400 (JAX-RS would answer 404) |
 | `arazzo-minion.url` | same property (`ARAZZO_MINION_URL`, default `http://localhost:8082`) |
 
+S9/S10: `commons/util` `JsonSchemaValidator.validateJsonWithPointers` and `JsonSchemaViolation` →
+`artifacts/artifact-jsonschema`; `OpenAPIResponseValidator` and the `*WithPointers` methods of `OpenAPISchemaValidator` /
+`SwaggerSchemaValidator` → `artifacts/artifact-openapi`, where `OpenAPITestRunner` now validates through
+`OpenAPIResponseValidator` (its v1 webapp test moved there, with hand-written fakes instead of Mockito). The launch takes
+`validateSchema`; the app sends the main OpenAPI/Swagger contract of each linked API to the minion (relative references
+from `validation.resourceUrl`); the minion (now depending on `microcks-artifact-openapi`, no code copied) validates JSON
+responses as contract tests do and a non-conformant response fails the step with its reason. The run keeps
+`validateSchema` and `missingExample` (`WorkflowMissingExample`, set for a failed step of a run on the mocks when no
+example matches its dispatch values; `ArazzoMockCoherenceService` is CDI).
+
 `ObjectIdRepository.save(entity)` was added (Spring Data `save` equivalent: `persistOrUpdate` then return the entity).
 S31, mixed runs: the launch takes the mockup's `target: {kind: "mixed", perSource: {<source>: "mock" | "implementation"}}`
 with `implementations` holding the base URL of each source sent to its implementation; a source `perSource` does not
@@ -256,8 +266,8 @@ imports an ArazzoSources overlay holding the current links plus the new one. Edi
 refused (Microcks keeps the document as imported).
 Runs of imported workflows go through `/api/arazzo` (launch, run, history) and are executed by the Arazzo minion; the run
 page reads the step exchanges from `/api/tests/{runId}/messages/{testCaseId}` and polls while the run is in progress.
-Runs of the placeholder documents stay simulated. Not covered yet by the backend: schema validation (S9), recorded
-examples (S16/S20), retries and early ends (S17/S21), mixed targets (proposal).
+Runs of the placeholder documents stay simulated. Not covered yet by the backend: recorded examples (S16/S20), retries
+and early ends (S17/S21).
 
 | Story | Status |
 |---|---|
@@ -266,7 +276,8 @@ examples (S16/S20), retries and early ends (S17/S21), mixed targets (proposal).
 | S3 browse, S4 read the steps and the diagram, S12 workflows using an API | ported |
 | S5 run on the mocks, S8 refuse missing inputs, S6 why a step failed, S11 runs history, S7 run on implementations | ported |
 | S31 mixed run (new in 2.0, "Proposed · beyond POC" in the mockup): some sources on their mocks, the others on their implementation | done |
-| S9, S10 and later (schema validation, coherence, sessions, mock URL, examples, sagas) | to do |
+| S10 missing mock examples (coherence), S9 schema validation of step responses | ported |
+| S14 and later (import dialog, importers, retries, examples, mock URL, sessions, sagas) | to do |
 
 ## Known divergences and TODO
 
