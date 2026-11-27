@@ -226,6 +226,7 @@
         workflowId={run.workflowId}
         mockUrl={workflow.mockUrl}
         mixed={run.target.kind === 'mixed'}
+        proposed={payload.demo !== false}
         body={apiBodyOf(run)}
       />
     {/if}

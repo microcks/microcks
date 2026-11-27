@@ -604,7 +604,7 @@ export interface BackendWorkflowRunSummary {
   id: string;
   number: number;
   workflowId: string;
-  target: 'MOCKS' | 'IMPLEMENTATIONS';
+  target: 'MOCKS' | 'IMPLEMENTATIONS' | 'MIXED';
   status: 'IN_PROGRESS' | 'SUCCESS' | 'FAILURE';
   failedStepId?: string | null;
   startedDate?: number | string;
@@ -630,7 +630,7 @@ export interface BackendWorkflowResult {
   id: string;
   documentId: string;
   workflowId: string;
-  target: 'MOCKS' | 'IMPLEMENTATIONS';
+  target: 'MOCKS' | 'IMPLEMENTATIONS' | 'MIXED';
   sources?: { sourceName: string; serviceId?: string | null; baseUrl?: string | null }[];
   inputs?: Record<string, unknown> | null;
   outputs?: Record<string, unknown> | null;
@@ -649,6 +649,8 @@ export interface BackendArazzoRunLaunch {
   timeout?: number;
   implementations?: Record<string, string>;
   secretName?: string;
+  /** S31: where each source goes in a mixed run, as the Deep Ink mockup launches it. */
+  target?: { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'> };
 }
 
 export async function launchArazzoRun(docId: string, workflowId: string, launch: BackendArazzoRunLaunch, token?: string): Promise<BackendWorkflowResult> {

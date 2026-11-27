@@ -137,8 +137,11 @@ export interface WorkflowExample {
 export type RunTarget =
   | { kind: 'mocks' }
   | { kind: 'implementations'; baseUrls: Record<string, string> }
-  /** Proposed, beyond the POC. */
-  | { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'>; proposed: true };
+  /**
+   * Some sources on their mocks, the others on their implementation (S31). `baseUrls` holds the implementations of a
+   * run Microcks executed; `proposed` marks the placeholder runs of the mockup, where Mixed was beyond the POC.
+   */
+  | { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'>; baseUrls?: Record<string, string>; proposed?: true };
 
 export type RunOrigin =
   | { kind: 'ui' }

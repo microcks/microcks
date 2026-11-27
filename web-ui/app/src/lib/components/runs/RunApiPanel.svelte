@@ -10,9 +10,11 @@
     mockUrl: string;
     body: RunApiBody;
     mixed?: boolean;
+    /** Mixed is a proposal of the mockup (placeholder data); false for a workflow Microcks runs. */
+    proposed?: boolean;
   }
 
-  let { hint, documentApiId, documentLabel, workflowId, mockUrl, body, mixed }: Props = $props();
+  let { hint, documentApiId, documentLabel, workflowId, mockUrl, body, mixed, proposed = true }: Props = $props();
 
   // Proposed endpoint: Microcks has no Arazzo API yet.
   const runsUrl = $derived(`http://microcks.local:8080/api/arazzo/documents/${documentApiId}/workflows/${workflowId}/runs`);
@@ -33,7 +35,11 @@
     </p>
     <CopyButton value={curlOne} label="Copy command" variant="outline" class="wfr-copy" />
   </div>
-  {#if mixed}
+  {#if mixed && !proposed}
+    <p class="wfr-note">
+      <span class="wfr-mono">target.perSource</span> says where each source goes; a source it does not name stays on its mocks.
+    </p>
+  {:else if mixed}
     <p class="wfr-note" data-tone="warning">
       Proposed · beyond POC: a source left out of <span class="wfr-mono">implementations</span> stays on its mocks.
     </p>

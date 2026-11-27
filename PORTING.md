@@ -234,6 +234,14 @@ Runs (S5–S11):
 | `arazzo-minion.url` | same property (`ARAZZO_MINION_URL`, default `http://localhost:8082`) |
 
 `ObjectIdRepository.save(entity)` was added (Spring Data `save` equivalent: `persistOrUpdate` then return the entity).
+S31, mixed runs: the launch takes the mockup's `target: {kind: "mixed", perSource: {<source>: "mock" | "implementation"}}`
+with `implementations` holding the base URL of each source sent to its implementation; a source `perSource` does not
+name goes to its mocks. Runs are recorded with the `MIXED` target (`WorkflowRunTarget`) and the history filters them
+(`?target=MIXED`); the UI keeps the mockup's filters (mixed runs under "Any target" only). The minion sends the run
+secret to implementations only: a source whose base URL is relative to Microcks is played on its mocks
+(`SourceTarget.mocks`). The mockup's own HTTP adapter forgets `implementations` for a mixed run and its API snippet
+uses a partial `implementations` instead of `perSource`: to align in microcks-deep-ink.
+
 Known gap: when authentication is enabled, the minion reports to `/api/arazzo/runs/**` without a token (the async
 minion's `MicrocksTokenProvider` is not wired in the Arazzo minion yet).
 
@@ -255,6 +263,7 @@ examples (S16/S20), retries and early ends (S17/S21), mixed targets (proposal).
 | S2 link source descriptions through an ArazzoSources overlay | ported |
 | S3 browse, S4 read the steps and the diagram, S12 workflows using an API | ported |
 | S5 run on the mocks, S8 refuse missing inputs, S6 why a step failed, S11 runs history, S7 run on implementations | ported |
+| S31 mixed run (new in 2.0, "Proposed · beyond POC" in the mockup): some sources on their mocks, the others on their implementation | done |
 | S9, S10 and later (schema validation, coherence, sessions, mock URL, examples, sagas) | to do |
 
 ## Known divergences and TODO

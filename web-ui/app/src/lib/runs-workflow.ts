@@ -304,6 +304,8 @@ export interface RunApiBody {
   inputs: Record<string, unknown>;
   timeout: number;
   implementations?: Record<string, string>;
+  /** Mixed run: where each source goes; `implementations` then holds the sources sent to their implementation. */
+  target?: { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'> };
   secretName?: string;
   validateSchema: boolean;
   example?: string;
@@ -314,6 +316,9 @@ export function apiBodyOf(run: WorkflowRun): RunApiBody {
     inputs: run.options.inputs,
     timeout: run.options.timeoutMs,
     ...(run.target.kind === 'implementations' ? { implementations: run.target.baseUrls } : {}),
+    ...(run.target.kind === 'mixed'
+      ? { implementations: run.target.baseUrls ?? {}, target: { kind: 'mixed' as const, perSource: run.target.perSource } }
+      : {}),
     ...(run.target.kind !== 'mocks' && run.options.secret ? { secretName: run.options.secret } : {}),
     validateSchema: run.options.validateSchemas,
     ...(run.options.example ? { example: run.options.example } : {})
@@ -330,7 +335,15 @@ export function launchedBy(run: WorkflowRun): string {
 export function targetLine(run: WorkflowRun): string {
   if (run.target.kind === 'mocks') return 'Microcks mocks';
   if (run.target.kind === 'implementations') return `Implementations · ${implementationsText(run.target.baseUrls)}`;
-  return 'Mixed · proposed, beyond POC';
+  if (run.target.proposed) return 'Mixed · proposed, beyond POC';
+  return `Mixed · ${mixedText(run.target.perSource, run.target.baseUrls ?? {})}`;
+}
+
+/** Where each source of a mixed run goes: `customerApi → https://…, orderApi → its mocks`. */
+export function mixedText(perSource: Record<string, 'mock' | 'implementation'>, baseUrls: Record<string, string>): string {
+  return Object.entries(perSource)
+    .map(([name, where]) => `${name} → ${where === 'implementation' ? (baseUrls[name] ?? 'its implementation') : 'its mocks'}`)
+    .join(', ');
 }
 
 export function originText(run: WorkflowRun): string {

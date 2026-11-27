@@ -3,7 +3,7 @@
   import { judgeExample } from '#lib/workflows/describe.js';
   import { workflowPath } from '#lib/workflows/paths.js';
   import type { WorkflowExample, WorkflowRun } from '#lib/workflows/types.js';
-  import { J, implementationsText, mockSources, originText } from '#lib/runs-workflow.js';
+  import { J, implementationsText, mockSources, originText, mixedText } from '#lib/runs-workflow.js';
 
   interface Props {
     run: WorkflowRun;
@@ -40,7 +40,8 @@
           <strong>{run.target.kind === 'mocks' ? 'Microcks mocks' : run.target.kind === 'implementations' ? 'Implementations' : 'Mixed'}</strong>
           {#if run.target.kind === 'implementations'}<span class="wfr-target-url">{implementationsText(run.target.baseUrls)}</span>{/if}
           {#if run.target.kind === 'mocks'}<span class="wfr-target-url">{mockSources(run)}</span>{/if}
-          {#if run.target.kind === 'mixed'}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
+          {#if run.target.kind === 'mixed' && !run.target.proposed}<span class="wfr-target-url">{mixedText(run.target.perSource, run.target.baseUrls ?? {})}</span>{/if}
+          {#if run.target.kind === 'mixed' && run.target.proposed}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
         </span>
       {/snippet}
     </FactRow>

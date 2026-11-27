@@ -10,7 +10,8 @@ import {
   type BackendTestMessage,
   type BackendWorkflowResult,
   type BackendWorkflowRunSummary,
-  type BackendWorkflowStepResult
+  type BackendWorkflowStepResult,
+  type BackendArazzoRunLaunch
 } from './backend';
 
 /*
@@ -27,10 +28,18 @@ const STATUS: Record<BackendWorkflowResult['status'], WorkflowRun['status']> = {
 
 const iso = (v: number | string | undefined) => new Date(v ?? Date.now()).toISOString();
 
+/** A base URL relative to Microcks is the path of the mocks of a source (the run sent it to its mocks). */
+const isMockPath = (baseUrl: string | null | undefined) => !baseUrl || baseUrl.startsWith('/');
+
 function targetOf(run: Pick<BackendWorkflowResult, 'target' | 'sources'>): RunTarget {
   if (run.target === 'MOCKS') return { kind: 'mocks' };
   const baseUrls: Record<string, string> = {};
-  for (const s of run.sources ?? []) if (s.baseUrl) baseUrls[s.sourceName] = s.baseUrl;
+  const perSource: Record<string, 'mock' | 'implementation'> = {};
+  for (const s of run.sources ?? []) {
+    perSource[s.sourceName] = isMockPath(s.baseUrl) ? 'mock' : 'implementation';
+    if (s.baseUrl && !isMockPath(s.baseUrl)) baseUrls[s.sourceName] = s.baseUrl;
+  }
+  if (run.target === 'MIXED') return { kind: 'mixed', perSource, baseUrls };
   return { kind: 'implementations', baseUrls };
 }
 
@@ -159,7 +168,12 @@ export function uiRunOfSummary(summary: BackendWorkflowRunSummary, documentId: s
     documentId,
     workflowId: summary.workflowId,
     origin: { kind: 'api' },
-    target: summary.target === 'MOCKS' ? { kind: 'mocks' } : { kind: 'implementations', baseUrls: {} },
+    target:
+      summary.target === 'MOCKS'
+        ? { kind: 'mocks' }
+        : summary.target === 'MIXED'
+          ? { kind: 'mixed', perSource: {} }
+          : { kind: 'implementations', baseUrls: {} },
     options: { inputs: {}, timeoutMs: 10_000, validateSchemas: false },
     status: STATUS[summary.status],
     startedAt,
@@ -189,11 +203,24 @@ export async function realRunsOf(docIds: string[], workflows: Workflow[], token?
 
 export type StartRealResult = { runId: string } | { status: 404 | 422; error: string; errors?: FieldError[] };
 
+/**
+ * Where the run goes, as Microcks takes it: the mocks (nothing), the implementations of every source, or a mixed target
+ * whose `implementations` hold the sources sent to their implementation (S31). The secret is for the implementations.
+ */
+function launchTargetOf(input: StartRunInput, sources: string[]): Pick<BackendArazzoRunLaunch, 'implementations' | 'secretName' | 'target'> {
+  if (input.target === 'mocks') return {};
+  const secretName = input.secret || undefined;
+  if (input.target === 'implementations') return { implementations: input.baseUrls ?? {}, secretName };
+  const perSource = Object.fromEntries(sources.map((name) => [name, input.perSource?.[name] === 'implementation' ? 'implementation' : 'mock'] as const));
+  const implementations = Object.fromEntries(
+    sources.filter((name) => perSource[name] === 'implementation').map((name) => [name, (input.baseUrls ?? {})[name] ?? ''])
+  );
+  const usesImplementation = Object.keys(implementations).length > 0;
+  return { implementations, target: { kind: 'mixed', perSource }, ...(usesImplementation ? { secretName } : {}) };
+}
+
 /** Launches a run of a real workflow on the backend, after the same checks as the run setup form. */
 export async function startRealRun(input: StartRunInput, workflow: Workflow, token?: string): Promise<StartRealResult> {
-  if (input.target === 'mixed') {
-    return { status: 422, error: 'Mixing mocks and implementations in one run is a proposal: Microcks runs a workflow on its mocks or on implementations.' };
-  }
   const sources = [...new Set(workflow.steps.map((s) => s.sourceName))];
   const errors = validateRunRequest({
     workflowId: workflow.workflowId,
@@ -214,7 +241,7 @@ export async function startRealRun(input: StartRunInput, workflow: Workflow, tok
       {
         inputs,
         timeout: timeoutOrDefault(String(input.timeoutMs)),
-        ...(input.target === 'implementations' ? { implementations: input.baseUrls ?? {}, secretName: input.secret || undefined } : {})
+        ...launchTargetOf(input, sources)
       },
       token
     );

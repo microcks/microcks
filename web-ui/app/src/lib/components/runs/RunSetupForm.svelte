@@ -139,6 +139,7 @@
     ...(target !== 'mocks'
       ? { implementations: target === 'implementations' ? baseUrls : Object.fromEntries(Object.entries(baseUrls).filter(([k]) => effectivePer(k) === 'implementation')) }
       : {}),
+    ...(target === 'mixed' ? { target: { kind: 'mixed' as const, perSource: Object.fromEntries(sources.map((name) => [name, effectivePer(name)])) } } : {}),
     ...(request.secret ? { secretName: request.secret } : {}),
     validateSchema: validate,
     ...(example ? { example } : {})
@@ -214,13 +215,17 @@
             <Choice kind="radio" variant="card" name="run-target" value={t.value} bind:group={targetValue}>
               {#snippet label()}
                 {t.label}
-                {#if t.proposed}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
+                {#if t.proposed && setup.demo !== false}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
               {/snippet}
               {#snippet description()}{t.description}{/snippet}
             </Choice>
           {/each}
         </div>
-        {#if target === 'mixed'}
+        {#if target === 'mixed' && setup.demo === false}
+          <p class="wfr-muted">
+            Each source goes to its mocks or to its implementation: a workflow spanning several APIs hits one real service while Microcks mocks the others. The secret, if any, is sent to the implementations only.
+          </p>
+        {:else if target === 'mixed'}
           <p class="wfr-muted">
             Proposal beyond the POC: the POC sends every source to its mocks or every source to its implementation. Mixed lets a workflow spanning several APIs hit one real service while
             Microcks mocks the others, e.g. <span class="wfr-mono">compare-prices</span> with apiPastry on staging and apiPastryV1 on its mocks.
@@ -273,7 +278,7 @@
             {/if}
             {#if usesImplementation}
               <div class="wfr-source-secret">
-                <Field label="Secret" help="Every call carries the authorization this secret defines, as in contract tests." class="wfr-field wfr-w-320">
+                <Field label="Secret" help={target === 'mixed' ? 'Every call to an implementation carries the authorization this secret defines, as in contract tests; the calls to the mocks never do.' : 'Every call carries the authorization this secret defines, as in contract tests.'} class="wfr-field wfr-w-320">
                   {#snippet children(c)}
                     <Select {...c} class="wfr-mono-control" bind:value={secret}>
                       <option value="">No secret</option>
@@ -419,6 +424,7 @@
       mockUrl={workflow.mockUrl}
       mixed={target === 'mixed'}
       body={apiBody}
+      proposed={setup.demo !== false}
     />
   </aside>
 </div>
