@@ -1,0 +1,141 @@
+openapi: 3.0.2
+info:
+  title: Pastry examples
+  version: 1.0.0
+  description: One operation per way Microcks dispatches its mocks, each with the examples of Eclair Cafe only.
+paths:
+  /pastries:
+    get:
+      operationId: GetPastries
+      responses:
+        "200":
+          description: Every pastry, whatever is asked (no dispatcher)
+          content:
+            application/json:
+              examples:
+                All:
+                  value:
+                  - name: Eclair Cafe
+  /pastries/sized:
+    get:
+      operationId: GetPastriesBySize
+      parameters:
+      - name: size
+        in: query
+        schema:
+          type: string
+        examples:
+          Small:
+            value: S
+      responses:
+        "200":
+          description: The pastries of a size (URI_PARAMS)
+          content:
+            application/json:
+              examples:
+                Small:
+                  value:
+                  - name: Eclair Cafe
+  /pastry/{name}:
+    get:
+      operationId: GetPastryByName
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        examples:
+          Eclair Cafe:
+            value: Eclair Cafe
+      responses:
+        "200":
+          description: A pastry (URI_PARTS)
+          content:
+            application/json:
+              examples:
+                Eclair Cafe:
+                  value:
+                    name: Eclair Cafe
+  /pastry/{name}/reviews:
+    get:
+      operationId: GetPastryReviews
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        examples:
+          Eclair Cafe in French:
+            value: Eclair Cafe
+      - name: lang
+        in: query
+        schema:
+          type: string
+        examples:
+          Eclair Cafe in French:
+            value: fr
+      responses:
+        "200":
+          description: The reviews of a pastry in a language (URI_ELEMENTS)
+          content:
+            application/json:
+              examples:
+                Eclair Cafe in French:
+                  value:
+                  - comment: Excellent
+  /pastry/{name}/price:
+    get:
+      operationId: GetPastryPrice
+      x-microcks-operation:
+        dispatcher: FALLBACK
+        dispatcherRules: |-
+          {
+            "dispatcher": "URI_PARTS",
+            "dispatcherRules": "name",
+            "fallback": "Eclair Cafe"
+          }
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        examples:
+          Eclair Cafe:
+            value: Eclair Cafe
+      responses:
+        "200":
+          description: The price of a pastry (FALLBACK on URI_PARTS)
+          content:
+            application/json:
+              examples:
+                Eclair Cafe:
+                  value:
+                    price: 2.5
+  /pastry/{name}/stock:
+    get:
+      operationId: GetPastryStock
+      x-microcks-operation:
+        dispatcher: SCRIPT
+        dispatcherRules: |-
+          return "Eclair Cafe"
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        examples:
+          Eclair Cafe:
+            value: Eclair Cafe
+      responses:
+        "200":
+          description: The stock of a pastry (SCRIPT)
+          content:
+            application/json:
+              examples:
+                Eclair Cafe:
+                  value:
+                    stock: 12

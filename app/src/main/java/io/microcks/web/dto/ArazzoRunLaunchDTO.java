@@ -28,10 +28,11 @@ import java.util.Map;
  * @param target          The mixed target of the Deep Ink mockup ({@code {"kind": "mixed", "perSource": {...}}}): where
  *                        each source goes, {@code mock} or {@code implementation}; null when every source goes to the
  *                        same place
+ * @param validateSchema  Whether each response is validated against the OpenAPI schema of its operation; null for no
  * @author SebastienDegodez
  */
 public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<String, String> implementations,
-      String secretName, MixedTarget target) {
+      String secretName, MixedTarget target, Boolean validateSchema) {
 
    /**
     * A run against the Microcks mocks.
@@ -39,7 +40,7 @@ public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<S
     * @param timeout How long a step waits for its response, in milliseconds; null for the default
     */
    public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout) {
-      this(inputs, timeout, null, null, null);
+      this(inputs, timeout, null, null, null, null);
    }
 
    /**
@@ -51,7 +52,17 @@ public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<S
     */
    public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<String, String> implementations,
          String secretName) {
-      this(inputs, timeout, implementations, secretName, null);
+      this(inputs, timeout, implementations, secretName, null, null);
+   }
+
+   /**
+    * A run against the Microcks mocks.
+    * @param inputs         The inputs of the workflow, by name
+    * @param timeout        How long a step waits for its response, in milliseconds; null for the default
+    * @param validateSchema Whether each response is validated against the OpenAPI schema of its operation; null for no
+    */
+   public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Boolean validateSchema) {
+      this(inputs, timeout, null, null, null, validateSchema);
    }
 
    /**

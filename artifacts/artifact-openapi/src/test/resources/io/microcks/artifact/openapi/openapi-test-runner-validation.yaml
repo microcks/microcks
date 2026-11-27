@@ -1,0 +1,108 @@
+# example: openapi-pastry - an OpenAPI 3 contract of API Pastry, one response per validation rule
+openapi: 3.0.2
+info:
+  title: API Pastry - 2.0
+  version: 2.0.0
+paths:
+  /pastry/{name}:
+    get:
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pastry with specified name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+        "201":
+          description: Pastry, whose content type is written with its charset
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+        "202":
+          description: Accepted, with any body
+          content:
+            application/json: {}
+        "404":
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    NotFound:
+      description: No pastry with this name
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Pastry:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+---
+# example: swagger-pastry - a Swagger 2 contract of API Pastry, one response per validation rule
+swagger: "2.0"
+info:
+  title: API Pastry - 1.0
+  version: 1.0.0
+paths:
+  /pastry/{name}:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - name: name
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Pastry with specified name
+          schema:
+            $ref: '#/definitions/Pastry'
+        "202":
+          description: Accepted, without schema
+        "404":
+          $ref: '#/responses/NotFound'
+responses:
+  NotFound:
+    description: No pastry with this name
+    schema:
+      $ref: '#/definitions/Error'
+definitions:
+  Pastry:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+  Error:
+    type: object
+    required:
+      - message
+    properties:
+      message:
+        type: string
+---
+# example: unreadable - a contract that is not YAML
+openapi: [3.0.2

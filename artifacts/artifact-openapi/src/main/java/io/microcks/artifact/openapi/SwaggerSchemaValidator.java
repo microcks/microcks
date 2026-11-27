@@ -15,6 +15,8 @@
  */
 package io.microcks.artifact.openapi;
 
+import io.microcks.artifact.jsonschema.JsonSchemaViolation;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
@@ -69,11 +71,30 @@ public class SwaggerSchemaValidator {
     */
    public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode,
          String messagePathPointer, String namespace) {
+      return validateJsonMessageWithPointers(specificationNode, jsonNode, messagePathPointer, namespace).stream()
+            .map(JsonSchemaViolation::message).toList();
+   }
+
+   /**
+    * Validate a Json object representing a Swagger message (response or request) against a node representing a full
+    * Swagger specification, like {@link #validateJsonMessage(JsonNode, JsonNode, String, String)} does, telling for
+    * each violation the JSON pointer of the part of the message that violates its schema.
+    * @param specificationNode  The Swagger full specification as a Jackson node
+    * @param jsonNode           The Json object representing actual message as a Jackson node
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param namespace          Namespace definition to resolve relative dependencies in Swagger schema
+    * @return The violations; a violation without pointer, whose message is
+    *         {@link OpenAPISchemaValidator#MESSAGE_NOT_FOUND}, {@link OpenAPISchemaValidator#CONTENT_NOT_FOUND} or
+    *         {@link OpenAPISchemaValidator#SCHEMA_NOT_FOUND}, when the specification does not describe the message or
+    *         its schema. If empty, json object is valid !
+    */
+   public static List<JsonSchemaViolation> validateJsonMessageWithPointers(JsonNode specificationNode,
+         JsonNode jsonNode, String messagePathPointer, String namespace) {
       // Extract specific content type node for message node.
       JsonNode messageNode = specificationNode.at(messagePathPointer);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
-         return List.of("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
+         return List.of(OpenAPISchemaValidator.specificationViolation(OpenAPISchemaValidator.MESSAGE_NOT_FOUND));
       }
       // Message node can be just a reference.
       if (messageNode.has("$ref")) {
@@ -82,14 +103,18 @@ public class SwaggerSchemaValidator {
       }
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("Schema node for message cannot be found into Swagger specification");
-         return List.of("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+         return List.of(OpenAPISchemaValidator.specificationViolation(OpenAPISchemaValidator.CONTENT_NOT_FOUND));
       }
 
       // Build a schema object with responseNode schema as root and by importing
       // all the definitions parts that may be referenced by references.
       JsonNode schemaNode = messageNode.path("schema").deepCopy();
+      if (schemaNode.isMissingNode()) {
+         log.debug("schema for {} cannot be found into Swagger specification", messageNode);
+         return List.of(OpenAPISchemaValidator.specificationViolation(OpenAPISchemaValidator.SCHEMA_NOT_FOUND));
+      }
       ((ObjectNode) schemaNode).set("definitions", specificationNode.path("definitions").deepCopy());
 
-      return OpenAPISchemaValidator.validateJson(schemaNode, jsonNode, namespace);
+      return OpenAPISchemaValidator.validateJsonWithPointers(schemaNode, jsonNode, namespace);
    }
 }

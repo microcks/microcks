@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Walking skeleton of running an Arazzo workflow: from the webapp, through the Arazzo minion, to the Microcks mocks the
@@ -69,8 +70,8 @@ class ArazzoRunWalkingSkeletonIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
-      String documentId = JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody()).get(0)
-            .get("id").asText();
+      String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
+      String documentId = JSON.readTree(documents).get(0).get("id").asText();
 
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
@@ -89,6 +90,35 @@ class ArazzoRunWalkingSkeletonIT extends AbstractBaseIT {
             .add(step.get("index").asInt() + " " + step.get("stepId").asText() + " " + step.get("status").asText()));
       assertEquals(List.of("0 readPastry PASSED", "1 reprice PASSED"), steps);
       assertEquals(JSON.readTree("{\"before\": 2.5, \"after\": 2.6}"), run.get("outputs"));
+   }
+
+   @Test
+   void listThenReadFirstFailsOnTheExampleTheMocksOfApiPastryLack() throws Exception {
+      uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
+      uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
+      String documentId = JSON.readTree(documents).get(0).get("id").asText();
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      ResponseEntity<String> launched = restTemplate.postForEntity(
+            "/api/arazzo/documents/" + documentId + "/workflows/listThenReadFirst/runs",
+            new HttpEntity<>("{\"inputs\": {}, \"timeout\": 10000}", headers), String.class);
+      assertEquals(201, launched.getStatusCode().value(), launched.getBody());
+
+      JsonNode run = awaitFinalRun(JSON.readTree(launched.getBody()).get("id").asText());
+
+      assertEquals("FAILURE", run.get("status").asText(), run.toPrettyString());
+      JsonNode missing = run.get("missingExample");
+      assertNotNull(missing, run.toPrettyString());
+      assertEquals("1 readFirst GetPastryByName GET /pastry/{name}",
+            missing.get("stepIndex").asInt() + " " + missing.get("stepId").asText() + " "
+                  + missing.get("operationId").asText() + " " + missing.get("operationName").asText(),
+            run.toPrettyString());
+      assertEquals(JSON.readTree(
+            "[{\"name\": \"name\", \"in\": \"path\", \"value\": \"Baba Rhum\", \"expression\": \"$steps.list.outputs.first\"}]"),
+            missing.get("parameters"));
    }
 
    private JsonNode awaitFinalRun(String runId) throws Exception {

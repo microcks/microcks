@@ -61,9 +61,11 @@ class ImplementationsRunIT {
    void eachStepCallsTheImplementationOfItsSourceWithTheAuthorizationOfTheSecret() throws IOException {
       RunRequestDTO request = new RunRequestDTO("run-1", "placeOrder", placeOrder(), Map.of("customerId", "c-42"),
             Map.of("customerApi",
-                  new SourceDTO(customers.url(), Map.of("GetCustomer", new OperationDTO("GET", "/customers/{id}"))),
-                  "orderApi", new SourceDTO(orders.url(), Map.of("CreateOrder", new OperationDTO("POST", "/orders")))),
-            10000, new SecretDTO("pastry-staging-token", null, null, "s3cr3t-t0k3n", "X-Pastry-Token"));
+                  new SourceDTO(customers.url(), Map.of("GetCustomer", new OperationDTO("GET", "/customers/{id}")),
+                        null, null),
+                  "orderApi",
+                  new SourceDTO(orders.url(), Map.of("CreateOrder", new OperationDTO("POST", "/orders")), null, null)),
+            10000, new SecretDTO("pastry-staging-token", null, null, "s3cr3t-t0k3n", "X-Pastry-Token"), false);
 
       runner.run(request.toSpecification("http://microcks:8080"), reporter);
 

@@ -19,10 +19,15 @@ import java.util.Map;
 
 /**
  * Where to call the operations of a source description, as Microcks sends it in a run request.
- * @param baseUrl    The base URL of the operations: relative to Microcks for its mocks, such as
- *                   /rest/API+Pastry+-+2.0/2.0.0, or absolute
- * @param operations The operations of the source, by operationId
+ * @param baseUrl                The base URL of the operations: relative to Microcks for its mocks, such as
+ *                               /rest/API+Pastry+-+2.0/2.0.0, or absolute
+ * @param operations             The operations of the source, by operationId
+ * @param openApiContract        The OpenAPI contract of the API the source is linked to, sent when the responses are
+ *                               validated against it; null otherwise
+ * @param openApiContractBaseUrl The URL the relative references of the contract resolve against, sent with the
+ *                               contract; null otherwise
  * @author SebastienDegodez
  */
-public record SourceDTO(String baseUrl, Map<String, OperationDTO> operations) {
+public record SourceDTO(String baseUrl, Map<String, OperationDTO> operations, String openApiContract,
+      String openApiContractBaseUrl) {
 }

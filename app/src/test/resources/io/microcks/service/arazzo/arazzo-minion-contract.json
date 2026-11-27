@@ -15,10 +15,13 @@
           "GetPastries": { "method": "GET", "path": "/pastry" },
           "GetPastryByName": { "method": "GET", "path": "/pastry/{name}" },
           "PatchPastry": { "method": "PATCH", "path": "/pastry/{name}" }
-        }
+        },
+        "openApiContract": "openapi: 3.0.2",
+        "openApiContractBaseUrl": "http://microcks:8080/api/resources/"
       }
     },
-    "timeoutMS": 10000
+    "timeoutMS": 10000,
+    "validateSchema": true
   },
   "passedStep": {
     "index": 0,
@@ -123,7 +126,9 @@
         "operations": {
           "GetPastryByName": { "method": "GET", "path": "/pastry/{name}" },
           "PatchPastry": { "method": "PATCH", "path": "/pastry/{name}" }
-        }
+        },
+        "openApiContract": null,
+        "openApiContractBaseUrl": null
       }
     },
     "timeoutMS": 10000,
@@ -133,6 +138,39 @@
       "password": null,
       "token": "s3cr3t-t0k3n",
       "tokenHeader": "X-Pastry-Token"
-    }
+    },
+    "validateSchema": false
+  },
+  "nonConformantStep": {
+    "index": 1,
+    "stepId": "reprice",
+    "operation": { "sourceName": "pastryApi", "operationId": "PatchPastry", "method": "PATCH", "path": "/pastry/{name}" },
+    "status": "FAILED",
+    "statusCode": 200,
+    "elapsedTime": 6,
+    "criteria": [
+      {
+        "condition": "$statusCode == 200",
+        "values": [ { "expression": "$statusCode", "value": 200 } ],
+        "held": true
+      }
+    ],
+    "outputs": {},
+    "request": {
+      "method": "PATCH",
+      "url": "http://pastry.example/api/pastry/Eclair%20Cafe",
+      "headers": { "Content-Type": "application/json" },
+      "body": "{\"price\":2.6}"
+    },
+    "response": {
+      "status": 200,
+      "headers": { "Content-Type": ["application/json"] },
+      "body": "{\"price\": \"2.6\"}"
+    },
+    "message": "/price does not match the Pastry schema: string found, number expected",
+    "parameters": [
+      { "name": "name", "in": "path", "value": "Eclair Cafe", "expression": "$steps.readPastry.outputs.name" }
+    ],
+    "outputOrigins": {}
   }
 }

@@ -34,10 +34,11 @@ import java.util.Map;
  * @param sources        Where to call the operations of each source description, by source name
  * @param timeoutMS      How long a step waits for its response, in milliseconds
  * @param secret         The secret whose authorization every call carries; null for none
+ * @param validateSchema Whether each response is validated against the OpenAPI schema of its operation
  * @author SebastienDegodez
  */
 public record RunRequestDTO(String runId, String workflowId, String arazzoDocument, Map<String, Object> inputs,
-      Map<String, SourceDTO> sources, long timeoutMS, SecretDTO secret) {
+      Map<String, SourceDTO> sources, long timeoutMS, SecretDTO secret, boolean validateSchema) {
 
    /**
     * @param microcksUrl The URL of Microcks, that relative base URLs are relative to
@@ -52,10 +53,12 @@ public record RunRequestDTO(String runId, String workflowId, String arazzoDocume
          // A base URL relative to Microcks is the path of the mocks of the source.
          boolean mocks = source.baseUrl().startsWith("/");
          String baseUrl = mocks ? microcksUrl + source.baseUrl() : source.baseUrl();
-         targets.put(name, new SourceTarget(URI.create(baseUrl), operations, mocks));
+         targets.put(name, new SourceTarget(URI.create(baseUrl), operations, mocks, source.openApiContract(),
+               source.openApiContractBaseUrl()));
       });
       return new RunSpecification(runId, workflowId, arazzoDocument, inputs, targets, Duration.ofMillis(timeoutMS),
             secret == null ? RunSecret.NONE
-                  : new RunSecret(secret.username(), secret.password(), secret.token(), secret.tokenHeader()));
+                  : new RunSecret(secret.username(), secret.password(), secret.token(), secret.tokenHeader()),
+            validateSchema);
    }
 }

@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
@@ -82,9 +83,25 @@ class ArazzoMinionContractTest {
                         SourceTarget.onMocks(URI.create(MOCKS),
                               Map.of("GetPastries", new OperationTarget("GET", "/pastry"), "GetPastryByName",
                                     new OperationTarget("GET", "/pastry/{name}"), "PatchPastry",
-                                    new OperationTarget("PATCH", "/pastry/{name}")))),
-                  Duration.ofSeconds(10)),
+                                    new OperationTarget("PATCH", "/pastry/{name}")),
+                              "openapi: 3.0.2", "http://microcks:8080/api/resources/")),
+                  Duration.ofSeconds(10), true),
             request.toSpecification("http://microcks:8080"));
+   }
+
+   @Test
+   void aRunRequestWithoutSchemaValidationHasNoContractToValidateAgainst() throws IOException {
+      ObjectNode runRequest = (ObjectNode) contract().get("runRequest");
+      runRequest.remove("validateSchema");
+      ((ObjectNode) runRequest.get("sources").get("pastryApi"))
+            .remove(List.of("openApiContract", "openApiContractBaseUrl"));
+
+      RunSpecification specification = JSON.treeToValue(runRequest, RunRequestDTO.class)
+            .toSpecification("http://microcks:8080");
+
+      assertEquals(false, specification.validateSchema());
+      assertNull(specification.sources().get("pastryApi").openApiContract());
+      assertNull(specification.sources().get("pastryApi").openApiContractBaseUrl());
    }
 
    @Test
@@ -144,6 +161,21 @@ class ArazzoMinionContractTest {
       assertEquals(contract.get("passedStep"), written(StepReportDTO.from(passed)));
       assertEquals(contract.get("failedStep"), written(StepReportDTO.from(failed)));
       assertEquals(contract.get("notRunStep"), written(StepReportDTO.from(notRun)));
+   }
+
+   @Test
+   void aStepWhoseResponseDoesNotMatchItsSchemaIsReportedWithTheReason() throws IOException {
+      StepResult nonConformant = new StepResult(1, "reprice",
+            new StepOperation("pastryApi", "PatchPastry", "PATCH", "/pastry/{name}"), StepStatus.FAILED, 200, 6,
+            List.of(new CriterionResult("$statusCode == 200", List.of(new ExpressionValue("$statusCode", 200)), true)),
+            Map.of(),
+            new HttpCall("PATCH", URI.create("http://pastry.example/api/pastry/Eclair%20Cafe"),
+                  Map.of("Content-Type", "application/json"), "{\"price\":2.6}"),
+            new HttpOutcome(200, Map.of("Content-Type", List.of("application/json")), "{\"price\": \"2.6\"}"),
+            "/price does not match the Pastry schema: string found, number expected",
+            List.of(new ParameterValue("name", "path", "Eclair Cafe", "$steps.readPastry.outputs.name")), Map.of());
+
+      assertEquals(contract().get("nonConformantStep"), written(StepReportDTO.from(nonConformant)));
    }
 
    @Test

@@ -71,7 +71,7 @@ public class ArazzoRunController {
                   + "': a run target is mixed, or left out to run on the mocks or on the implementations");
          }
          Optional<WorkflowResult> run = arazzoRunService.launchRun(documentId, workflowId, launch.inputs(),
-               launch.timeout(), implementationsOf(launch));
+               launch.timeout(), implementationsOf(launch), Boolean.TRUE.equals(launch.validateSchema()));
          return run.map(launched -> Response.created(URI.create("/api/arazzo/runs/" + launched.getId()))
                .entity(launched).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
       } catch (ArazzoRunRefusedException arre) {

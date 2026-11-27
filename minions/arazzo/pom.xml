@@ -64,6 +64,12 @@
       <artifactId>microcks-artifact-arazzo</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- Validates the responses of the steps against the OpenAPI contract of their source, as contract tests do. -->
+    <dependency>
+      <groupId>io.microcks</groupId>
+      <artifactId>microcks-artifact-openapi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- Test related dependencies -->
     <dependency>
       <groupId>io.quarkus</groupId>

@@ -78,8 +78,9 @@ class ArazzoMinionContractTest {
                   new ArazzoRunRequest.Source("/rest/API+Pastry+-+2.0/2.0.0",
                         Map.of("GetPastries", new ArazzoRunRequest.Operation("GET", "/pastry"), "GetPastryByName",
                               new ArazzoRunRequest.Operation("GET", "/pastry/{name}"), "PatchPastry",
-                              new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}")))),
-            10000));
+                              new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}")),
+                        "openapi: 3.0.2", "http://microcks:8080/api/resources/")),
+            10000, true));
 
       assertEquals(List.of(contract().get("runRequest")),
             minion.runRequests().stream().map(ArazzoMinionContractTest::read).toList());
@@ -159,6 +160,17 @@ class ArazzoMinionContractTest {
             report.toStepResult());
       assertNull(report.toRequest());
       assertNull(report.toResponse());
+   }
+
+   @Test
+   void aStepWhoseResponseDoesNotMatchItsSchemaIsRecordedWithTheReason() throws IOException {
+      ArazzoStepReportDTO report = JSON.treeToValue(contract().get("nonConformantStep"), ArazzoStepReportDTO.class);
+
+      WorkflowStepResult step = report.toStepResult();
+      assertEquals("1 reprice FAILED 200 /price does not match the Pastry schema: string found, number expected",
+            step.index() + " " + step.stepId() + " " + step.status() + " " + step.statusCode() + " " + step.message());
+      assertEquals(List.of(new WorkflowCriterionResult("$statusCode == 200",
+            List.of(new WorkflowExpressionValue("$statusCode", 200)), true)), step.criteria());
    }
 
    @Test

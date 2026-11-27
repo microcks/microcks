@@ -1,0 +1,144 @@
+# example: api-pastry-non-conformant - API Pastry whose PatchPastry example answers a price as a string, against its Pastry schema
+openapi: 3.0.2
+info:
+  title: API Pastry - non-conformant
+  version: 2.0.0
+paths:
+  /pastry/{name}:
+    get:
+      operationId: GetPastryByName
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            Eclair Cafe:
+              value: Eclair Cafe
+      responses:
+        "200":
+          description: Pastry with specified name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                Eclair Cafe:
+                  value:
+                    name: Eclair Cafe
+                    size: M
+                    price: 2.5
+                    status: available
+    patch:
+      operationId: PatchPastry
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            Eclair Cafe:
+              value: Eclair Cafe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pastry'
+            examples:
+              Eclair Cafe:
+                value:
+                  price: 2.6
+      responses:
+        "200":
+          description: Changed pastry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                Eclair Cafe:
+                  value:
+                    price: "2.6"
+components:
+  schemas:
+    Pastry:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: string
+        price:
+          format: double
+          type: number
+        status:
+          type: string
+---
+# example: pastry-journeys - readThenReprice, whose reprice step only checks its status
+arazzo: 1.0.1
+info:
+  title: API Pastry journeys
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readThenReprice
+    inputs:
+      type: object
+      properties:
+        pastry:
+          type: string
+        newPrice:
+          type: number
+    steps:
+      - stepId: readPastry
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+          - name: Accept
+            in: header
+            value: application/json
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          name: $response.body#/name
+      - stepId: reprice
+        operationId: PatchPastry
+        parameters:
+          - name: name
+            in: path
+            value: $steps.readPastry.outputs.name
+          - name: Accept
+            in: header
+            value: application/json
+        requestBody:
+          contentType: application/json
+          payload:
+            price: 0
+          replacements:
+            - target: /price
+              value: $inputs.newPrice
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          price: $response.body#/price
+    outputs:
+      after: $steps.reprice.outputs.price
+---
+# example: pastry-journeys-sources - links the pastryApi source of API Pastry journeys to API Pastry - non-conformant
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry journeys
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - non-conformant
+    version: 2.0.0

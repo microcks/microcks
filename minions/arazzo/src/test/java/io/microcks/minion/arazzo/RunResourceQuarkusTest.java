@@ -48,6 +48,8 @@ class RunResourceQuarkusTest {
       JsonNode contract = resource("contract/arazzo-minion-contract.json");
       ObjectNode runRequest = (ObjectNode) contract.get("runRequest");
       runRequest.put("arazzoDocument", text("runner/workflow-runs.arazzo.yaml").split("\n---\n")[0]);
+      ((ObjectNode) runRequest.get("sources").get("pastryApi")).put("openApiContract",
+            text("runner/schema-validation.yaml").split("\n---\n")[1]);
 
       given().contentType(ContentType.JSON).body(runRequest.toString()).when().post("/api/runs").then().statusCode(202);
 

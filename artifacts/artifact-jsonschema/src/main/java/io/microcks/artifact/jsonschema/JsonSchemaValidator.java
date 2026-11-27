@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.networknt.schema.JsonMetaSchema;
+import com.networknt.schema.JsonNodePath;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
@@ -169,6 +170,24 @@ public class JsonSchemaValidator {
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace,
          JsonSchemaDialect dialect) {
       List<String> errors = new ArrayList<>();
+      for (JsonSchemaViolation violation : validateJsonWithPointers(schemaNode, jsonNode, namespace, dialect)) {
+         errors.add(violation.message());
+      }
+      return errors;
+   }
+
+   /**
+    * Validate a Json object against a schema, like {@link #validateJson(JsonNode, JsonNode, String, JsonSchemaDialect)}
+    * does, telling for each violation the JSON pointer of the part of the object that violates the schema.
+    * @param schemaNode The Json schema specification as a Jackson node
+    * @param jsonNode   The Json object as a Jackson node
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
+    * @param dialect    The JSON Schema dialect to validate against (DRAFT_4 for OAS 3.0, DRAFT_2020_12 for OAS 3.1)
+    * @return The violations, in the order the validator found them. If empty, json object is valid !
+    */
+   public static List<JsonSchemaViolation> validateJsonWithPointers(JsonNode schemaNode, JsonNode jsonNode,
+         String namespace, JsonSchemaDialect dialect) {
+      List<JsonSchemaViolation> violations = new ArrayList<>();
 
       final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode, namespace, toVersionFlag(dialect));
 
@@ -177,12 +196,19 @@ public class JsonSchemaValidator {
          executionContext.getExecutionConfig().setLocale(Locale.US);
       });
 
-      if (!messages.isEmpty()) {
-         for (ValidationMessage message : messages) {
-            errors.add(message.getError());
-         }
+      for (ValidationMessage message : messages) {
+         violations.add(new JsonSchemaViolation(pointerOf(message.getInstanceLocation()), message.getError()));
       }
-      return errors;
+      return violations;
+   }
+
+   /** The JSON pointer of a location in a Json object, such as /tags/1, escaping ~ and / in its property names. */
+   private static String pointerOf(JsonNodePath location) {
+      StringBuilder pointer = new StringBuilder();
+      for (int index = 0; index < location.getNameCount(); index++) {
+         pointer.append('/').append(location.getName(index).replace("~", "~0").replace("/", "~1"));
+      }
+      return pointer.toString();
    }
 
    /**

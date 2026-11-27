@@ -106,12 +106,12 @@ class WorkflowRunnerImplementationsTest {
    void aRunRequestOfMicrocksSendsTheSecretToItsImplementationsButNotToItsMocks() throws IOException {
       Map<String, SourceDTO> sources = new LinkedHashMap<>();
       sources.put("customerApi", new SourceDTO(StagingImplementations.CUSTOMERS,
-            Map.of("GetCustomer", new OperationDTO("GET", "/customers/{id}"))));
-      sources.put("orderApi",
-            new SourceDTO("/rest/Order+API/1.0.0", Map.of("CreateOrder", new OperationDTO("POST", "/orders"))));
+            Map.of("GetCustomer", new OperationDTO("GET", "/customers/{id}")), null, null));
+      sources.put("orderApi", new SourceDTO("/rest/Order+API/1.0.0",
+            Map.of("CreateOrder", new OperationDTO("POST", "/orders")), null, null));
       RunRequestDTO request = new RunRequestDTO("run-1", "placeOrder", exampleOf("order-fulfilment"),
             Map.of("customerId", "c-42"), sources, 10000,
-            new SecretDTO("customers-staging-token", null, null, "s3cr3t-t0k3n", null));
+            new SecretDTO("customers-staging-token", null, null, "s3cr3t-t0k3n", null), false);
 
       runner.run(request.toSpecification(StagingImplementations.ORDERS), reporter);
 

@@ -80,10 +80,11 @@ public class WorkflowRunner {
          return;
       }
       Map<String, Map<String, Object>> stepOutputs = new LinkedHashMap<>();
+      ResponseSchemaValidator schemas = new ResponseSchemaValidator();
       List<ArazzoStep> steps = workflow.get().steps();
       for (int index = 0; index < steps.size(); index++) {
          ArazzoStep step = steps.get(index);
-         StepResult result = execute(index, step, specification, stepOutputs);
+         StepResult result = execute(index, step, specification, stepOutputs, schemas);
          reporter.stepEnded(result);
          if (result.status() == StepStatus.FAILED) {
             for (int next = index + 1; next < steps.size(); next++) {
@@ -107,7 +108,7 @@ public class WorkflowRunner {
    }
 
    private StepResult execute(int index, ArazzoStep step, RunSpecification specification,
-         Map<String, Map<String, Object>> stepOutputs) {
+         Map<String, Map<String, Object>> stepOutputs, ResponseSchemaValidator schemas) {
       StepOperation operation = operationOf(step, specification);
       Instant start = clock.instant();
       EvaluationContext context = new EvaluationContext(specification.inputs(), stepOutputs, null);
@@ -126,11 +127,15 @@ public class WorkflowRunner {
          EvaluationContext answered = context.with(response);
          List<CriterionResult> criteria = step.successCriteria().stream()
                .map(criterion -> conditions.evaluate(criterion, answered)).toList();
-         boolean passed = criteria.stream().allMatch(CriterionResult::held);
+         // A response that does not conform to its schema fails the step, even when its criteria hold.
+         Optional<String> nonConformance = specification.validateSchema()
+               ? schemas.nonConformance(operation, specification.sources().get(operation.sourceName()), response)
+               : Optional.empty();
+         boolean passed = criteria.stream().allMatch(CriterionResult::held) && nonConformance.isEmpty();
          return new StepResult(index, step.stepId(), operation, passed ? StepStatus.PASSED : StepStatus.FAILED,
                response.status(), elapsedSince(start), criteria,
-               passed ? evaluateAll(step.outputs(), answered) : Map.of(), call, response, null, parameters,
-               passed ? step.outputs() : Map.of());
+               passed ? evaluateAll(step.outputs(), answered) : Map.of(), call, response, nonConformance.orElse(null),
+               parameters, passed ? step.outputs() : Map.of());
       } catch (IOException ioe) {
          return failed(index, step, operation, start, new Exchange(parameters, call, null), "No response: " + ioe);
       } catch (ArazzoRunException are) {
