@@ -13,6 +13,8 @@
     count?: number;
     /** When defined the chip is a toggle `<button aria-pressed>`. */
     pressed?: boolean;
+    /** A toggle chip that cannot be pressed (needs `pressed`). */
+    disabled?: boolean;
     onclick?: (e: MouseEvent) => void;
     onRemove?: () => void;
     removeLabel?: string;
@@ -27,6 +29,7 @@
     protocol,
     count,
     pressed,
+    disabled,
     onclick,
     onRemove,
     removeLabel,
@@ -56,6 +59,7 @@
     data-protocol={protocol ? PROTOCOL_ATTR[protocol] : undefined}
     data-empty={count === 0 ? '' : undefined}
     aria-pressed={pressed}
+    {disabled}
     {onclick}
   >
     {@render body()}

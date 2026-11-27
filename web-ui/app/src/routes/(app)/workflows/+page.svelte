@@ -18,7 +18,7 @@
   import DocumentGroup from '#lib/components/workflows/DocumentGroup.svelte';
   import { callsOneOf, distinctSources, sourceKey } from '#lib/workflows/source-key.js';
   import LinkSourceDialog from '#lib/components/workflows/LinkSourceDialog.svelte';
-  import { isAvailable } from '#lib/workflows/availability.js';
+  import { filterFeature, isAvailable, isFilterAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { listWorkflows, type ResultFilter } from '#lib/workflows/list.js';
   import type { ArazzoDocument, RunKindFilter, SourceDescription } from '#lib/workflows/types.js';
 
@@ -155,7 +155,7 @@ workflows:
         />
         <Segmented
           label="Run target"
-          options={TARGETS.map((t) => ({ ...t, count: targetCounts[t.id] }))}
+          options={TARGETS.map((t) => ({ ...t, count: targetCounts[t.id], ...(isFilterAvailable(t.id, data.demo) ? {} : { disabled: true, title: unavailableReason(filterFeature(t.id)!, data.demo) }) }))}
           value={runKind}
           onchange={(id) => (runKind = id as RunKindFilter)}
         />

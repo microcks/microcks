@@ -42,7 +42,7 @@
   data-spacing={spacing === 'wide' ? 'wide' : undefined}
 >
   {#each options as o (o.id)}
-    <button type="button" aria-pressed={o.id === value} onclick={() => onchange(o.id)}>
+    <button type="button" aria-pressed={o.id === value} disabled={o.disabled} title={o.title} onclick={() => onchange(o.id)}>
       {#if o.dot}<span class="segmented-dot" data-dot={o.dot} aria-hidden="true"></span>{/if}
       {#if o.icon}<Icon name={o.icon} size={iconSize} data-tone={o.iconTone} />{/if}
       {o.label}

@@ -54,3 +54,14 @@ export function isAvailable(feature: ArazzoFeature, scope: AvailabilityScope): b
 export function unavailableReason(feature: ArazzoFeature, scope: AvailabilityScope): string | undefined {
   return isAvailable(feature, scope) ? undefined : REASON[feature];
 }
+
+/** The feature behind a run origin or run-target filter (Mock URL, Session); the other filters need none. */
+export function filterFeature(filter: string): ArazzoFeature | undefined {
+  return filter === 'mock-url' ? 'mock-url' : filter === 'session' ? 'sessions' : undefined;
+}
+
+/** Whether a run origin filter has runs to show: Mock URL and Session runs only exist where their feature does. */
+export function isFilterAvailable(filter: string, scope: AvailabilityScope): boolean {
+  const feature = filterFeature(filter);
+  return feature === undefined || isAvailable(feature, scope);
+}

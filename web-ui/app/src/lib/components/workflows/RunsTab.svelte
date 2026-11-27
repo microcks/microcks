@@ -2,6 +2,7 @@
   import { Button, Chip, Icon, MethodTag, type IconName } from '@microcks/deep-ink';
   import { formatRelative, formatShortClock } from '#lib/format.js';
   import { callTotals, stoppedStep, verdictExplanation } from '#lib/workflows/describe.js';
+  import { filterFeature, isFilterAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { matchesRunKind, runPath, runSetupPath } from '#lib/workflows/paths.js';
   import { originWord } from '#lib/workflows/run-facts.js';
   import { formatDuration } from '#lib/workflows/time.js';
@@ -33,7 +34,7 @@
   let { workflow, document, runs, sessions = [], initialFilter }: Props = $props();
 
   const initial = initialFilter === 'impl' ? 'implementations' : initialFilter === 'mockurl' ? 'mock-url' : initialFilter;
-  let filter = $state<Filter>(FILTERS.some((f) => f.id === initial) ? (initial as Filter) : 'all');
+  let filter = $state<Filter>(FILTERS.some((f) => f.id === initial && isFilterAvailable(f.id, document)) ? (initial as Filter) : 'all');
   let copied = $state(false);
 
   const match = (r: WorkflowRun, f: Filter) => f === 'all' || matchesRunKind(r, f);
@@ -123,7 +124,15 @@
       <span class="wf-runs-count">Last {runs.length} of {total} {total === 1 ? 'run' : 'runs'}</span>
       <div role="group" aria-label="Filter runs by origin" class="wf-runs-filters">
         {#each FILTERS as f (f.id)}
-          <Chip size="lg" pressed={f.id === filter} count={runs.filter((r) => match(r, f.id)).length} onclick={() => (filter = f.id)}>{f.label}</Chip>
+          {@const feature = filterFeature(f.id)}
+          <Chip
+            size="lg"
+            pressed={f.id === filter}
+            count={runs.filter((r) => match(r, f.id)).length}
+            disabled={!isFilterAvailable(f.id, document)}
+            title={feature ? unavailableReason(feature, document) : undefined}
+            onclick={() => (filter = f.id)}>{f.label}</Chip
+          >
         {/each}
       </div>
     </div>
