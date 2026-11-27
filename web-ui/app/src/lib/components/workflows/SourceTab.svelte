@@ -1,7 +1,9 @@
 <script lang="ts">
   import { ApiBadge, Button, Choice, Icon } from '@microcks/deep-ink';
   import { outlineOf, yamlSpans, type OutlineBlock } from '#lib/workflows/source-outline.js';
-  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
+  import { api } from '#lib/api.js';
+  import { analysisIssues, type ImportAnalysis } from '#lib/workflows/import-analysis.js';
+  import { isAvailable, isDemo, unavailableReason } from '#lib/workflows/availability.js';
   import { syncedText } from '#lib/workflows/header.js';
   import type { ArazzoDocument, ImportIssue, Workflow } from '#lib/workflows/types.js';
 
@@ -20,7 +22,8 @@
   let picked = $state<string | undefined>();
   let fold = $state(true);
   let validating = $state(false);
-  let validated = $state<{ issues: ImportIssue[]; at: string } | null>(null);
+  let validated = $state<{ issues: { path: string; message: string }[]; at: string; analysed: boolean } | null>(null);
+  let validateError = $state<string | null>(null);
   let copied = $state(false);
 
   $effect(() => {
@@ -46,6 +49,7 @@
     })
   );
   const issues = $derived(validated?.issues ?? document.importIssues);
+  const analysed = $derived(validated?.analysed === true);
   const when = $derived(validated ? validated.at : syncedText(document) ? `at sync, ${syncedText(document)?.replace(/^Synced /, '')}` : 'at import');
   const wfBlock = $derived(blocks.find((b) => b.id === 'workflow'));
   const last = $derived(blocks[blocks.length - 1]);
@@ -71,11 +75,23 @@
     if (b.step) onselectstep(b.id);
   }
 
+  /** Demo documents replay their import issues; for a real one Microcks analyses the document with its current links. */
   async function validate() {
     validating = true;
-    await new Promise((r) => setTimeout(r, 350));
-    validated = { issues: document.importIssues, at: 'just now' };
-    validating = false;
+    validateError = null;
+    try {
+      if (isDemo(document)) {
+        await new Promise((r) => setTimeout(r, 350));
+        validated = { issues: document.importIssues, at: 'just now', analysed: false };
+      } else {
+        const analysis = await api<ImportAnalysis>(`/api/workflows/documents/${encodeURIComponent(document.id)}/analysis`, { method: 'POST', json: {} });
+        validated = { issues: analysisIssues(analysis), at: 'just now', analysed: true };
+      }
+    } catch (e) {
+      validateError = e instanceof Error ? e.message : String(e);
+    } finally {
+      validating = false;
+    }
   }
 
   async function copy() {
@@ -117,7 +133,7 @@
           </span>
         </div>
         <div class="wf-src-actions">
-          <Button size="sm" icon="check" loading={validating} onclick={validate}>{validating ? 'Validating…' : 'Validate'}</Button>
+          <Button size="sm" icon="check" loading={validating} title={isDemo(document) ? undefined : 'Asks Microcks to analyse the document with its current links'} onclick={validate}>{validating ? 'Validating…' : 'Validate'}</Button>
           <Button size="sm" icon="copy" onclick={copy}>{copied ? 'Copied' : 'Copy YAML'}</Button>
           {#if isAvailable('document-edit', document)}
             <Button size="sm" href="/sources">Edit in source</Button>
@@ -129,7 +145,9 @@
 
       <div role="status" aria-live="polite" class="wf-src-band">
         {#if validating}
-          <span>Validating against Arazzo {document.arazzoVersion}…</span>
+          <span>{isDemo(document) ? `Validating against Arazzo ${document.arazzoVersion}…` : 'Microcks is analysing the document…'}</span>
+        {:else if validateError}
+          <span class="wf-src-invalid"><Icon name="x-circle" size={15} />{validateError}</span>
         {:else if issues.length === 0}
           <span class="wf-src-band-line">
             <span class="wf-src-valid"><Icon name="check-circle" size={15} />Valid Arazzo {document.arazzoVersion}</span>
@@ -141,7 +159,7 @@
             → {linkedTo.map((l) => `${l.name} ${l.label ? `linked to ${l.label}` : 'not linked'}`).join(', ')}{document.overlay ? ` by ${document.overlay}` : ''}
           </span>
         {:else}
-          <span class="wf-src-invalid"><Icon name="x-circle" size={15} />{issues.length} feature{issues.length === 1 ? '' : 's'} outside the subset Microcks runs</span>
+          <span class="wf-src-invalid"><Icon name="x-circle" size={15} />{#if analysed}{issues.length} problem{issues.length === 1 ? '' : 's'} found by Microcks{:else}{issues.length} feature{issues.length === 1 ? '' : 's'} outside the subset Microcks runs{/if}</span>
           <ul class="wf-src-issues">
             {#each issues as i (i.path)}<li><code>{i.path}</code>: {i.message}</li>{/each}
           </ul>

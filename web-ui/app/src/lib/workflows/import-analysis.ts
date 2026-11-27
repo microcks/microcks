@@ -103,3 +103,14 @@ export function readiness(analysis: Pick<ImportAnalysis, 'checks'>): { runnable:
     blocked: verdicts.filter((v) => !v.runnable).map(({ workflowId, note }) => ({ workflowId, note }))
   };
 }
+
+/** What is wrong with a document after analysis, as a list to read: where, and what. Empty when it is fine. */
+export function analysisIssues(analysis: ImportAnalysis): { path: string; message: string }[] {
+  if (analysis.refusal) return [{ path: 'document', message: analysis.refusal }];
+  const sources = analysis.sources.filter((s) => !s.link.linked).map((s) => ({ path: `sourceDescriptions.${s.sourceName}`, message: sourceVerdict(s).detail }));
+  const workflows = analysis.checks
+    .map((c) => ({ id: c.workflowId, ...workflowVerdict(c) }))
+    .filter((v) => !v.runnable)
+    .map((v) => ({ path: `workflows.${v.id}`, message: v.note }));
+  return [...sources, ...workflows];
+}

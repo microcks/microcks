@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { initialLinks, readiness, sourceVerdict, workflowVerdict, type ImportAnalysis } from './import-analysis.ts';
+import { analysisIssues, initialLinks, readiness, sourceVerdict, workflowVerdict, type ImportAnalysis } from './import-analysis.ts';
 
 const apis = [
   { serviceId: 's-customer', name: 'Customer API', version: '1.0.0' },
@@ -66,4 +66,17 @@ test('a workflow waits for the sources it calls, or runs', () => {
 test('the readiness of a document counts the workflows that can run and says what the others wait for', () => {
   assert.deepEqual(readiness(analysis), { runnable: 1, total: 2, blocked: [{ workflowId: 'placeOrder', note: 'Needs orderApi linked' }] });
   assert.deepEqual(readiness({ ...analysis, checks: [analysis.checks[0]!] }), { runnable: 1, total: 1, blocked: [] });
+});
+
+test('a document Microcks analyses without problem has no issue', () => {
+  const ok: ImportAnalysis = { ...analysis, sources: [analysis.sources[0]!], checks: [analysis.checks[0]!] };
+  assert.deepEqual(analysisIssues(ok), []);
+});
+
+test('the issues are the refusal, the sources not linked and the operations not found, each at its place', () => {
+  assert.deepEqual(analysisIssues({ ...analysis, refusal: 'Unsupported action type: goto' }), [{ path: 'document', message: 'Unsupported action type: goto' }]);
+  assert.deepEqual(analysisIssues(analysis), [
+    { path: 'sourceDescriptions.orderApi', message: 'The contract at ./order-api.openapi.yaml could not be read: pick the API to link' },
+    { path: 'workflows.placeOrder', message: 'Needs orderApi linked' }
+  ]);
 });
