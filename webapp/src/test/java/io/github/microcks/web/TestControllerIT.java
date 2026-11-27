@@ -23,10 +23,7 @@ import io.github.microcks.service.TestRunnerService;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -93,14 +90,10 @@ class TestControllerIT extends AbstractBaseIT {
             .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ")
             .append("\"runnerType\": \"OPEN_API_SCHEMA\", ").append("\"timeout\": 2000").append("}");
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+      var response = restTestClient.post().uri("/api/tests").contentType(MediaType.APPLICATION_JSON)
+            .body(testRequest.toString()).exchange().expectStatus().isCreated().returnResult(TestResult.class);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
-
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -109,10 +102,10 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 6);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = restTestClient.get().uri("/api/tests/" + testResult.getId()).exchange().expectStatus().isOk()
+            .returnResult(TestResult.class);
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertTrue(testResult.isSuccess());
@@ -140,14 +133,10 @@ class TestControllerIT extends AbstractBaseIT {
             .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ").append("\"runnerType\": \"POSTMAN\", ")
             .append("\"timeout\": 3000").append("}");
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+      var response = restTestClient.post().uri("/api/tests").contentType(MediaType.APPLICATION_JSON)
+            .body(testRequest.toString()).exchange().expectStatus().isCreated().returnResult(TestResult.class);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
-
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -161,10 +150,10 @@ class TestControllerIT extends AbstractBaseIT {
          System.err.println(postmanRunner.getLogs());
       }
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = restTestClient.get().uri("/api/tests/" + testResult.getId()).exchange().expectStatus().isOk()
+            .returnResult(TestResult.class);
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertTrue(testResult.isSuccess());
@@ -182,14 +171,10 @@ class TestControllerIT extends AbstractBaseIT {
             .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ").append("\"runnerType\": \"SOAP_UI\", ")
             .append("\"timeout\": 2000").append("}");
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+      var response = restTestClient.post().uri("/api/tests").contentType(MediaType.APPLICATION_JSON)
+            .body(testRequest.toString()).exchange().expectStatus().isCreated().returnResult(TestResult.class);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
-
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -198,10 +183,10 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 6);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = restTestClient.get().uri("/api/tests/" + testResult.getId()).exchange().expectStatus().isOk()
+            .returnResult(TestResult.class);
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       // 2 tests steps are ok, 1 is failing.
@@ -244,14 +229,10 @@ class TestControllerIT extends AbstractBaseIT {
             .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ")
             .append("\"runnerType\": \"GRPC_PROTOBUF\", ").append("\"timeout\": 2000").append("}");
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+      var response = restTestClient.post().uri("/api/tests").contentType(MediaType.APPLICATION_JSON)
+            .body(testRequest.toString()).exchange().expectStatus().isCreated().returnResult(TestResult.class);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
-
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -260,10 +241,10 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 6);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
+      response = restTestClient.get().uri("/api/tests/" + testResult.getId()).exchange().expectStatus().isOk()
+            .returnResult(TestResult.class);
 
-      testResult = response.getBody();
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertTrue(testResult.isSuccess());
@@ -292,14 +273,10 @@ class TestControllerIT extends AbstractBaseIT {
             .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ")
             .append("\"runnerType\": \"GRPC_PROTOBUF\", ").append("\"timeout\": 2000").append("}");
 
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+      var response = restTestClient.post().uri("/api/tests").contentType(MediaType.APPLICATION_JSON)
+            .body(testRequest.toString()).exchange().expectStatus().isCreated().returnResult(TestResult.class);
 
-      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
-      assertEquals(201, response.getStatusCode().value());
-
-      TestResult testResult = response.getBody();
+      TestResult testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertNotNull(testResult.getId());
       assertTrue(testResult.isInProgress());
@@ -308,9 +285,9 @@ class TestControllerIT extends AbstractBaseIT {
       // Wait till timeout and re-fetch the result.
       waitForTestCompletion(testResult, 6);
 
-      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
-      assertEquals(200, response.getStatusCode().value());
-      testResult = response.getBody();
+      response = restTestClient.get().uri("/api/tests/" + testResult.getId()).exchange().expectStatus().isOk()
+            .returnResult(TestResult.class);
+      testResult = response.getResponseBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertFalse(testResult.isSuccess());
@@ -319,10 +296,10 @@ class TestControllerIT extends AbstractBaseIT {
    private void waitForTestCompletion(TestResult testResult, int seconds) {
       await().atMost(seconds, TimeUnit.SECONDS).pollDelay(500, TimeUnit.MILLISECONDS)
             .pollInterval(250, TimeUnit.MILLISECONDS).until(() -> {
-               ResponseEntity<TestResult> resp = restTemplate.getForEntity("/api/tests/" + testResult.getId(),
-                     TestResult.class);
-               if (resp.getStatusCode().value() == 200) {
-                  TestResult tr = resp.getBody();
+               var resp = restTestClient.get().uri("/api/tests/" + testResult.getId()).exchange()
+                     .returnResult(TestResult.class);
+               if (resp.getStatus().value() == 200) {
+                  TestResult tr = resp.getResponseBody();
                   return tr != null && !tr.isInProgress();
                }
                return false;
