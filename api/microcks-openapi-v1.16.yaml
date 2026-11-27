@@ -2712,6 +2712,13 @@ components:
       - MOCKS
       - IMPLEMENTATIONS
       type: string
+    WorkflowRunOrigin:
+      description: Where a workflow run was launched from, when not from the Microcks
+        UI or API. MOCK_URL is an application posting the inputs of the workflow to
+        its Mock URL, to get its outputs played on the Microcks mocks.
+      enum:
+      - MOCK_URL
+      type: string
     WorkflowStepStatus:
       description: Status of a step of a workflow run
       enum:
@@ -2976,6 +2983,10 @@ components:
           $ref: '#/components/schemas/WorkflowExampleCheck'
           description: The recorded example the run plays, with its verdict once
             the run is finished
+        origin:
+          $ref: '#/components/schemas/WorkflowRunOrigin'
+          description: Where the run was launched from; absent when it was launched
+            from the Microcks UI or API
     WorkflowExampleVerdict:
       description: Whether a run matches the recorded example it plays, apart from
         the status of the run, as an example may expect the workflow to fail
