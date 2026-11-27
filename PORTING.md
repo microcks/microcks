@@ -9,15 +9,18 @@ commit below, then map each changed file with the tables in this document.
 | | |
 |---|---|
 | Upstream repository | `https://github.com/microcks/microcks` |
-| Baseline commit | `1e8b6c60d786363d7c9c85f7985189802f350015` (`master`, "Feat/opencollection examples (#2401)"), synchronized on 2026-11-02 |
+| Baseline commit | `f757641ed34c64e4d9885c6c1c89abd17580aeff` (`master`, "chore(deps-dev): bump maven-clean-plugin (#2398)"), synchronized on 2026-11-27 |
 | Initial baseline | `608ddb53a824483c781c1ba277040a8971f43b63` (`master`, 2026-10-16, "fix: #2293 Restore package-lock.json") |
 | Upstream version | `1.16.0-SNAPSHOT` |
 
-The baseline was identified by comparing blob hashes of the files changed by the last upstream commits against the
-working copy (the copy has no usable `.git`). The last four commits before the copy were all identical.
+The 2.0 code lives on the `v2` branch of `microcks/microcks`, built from `1e8b6c60` with a pure-rename commit followed by
+the 2.0 code, so `git log --follow` and `git cherry-pick` traverse the moves.
 
-Synchronizing: `git diff 1e8b6c60d786363d7c9c85f7985189802f350015..origin/master -- webapp commons`, then port each
-change using the mapping below. Update the baseline in this file after every synchronization.
+Synchronizing the 1.x commits: run `./sync-upstream.sh . report` (dry run: OK / SKIP / CONFLICT / ORPHAN per commit), then
+`REFS="Refs #<issue>" SIGNOFF="Signed-off-by: Name <mail>" ./sync-upstream.sh . apply`. Commits are cherry-picked with the
+original author and a `(cherry picked from commit ...)` trailer. On CONFLICT or ORPHAN (new files left under `webapp/`),
+fix by hand, `git commit` with the same trailer, and re-run. Compile before committing: upstream wildcard imports hide
+missing imports. Update the baseline above and the history below after every synchronization.
 
 ## Layout and naming
 
@@ -226,6 +229,8 @@ Last validated state: build success, 260 tests in the webapp plus the tests of e
 | Date | Upstream commit | Notes |
 |---|---|---|
 | 2026-10-16 | `608ddb53a824483c781c1ba277040a8971f43b63` | Initial baseline |
+| 2026-11-02 | `1e8b6c60d786363d7c9c85f7985189802f350015` | Manual port into `v2/` (study) |
+| 2026-11-27 | `f757641ed34c64e4d9885c6c1c89abd17580aeff` | 17 commits via `sync-upstream.sh`: 15 picked, 1 skipped (`webapp/pom.xml`), 2 conflicts fixed by hand (`OpenCollectionImporter` imports, `NativeConfiguration`) |
 
 ## Synchronization log
 
