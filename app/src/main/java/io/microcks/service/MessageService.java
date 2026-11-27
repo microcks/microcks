@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.*;
-import io.github.microcks.repository.EventMessageRepository;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.ResponseRepository;
+import io.microcks.domain.*;
+import io.microcks.repository.EventMessageRepository;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.ResponseRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +36,7 @@ import java.util.Set;
  * Service bean for common processing around messages (request and responses).
  * @author laurent
  */
-@org.springframework.stereotype.Service
+@ApplicationScoped
 public class MessageService {
 
    /** A simple logger for diagnostic messages. */

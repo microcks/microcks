@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.artifact.grpc;
 
-import io.github.microcks.util.script.HttpHeadersStringToStringsMap;
-import io.github.microcks.util.script.StringToStringsMap;
+import io.microcks.util.http.HttpHeadersStringToStringsMap;
+import io.microcks.util.http.StringToStringsMap;
 import io.grpc.Context;
 import io.grpc.Metadata;
 
 import java.util.Set;
 
-import com.nimbusds.jose.util.StandardCharset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Helper class containing utility to deal with GrpcMetadata.
@@ -60,7 +60,7 @@ public class GrpcMetadataUtil {
             Iterable<byte[]> values = metadata.getAll(metadataKey);
 
             for (byte[] value : values) {
-               String stringValue = new String(value, StandardCharset.UTF_8);
+               String stringValue = new String(value, StandardCharsets.UTF_8);
                result.add(key, stringValue);
             }
          } else {

@@ -1,0 +1,109 @@
+
+/* Conformance timeline card. */
+.test-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--canvas);
+}
+.test-timeline-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.test-timeline-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.test-timeline-heading h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.test-timeline-sub { font-size: 13px; color: var(--text-muted); }
+.test-timeline-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); }
+.test-timeline-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.test-timeline-legend i { display: block; width: 10px; height: 10px; border-radius: 2px; }
+.test-timeline-legend i[data-tone="passed"] { background: var(--success); }
+.test-timeline-legend i[data-tone="failed"] { background: var(--danger); }
+.test-timeline-legend i[data-tone="timeout"] { background: var(--warning); }
+.test-timeline-legend i[data-tone="line"] { width: 16px; height: 2px; border-radius: 0; background: var(--link); }
+.test-timeline-legend .test-timeline-muted { color: var(--text-muted); }
+
+/* Selected run. */
+.test-timeline-strip {
+  --tone: var(--success);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.3;
+}
+.test-timeline-strip[data-tone="failed"] { --tone: var(--danger); }
+.test-timeline-strip[data-tone="timeout"] { --tone: var(--warning); }
+.test-timeline-strip[data-tone="running"] { --tone: var(--running); }
+.test-timeline-id { font-family: var(--font-mono); font-weight: 600; }
+.test-timeline-result { display: inline-flex; align-items: center; gap: 6px; color: var(--tone); font-weight: 600; }
+.test-timeline-when { color: var(--text-secondary); }
+.test-timeline-endpoint { font-family: var(--font-mono); color: var(--link); overflow-wrap: anywhere; }
+.test-timeline-meta { font-family: var(--font-mono); color: var(--text-secondary); }
+.test-timeline-reason { flex-basis: 100%; font-family: var(--font-mono); font-size: 12px; color: var(--tone); }
+.test-timeline-open { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--link); }
+
+/* One card per operation over the timeline runs. */
+.test-op-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.test-op-card { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); }
+.test-op-card-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.test-op-card-head .method { flex: none; min-width: 0; padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; line-height: normal; }
+.test-op-card-path { flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.test-op-card-rate { flex: none; font-family: var(--font-brand); font-weight: 800; font-size: 20px; line-height: 1; color: var(--success); }
+.test-op-card-rate[data-tone="warning"] { color: var(--warning); }
+.test-op-card-rate[data-tone="danger"] { color: var(--danger); }
+.test-op-card-strip { display: grid; gap: 2px; }
+.test-op-card-strip > span { height: 8px; border-radius: 1px; background: var(--border); }
+.test-op-card-strip > span[data-outcome="pass"] { background: var(--success); }
+.test-op-card-strip > span[data-outcome="fail"] { background: var(--danger); }
+.test-op-card-note { font-size: 11px; color: var(--text-muted); }
+
+/* Header: linked service badge, KPI pills, link to the agent tests. */
+.tests-title-badge { display: inline-flex; border-radius: 6px; text-decoration: none; }
+.tests-head-extra { display: flex; flex-direction: column; gap: 10px; margin-top: -10px; }
+.tests-kpis { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.tests-other { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; align-self: flex-start; font-size: 13px; color: var(--text-secondary); text-decoration: none; }
+.tests-other:hover > span:first-child { text-decoration: underline; }
+.tests-other-run { color: var(--success); font-weight: 600; }
+.tests-other-run:is([data-result="failed"], [data-result="timeout"]) { color: var(--danger); }
+.tests-other-arrow { color: var(--link); }
+
+/* Filter row above the runs table. */
+.tests-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.tests-filter { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
+.tests-filter > label { font-size: 13px; color: var(--text-muted); }
+.tests-filter > .select { width: auto; max-width: 100%; }
+.tests-count { margin: 0 0 0 auto; font-size: 13px; color: var(--text-muted); }
+
+/* Runs table. */
+.tests-table { border: 1px solid var(--border); border-radius: 8px; background: var(--canvas); overflow: hidden; }
+.tests-table .table-wrap { border: 0; border-radius: 0; }
+.tests-run-id { padding: 0; border: 0; background: transparent; color: var(--text); font: 600 13px var(--font-mono); cursor: pointer; }
+.tests-when { display: flex; flex-direction: column; gap: 1px; }
+.tests-when-date { font-size: 11px; color: var(--text-muted); }
+.tests-endpoint { display: flex; align-items: center; gap: 8px; }
+.tests-env { flex: none; padding: 0 5px; border: 1px solid currentColor; border-radius: 4px; font: 600 10px var(--font-mono); color: var(--text-secondary); }
+.tests-env[data-env="prod"] { color: var(--action); }
+.tests-env[data-env="local"] { color: var(--text-muted); }
+.tests-endpoint-url { font: 12px var(--font-mono); color: var(--link); white-space: nowrap; }
+.tests-runner, .tests-samples { font: 12px var(--font-mono); color: var(--text-secondary); }
+.tests-duration { font: 12px var(--font-mono); color: var(--text-secondary); }
+.tests-duration[data-result="timeout"] { color: var(--warning); }
+.tests-result { --tone: var(--success); display: flex; flex-direction: column; gap: 3px; min-width: 220px; }
+.tests-result[data-result="failed"] { --tone: var(--danger); }
+.tests-result[data-result="timeout"] { --tone: var(--warning); }
+.tests-result[data-result="running"] { --tone: var(--running); }
+.tests-result-word { display: inline-flex; align-items: center; gap: 6px; color: var(--tone); font-weight: 600; }
+.tests-result-reason { font: 11px/1.45 var(--font-mono); color: var(--text-muted); }
+.tests-band { display: flex; gap: 3px; }
+.tests-band > span { width: 22px; height: 12px; box-sizing: border-box; border-radius: 2px; border: 1px solid var(--border-strong); }
+.tests-band > span[data-outcome="pass"] { background: var(--success); border-color: var(--success); }
+.tests-band > span[data-outcome="fail"] { background: var(--danger); border-color: var(--danger); }
+.tests-actions { display: inline-flex; align-items: center; gap: 6px; }
+.tests-table-more { display: flex; justify-content: center; padding: 10px; background: var(--surface); }
+.tests-table-empty { margin: 0; padding: 0 16px 16px; }
+.tests-footnote { margin: 0; font-size: 12px; color: var(--text-muted); }

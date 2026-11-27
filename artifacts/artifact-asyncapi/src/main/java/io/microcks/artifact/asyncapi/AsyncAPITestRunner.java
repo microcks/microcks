@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.asyncapi;
+package io.microcks.artifact.asyncapi;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.util.test.AbstractTestRunner;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Secret;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestReturn;
+import io.microcks.domain.TestRunnerType;
+import io.microcks.test.ResourceReader;
+import io.microcks.test.SecretReader;
+import io.microcks.test.AbstractTestRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpResponse;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.ClientHttpRequest;
+import io.microcks.util.http.ClientHttpRequestFactory;
+import io.microcks.util.http.ClientHttpResponse;
 
 import java.io.IOException;
 import java.net.URI;
@@ -57,9 +57,9 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
 
    private ObjectMapper mapper = new ObjectMapper();
 
-   private ResourceRepository resourceRepository;
+   private ResourceReader resourceReader;
 
-   private SecretRepository secretRepository;
+   private SecretReader secretReader;
 
    private ClientHttpRequestFactory clientHttpRequestFactory;
 
@@ -67,12 +67,12 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
 
    /**
     * Build a new AsyncAPITestRunner using a resource repository for retrieving AsyncAPI specification.
-    * @param resourceRepository The repository that contains AsyncAPI specification to validate
-    * @param secretRepository   The repository for accessing secrets for connecting test endpoints
+    * @param resourceReader The repository that contains AsyncAPI specification to validate
+    * @param secretReader   The repository for accessing secrets for connecting test endpoints
     */
-   public AsyncAPITestRunner(ResourceRepository resourceRepository, SecretRepository secretRepository) {
-      this.resourceRepository = resourceRepository;
-      this.secretRepository = secretRepository;
+   public AsyncAPITestRunner(ResourceReader resourceReader, SecretReader secretReader) {
+      this.resourceReader = resourceReader;
+      this.secretReader = secretReader;
    }
 
    /**
@@ -97,7 +97,7 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
 
       // Retrieve the resource corresponding to OpenAPI specification if any.
       Resource asyncAPISpecResource = null;
-      List<Resource> resources = resourceRepository.findByServiceId(service.getId());
+      List<Resource> resources = resourceReader.findByServiceId(service.getId());
       for (Resource resource : resources) {
          if (ResourceType.ASYNC_API_SPEC.equals(resource.getType())) {
             asyncAPISpecResource = resource;
@@ -116,7 +116,7 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
       jsonArg.put("asyncAPISpec", asyncAPISpecResource.getContent());
 
       if (testResult.getSecretRef() != null) {
-         Secret secret = secretRepository.findById(testResult.getSecretRef().getSecretId()).orElse(null);
+         Secret secret = secretReader.findById(testResult.getSecretRef().getSecretId());
          if (secret != null) {
             log.debug("Adding the secret '{}' to test specification request", secret.getName());
             jsonArg.set("secret", mapper.valueToTree(secret));

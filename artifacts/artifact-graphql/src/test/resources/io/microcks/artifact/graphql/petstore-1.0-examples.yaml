@@ -1,0 +1,123 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIExamples
+metadata:
+  name: Petstore Graph API
+  version: '1.0'
+operations:
+  allPets:
+    allPets:
+      request:
+        body:
+          query: |-
+            query {
+              allPets
+            }
+      response:
+        mediaType: application/json
+        body:
+          data:
+            allPets:
+              - id: "1"
+                name: Zaza
+                color: blue
+              - id: "2"
+                name: Tigress
+                color: stripped
+              - id: "3"
+                name: Maki
+                color: calico
+              - id: "4"
+                name: Toufik
+                color: stripped
+
+  searchPets:
+    k pets:
+      request:
+        body:
+          query: |- 
+            query searchPets ($name: String) {
+              searchPets (name: $name) {
+                id
+                name
+                color
+              }
+            }
+          variables:
+            name: k
+      response:
+        mediaType: application/json
+        body: |-
+          {
+            "data": {
+              "searchPets": [
+                {
+                  "id": "3",
+                  "name": "Maki",
+                  "color": "calico"
+                },
+                {
+                  "id": "4",
+                  "name": "Toufik",
+                  "color": "stripped"
+                }
+              ]
+            }
+          }
+    'i pets':
+      request:
+        body:
+          query: |- 
+            query searchPets ($name: String) {
+              searchPets (name: $name) {
+                id
+                name
+                color
+              }
+            }
+          variables:
+            name: i
+      response:
+        mediaType: application/json
+        body:
+          data:
+            searchPets:
+              - id: "2"
+                name: Tigress
+                color: stripped
+              - id: "3"
+                name: Maki
+                color: calico
+              - id: "4"
+                name: Toufik
+                color: stripped
+  createPet:
+    new pet:
+      request:
+        body:
+          query: |-
+            mutation createPet($newPet: NewPet) {
+              createPet(review: $newPet) {
+                id
+                name
+                color
+              }
+            }
+          variables: |-
+            {
+              "newPet": {
+                "name": "Jojo",
+                "color": "tuxedo"
+              }
+            }
+      response:
+        body: |-
+          {
+            "data": {
+              "createPet": {
+                "id": "{{ randomInt(5, 10) }}",
+                "name": "{{ request.body/variables/newPet/name }}",
+                "color": "{{ request.body/variables/newPet/color }}"
+              }
+            }
+          }
+

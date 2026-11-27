@@ -13,27 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.service.ImportExportService;
-import io.github.microcks.util.SafeLogger;
+import io.microcks.service.ImportExportService;
+import io.microcks.util.SafeLogger;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 /**
  * A Controller for importing new definitions into microcks repository.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class ImportController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -45,33 +50,36 @@ public class ImportController {
     * Create new ImportController with required service.
     * @param importExportService The service for managing imports.
     */
+   @Inject
    public ImportController(ImportExportService importExportService) {
       this.importExportService = importExportService;
    }
 
-   @PostMapping(value = "/import")
-   public ResponseEntity<byte[]> importRepository(@RequestParam(value = "file") MultipartFile file) {
+   @POST
+   @Path("/import")
+   @Consumes(MediaType.MULTIPART_FORM_DATA)
+   public Response importRepository(@RestForm("file") FileUpload file) {
       log.debug("Importing new services and resources definitions");
 
-      if (file.isEmpty()) {
-         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      if (file == null || file.size() == 0) {
+         return Response.status(Response.Status.BAD_REQUEST).build();
       }
 
-      log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
+      log.debug("Content type of {} is {}", file.fileName(), file.contentType());
 
-      if (!MediaType.APPLICATION_JSON_VALUE.equals(file.getContentType())) {
-         return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+      if (!MediaType.APPLICATION_JSON.equals(file.contentType())) {
+         return Response.status(Response.Status.UNSUPPORTED_MEDIA_TYPE).build();
       }
 
       try {
-         byte[] bytes = file.getBytes();
+         byte[] bytes = Files.readAllBytes(file.uploadedFile());
          String json = new String(bytes, StandardCharsets.UTF_8);
          importExportService.importRepository(json);
 
-         return new ResponseEntity<>(HttpStatus.CREATED);
+         return Response.status(Response.Status.CREATED).build();
       } catch (Exception e) {
          log.error("Exception while importing repository", e);
-         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
       }
    }
 }

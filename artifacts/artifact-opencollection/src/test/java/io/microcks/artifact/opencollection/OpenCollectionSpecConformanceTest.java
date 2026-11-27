@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.opencollection;
+package io.microcks.artifact.opencollection;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Service;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.MockRepositoryImporterFactory;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Service;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.artifact.MockRepositoryImporter;
+import io.microcks.artifact.MockRepositoryImporterFactory;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class OpenCollectionSpecConformanceTest {
 
-   private static final String FIXTURES = "target/test-classes/io/github/microcks/util/opencollection/";
+   private static final String FIXTURES = "target/test-classes/io/microcks/artifact/opencollection/";
 
    private static final String SPEC_FIXTURES = FIXTURES + "spec/";
 

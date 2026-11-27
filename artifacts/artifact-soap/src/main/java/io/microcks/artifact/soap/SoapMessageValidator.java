@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soap;
+package io.microcks.artifact.soap;
 
-import io.github.microcks.util.XmlSchemaValidator;
-import io.github.microcks.util.XmlUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="io.microcks.soap.XmlSchemaValidatorTest" time="0.083" tests="2" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="25"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/target/test-classes:/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/target/classes:/home/laurent/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/commons/model/target/microcks-model-2.0.0-SNAPSHOT.jar:/home/laurent/.m2/repository/org/mongodb/bson/5.6.4/bson-5.6.4.jar:/home/laurent/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.21/jackson-annotations-2.21.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter/6.0.3/junit-jupiter-6.0.3.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter-api/6.0.3/junit-jupiter-api-6.0.3.jar:/home/laurent/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/laurent/.m2/repository/org/junit/platform/junit-platform-commons/6.0.3/junit-platform-commons-6.0.3.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter-params/6.0.3/junit-jupiter-params-6.0.3.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter-engine/6.0.3/junit-jupiter-engine-6.0.3.jar:/home/laurent/.m2/repository/commons-io/commons-io/2.16.1/commons-io-2.16.1.jar:/home/laurent/.m2/repository/org/junit/platform/junit-platform-launcher/6.0.3/junit-platform-launcher-6.0.3.jar:/home/laurent/.m2/repository/org/junit/platform/junit-platform-engine/6.0.3/junit-platform-engine-6.0.3.jar:/home/laurent/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/laurent/.m2/repository/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar:"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="25"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.boot.library.path" value="/home/laurent/.sdkman/candidates/java/25.0.2-tem/lib"/>
+    <property name="sun.java.command" value="/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/target/surefire/surefirebooter-20261109143910458_19.jar /home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/target/surefire 2026-11-09T14-39-06_629-jvmRun1 surefire-20261109143910458_17tmp surefire_4-20261109143910458_18tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/target/test-classes:/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/target/classes:/home/laurent/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/commons/model/target/microcks-model-2.0.0-SNAPSHOT.jar:/home/laurent/.m2/repository/org/mongodb/bson/5.6.4/bson-5.6.4.jar:/home/laurent/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.21/jackson-annotations-2.21.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter/6.0.3/junit-jupiter-6.0.3.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter-api/6.0.3/junit-jupiter-api-6.0.3.jar:/home/laurent/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/laurent/.m2/repository/org/junit/platform/junit-platform-commons/6.0.3/junit-platform-commons-6.0.3.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter-params/6.0.3/junit-jupiter-params-6.0.3.jar:/home/laurent/.m2/repository/org/junit/jupiter/junit-jupiter-engine/6.0.3/junit-jupiter-engine-6.0.3.jar:/home/laurent/.m2/repository/commons-io/commons-io/2.16.1/commons-io-2.16.1.jar:/home/laurent/.m2/repository/org/junit/platform/junit-platform-launcher/6.0.3/junit-platform-launcher-6.0.3.jar:/home/laurent/.m2/repository/org/junit/platform/junit-platform-engine/6.0.3/junit-platform-engine-6.0.3.jar:/home/laurent/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/laurent/.m2/repository/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/laurent"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-01-20"/>
+    <property name="java.home" value="/home/laurent/.sdkman/candidates/java/25.0.2-tem"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="surefire.real.class.path" value="/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/target/surefire/surefirebooter-20261109143910458_19.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="25.0.2+10-LTS"/>
+    <property name="user.name" value="laurent"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-42-generic"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-25.0.2+10"/>
+    <property name="localRepository" value="/home/laurent/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="25.0.2"/>
+    <property name="user.dir" value="/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="25.0.2+10-LTS"/>
+    <property name="stdin.encoding" value="UTF-8"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="69.0"/>
+  </properties>
+  <testcase name="testValidXmlAgainstInvalidSchema" classname="io.microcks.soap.XmlSchemaValidatorTest" time="0.049">
+    <system-err><![CDATA[SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+]]></system-err>
+  </testcase>
+  <testcase name="testValidXmlAgainstValidSchema" classname="io.microcks.soap.XmlSchemaValidatorTest" time="0.021"/>
+</testsuite>

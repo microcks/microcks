@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.service;
+package io.microcks.service;
 
 import java.util.List;
 import java.util.Map;

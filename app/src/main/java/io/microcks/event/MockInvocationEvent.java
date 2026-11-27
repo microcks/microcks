@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.event;
+package io.microcks.event;
 
-import org.springframework.context.ApplicationEvent;
 
 import java.util.Date;
 
@@ -23,7 +22,7 @@ import java.util.Date;
  * Simple bean representing an invocation event on a Mock.
  * @author laurent
  */
-public class MockInvocationEvent extends ApplicationEvent {
+public class MockInvocationEvent {
 
    /** */
    private final String serviceName;
@@ -38,16 +37,14 @@ public class MockInvocationEvent extends ApplicationEvent {
 
    /**
     * Create a new mock invocation event.
-    * @param source              Source object for event
     * @param serviceName         Name of invoked service
     * @param serviceVersion      Version of invoked service
     * @param mockResponse        Mock response returned during invocation
     * @param invocationTimestamp Timestamp of invocation
     * @param duration            Duration of invocation
     */
-   public MockInvocationEvent(Object source, String serviceName, String serviceVersion, String mockResponse,
-         Date invocationTimestamp, long duration) {
-      super(source);
+   public MockInvocationEvent(String serviceName, String serviceVersion, String mockResponse, Date invocationTimestamp,
+         long duration) {
       this.serviceName = serviceName;
       this.serviceVersion = serviceVersion;
       this.mockResponse = mockResponse;

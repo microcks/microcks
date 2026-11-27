@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.ServiceState;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.ServiceState;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,19 +29,17 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for ServiceStateRepository implementation.
  * @author laurent
  */
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class ServiceStateRepositoryTest {
 
-   @Autowired
+   @Inject
    ServiceStateRepository repository;
 
    @BeforeEach
    public void setUp() {
       ServiceState status = new ServiceState("azertyuiop", "foo");
       status.setValue("bar");
-      repository.save(status);
+      repository.persist(status);
    }
 
    @Test

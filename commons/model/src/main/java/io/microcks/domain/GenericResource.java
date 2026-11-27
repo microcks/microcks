@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package io.github.microcks.domain;
+package io.microcks.domain;
 
+import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.Document;
-import org.springframework.data.annotation.Id;
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 /**
  * Domain class representing a GenericResource created for simple CRUD mocking.
  * @author laurent
  */
+@MongoEntity(collection = "genericResource")
 public class GenericResource {
 
-   @Id
+   @BsonId
+   @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
    private String serviceId;
    private Document payload;

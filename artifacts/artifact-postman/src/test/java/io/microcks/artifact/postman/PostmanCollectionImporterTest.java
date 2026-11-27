@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.postman;
+package io.microcks.artifact.postman;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import java.io.IOException;
 
@@ -47,7 +47,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_collection.json");
+               "target/test-classes/io/microcks/artifact/postman/Swagger Petstore.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -155,7 +155,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_collection-2.1.json");
+               "target/test-classes/io/microcks/artifact/postman/Swagger Petstore.postman_collection-2.1.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -262,7 +262,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/Test API.postman_collection.json");
+               "target/test-classes/io/microcks/artifact/postman/Test API.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -423,7 +423,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/Test API no version.postman_collection.json");
+               "target/test-classes/io/microcks/artifact/postman/Test API no version.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -444,7 +444,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/Test API bad version.postman_collection.json");
+               "target/test-classes/io/microcks/artifact/postman/Test API bad version.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -461,10 +461,10 @@ class PostmanCollectionImporterTest {
 
    @ParameterizedTest
    @ValueSource(strings = {
-         "target/test-classes/io/github/microcks/util/postman/structured-version-identifier-collection.json",
-         "target/test-classes/io/github/microcks/util/postman/structured-version-digits-collection.json",
-         "target/test-classes/io/github/microcks/util/postman/structured-version-raw-collection.json",
-         "target/test-classes/io/github/microcks/util/postman/structured-version-desc-collection.json" })
+         "target/test-classes/io/microcks/artifact/postman/structured-version-identifier-collection.json",
+         "target/test-classes/io/microcks/artifact/postman/structured-version-digits-collection.json",
+         "target/test-classes/io/microcks/artifact/postman/structured-version-raw-collection.json",
+         "target/test-classes/io/microcks/artifact/postman/structured-version-desc-collection.json" })
    void testStructuredVersionImport(String collection) {
       PostmanCollectionImporter importer = null;
       try {
@@ -488,7 +488,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/PetstoreAPI-collection-sample-trailing-dollar.json");
+               "target/test-classes/io/microcks/artifact/postman/PetstoreAPI-collection-sample-trailing-dollar.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -556,7 +556,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/PetstoreAPI-collection-sample.json");
+               "target/test-classes/io/microcks/artifact/postman/PetstoreAPI-collection-sample.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -605,7 +605,7 @@ class PostmanCollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/graphql/films-postman.json");
+               "target/test-classes/io/microcks/artifact/graphql/films-postman.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

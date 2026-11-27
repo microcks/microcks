@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
-import io.github.microcks.domain.Parameter;
+import io.microcks.domain.Parameter;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import org.springframework.web.util.UriUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -132,6 +131,17 @@ public class URIBuilder {
     * parameters value. See https://stackoverflow.com/a/2678602 and https://www.baeldung.com/java-url-encoding-decoding.
     */
    private static String encodePath(String path) {
-      return UriUtils.encodePath(path, StandardCharsets.UTF_8);
+      StringBuilder encoded = new StringBuilder();
+      for (byte b : path.getBytes(StandardCharsets.UTF_8)) {
+         char c = (char) (b & 0xFF);
+         boolean allowed = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+               || "-._~!$&'()*+,;=:@/".indexOf(c) >= 0;
+         if (allowed) {
+            encoded.append(c);
+         } else {
+            encoded.append('%').append(String.format("%02X", b & 0xFF));
+         }
+      }
+      return encoded.toString();
    }
 }

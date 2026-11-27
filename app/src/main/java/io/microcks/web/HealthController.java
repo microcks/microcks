@@ -13,24 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.repository.ImportJobRepository;
+import io.microcks.repository.ImportJobRepository;
 
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 
 /**
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class HealthController {
 
    /** A simple logger for diagnostic messages. */
@@ -42,22 +47,24 @@ public class HealthController {
     * Build a new HealthController with its dependencies.
     * @param jobRepository to have access to ImportJobs
     */
+   @Inject
    public HealthController(ImportJobRepository jobRepository) {
       this.jobRepository = jobRepository;
    }
 
-   @GetMapping(value = "/health")
-   public ResponseEntity<String> health() {
+   @GET
+   @Path("/health")
+   public Response health() {
       log.trace("Health check endpoint invoked");
 
       try {
          // Using a single selection query to ensure connection to MongoDB is ok.
-         jobRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"))).getContent();
+         jobRepository.findAll(Sort.ascending("name")).page(Page.of(0, 10)).list();
       } catch (Exception e) {
          log.error("Health check caught an exception: {}", e.getMessage(), e);
-         return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+         return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
       }
       log.trace("Health check is OK");
-      return new ResponseEntity<>(HttpStatus.OK);
+      return Response.status(Response.Status.OK).build();
    }
 }

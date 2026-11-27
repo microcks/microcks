@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class AsyncMockRepository {
 
-   private final Set<AsyncMockDefinition> mockDefinitions = new HashSet<>();
+   private final Set<AsyncMockDefinition> mockDefinitions = ConcurrentHashMap.newKeySet();
 
    /**
     * Retrieve the AsyncMockDefinitions present in store.

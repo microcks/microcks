@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.graphql;
+package io.microcks.artifact.graphql;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.test.HttpTestRunner;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestReturn;
+import io.microcks.test.ResourceReader;
+import io.microcks.test.HttpTestRunner;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.client.ClientHttpResponse;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.ClientHttpResponse;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,17 +49,17 @@ public class GraphQLTestRunner extends HttpTestRunner {
 
    private ObjectMapper mapper = new ObjectMapper();
 
-   private ResourceRepository resourceRepository;
+   private ResourceReader resourceReader;
 
    private String lastQueryContent = null;
    private List<String> lastValidationErrors = null;
 
    /**
     * Build a new GraphQLTestRunner.
-    * @param resourceRepository Access to resources repository
+    * @param resourceReader Access to resources repository
     */
-   public GraphQLTestRunner(ResourceRepository resourceRepository) {
-      this.resourceRepository = resourceRepository;
+   public GraphQLTestRunner(ResourceReader resourceReader) {
+      this.resourceReader = resourceReader;
    }
 
 
@@ -111,8 +111,7 @@ public class GraphQLTestRunner extends HttpTestRunner {
       if (responseCode != 204 && APPLICATION_JSON_TYPE.equals(contentType)) {
          // Retrieve the resource corresponding to OpenAPI specification if any.
          Resource graphqlSchemaResource = null;
-         List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
-               ResourceType.GRAPHQL_SCHEMA);
+         List<Resource> resources = resourceReader.findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA);
          if (!resources.isEmpty()) {
             graphqlSchemaResource = resources.get(0);
          }

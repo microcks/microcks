@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestRunnerType;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestRunnerType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 
 import java.util.List;
 
@@ -35,15 +33,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for TestResultRepository implementation.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class TestResultRepositoryTest {
 
-   @Autowired
+   @Inject
    ServiceRepository serviceRepository;
 
-   @Autowired
+   @Inject
    TestResultRepository repository;
 
    String serviceId;
@@ -54,7 +50,7 @@ class TestResultRepositoryTest {
       Service service = new Service();
       service.setName("HelloWorld");
       service.setVersion("1.0");
-      serviceRepository.save(service);
+      serviceRepository.persist(service);
       // Create a bunch of test results for this service.
       TestResult testResult = new TestResult();
       testResult.setInProgress(false);
@@ -62,7 +58,7 @@ class TestResultRepositoryTest {
       testResult.setTestNumber(1L);
       testResult.setServiceId(service.getId());
       testResult.setTestedEndpoint("http://localhost:8088/HelloWorld");
-      repository.save(testResult);
+      repository.persist(testResult);
       // ... another one.
       testResult = new TestResult();
       testResult.setInProgress(false);
@@ -70,7 +66,7 @@ class TestResultRepositoryTest {
       testResult.setTestNumber(2L);
       testResult.setServiceId(service.getId());
       testResult.setTestedEndpoint("http://localhost:8088/HelloWorld");
-      repository.save(testResult);
+      repository.persist(testResult);
       serviceId = service.getId();
    }
 
@@ -84,8 +80,7 @@ class TestResultRepositoryTest {
 
    @Test
    void testFindLastOnesForService() {
-      List<TestResult> older = repository.findByServiceId(serviceId,
-            PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
+      List<TestResult> older = repository.findByServiceId(serviceId, Page.ofSize(2), Sort.descending("testNumber"));
       assertEquals(2, older.size());
       Long newTestNumber = older.get(0).getTestNumber() + 1L;
       assertEquals(3L, newTestNumber.longValue());

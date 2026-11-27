@@ -13,99 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.MicrocksApplication;
-import io.github.microcks.repository.ServiceRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.testsupport.http.ResponseEntity;
+import io.microcks.testsupport.http.TestRestTemplate;
 
+import io.quarkus.test.common.http.TestHTTPResource;
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.testcontainers.mongodb.MongoDBContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
+import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Base class for Integration tests using Http layers as well as testcontainers for MongoDB persistence.
+ * Base class for Integration tests using the real HTTP layer and the Quarkus Dev Services MongoDB persistence.
  * @author laurent
  */
-@SpringBootTest(classes = MicrocksApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestRestTemplate
-@ActiveProfiles("it")
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 public abstract class AbstractBaseIT {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(AbstractBaseIT.class);
 
-   @LocalServerPort
-   private int port;
+   @TestHTTPResource
+   URL serverUrl;
 
-   @Autowired
-   protected TestRestTemplate restTemplate;
-
-   @Autowired
+   @Inject
    protected ServiceRepository serviceRepository;
 
-   private static final MongoDBContainer mongoDBContainer;
+   protected TestRestTemplate restTemplate;
 
-   static {
-      mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.4")).withReuse(false);
-      mongoDBContainer.start();
-   }
-
-   @DynamicPropertySource
-   public static void setDatasourceProperties(final DynamicPropertyRegistry registry) {
-      String url = "mongodb://" + mongoDBContainer.getHost() + ":" + mongoDBContainer.getMappedPort(27017)
-            + "/microcksIT";
-      registry.add("spring.mongodb.uri", () -> url);
+   @BeforeEach
+   void initRestTemplate() {
+      restTemplate = new TestRestTemplate(getServerUrl());
    }
 
    public int getServerPort() {
-      return port;
+      return serverUrl.getPort();
    }
 
    public String getServerUrl() {
-      return "http://localhost:" + port;
+      return "http://localhost:" + serverUrl.getPort();
    }
 
    /** */
    protected void uploadArtifactFile(String artifactFilePath, boolean isMainArtifact) {
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-      MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-      body.add("file", new FileSystemResource(new File(artifactFilePath)));
-
-      HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-      ResponseEntity<String> response;
-      if (isMainArtifact) {
-         response = restTemplate.postForEntity("/api/artifact/upload", requestEntity, String.class);
-      } else {
-         response = restTemplate.postForEntity("/api/artifact/upload?mainArtifact=false", requestEntity, String.class);
-      }
-
-      assertEquals(201, response.getStatusCode().value());
-      log.info("Just uploaded: {}", response.getBody());
+      String response = RestAssured.given().multiPart("file", new File(artifactFilePath))
+            .queryParam("mainArtifact", isMainArtifact).when().post("/api/artifact/upload").then().statusCode(201)
+            .extract().asString();
+      log.info("Just uploaded: {}", response);
    }
 
    protected void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {

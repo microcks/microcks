@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.el;
+package io.microcks.util.el;
 
-import io.github.microcks.domain.Request;
-import io.github.microcks.util.el.function.ELFunction;
-import io.github.microcks.util.el.function.NowELFunction;
+import io.microcks.domain.Request;
+import io.microcks.util.el.function.ELFunction;
+import io.microcks.util.el.function.NowELFunction;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

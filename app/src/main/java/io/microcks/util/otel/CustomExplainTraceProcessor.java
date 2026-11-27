@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.otel;
+package io.microcks.util.otel;
 
-import io.github.microcks.service.SpanStorageService;
-import io.github.microcks.util.tracing.TraceUtil;
+import io.microcks.service.SpanStorageService;
+import io.microcks.util.tracing.TraceUtil;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
@@ -24,7 +24,8 @@ import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.Unremovable;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -34,7 +35,8 @@ import java.util.Map;
  * relevant spans to the storage service for collection and retrieval.
  * @author Apoorva Srinivas Appadoo
  */
-@Component
+@ApplicationScoped
+@Unremovable
 public class CustomExplainTraceProcessor implements SpanProcessor {
 
    /** A commons logger for diagnostic messages. */
@@ -46,6 +48,7 @@ public class CustomExplainTraceProcessor implements SpanProcessor {
     * Construct a CustomExplainTraceProcessor with the given SpanStorageService.
     * @param spanStorageService the span storage service
     */
+   @jakarta.inject.Inject
    public CustomExplainTraceProcessor(SpanStorageService spanStorageService) {
       this.spanStorageService = spanStorageService;
    }

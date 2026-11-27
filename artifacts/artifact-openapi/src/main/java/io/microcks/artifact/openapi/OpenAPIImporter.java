@@ -13,32 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.artifact.openapi;
 
-import io.github.microcks.domain.CallbackInfo;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Parameter;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.ParameterLocation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.AbstractJsonRepositoryImporter;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.ReferenceResolver;
-import io.github.microcks.util.URIBuilder;
-import io.github.microcks.util.metadata.MetadataExtensions;
-import io.github.microcks.util.metadata.MetadataExtractor;
+import io.microcks.domain.CallbackInfo;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Metadata;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Parameter;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.ParameterLocation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.artifact.AbstractJsonRepositoryImporter;
+import io.microcks.util.DispatchCriteriaHelper;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.artifact.MockRepositoryImporter;
+import io.microcks.util.ReferenceResolver;
+import io.microcks.util.URIBuilder;
+import io.microcks.artifact.metadata.MetadataExtensions;
+import io.microcks.artifact.metadata.MetadataExtractor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

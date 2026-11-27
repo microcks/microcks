@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util;
+package io.microcks.artifact.soap;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

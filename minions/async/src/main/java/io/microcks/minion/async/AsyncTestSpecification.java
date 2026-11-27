@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.TestRunnerType;
+import io.microcks.domain.Secret;
+import io.microcks.domain.TestRunnerType;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 

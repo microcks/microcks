@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.service;
+package io.microcks.service;
 
 import javax.annotation.Nullable;
 

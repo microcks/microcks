@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,50 +13,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.ServiceView;
-import io.github.microcks.repository.CustomServiceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.service.MessageService;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.util.EntityAlreadyExistsException;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.web.dto.GenericResourceServiceDTO;
-import io.github.microcks.web.dto.OperationOverrideDTO;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Metadata;
+import io.microcks.domain.Operation;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.ServiceView;
+import io.microcks.repository.CustomServiceRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.service.MessageService;
+import io.microcks.service.ServiceService;
+import io.microcks.util.EntityAlreadyExistsException;
+import io.microcks.util.IdBuilder;
+import io.microcks.util.SafeLogger;
+import io.microcks.web.dto.GenericResourceServiceDTO;
+import io.microcks.web.dto.OperationOverrideDTO;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * A Rest controller for API defined on services.
+ * A JAX-RS resource for API defined on services.
  * @author laurent
  */
-@RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class ServiceController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -72,6 +77,7 @@ public class ServiceController {
     * @param serviceRepository to have access to Services definition
     * @param messageService    to have acces to Services messages
     */
+   @Inject
    public ServiceController(ServiceService serviceService, ServiceRepository serviceRepository,
          MessageService messageService) {
       this.serviceService = serviceService;
@@ -79,24 +85,26 @@ public class ServiceController {
       this.messageService = messageService;
    }
 
-   @GetMapping(value = "/services")
-   public List<Service> listServices(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+   @GET
+   @Path("/services")
+   public List<Service> listServices(@QueryParam("page") @DefaultValue("0") int page,
+         @QueryParam("size") @DefaultValue("20") int size) {
       log.debug("Getting service list for page {} and size {}", page, size);
-      return serviceRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name", "version")))
-            .getContent();
+      return serviceRepository.findAll(Sort.ascending("name", "version")).page(Page.of(page, size)).list();
    }
 
-   @GetMapping(value = "/services/search")
-   public List<Service> searchServices(@RequestParam Map<String, String> queryMap) {
-      // Parse params from queryMap.
+   @GET
+   @Path("/services/search")
+   public List<Service> searchServices(@jakarta.ws.rs.core.Context UriInfo uriInfo) {
+      // Parse params from query parameters.
       String name = null;
       Map<String, String> labels = new HashMap<>();
-      for (Map.Entry<String, String> entry : queryMap.entrySet()) {
+      for (Map.Entry<String, List<String>> entry : uriInfo.getQueryParameters().entrySet()) {
+         String value = entry.getValue().isEmpty() ? null : entry.getValue().get(0);
          if ("name".equals(entry.getKey())) {
-            name = entry.getValue();
+            name = value;
          } else if (entry.getKey().startsWith("labels.")) {
-            labels.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
+            labels.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), value);
          }
       }
 
@@ -112,7 +120,8 @@ public class ServiceController {
       return serviceRepository.findByLabelsAndNameLike(labels, name);
    }
 
-   @GetMapping(value = "/services/count")
+   @GET
+   @Path("/services/count")
    public Map<String, Long> countServices() {
       log.debug("Counting services...");
       Map<String, Long> counter = new HashMap<>();
@@ -120,7 +129,8 @@ public class ServiceController {
       return counter;
    }
 
-   @GetMapping(value = "/services/map")
+   @GET
+   @Path("/services/map")
    public Map<String, Integer> getServicesMap() {
       log.debug("Counting services by type...");
       Map<String, Integer> map = new HashMap<>();
@@ -131,7 +141,8 @@ public class ServiceController {
       return map;
    }
 
-   @GetMapping(value = "/services/labels")
+   @GET
+   @Path("/services/labels")
    public Map<String, String[]> getServicesLabels() {
       log.debug("Retrieving available services labels...");
       Map<String, String[]> labelValues = new HashMap<>();
@@ -142,15 +153,16 @@ public class ServiceController {
       return labelValues;
    }
 
-   @GetMapping(value = "/services/{id:.+}", produces = "application/json")
-   public ResponseEntity<Object> getService(@PathVariable("id") String serviceId,
-         @RequestParam(value = "messages", required = false, defaultValue = "true") boolean messages) {
+   @GET
+   @Path("/services/{id:.+}")
+   public Response getService(@PathParam("id") String serviceId,
+         @QueryParam("messages") @DefaultValue("true") boolean messages) {
       log.debug("Retrieving service with id {}", serviceId);
 
       // Just retrieve the service and return it.
       Service service = serviceService.getServiceById(serviceId);
       if (service == null) {
-         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
       if (messages) {
          // Put messages into a map where key is operation name.
@@ -168,74 +180,68 @@ public class ServiceController {
                messagesMap.put(operation.getName(), pairs);
             }
          }
-         return new ResponseEntity<>(new ServiceView(service, messagesMap), HttpStatus.OK);
+         return Response.ok(new ServiceView(service, messagesMap)).build();
       }
-      return new ResponseEntity<>(service, HttpStatus.OK);
+      return Response.ok(service).build();
    }
 
-   @PostMapping(value = "/services/generic")
-   public ResponseEntity<Service> createGenericResourceService(@RequestBody GenericResourceServiceDTO serviceDTO) {
+   @POST
+   @Path("/services/generic")
+   public Response createGenericResourceService(GenericResourceServiceDTO serviceDTO) {
       log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(),
             serviceDTO.getVersion(), serviceDTO.getResource());
 
       try {
          Service service = serviceService.createGenericResourceService(serviceDTO.getName(), serviceDTO.getVersion(),
                serviceDTO.getResource(), serviceDTO.getReferencePayload());
-         return new ResponseEntity<>(service, HttpStatus.CREATED);
+         return Response.status(Response.Status.CREATED).entity(service).build();
       } catch (EntityAlreadyExistsException eaee) {
          log.error("Service '{}-{} already exists'", serviceDTO.getName(), serviceDTO.getVersion());
-         return new ResponseEntity<>(HttpStatus.CONFLICT);
+         return Response.status(Response.Status.CONFLICT).build();
       }
    }
 
-   @PostMapping(value = "/services/generic/event")
-   public ResponseEntity<Service> createGenericEventService(@RequestBody GenericResourceServiceDTO serviceDTO) {
+   @POST
+   @Path("/services/generic/event")
+   public Response createGenericEventService(GenericResourceServiceDTO serviceDTO) {
       log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(),
             serviceDTO.getVersion(), serviceDTO.getResource());
 
       try {
          Service service = serviceService.createGenericEventService(serviceDTO.getName(), serviceDTO.getVersion(),
                serviceDTO.getResource(), serviceDTO.getReferencePayload());
-         return new ResponseEntity<>(service, HttpStatus.CREATED);
+         return Response.status(Response.Status.CREATED).entity(service).build();
       } catch (EntityAlreadyExistsException eaee) {
          log.error("Service '{}-{} already exists'", serviceDTO.getName(), serviceDTO.getVersion());
-         return new ResponseEntity<>(HttpStatus.CONFLICT);
+         return Response.status(Response.Status.CONFLICT).build();
       }
    }
 
-   @PutMapping(value = "/services/{id}/metadata")
-   public ResponseEntity<Object> updateMetadata(@PathVariable("id") String serviceId, @RequestBody Metadata metadata,
-         UserInfo userInfo) {
+   @PUT
+   @Path("/services/{id}/metadata")
+   public Response updateMetadata(@PathParam("id") String serviceId, Metadata metadata) {
       log.debug("Updating the metadata of service {}", serviceId);
-      boolean result = serviceService.updateMetadata(serviceId, metadata, userInfo);
-      if (result) {
-         return new ResponseEntity<>(HttpStatus.OK);
-      }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      boolean result = serviceService.updateMetadata(serviceId, metadata, null);
+      return Response.status(result ? Response.Status.OK : Response.Status.FORBIDDEN).build();
    }
 
-   @PutMapping(value = "/services/{id}/operation")
-   public ResponseEntity<Object> overrideServiceOperation(@PathVariable("id") String serviceId,
-         @RequestParam(value = "operationName") String operationName,
-         @RequestBody OperationOverrideDTO operationOverride, UserInfo userInfo) {
+   @PUT
+   @Path("/services/{id}/operation")
+   public Response overrideServiceOperation(@PathParam("id") String serviceId,
+         @QueryParam("operationName") String operationName, OperationOverrideDTO operationOverride) {
       log.debug("Updating operation {} of service {}", operationName, serviceId);
       log.debug("ParameterConstraints?: {}", operationOverride.getParameterConstraints());
       boolean result = serviceService.updateOperation(serviceId, operationName, operationOverride.getDispatcher(),
             operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(),
-            operationOverride.getDefaultDelayStrategy(), operationOverride.getParameterConstraints(), userInfo);
-      if (result) {
-         return new ResponseEntity<>(HttpStatus.OK);
-      }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            operationOverride.getDefaultDelayStrategy(), operationOverride.getParameterConstraints(), null);
+      return Response.status(result ? Response.Status.OK : Response.Status.FORBIDDEN).build();
    }
 
-   @DeleteMapping(value = "/services/{id}")
-   public ResponseEntity<String> deleteService(@PathVariable("id") String serviceId, UserInfo userInfo) {
+   @DELETE
+   @Path("/services/{id}")
+   public Response deleteService(@PathParam("id") String serviceId) {
       log.debug("Removing service with id {}", serviceId);
-      boolean result = serviceService.deleteService(serviceId, userInfo);
-      if (result) {
-         return new ResponseEntity<>(HttpStatus.OK);
-      }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      boolean result = serviceService.deleteService(serviceId, null);
+      return Response.status(result ? Response.Status.OK : Response.Status.FORBIDDEN).build();
    }
 }

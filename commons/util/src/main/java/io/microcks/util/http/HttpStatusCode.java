@@ -13,20 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
-
-import io.github.microcks.domain.ImportJob;
-
-import java.util.List;
-import java.util.Map;
+package io.microcks.util.http;
 
 /**
- * Custom repository interface for ImportJob domain objects.
+ * An HTTP status code.
+ * @param value The numeric code
  * @author laurent
  */
-public interface CustomImportJobRepository {
+public record HttpStatusCode(int value) {
 
-   List<ImportJob> findByLabels(Map<String, String> labels);
+   /**
+    * Tell if this status is a client (4xx) or server (5xx) error.
+    * @return True if error status
+    */
+   public boolean isError() {
+      return value >= 400 && value < 600;
+   }
 
-   List<ImportJob> findByLabelsAndNameLike(Map<String, String> labels, String name);
+   @Override
+   public String toString() {
+      return String.valueOf(value);
+   }
 }

@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Service;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.util.ai.AICopilot;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Service;
+import io.microcks.security.UserInfo;
+import io.microcks.util.ai.AICopilot;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +37,7 @@ import java.util.concurrent.CompletableFuture;
  * A service that runs the AI Copilot on asynchronous/long-running tasks.
  * @author laurent
  */
-@org.springframework.stereotype.Service
+@ApplicationScoped
 public class AICopilotRunnerService {
 
    /** A simple logger for diagnostic messages. */
@@ -50,9 +52,12 @@ public class AICopilotRunnerService {
     * @param serviceService The service service.
     * @param copilot        The optional AI Copilot
     */
-   public AICopilotRunnerService(ServiceService serviceService, Optional<AICopilot> copilot) {
+   @Inject
+   public AICopilotRunnerService(ServiceService serviceService, Instance<AICopilot> copilot) {
       this.serviceService = serviceService;
-      copilot.ifPresent(aiCopilot -> this.copilot = aiCopilot);
+      if (copilot.isResolvable()) {
+         this.copilot = copilot.get();
+      }
    }
 
    /**
@@ -62,8 +67,11 @@ public class AICopilotRunnerService {
     * @param userInfo The user information for user having launched the generation.
     * @return A Future wrapping generation success flag.
     */
-   @Async
    public CompletableFuture<Boolean> generateSamplesForService(Service service, Resource contract, UserInfo userInfo) {
+      return CompletableFuture.supplyAsync(() -> generateSamples(service, contract, userInfo));
+   }
+
+   private boolean generateSamples(Service service, Resource contract, UserInfo userInfo) {
       for (Operation operation : service.getOperations()) {
          try {
             List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation, contract, 3);
@@ -79,6 +87,6 @@ public class AICopilotRunnerService {
                   operation.getName(), e);
          }
       }
-      return CompletableFuture.completedFuture(true);
+      return true;
    }
 }

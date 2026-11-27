@@ -1,0 +1,12 @@
+/* Usage · invocations chart card: header and selection pill. The plot is the registry bar-chart. */
+.us-chart-card > .panel-body { display: flex; flex-direction: column; gap: 14px; padding: 18px; }
+.us-chart-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; }
+.us-chart-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.us-chart-title h2 { margin: 0; font: 600 16px/1.3 var(--font-ui); }
+.us-chart-title > span { font-size: 13px; color: var(--text-muted); }
+.us-chart-selection {
+  display: inline-flex; align-items: baseline; gap: 8px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--surface); font-size: 13px;
+}
+.us-chart-selection-label { color: var(--text-muted); }
+.us-chart-selection-value { font-family: var(--font-mono); font-weight: 600; }

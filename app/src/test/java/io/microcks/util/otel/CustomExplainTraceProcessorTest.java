@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.otel;
+package io.microcks.util.otel;
 
-import io.github.microcks.service.SpanStorageService;
+import io.microcks.service.SpanStorageService;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.trace.ReadableSpan;

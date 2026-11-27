@@ -1,0 +1,16 @@
+service/ServiceServiceTest.java
+service/MessageServiceTest.java
+service/ServiceStateStoreTest.java
+service/ImportExportServiceTest.java
+util/openapi/OpenAPIMcpToolConverterTest.java
+util/grpc/GrpcMcpToolConverterTest.java
+util/graphql/GraphQLMcpToolConverterTest.java
+repository/GenericResourceRepositoryTest.java
+repository/ResourceRepositoryTest.java
+repository/TestResultRepositoryTest.java
+repository/DailyStatisticRepositoryTest.java
+repository/CustomDailyStatisticRepositoryTest.java
+repository/CustomTestConformanceMetricRepositoryTest.java
+repository/ServiceRepositoryTest.java
+repository/ServiceStateRepositoryTest.java
+listener/DailyStatisticsFeederTest.java

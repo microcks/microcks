@@ -1,0 +1,20 @@
+schema {
+    query: Query
+}
+type Query {
+    hero: Hero
+}
+type Hero {
+    name: String!
+    email: String
+    movies: [Movie]
+    family: Family!
+    affiliate: Family
+}
+type Movie {
+    title: String!
+}
+enum Family {
+    MARVEL
+    DC
+}

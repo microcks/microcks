@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.script;
+package io.microcks.util.script;
 
-import io.github.microcks.service.StateStore;
+import io.microcks.service.StateStore;
 
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
+import io.microcks.testsupport.MockServletRequest;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -67,7 +67,7 @@ class ScriptEngineBinderTest {
 
       ScriptEngineManager sem = new ScriptEngineManager();
       String body = "content";
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       request.addHeader("foo", "bar");
 
       try {
@@ -92,7 +92,7 @@ class ScriptEngineBinderTest {
 
       ScriptEngineManager sem = new ScriptEngineManager();
       String body = "content";
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       Map<String, String> uriParameters = new HashMap<>();
       uriParameters.put("foo", "bar");
 
@@ -200,7 +200,7 @@ class ScriptEngineBinderTest {
             """;
 
       String script = """
-            import io.github.microcks.util.soapui.XmlHolder
+            import io.microcks.artifact.soapui.XmlHolder
             def holder = new XmlHolder( mockRequest.requestContent )
             def name = holder["//name"]
 

@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.DailyStatistic;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.DailyStatistic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,12 +30,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for CustomDailyStatisticRepository class.
  * @author laurent
  */
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class CustomDailyStatisticRepositoryTest {
 
-   @Autowired
+   @Inject
    DailyStatisticRepository repository;
 
    @BeforeEach
@@ -50,7 +45,7 @@ class CustomDailyStatisticRepositoryTest {
       stat.setServiceVersion("1.0");
       stat.setDailyCount(2);
       stat.setHourlyCount(initializeHourlyMap());
-      repository.save(stat);
+      repository.persist(stat);
       // with same name and different version ...
       stat = new DailyStatistic();
       stat.setDay("20140930");
@@ -58,7 +53,7 @@ class CustomDailyStatisticRepositoryTest {
       stat.setServiceVersion("1.2");
       stat.setDailyCount(2);
       stat.setHourlyCount(initializeHourlyMap());
-      repository.save(stat);
+      repository.persist(stat);
    }
 
    @Test
@@ -89,7 +84,7 @@ class CustomDailyStatisticRepositoryTest {
       hourly.put("9", 5);
       hourly.put("14", 3);
       stat.setHourlyCount(hourly);
-      repository.save(stat);
+      repository.persist(stat);
 
       stat = new DailyStatistic();
       stat.setDay("20141001");
@@ -100,7 +95,7 @@ class CustomDailyStatisticRepositoryTest {
       hourly.put("9", 7);
       hourly.put("14", 2);
       stat.setHourlyCount(hourly);
-      repository.save(stat);
+      repository.persist(stat);
 
       // Aggregate and verify cross-service summation.
       DailyStatistic result = repository.aggregateDailyStatistics("20141001");

@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
-import org.springframework.data.annotation.Id;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -27,9 +30,11 @@ import java.util.Set;
  * repositoryUrl attribute, associated with the etag marker in order to easily see if something has been updated.
  * @author laurent
  */
+@MongoEntity(collection = "importJob")
 public class ImportJob {
 
-   @Id
+   @BsonId
+   @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
    private String name;
    private String repositoryUrl;

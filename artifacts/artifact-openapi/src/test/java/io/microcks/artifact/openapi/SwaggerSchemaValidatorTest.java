@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.artifact.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.FileUtils;
@@ -50,7 +50,7 @@ class SwaggerSchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml"),
+               new File("target/test-classes/io/microcks/artifact/openapi/validation/beer-catalog-api-swagger.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
 /**
  * A simple enumeration for the different types of AWS credentials provider.

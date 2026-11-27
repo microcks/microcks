@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.client;
+package io.microcks.minion.async.client;
 
 /**
- * Exception related to Microcks or Keycloak backend connnection.
+ * Exception related to Microcks backend connnection.
  * @author laurent
  */
 public class ConnectorException extends Exception {

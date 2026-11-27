@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
 
 /**
  * A mock invocation context that carries the service, operation and resource path.

@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.artifact.openapi;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.util.test.HttpTestRunner;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestReturn;
+import io.microcks.test.ResourceReader;
+import io.microcks.test.ResponseReader;
+import io.microcks.test.HttpTestRunner;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.client.ClientHttpResponse;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.ClientHttpResponse;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,8 +49,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
    /** Content-types for JSON that are valid response types validated using JSON Schemas. */
    public static final Pattern APPLICATION_JSON_TYPES_PATTERN = Pattern.compile("application/.*json");
 
-   private final ResourceRepository resourceRepository;
-   private final ResponseRepository responseRepository;
+   private final ResourceReader resourceReader;
+   private final ResponseReader responseReader;
 
    private final boolean validateResponseCode;
 
@@ -62,14 +62,14 @@ public class OpenAPITestRunner extends HttpTestRunner {
 
    /**
     * Build a new OpenAPITestRunner.
-    * @param resourceRepository   Access to resources repository
-    * @param responseRepository   Access to response repository
+    * @param resourceReader       Access to resources repository
+    * @param responseReader       Access to response repository
     * @param validateResponseCode whether to validate response code
     */
-   public OpenAPITestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository,
+   public OpenAPITestRunner(ResourceReader resourceReader, ResponseReader responseReader,
          boolean validateResponseCode) {
-      this.resourceRepository = resourceRepository;
-      this.responseRepository = responseRepository;
+      this.resourceReader = resourceReader;
+      this.responseReader = responseReader;
       this.validateResponseCode = validateResponseCode;
    }
 
@@ -120,7 +120,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
 
       // If required, compare response code and content-type to expected ones.
       if (validateResponseCode) {
-         Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
+         Response expectedResponse = responseReader.findById(request.getResponseId());
          if (expectedResponse != null) {
             log.debug("Response expected status code: {}", expectedResponse.getStatus());
             if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
@@ -242,13 +242,13 @@ public class OpenAPITestRunner extends HttpTestRunner {
    private Resource findResourceCandidate(Service service) {
       Optional<Resource> candidate = Optional.empty();
       // Try resources marked within mainArtifact first.
-      List<Resource> resources = resourceRepository.findMainByServiceId(service.getId());
+      List<Resource> resources = resourceReader.findMainByServiceId(service.getId());
       if (!resources.isEmpty()) {
          candidate = getResourceCandidate(resources);
       }
       // Else try all the services resources...
       if (candidate.isEmpty()) {
-         resources = resourceRepository.findByServiceId(service.getId());
+         resources = resourceReader.findByServiceId(service.getId());
          if (!resources.isEmpty()) {
             candidate = getResourceCandidate(resources);
          }

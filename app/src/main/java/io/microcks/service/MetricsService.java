@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestConformanceMetric;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestStepResult;
-import io.github.microcks.domain.Trend;
-import io.github.microcks.repository.TestConformanceMetricRepository;
-import io.github.microcks.util.IdBuilder;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.TestCaseResult;
+import io.microcks.domain.TestConformanceMetric;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestStepResult;
+import io.microcks.domain.Trend;
+import io.microcks.repository.TestConformanceMetricRepository;
+import io.microcks.util.IdBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.PropertySources;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Calendar;
 import java.util.Comparator;
@@ -44,28 +43,25 @@ import java.util.stream.Collectors;
  * 
  * @author laurent
  */
-@org.springframework.stereotype.Service
-@PropertySources({ @PropertySource("features.properties"),
-      @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true),
-      @PropertySource("application.properties") })
+@ApplicationScoped
 public class MetricsService {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(MetricsService.class);
 
-   @Autowired
+   @Inject
    private MessageService messageService;
 
-   @Autowired
+   @Inject
    private TestConformanceMetricRepository metricRepository;
 
-   @Value("${features.feature.repository-filter.label-key}")
+   @ConfigProperty(name = "features.feature.repository-filter.label-key")
    private String filterLabelKey;
 
-   @Value("#{new Integer('${test-conformance.trend-size:3}')}")
+   @ConfigProperty(name = "test-conformance.trend-size", defaultValue = "3")
    private Integer testConformanceTrendSize;
 
-   @Value("#{new Integer('${test-conformance.trend-history-size:10}')}")
+   @ConfigProperty(name = "test-conformance.trend-history-size", defaultValue = "10")
    private Integer testConformanceTrendHistorySize;
 
    /**
@@ -88,7 +84,7 @@ public class MetricsService {
          metric.setAggregationLabelValue(service.getMetadata().getLabels().get(filterLabelKey));
       }
 
-      metricRepository.save(metric);
+      metricRepository.persistOrUpdate(metric);
    }
 
    /**
@@ -171,7 +167,7 @@ public class MetricsService {
          }
          metric.getLatestScores().put(metric.getLastUpdateDay(), currentScore);
          // Save updated metric.
-         metricRepository.save(metric);
+         metricRepository.persistOrUpdate(metric);
       }
    }
 

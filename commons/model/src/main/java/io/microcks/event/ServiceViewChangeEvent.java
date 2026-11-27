@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.event;
+package io.microcks.event;
 
-import io.github.microcks.domain.ServiceView;
+import io.microcks.domain.ServiceView;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

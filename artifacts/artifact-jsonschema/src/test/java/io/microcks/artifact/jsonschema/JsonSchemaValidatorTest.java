@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.artifact.jsonschema;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class JsonSchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema.json"));
+               .readFileToString(new File("target/test-classes/io/microcks/artifact/jsonschema/car-schema.json"));
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -57,7 +57,7 @@ class JsonSchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema.json"));
+               .readFileToString(new File("target/test-classes/io/microcks/artifact/jsonschema/car-schema.json"));
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -86,8 +86,8 @@ class JsonSchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema-no-addon.json"));
+         schemaText = FileUtils.readFileToString(
+               new File("target/test-classes/io/microcks/artifact/jsonschema/car-schema-no-addon.json"));
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {

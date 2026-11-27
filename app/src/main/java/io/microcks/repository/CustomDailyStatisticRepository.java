@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.DailyStatistic;
+import io.microcks.domain.DailyStatistic;
 
 import java.util.List;
 

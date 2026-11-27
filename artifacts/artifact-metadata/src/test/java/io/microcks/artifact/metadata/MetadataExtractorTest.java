@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.metadata;
+package io.microcks.artifact.metadata;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.TriggerInfo;
+import io.microcks.domain.Operation;
+import io.microcks.domain.TriggerInfo;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

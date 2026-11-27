@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.event.ChangeType;
-import io.github.microcks.event.ServiceChangeEvent;
-import io.github.microcks.event.ServiceViewChangeEvent;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.service.MessageService;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.domain.ServiceView;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.event.ChangeType;
+import io.microcks.event.ServiceChangeEvent;
+import io.microcks.event.ServiceViewChangeEvent;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.service.MessageService;
+import io.microcks.util.IdBuilder;
+import io.microcks.domain.ServiceView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
+import jakarta.enterprise.inject.Instance;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,9 +44,8 @@ import java.util.Map;
  * Application event listener that send a message on event publication channel on incoming ServiceUpdateEvent.
  * @author laurent
  */
-@Component
-@ConditionalOnProperty(value = "async-api.enabled", havingValue = "true", matchIfMissing = true)
-public class ServiceChangeEventPublisher implements ApplicationListener<ServiceChangeEvent> {
+@ApplicationScoped
+public class ServiceChangeEventPublisher {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(ServiceChangeEventPublisher.class);
@@ -53,30 +53,36 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
 
    private final ServiceRepository serviceRepository;
    private final MessageService messageService;
-   private final EventPublicationChannel channel;
+   private final Instance<EventPublicationChannel> channels;
+   private final boolean enabled;
 
 
    /**
     * Create a new ServiceChangeEventPublisher with required dependencies.
     * @param serviceRepository the repository for Service objects
     * @param messageService    the service for Message objects
-    * @param channel           the channel for ServiceChangeEvent
+    * @param channels          the channel for ServiceChangeEvent
+    * @param enabled           whether AsyncAPI support is enabled
     */
    public ServiceChangeEventPublisher(ServiceRepository serviceRepository, MessageService messageService,
-         EventPublicationChannel channel) {
+         Instance<EventPublicationChannel> channels,
+         @ConfigProperty(name = "async-api.enabled", defaultValue = "true") boolean enabled) {
       this.serviceRepository = serviceRepository;
       this.messageService = messageService;
-      this.channel = channel;
+      this.channels = channels;
+      this.enabled = enabled;
    }
 
-   @Override
-   @Async
-   public void onApplicationEvent(ServiceChangeEvent event) {
+   public void onApplicationEvent(@ObservesAsync ServiceChangeEvent event) {
+      if (!enabled || channels.isUnsatisfied()) {
+         return;
+      }
+      EventPublicationChannel channel = channels.get();
       log.debug("Received a ServiceChangeEvent on {}", event.getServiceId());
 
       ServiceView serviceView = null;
       if (event.getChangeType() != ChangeType.DELETED) {
-         Service service = serviceRepository.findById(event.getServiceId()).orElse(null);
+         Service service = serviceRepository.findById(event.getServiceId());
 
          if (service != null) {
             // Put messages into a map where key is operation name.

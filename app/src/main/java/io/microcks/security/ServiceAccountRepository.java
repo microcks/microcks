@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.microcks.security;
 
-package io.github.microcks.repository;
+import io.microcks.repository.ObjectIdRepository;
 
-import io.github.microcks.domain.ServiceState;
-
-import org.springframework.data.mongodb.repository.MongoRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Repository interface for ServiceState domain objects.
+ * Repository for {@code ServiceAccount} objects.
  * @author laurent
  */
-public interface ServiceStateRepository extends MongoRepository<ServiceState, String> {
+@ApplicationScoped
+public class ServiceAccountRepository implements ObjectIdRepository<ServiceAccount> {
 
-   ServiceState findByServiceIdAndKey(String serviceId, String key);
+   public ServiceAccount findByClientId(String clientId) {
+      return find("clientId", clientId).firstResult();
+   }
 }

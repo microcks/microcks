@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.security;
+package io.microcks.security;
 
-import io.github.microcks.domain.OAuth2AuthorizedClient;
-import io.github.microcks.domain.OAuth2ClientContext;
-import io.github.microcks.domain.OAuth2GrantType;
+import io.microcks.domain.OAuth2AuthorizedClient;
+import io.microcks.domain.OAuth2ClientContext;
+import io.microcks.domain.OAuth2GrantType;
 
-import io.github.microcks.security.oauth2.DefaultPasswordTokenResponseClient;
-import io.github.microcks.security.oauth2.OAuth2PasswordGrantRequest;
+import io.microcks.security.oauth2.DefaultPasswordTokenResponseClient;
+import io.microcks.security.oauth2.OAuth2PasswordGrantRequest;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ public class OAuth2AuthorizeClientProviderTest {
 
    @Container
    public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.0.0")
-         .withRealmImportFile("io/github/microcks/security/myrealm-realm.json");
+         .withRealmImportFile("io/microcks/security/myrealm-realm.json");
 
    @Test
    void testResourceOwnerPassword() {

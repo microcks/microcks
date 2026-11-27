@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks;
+package io.microcks;
 
 import com.code_intelligence.jazzer.api.BugDetectors;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -97,7 +97,7 @@ public class MicrocksApplicationFuzz {
       beforeCalled = true;
 
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/util/openapi/petstore-openapi.json", true);
    }
 
    @FuzzTest(maxDuration = "20s")

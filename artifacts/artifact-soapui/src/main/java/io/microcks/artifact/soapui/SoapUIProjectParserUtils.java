@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soapui;
+package io.microcks.artifact.soapui;
 
-import io.github.microcks.util.MalformedXmlException;
-import io.github.microcks.util.XmlUtil;
+import io.microcks.artifact.soap.MalformedXmlException;
+import io.microcks.artifact.soap.XmlUtil;
 
 import org.w3c.dom.Element;
 import java.util.List;

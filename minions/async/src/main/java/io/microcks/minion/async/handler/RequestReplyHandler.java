@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.handler;
+package io.microcks.minion.async.handler;
 
-import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockDefinition;
 
 /**
  * Interface for request-reply handlers that listen for incoming request messages and send correlated replies. Each

@@ -1,0 +1,584 @@
+/* Form | CI aside: the form takes the rest, the aside is 360px (prototype flex 999 1 520px | 1 1 360px). */
+.tc-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .tc-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+}
+
+.tc-form {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel, 8px);
+  background: var(--canvas);
+  min-width: 0;
+}
+
+/* Sections: 01 Target ... 05 Request headers */
+.tc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 18px 20px 20px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.tc-section[data-gap='12'] {
+  gap: 12px;
+}
+
+.tc-section > legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.tc-section > legend + * {
+  clear: both;
+}
+
+.tc-step {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.tc-legend-hint {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 01 Target: service picker. The native select is stretched, transparent, over the styled face. */
+.tc-service-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.tc-svc-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control, 4px);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.tc-svc-picker:hover {
+  border-color: var(--action);
+}
+
+.tc-svc-picker:has(.tc-svc-select:focus-visible) {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+}
+
+.tc-svc-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  font: 400 14px var(--font-ui);
+}
+
+.tc-svc-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tc-contract {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tc-contract-value {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* Endpoint: help, error and recent chips are 6px apart. */
+.tc-endpoint-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tc-endpoint input {
+  min-height: 42px;
+  color: var(--link);
+}
+
+.tc-recent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tc-recent-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tc-recent-chip {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.tc-recent-env {
+  color: var(--text-muted);
+}
+
+/* 02 Test runner: card grid. */
+.tc-runner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.tc-runner-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tc-runner-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tc-bestfit {
+  padding: 0 4px;
+  border: 1px solid var(--success);
+  border-radius: 4px;
+  color: var(--success);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.tc-runner-desc {
+  display: block;
+  color: var(--text-secondary);
+}
+
+.tc-reason {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 03 Scope */
+.tc-scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.tc-ops {
+  flex: 3 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tc-timeout-field {
+  flex: 1 1 180px;
+}
+
+.tc-ops-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tc-ops-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tc-ops-toggle.button {
+  min-height: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+/* The row label spans the card so the sample count sits at the right edge. */
+.tc-ops .choice > span:last-child {
+  flex: 1;
+}
+
+.tc-op-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 400;
+}
+
+.tc-op-label .method {
+  min-width: 52px;
+  padding: 2px 5px;
+  font-size: 10px;
+}
+
+.tc-op-path {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.tc-ops .choice:not(:has(input:checked)) .tc-op-path {
+  color: var(--text-muted);
+}
+
+.tc-op-samples {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.tc-timeout {
+  display: flex;
+  align-items: stretch;
+}
+
+.tc-timeout input {
+  flex: 1;
+  min-width: 0;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.tc-unit {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--border-control);
+  border-inline-start-color: var(--border);
+  border-start-end-radius: var(--radius-control, 4px);
+  border-end-end-radius: var(--radius-control, 4px);
+  background: var(--raised);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* 04 Authentication: Secret | OAuth2, then the OAuth2 fields box. */
+.tc-auth {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px 24px;
+}
+
+.tc-auth > * {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.tc-oauth-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tc-oauth-toggle .choice {
+  align-self: flex-start;
+  align-items: center;
+  min-height: 40px;
+}
+
+.tc-mono-select {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.tc-oauth {
+  display: grid;
+  gap: 12px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.tc-oauth input {
+  background: var(--canvas);
+}
+
+.tc-oauth .tc-link-input {
+  color: var(--link);
+}
+
+.tc-label-hint {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.tc-oauth .tc-wide {
+  grid-column: 1 / -1;
+}
+
+/* 05 Request headers */
+.tc-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.tc-headers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tc-header-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+}
+
+.tc-header-head {
+  display: none;
+  padding: 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+@media (min-width: 720px) {
+  .tc-header-row {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 2.7fr) 36px;
+  }
+
+  .tc-header-head {
+    display: grid;
+  }
+}
+
+.tc-header-row select,
+.tc-header-row input {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.tc-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Outline compact button, set in mono with the lighter border (page-specific). */
+.tc-apikey.button {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Footer */
+.tc-submit-error {
+  margin: 16px 20px 0;
+}
+
+.tc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-radius: 0 0 var(--radius-panel, 8px) var(--radius-panel, 8px);
+}
+
+.tc-summary {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tc-actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* CI aside */
+.tc-ci {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel, 8px);
+  background: var(--canvas);
+}
+
+@media (min-width: 1000px) {
+  .tc-ci {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+.tc-ci-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tc-ci-title {
+  margin: 0;
+  font: 800 22px/1 var(--font-brand);
+}
+
+
+.tc-ci-intro {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Three formats and Copy do not fit 360px on one row: the bar wraps, as in the prototype. */
+.tc-ci-code > figcaption {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.tc-ci-code .code-tabs {
+  flex-wrap: wrap;
+}
+
+/* Copy wraps under the tabs, on the left. */
+.tc-ci-code > figcaption .code-copy.button {
+  margin-inline-start: 0;
+}
+
+.tc-ci-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tc-ci-swatch {
+  flex: none;
+  box-sizing: border-box;
+  width: 14px;
+  height: 10px;
+  border: 1px solid var(--action);
+  border-radius: 2px;
+  background: var(--selected);
+}
+
+/* Outline warning note (future registry item: callout outline variant). */
+.tc-callout-outline {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 11px;
+  border: 1px solid var(--warning);
+  border-radius: 6px;
+  color: var(--warning);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.tc-callout-outline > .icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.tc-ci-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.tc-ci-steps h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tc-ci-steps ol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tc-ci-steps li {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.tc-ci-step-n {
+  flex: none;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}

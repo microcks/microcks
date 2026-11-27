@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.service.ImportExportService;
-import io.github.microcks.util.SafeLogger;
+import io.microcks.service.ImportExportService;
+import io.microcks.util.SafeLogger;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -32,8 +33,9 @@ import java.util.List;
  * A Controller for getting an export of microcks repository.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class ExportController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -45,21 +47,20 @@ public class ExportController {
     * Build a new ExportController with its dependencies.
     * @param importExportService to have access to export service
     */
+   @Inject
    public ExportController(ImportExportService importExportService) {
       this.importExportService = importExportService;
    }
 
-   @GetMapping(value = "/export")
-   public ResponseEntity<Object> exportRepository(@RequestParam(value = "serviceIds") List<String> serviceIds) {
+   @GET
+   @Path("/export")
+   public Response exportRepository(@QueryParam("serviceIds") List<String> serviceIds) {
       log.debug("Extracting export for serviceIds {}", serviceIds);
       String json = importExportService.exportRepository(serviceIds, "json");
 
       byte[] body = json.getBytes();
-      HttpHeaders responseHeaders = new HttpHeaders();
-      responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-      responseHeaders.set("Content-Disposition", "attachment; filename=microcks-repository.json");
-      responseHeaders.setContentLength(body.length);
-
-      return new ResponseEntity<>(body, responseHeaders, HttpStatus.OK);
+      return Response.ok(body).type(MediaType.APPLICATION_JSON)
+            .header("Content-Disposition", "attachment; filename=microcks-repository.json")
+            .header("Content-Length", body.length).build();
    }
 }

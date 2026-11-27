@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.util.el.TemplateEngine;
+import io.microcks.domain.EventMessage;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.util.el.TemplateEngine;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -129,10 +129,10 @@ public class NATSProducerManager {
     * @param headers The Microcks event message headers definition.
     * @return A set of NATS headers.
     */
-   public Headers renderEventMessageHeaders(TemplateEngine engine, Set<io.github.microcks.domain.Header> headers) {
+   public Headers renderEventMessageHeaders(TemplateEngine engine, Set<io.microcks.domain.Header> headers) {
       if (headers != null && !headers.isEmpty()) {
          Headers natsHeaders = new Headers();
-         for (io.github.microcks.domain.Header header : headers) {
+         for (io.microcks.domain.Header header : headers) {
             Optional<String> optionalValue = header.getValues().stream().findFirst();
             if (optionalValue.isPresent()) {
                String headerValue;

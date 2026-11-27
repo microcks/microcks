@@ -1,0 +1,15 @@
+# Persistent MongoDB for `mvn quarkus:dev` (profile dev): fixed port 27018, data kept in a named volume.
+#   docker compose -f dev/compose.yaml up -d      start (once; it survives app restarts)
+#   docker compose -f dev/compose.yaml down       stop, keep the data
+#   docker compose -f dev/compose.yaml down -v    stop and wipe the data
+name: microcks-v2-dev
+services:
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+volumes:
+  mongo-data:

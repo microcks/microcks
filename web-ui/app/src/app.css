@@ -1,0 +1,67 @@
+/*
+ * Layer order: Tailwind theme and utilities (no preflight, Deep Ink ships its own base) around the
+ * Deep Ink layers. Page styles below are unlayered, as in the Deep Ink demo.
+ */
+@layer theme, deep-ink.base, deep-ink.components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Fonts are self-hosted (Alegreya Sans SC brand, IBM Plex Sans UI, JetBrains Mono machine data). */
+@import '@fontsource/alegreya-sans-sc/700.css';
+@import '@fontsource/alegreya-sans-sc/800.css';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-sans/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+
+@import '@microcks/deep-ink/styles.css';
+@import '@microcks/deep-ink/tailwind.css';
+
+@import './styles/shell.css';
+@import './styles/explore.css';
+@import './styles/states.css';
+@import './styles/catalogue.css';
+@import './styles/sources.css';
+@import './styles/import.css';
+@import './styles/footer.css';
+@import './styles/page-kit.css';
+@import './styles/test-create.css';
+@import './styles/admin.css';
+@import './styles/admin-users.css';
+@import './styles/admin-groups.css';
+@import './styles/admin-secrets.css';
+@import './styles/admin-snapshots.css';
+@import './styles/admin-configuration.css';
+@import './styles/agent-test.css';
+@import './styles/workflow-run.css';
+@import './styles/workflows.css';
+@import './styles/workflow.css';
+@import './styles/workflow-loom.css';
+@import './styles/workflow-steps.css';
+@import './styles/workflow-source.css';
+@import './styles/workflow-runs.css';
+@import './styles/workflow-mock-url.css';
+@import './styles/workflow-sessions.css';
+@import './styles/workflow-examples.css';
+@import './styles/traces.css';
+@import './styles/hub.css';
+@import './styles/cockpit.css';
+@import './styles/service.css';
+@import './styles/behavior.css';
+@import './styles/behavior-config.css';
+@import './styles/behavior-dispatcher.css';
+@import './styles/behavior-simulator.css';
+@import './styles/copilot.css';
+@import './styles/testing-run.css';
+@import './styles/testing-history.css';
+@import './styles/usage.css';
+@import './styles/usage-chart.css';
+@import './styles/usage-conformance.css';
+@import './styles/usage-heatmap.css';
+@import './styles/usage-kpis.css';
+@import './styles/usage-table.css';
+@import './styles/testing.css';

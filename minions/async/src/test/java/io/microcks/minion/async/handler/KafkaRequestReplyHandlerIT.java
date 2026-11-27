@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.handler;
+package io.microcks.minion.async.handler;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ReplyInfo;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.github.microcks.minion.async.producer.FakeMicrocksAPIConnector;
-import io.github.microcks.minion.async.producer.KafkaProducerManager;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ReplyInfo;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.minion.async.client.MicrocksAPIConnector;
+import io.microcks.minion.async.producer.FakeMicrocksAPIConnector;
+import io.microcks.minion.async.producer.KafkaProducerManager;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -117,7 +117,7 @@ class KafkaRequestReplyHandlerIT {
    void testRequestReplyHandlerWithJsonMessages() throws Exception {
       // Arrange.
       String asyncAPIContent = Files.readString(
-            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
+            Paths.get("target/test-classes/io/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
 
       // Prepare request and reply messages.
       EventMessage requestMessage = new EventMessage();
@@ -202,7 +202,7 @@ class KafkaRequestReplyHandlerIT {
    void testRequestReplyHandlerIgnoresUnmatchingMessage() throws Exception {
       // Arrange.
       String asyncAPIContent = Files.readString(
-            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
+            Paths.get("target/test-classes/io/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
 
       // Prepare request and reply messages.
       EventMessage requestMessage = new EventMessage();
@@ -284,7 +284,7 @@ class KafkaRequestReplyHandlerIT {
    void testHandlerStartStop() throws Exception {
       // Arrange.
       String asyncAPIContent = Files.readString(
-            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
+            Paths.get("target/test-classes/io/microcks/minion/async", "user-signedup-asyncapi-3.0-reply.yaml"));
 
       EventMessage requestMessage = new EventMessage();
       requestMessage.setName("TestRequest");

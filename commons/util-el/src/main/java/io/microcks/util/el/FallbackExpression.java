@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util.el;
+package io.microcks.util.el;
 
 /**
  * An implementation of {@code Expression} that returns the result of the first expression that is not null or empty.

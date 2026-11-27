@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.service.ArtifactInfo;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.ReferenceResolver;
+import io.microcks.repository.SecretRepository;
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.util.ReferenceResolver;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
@@ -29,8 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import jakarta.ws.rs.core.Response;
 
 import java.io.File;
 import java.util.Collections;
@@ -56,12 +55,12 @@ class UploadArtifactControllerTest {
             Mockito.any(ArtifactInfo.class))).thenThrow(new MockRepositoryImportException("Intentional error"));
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(apiPastry, false, null);
+      Response responseEntity = sut.downloadArtifact(apiPastry, false, null);
 
       // assert
       SoftAssertions.assertSoftly(softly -> {
-         softly.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-         softly.assertThat(responseEntity.getBody()).contains("Intentional error");
+         softly.assertThat(responseEntity.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+         softly.assertThat(String.valueOf(responseEntity.getEntity())).contains("Intentional error");
       });
    }
 
@@ -72,12 +71,13 @@ class UploadArtifactControllerTest {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/wrong-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
+      Response responseEntity = sut.downloadArtifact(wrongUrl, false, null);
 
       // assert
       SoftAssertions.assertSoftly(softly -> {
-         softly.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-         softly.assertThat(responseEntity.getBody()).contains("Exception while retrieving remote item");
+         softly.assertThat(responseEntity.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+         softly.assertThat(String.valueOf(responseEntity.getEntity()))
+               .contains("Exception while retrieving remote item");
       });
    }
 
@@ -90,10 +90,10 @@ class UploadArtifactControllerTest {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
+      Response responseEntity = sut.downloadArtifact(wrongUrl, false, null);
 
       // assert
-      Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+      Assertions.assertThat(responseEntity.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
    }
 
    @Test
@@ -105,10 +105,10 @@ class UploadArtifactControllerTest {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
+      Response responseEntity = sut.downloadArtifact(wrongUrl, false, null);
 
       // assert
-      Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+      Assertions.assertThat(responseEntity.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
    }
 
 }

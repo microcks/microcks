@@ -13,24 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.DailyStatistic;
-import io.github.microcks.domain.TestConformanceMetric;
-import io.github.microcks.domain.WeightedMetricValue;
-import io.github.microcks.listener.DailyStatisticsFeeder;
-import io.github.microcks.listener.StatisticsFlusher;
-import io.github.microcks.repository.CustomDailyStatisticRepository;
-import io.github.microcks.repository.DailyStatisticRepository;
-import io.github.microcks.repository.TestConformanceMetricRepository;
-import io.github.microcks.repository.TestResultRepository;
-import io.github.microcks.util.SafeLogger;
+import io.microcks.domain.DailyStatistic;
+import io.microcks.domain.TestConformanceMetric;
+import io.microcks.domain.WeightedMetricValue;
+import io.microcks.listener.DailyStatisticsFeeder;
+import io.microcks.listener.StatisticsFlusher;
+import io.microcks.repository.CustomDailyStatisticRepository;
+import io.microcks.repository.DailyStatisticRepository;
+import io.microcks.repository.TestConformanceMetricRepository;
+import io.microcks.repository.TestResultRepository;
+import io.microcks.util.SafeLogger;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -43,8 +47,9 @@ import java.util.stream.Collectors;
  * A REST controller for managing metrics consultation API endpoints.
  * @author laurent
  */
-@RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class MetricsController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -62,6 +67,7 @@ public class MetricsController {
     * @param testResultRepository  The repository for test results.
     * @param statisticsFlusher     The statistics flusher.
     */
+   @Inject
    public MetricsController(DailyStatisticRepository invocationsRepository,
          TestConformanceMetricRepository metricRepository, TestResultRepository testResultRepository,
          StatisticsFlusher statisticsFlusher) {
@@ -71,8 +77,9 @@ public class MetricsController {
       this.statisticsFlusher = statisticsFlusher;
    }
 
-   @GetMapping(value = "/metrics/invocations/global")
-   public DailyStatistic getInvocationStatGlobal(@RequestParam(value = "day", required = false) String day) {
+   @GET
+   @Path("/metrics/invocations/global")
+   public DailyStatistic getInvocationStatGlobal(@QueryParam("day") String day) {
       // Ensure we got accurate statistics by flushing the feeder to database.
       statisticsFlusher.flushToDatabase();
       // Now process the request.
@@ -83,9 +90,10 @@ public class MetricsController {
       return invocationsRepository.aggregateDailyStatistics(day);
    }
 
-   @GetMapping(value = "/metrics/invocations/top")
-   public List<DailyStatistic> getInvocationTopStats(@RequestParam(value = "day", required = false) String day,
-         @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
+   @GET
+   @Path("/metrics/invocations/top")
+   public List<DailyStatistic> getInvocationTopStats(@QueryParam("day") String day,
+         @QueryParam("limit") @DefaultValue("20") Integer limit) {
       // Ensure we got accurate statistics by flushing the feeder to database.
       statisticsFlusher.flushToDatabase();
       // Now process the request.
@@ -96,9 +104,10 @@ public class MetricsController {
       return invocationsRepository.findTopStatistics(day, limit);
    }
 
-   @GetMapping(value = "/metrics/invocations/{service}/{version}")
-   public DailyStatistic getInvocationStatForService(@PathVariable("service") String serviceName,
-         @PathVariable("version") String serviceVersion, @RequestParam(value = "day", required = false) String day) {
+   @GET
+   @Path("/metrics/invocations/{service}/{version}")
+   public DailyStatistic getInvocationStatForService(@PathParam("service") String serviceName,
+         @PathParam("version") String serviceVersion, @QueryParam("day") String day) {
       // Ensure we got accurate statistics by flushing the feeder to database.
       statisticsFlusher.flushToDatabase();
       // Now process the request.
@@ -114,9 +123,9 @@ public class MetricsController {
       return null;
    }
 
-   @GetMapping(value = "/metrics/invocations/global/latest")
-   public Map<String, Long> getLatestInvocationStatGlobal(
-         @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
+   @GET
+   @Path("/metrics/invocations/global/latest")
+   public Map<String, Long> getLatestInvocationStatGlobal(@QueryParam("limit") @DefaultValue("20") Integer limit) {
       // Ensure we got accurate statistics by flushing the feeder to database.
       statisticsFlusher.flushToDatabase();
       // Now process the request.
@@ -133,23 +142,25 @@ public class MetricsController {
       return invocations;
    }
 
-   @GetMapping(value = "/metrics/conformance/aggregate")
+   @GET
+   @Path("/metrics/conformance/aggregate")
    public List<WeightedMetricValue> getAggregatedTestCoverageMetrics() {
       log.debug("Computing TestConformanceMetric aggregates");
 
       return metricRepository.aggregateTestConformanceMetric();
    }
 
-   @GetMapping(value = "/metrics/conformance/service/{serviceId:.+}")
-   public TestConformanceMetric getTestConformanceMetric(@PathVariable("serviceId") String serviceId) {
+   @GET
+   @Path("/metrics/conformance/service/{serviceId:.+}")
+   public TestConformanceMetric getTestConformanceMetric(@PathParam("serviceId") String serviceId) {
       log.debug("Retrieving TestConformanceMetric for service with id {}", serviceId);
 
       return metricRepository.findByServiceId(serviceId);
    }
 
-   @GetMapping(value = "/metrics/tests/latest")
-   public List<TestResultSummary> getLatestTestResults(
-         @RequestParam(value = "limit", required = false, defaultValue = "7") Integer limit) {
+   @GET
+   @Path("/metrics/tests/latest")
+   public List<TestResultSummary> getLatestTestResults(@QueryParam("limit") @DefaultValue("7") Integer limit) {
       log.debug("Getting tests trend for last {} days", limit);
 
       // Compute last date and retrieve test results.

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.metadata;
+package io.microcks.artifact.metadata;
 
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.ParameterLocation;
-import io.github.microcks.domain.TriggerInfo;
+import io.microcks.domain.Metadata;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.ParameterLocation;
+import io.microcks.domain.TriggerInfo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.artifact.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.github.microcks.util.JsonSchemaDialect;
-import io.github.microcks.util.JsonSchemaValidator;
+import io.microcks.artifact.jsonschema.JsonSchemaDialect;
+import io.microcks.artifact.jsonschema.JsonSchemaValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static io.github.microcks.util.JsonSchemaValidator.*;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.*;
 
 /**
  * Helper class for validating Json objects against their OpenAPI schema. Supported version of OpenAPI schema is

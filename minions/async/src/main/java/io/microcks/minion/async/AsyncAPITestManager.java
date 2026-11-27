@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
-import io.github.microcks.minion.async.consumer.AMQPMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.AmazonSNSMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.AmazonSQSMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.ConsumedMessage;
-import io.github.microcks.minion.async.consumer.GooglePubSubMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.MQTTMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.IBMMQMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.MessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.WebSocketMessageConsumptionTask;
-import io.github.microcks.minion.async.consumer.NATSMessageConsumptionTask;
-import io.github.microcks.util.SchemaMap;
-import io.github.microcks.util.asyncapi.AsyncAPISchemaUtil;
-import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.TestReturn;
+import io.microcks.minion.async.client.MicrocksAPIConnector;
+import io.microcks.minion.async.client.dto.TestCaseReturnDTO;
+import io.microcks.minion.async.consumer.AMQPMessageConsumptionTask;
+import io.microcks.minion.async.consumer.AmazonSNSMessageConsumptionTask;
+import io.microcks.minion.async.consumer.AmazonSQSMessageConsumptionTask;
+import io.microcks.minion.async.consumer.ConsumedMessage;
+import io.microcks.minion.async.consumer.GooglePubSubMessageConsumptionTask;
+import io.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
+import io.microcks.minion.async.consumer.MQTTMessageConsumptionTask;
+import io.microcks.minion.async.consumer.IBMMQMessageConsumptionTask;
+import io.microcks.minion.async.consumer.MessageConsumptionTask;
+import io.microcks.minion.async.consumer.WebSocketMessageConsumptionTask;
+import io.microcks.minion.async.consumer.NATSMessageConsumptionTask;
+import io.microcks.artifact.asyncapi.SchemaMap;
+import io.microcks.artifact.asyncapi.AsyncAPISchemaUtil;
+import io.microcks.artifact.asyncapi.AsyncAPISchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -61,7 +61,7 @@ public class AsyncAPITestManager {
    private final MicrocksAPIConnector microcksAPIConnector;
    private final SchemaRegistry schemaRegistry;
 
-   @ConfigProperty(name = "io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url")
+   @ConfigProperty(name = "io.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url")
    String microcksUrl;
 
    /**

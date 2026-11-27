@@ -1,0 +1,33 @@
+/*
+ * Workflow page (one Arazzo workflow): header, last-run note and the tab panels.
+ * Values come from the Workflow prototype; components keep their own look.
+ */
+
+.wf-workflow { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* Header facts, description and proof strip (children of PageHeader, under the title badge) */
+.wf-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; font: 400 12px/1.4 var(--font-ui); color: var(--text-muted); }
+.wf-facts-mono, .wf-facts-strong { font-family: var(--font-mono); }
+.wf-facts-strong { color: var(--text); }
+.wf-facts a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.wf-description { margin: 0; max-width: 760px; font: 400 15px/1.5 var(--font-ui); color: var(--text-secondary); }
+.wf-proof { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.wf-proof-source { display: inline-flex; align-items: center; gap: 8px 10px; }
+.wf-proof-name { font: 400 12px/1 var(--font-mono); color: var(--text-muted); }
+.wf-proof-divider { width: 1px; height: 18px; margin: 0 4px; background: var(--border); }
+.wf-badge-link { display: inline-flex; text-decoration: none; border-radius: var(--radius-badge); }
+.wf-badge-button { display: inline-flex; padding: 0; border: 0; background: none; cursor: pointer; border-radius: var(--radius-badge); }
+
+/* Last run note: one line, danger border on the canvas (no tint) */
+.wf-last-note {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  padding: 10px 14px; border: 1px solid var(--danger); border-radius: 8px; background: var(--canvas);
+  font: 400 14px/1.4 var(--font-ui);
+}
+.wf-last-note-title { display: inline-flex; align-items: center; gap: 8px; color: var(--danger); font-weight: 600; }
+.wf-last-note-title .icon { flex: none; }
+.wf-last-note-text { flex: 1 1 360px; min-width: 0; color: var(--text-secondary); line-height: 1.5; }
+.wf-note-mono { font-family: var(--font-mono); }
+.wf-last-note-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.wf-note-link { font: 500 13px/1 var(--font-ui); color: var(--link); text-decoration: none; }
+.wf-note-link:hover { text-decoration: underline; text-underline-offset: 3px; }

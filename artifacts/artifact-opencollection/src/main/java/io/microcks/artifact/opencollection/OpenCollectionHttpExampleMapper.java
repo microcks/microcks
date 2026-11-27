@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.opencollection;
+package io.microcks.artifact.opencollection;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Parameter;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Response;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Parameter;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

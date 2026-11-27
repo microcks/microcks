@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soapui.assertions;
+package io.microcks.artifact.soapui.assertions;
 
-import io.github.microcks.domain.Request;
+import io.microcks.domain.Request;
 
-import org.springframework.http.client.ClientHttpResponse;
+import io.microcks.util.http.ClientHttpResponse;
 
 /**
  * Simple record for wrapping exchange elements of a test.

@@ -18,7 +18,7 @@
  * Spring Security 7 removed Password Grant support per OAuth 2.1.
  * Original copyright belongs to the Spring Security project authors.
  */
-package io.github.microcks.security.oauth2;
+package io.microcks.security.oauth2;
 
 import org.springframework.security.oauth2.client.endpoint.AbstractOAuth2AuthorizationGrantRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;

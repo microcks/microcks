@@ -13,73 +13,108 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.OperationPathPattern;
-import io.github.microcks.util.ParameterConstraintUtil;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.openapi.OpenAPISchemaValidator;
-import io.github.microcks.util.openapi.OpenAPITestRunner;
-import io.github.microcks.util.tracing.CommonAttributes;
-import io.github.microcks.util.tracing.CommonEvents;
-import io.github.microcks.util.tracing.TraceUtil;
-import io.github.microcks.util.openapi.SwaggerSchemaValidator;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.util.OperationPathPattern;
+import io.microcks.util.ParameterConstraintUtil;
+import io.microcks.util.SafeLogger;
+import io.microcks.util.delay.DelaySpec;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.artifact.openapi.OpenAPISchemaValidator;
+import io.microcks.artifact.openapi.OpenAPITestRunner;
+import io.microcks.artifact.openapi.SwaggerSchemaValidator;
+import io.microcks.util.tracing.CommonAttributes;
+import io.microcks.util.tracing.CommonEvents;
+import io.microcks.util.tracing.TraceUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.vertx.core.http.HttpServerRequest;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
+import jakarta.ws.rs.OPTIONS;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
-import javax.annotation.CheckForNull;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * A controller for mocking Rest responses.
+ * A resource for mocking Rest responses. It serves the very same URLs as the 1.x controller: {@code /rest/{service}/
+ * {version}/**} and {@code /rest-valid/{service}/{version}/**} (the latter validating the request body against the
+ * OpenAPI/Swagger schema) for all HTTP verbs.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
+@ApplicationScoped
+@Path("/")
+@RunOnVirtualThread
 public class RestController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
    private static final SafeLogger log = SafeLogger.getLogger(RestController.class);
 
+   /** Matches the service and version segments followed by an optional (possibly empty) trailing path. */
+   private static final String REST_PATH = "/rest/{service}/{version}{path:(/.*)?}";
+   private static final String REST_VALID_PATH = "/rest-valid/{service}/{version}{path:(/.*)?}";
+
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
    private final RestInvocationProcessor invocationProcessor;
 
-   @Value("${mocks.rest.enable-cors-policy}")
-   private Boolean enableCorsPolicy;
-   @Value("${mocks.rest.cors.allowedOrigins}")
-   private String corsAllowedOrigins;
-   @Value("${mocks.rest.cors.allowCredentials}")
-   private Boolean corsAllowCredentials;
+   @ConfigProperty(name = "mocks.rest.enable-cors-policy", defaultValue = "true")
+   boolean enableCorsPolicy;
+   @ConfigProperty(name = "mocks.rest.cors.allowedOrigins", defaultValue = "*")
+   String corsAllowedOrigins;
+   @ConfigProperty(name = "mocks.rest.cors.allowCredentials", defaultValue = "false")
+   boolean corsAllowCredentials;
 
-   @Value("${validation.resourceUrl}")
-   private String validationResourceUrl;
+   @ConfigProperty(name = "validation.resourceUrl", defaultValue = "http://localhost:8080/api/resources/")
+   String validationResourceUrl;
+
+   /** The request parameters and context common to all mock endpoints. */
+   public static class MockParams {
+      @PathParam("service")
+      String service;
+      @PathParam("version")
+      String version;
+      @QueryParam("delay")
+      Long delay;
+      @QueryParam("delayStrategy")
+      String delayStrategy;
+      @Context
+      UriInfo uriInfo;
+      @Context
+      jakarta.ws.rs.core.HttpHeaders headers;
+      @Context
+      HttpServerRequest request;
+   }
 
    /**
     * Build a RestController with required dependencies.
@@ -87,6 +122,7 @@ public class RestController {
     * @param resourceRepository  The repository to access resources definitions
     * @param invocationProcessor The invocation processor to apply REST mocks dispatching logic
     */
+   @Inject
    public RestController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
          RestInvocationProcessor invocationProcessor) {
       this.serviceRepository = serviceRepository;
@@ -94,36 +130,99 @@ public class RestController {
       this.invocationProcessor = invocationProcessor;
    }
 
-   @SuppressWarnings("java:S3752")
-   @RequestMapping(value = "/rest/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
-         RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
-   public ResponseEntity<byte[]> execute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long requestedDelay,
-         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
-         @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
-         HttpMethod method) {
-
-      return doExecute(serviceName, version, requestedDelay, requestedDelayStrategy, body, headers, request, method,
-            false);
+   @GET
+   @Path(REST_PATH)
+   public Response get(@BeanParam MockParams p, byte[] body) {
+      return doExecute("GET", p, body, false);
    }
 
-   @SuppressWarnings("java:S3752")
-   @RequestMapping(value = "/rest-valid/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
-         RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
-   public ResponseEntity<byte[]> validateAndExecute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long requestedDelay,
-         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
-         @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
-         HttpMethod method) {
+   @POST
+   @Path(REST_PATH)
+   public Response post(@BeanParam MockParams p, byte[] body) {
+      return doExecute("POST", p, body, false);
+   }
 
-      return doExecute(serviceName, version, requestedDelay, requestedDelayStrategy, body, headers, request, method,
-            true);
+   @PUT
+   @Path(REST_PATH)
+   public Response put(@BeanParam MockParams p, byte[] body) {
+      return doExecute("PUT", p, body, false);
+   }
+
+   @PATCH
+   @Path(REST_PATH)
+   public Response patch(@BeanParam MockParams p, byte[] body) {
+      return doExecute("PATCH", p, body, false);
+   }
+
+   @DELETE
+   @Path(REST_PATH)
+   public Response delete(@BeanParam MockParams p, byte[] body) {
+      return doExecute("DELETE", p, body, false);
+   }
+
+   @HEAD
+   @Path(REST_PATH)
+   public Response head(@BeanParam MockParams p, byte[] body) {
+      return doExecute("HEAD", p, body, false);
+   }
+
+   @OPTIONS
+   @Path(REST_PATH)
+   public Response options(@BeanParam MockParams p, byte[] body) {
+      return doExecute("OPTIONS", p, body, false);
+   }
+
+   @GET
+   @Path(REST_VALID_PATH)
+   public Response validateGet(@BeanParam MockParams p, byte[] body) {
+      return doExecute("GET", p, body, true);
+   }
+
+   @POST
+   @Path(REST_VALID_PATH)
+   public Response validatePost(@BeanParam MockParams p, byte[] body) {
+      return doExecute("POST", p, body, true);
+   }
+
+   @PUT
+   @Path(REST_VALID_PATH)
+   public Response validatePut(@BeanParam MockParams p, byte[] body) {
+      return doExecute("PUT", p, body, true);
+   }
+
+   @PATCH
+   @Path(REST_VALID_PATH)
+   public Response validatePatch(@BeanParam MockParams p, byte[] body) {
+      return doExecute("PATCH", p, body, true);
+   }
+
+   @DELETE
+   @Path(REST_VALID_PATH)
+   public Response validateDelete(@BeanParam MockParams p, byte[] body) {
+      return doExecute("DELETE", p, body, true);
+   }
+
+   @HEAD
+   @Path(REST_VALID_PATH)
+   public Response validateHead(@BeanParam MockParams p, byte[] body) {
+      return doExecute("HEAD", p, body, true);
+   }
+
+   @OPTIONS
+   @Path(REST_VALID_PATH)
+   public Response validateOptions(@BeanParam MockParams p, byte[] body) {
+      return doExecute("OPTIONS", p, body, true);
    }
 
    /** Common execution logic for both execute and validateAndExecute endpoints. */
-   private ResponseEntity<byte[]> doExecute(String serviceName, String version, Long requestedDelay,
-         String requestedDelayStrategy, String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method,
-         boolean validateRequest) {
+   private Response doExecute(String method, MockParams params, byte[] rawBody, boolean validateRequest) {
+      String serviceName = params.service;
+      String version = params.version;
+      ContainerHttpServletRequest request = ContainerHttpServletRequest.from(method, params.uriInfo, params.headers,
+            params.request);
+      HttpHeaders headers = new HttpHeaders();
+      headers.putAll(params.headers.getRequestHeaders());
+      String body = decodeBody(rawBody, request.getContentType());
 
       log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}", serviceName, version,
             request.getRequestURI(), method);
@@ -136,8 +235,7 @@ public class RestController {
       TraceUtil.enableExplainTracing();
 
       span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
-            .explainSpanEventBuilder(
-                  String.format("Received REST invocation %s %s", method.name(), request.getRequestURI()))
+            .explainSpanEventBuilder(String.format("Received REST invocation %s %s", method, request.getRequestURI()))
             .put(CommonAttributes.HTTP_METHOD, request.getMethod())
             .put(CommonAttributes.QUERY_STRING, request.getQueryString() != null ? request.getQueryString() : "empty")
             .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
@@ -146,15 +244,16 @@ public class RestController {
             .put(CommonAttributes.URI_FULL,
                   request.getRequestURL().toString()
                         + (request.getQueryString() != null ? "?" + request.getQueryString() : ""))
-            .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
+            .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr() != null ? request.getRemoteAddr() : "")
+            .build());
 
       // Find matching service and operation.
       MockInvocationContext ic = findInvocationContext(serviceName, version, request, method);
       if (ic.service() == null) {
          String msg = String.format("The service %s with version %s does not exist!", serviceName, version);
          span.addEvent(CommonEvents.SERVICE_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
-         span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
-         return new ResponseEntity<>(msg.getBytes(), HttpStatus.NOT_FOUND);
+         span.setStatus(StatusCode.ERROR, msg);
+         return Response.status(404).entity(msg.getBytes(StandardCharsets.UTF_8)).build();
       }
       // Found a valid service, add its name and version as span attributes.
       span.setAttribute(CommonAttributes.SERVICE_NAME, ic.service().getName());
@@ -163,17 +262,17 @@ public class RestController {
       // Check matching operation.
       if (ic.operation() == null) {
          // Handle OPTIONS request if CORS policy is enabled.
-         if (Boolean.TRUE.equals(enableCorsPolicy) && HttpMethod.OPTIONS.equals(method)) {
+         if (enableCorsPolicy && "OPTIONS".equals(method)) {
             log.debug("No valid operation found but Microcks configured to apply CORS policy");
             return handleCorsRequest(request);
          }
 
          log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
-         String msg = String.format("No valid operation found for %s %s on service %s/%s", method.name(),
-               ic.resourcePath(), serviceName, version);
+         String msg = String.format("No valid operation found for %s %s on service %s/%s", method, ic.resourcePath(),
+               serviceName, version);
          span.addEvent(CommonEvents.OPERATION_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
-         span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
-         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+         span.setStatus(StatusCode.ERROR, msg);
+         return Response.status(404).build();
       }
       log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
             ic.operation().getDispatcherRules());
@@ -182,25 +281,43 @@ public class RestController {
 
       // Try to validate request payload (body) if validation is enabled.
       if (validateRequest) {
-         ResponseEntity<byte[]> validationError = validateRequestBody(serviceName, version, body, request, ic);
+         Response validationError = validateRequestBody(serviceName, version, body, request, ic);
          if (validationError != null) {
             return validationError;
          }
       }
 
-      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
-      return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
+      DelaySpec delay = MockControllerCommons.getDelay(headers, params.delay, params.delayStrategy);
+      return processMockInvocationRequest(ic, startTime, delay, body, headers, request);
+   }
+
+   /** Decode the request body honoring the charset of the content type (UTF-8 by default). Empty means null. */
+   private String decodeBody(byte[] rawBody, String contentType) {
+      if (rawBody == null || rawBody.length == 0) {
+         return null;
+      }
+      Charset charset = StandardCharsets.UTF_8;
+      if (contentType != null && !contentType.isBlank()) {
+         try {
+            String charsetName = MediaType.valueOf(contentType).getParameters().get("charset");
+            if (charsetName != null) {
+               charset = Charset.forName(charsetName);
+            }
+         } catch (IllegalArgumentException e) {
+            log.debug("Unable to read charset of content type, defaulting to UTF-8");
+         }
+      }
+      return new String(rawBody, charset);
    }
 
    /**
     * Validate request body against OpenAPI/Swagger schema. Returns error response if validation fails, null otherwise.
     */
-   @CheckForNull
-   private ResponseEntity<byte[]> validateRequestBody(String serviceName, String version, String body,
-         HttpServletRequest request, MockInvocationContext ic) {
+   private Response validateRequestBody(String serviceName, String version, String body,
+         ContainerHttpServletRequest request, MockInvocationContext ic) {
 
       String shortContentType = getShortContentType(request.getContentType());
-      if (body != null && !body.trim().isEmpty()
+      if (body != null && !body.trim().isEmpty() && shortContentType != null
             && OpenAPITestRunner.APPLICATION_JSON_TYPES_PATTERN.matcher(shortContentType).matches()) {
          log.debug("Looking for an OpenAPI/Swagger schema to validate request body");
 
@@ -212,7 +329,7 @@ public class RestController {
             TraceUtil.enableExplainTracing();
             span.addEvent(CommonEvents.SCHEMA_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
             span.setStatus(StatusCode.ERROR, msg);
-            return new ResponseEntity<>(msg.getBytes(), HttpStatus.PRECONDITION_FAILED);
+            return Response.status(412).entity(msg.getBytes(StandardCharsets.UTF_8)).build();
          }
 
          List<String> errors = getErrors(body, ic, shortContentType, openapiSpecResource);
@@ -225,8 +342,8 @@ public class RestController {
             TraceUtil.enableExplainTracing();
             span.addEvent(CommonEvents.VALIDATION_FAILED.getEventName(),
                   TraceUtil.explainSpanEventBuilder(msg).build());
-            span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, msg);
-            return new ResponseEntity<>(errors.toString().getBytes(), HttpStatus.BAD_REQUEST);
+            span.setStatus(StatusCode.ERROR, msg);
+            return Response.status(400).entity(errors.toString().getBytes(StandardCharsets.UTF_8)).build();
          }
       }
       return null;
@@ -269,8 +386,8 @@ public class RestController {
    }
 
    /** Process REST mock invocation. */
-   private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime,
-         DelaySpec delay, String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+   private Response processMockInvocationRequest(MockInvocationContext ic, long startTime, DelaySpec delay, String body,
+         HttpHeaders headers, ContainerHttpServletRequest request) {
 
       Span span = Span.current();
 
@@ -279,22 +396,39 @@ public class RestController {
          // if a constraint is violated, add an event and return a 400 error.
          span.addEvent(CommonEvents.PARAMETER_CONSTRAINT_VIOLATED.getEventName(),
                TraceUtil.explainSpanEventBuilder(violationMsg).build());
-         span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, "Parameter constraint violation");
+         span.setStatus(StatusCode.ERROR, "Parameter constraint violation");
          span.setAttribute(CommonAttributes.ERROR_STATUS, 400);
 
-         return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(),
-               HttpStatus.BAD_REQUEST);
+         return Response.status(400).entity((violationMsg + ". Check parameter constraints.").getBytes()).build();
       }
 
-      ResponseResult response = invocationProcessor.processInvocation(ic, startTime, delay, body,
+      ResponseResult result = invocationProcessor.processInvocation(ic, startTime, delay, body,
             headers.asMultiValueMap(), request);
-      return new ResponseEntity<>(response.content(), response.headers(), response.status());
+      return toResponse(result);
+   }
+
+   /** Translate a neutral response result into a Jakarta REST response. */
+   static Response toResponse(ResponseResult result) {
+      Response.ResponseBuilder builder = Response.status(result.status().value());
+      if (result.headers() != null) {
+         result.headers().headerSet().forEach(header -> {
+            // Framing headers are computed by the HTTP server.
+            if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getKey())
+                  && !HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(header.getKey())) {
+               header.getValue().forEach(value -> builder.header(header.getKey(), value));
+            }
+         });
+      }
+      if (result.content() != null) {
+         builder.entity(result.content());
+      }
+      return builder.build();
    }
 
    /** Find the invocation context for this mock request. */
-   private MockInvocationContext findInvocationContext(String serviceName, String version, HttpServletRequest request,
-         HttpMethod method) {
-      // Extract resourcePath for matching with correct operation and build the encoded URI fragment to retrieve simple resourcePath.
+   private MockInvocationContext findInvocationContext(String serviceName, String version,
+         ContainerHttpServletRequest request, String method) {
+      // Extract resourcePath for matching with correct operation and build the encoded URI fragment.
       String serviceAndVersion = MockControllerCommons.composeServiceAndVersion(serviceName, version);
       String resourcePath = MockControllerCommons.extractResourcePath(request, serviceAndVersion);
       log.debug("Found resourcePath: {}", resourcePath);
@@ -315,8 +449,7 @@ public class RestController {
       return new MockInvocationContext(service, operation, resourcePath);
    }
 
-   @CheckForNull
-   private Operation findOperation(Service service, HttpMethod method, String resourcePath) {
+   private Operation findOperation(Service service, String method, String resourcePath) {
       // Remove trailing '/' if any.
       String trimmedResourcePath = trimResourcePath(resourcePath);
 
@@ -330,12 +463,11 @@ public class RestController {
       return result;
    }
 
-   @CheckForNull
-   private Operation findOperationByPathPattern(Service service, HttpMethod method, String resourcePath) {
+   private Operation findOperationByPathPattern(Service service, String method, String resourcePath) {
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          // ... then check is current resource path matches operation path pattern.
-         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null) {
+         if (operation.getMethod().equals(method) && operation.getResourcePaths() != null) {
             if (OperationPathPattern.compile(getURIPattern(operation.getName())).matches(resourcePath)) {
                return operation;
             }
@@ -344,19 +476,18 @@ public class RestController {
       return null;
    }
 
-   @CheckForNull
-   private Operation findOperationByResourcePath(Service service, HttpMethod method, String resourcePath,
+   private Operation findOperationByResourcePath(Service service, String method, String resourcePath,
          String trimmedResourcePath) {
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          // ... then check is we have a matching resource path.
-         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null
+         if (operation.getMethod().equals(method) && operation.getResourcePaths() != null
                && (operation.getResourcePaths().contains(resourcePath)
                      || operation.getResourcePaths().contains(trimmedResourcePath))) {
             return operation;
          }
          // Check by simple name comparison if no resource path is defined.
-         if (operation.getName().equals(method.name().toUpperCase() + " " + resourcePath)) {
+         if (operation.getName().equals(method.toUpperCase() + " " + resourcePath)) {
             return operation;
          }
       }
@@ -381,7 +512,7 @@ public class RestController {
    }
 
    /** Validate the parameter constraints and return a single string with violation message if any. */
-   private String validateParameterConstraintsIfAny(Operation rOperation, HttpServletRequest request) {
+   private String validateParameterConstraintsIfAny(Operation rOperation, ContainerHttpServletRequest request) {
       if (rOperation.getParameterConstraints() != null) {
          for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
             String violationMsg = ParameterConstraintUtil.validateConstraint(request, constraint);
@@ -403,19 +534,20 @@ public class RestController {
       return operationName;
    }
 
-   /** Handle a CORS request putting the correct headers in response entity. */
-   private ResponseEntity<byte[]> handleCorsRequest(HttpServletRequest request) {
+   /** Handle a CORS request putting the correct headers in response. */
+   private Response handleCorsRequest(ContainerHttpServletRequest request) {
       // Retrieve and set access control headers from those coming in request.
-      List<String> accessControlHeaders = new ArrayList<>();
-      Collections.list(request.getHeaders("Access-Control-Request-Headers")).forEach(accessControlHeaders::add);
-      HttpHeaders requestHeaders = new HttpHeaders();
-      requestHeaders.setAccessControlAllowHeaders(accessControlHeaders);
-      requestHeaders.setAccessControlExposeHeaders(accessControlHeaders);
+      List<String> accessControlHeaders = Collections.list(request.getHeaders("Access-Control-Request-Headers"));
+      String allowedHeaders = String.join(", ", accessControlHeaders);
 
       // Apply CORS headers to response with 204 response code.
-      return ResponseEntity.noContent().header("Access-Control-Allow-Origin", corsAllowedOrigins)
-            .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH").headers(requestHeaders)
-            .header("Access-Allow-Credentials", String.valueOf(corsAllowCredentials))
+      Response.ResponseBuilder builder = Response.noContent().header("Access-Control-Allow-Origin", corsAllowedOrigins)
+            .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH");
+      if (!accessControlHeaders.isEmpty()) {
+         builder.header("Access-Control-Allow-Headers", allowedHeaders).header("Access-Control-Expose-Headers",
+               allowedHeaders);
+      }
+      return builder.header("Access-Allow-Credentials", String.valueOf(corsAllowCredentials))
             .header("Access-Control-Max-Age", "3600").header("Vary", "Accept-Encoding, Origin").build();
    }
 

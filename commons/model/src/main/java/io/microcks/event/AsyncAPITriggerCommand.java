@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.event;
+package io.microcks.event;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.microcks.domain.Operation;
+import io.microcks.domain.Operation;
 
 /**
  * This represented a domain event around AsyncAPI trigger command.

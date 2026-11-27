@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -120,7 +122,7 @@ public class Operation implements Serializable, BindingsHolder {
       return callbackInfos;
    }
 
-   public void setCallbackInfso(Map<String, CallbackInfo> callbackInfos) {
+   public void setCallbackInfos(Map<String, CallbackInfo> callbackInfos) {
       this.callbackInfos = callbackInfos;
    }
 
@@ -147,6 +149,12 @@ public class Operation implements Serializable, BindingsHolder {
    }
 
    public boolean hasOverride() {
+      return this.override;
+   }
+
+   /** Bean-style accessor for the BSON codec; kept out of the JSON API where this flag was never exposed. */
+   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+   public boolean isOverride() {
       return this.override;
    }
 

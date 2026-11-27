@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.consumer;
+package io.microcks.minion.async.consumer;
 
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.minion.async.AsyncTestSpecification;
+import io.microcks.domain.Header;
+import io.microcks.minion.async.AsyncTestSpecification;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

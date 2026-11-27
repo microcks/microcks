@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.task;
+package io.microcks.task;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.WebhookRegistration;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.WebhookRegistrationRepository;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
+import io.microcks.domain.Header;
+import io.microcks.domain.Request;
+import io.microcks.domain.WebhookRegistration;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.WebhookRegistrationRepository;
+import io.microcks.util.el.TemplateEngine;
+import io.microcks.util.el.TemplateEngineFactory;
 
+import io.quarkus.scheduler.Scheduled;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
  * Scheduled task that triggers webhook registrations.
  * @author laurent
  */
-@Component
+@ApplicationScoped
 public class TriggerWebhookTask {
 
    /** A simple logger for diagnostic messages. */
@@ -54,25 +55,26 @@ public class TriggerWebhookTask {
    private final WebhookRegistrationRepository webhookRegistrationRepository;
    private final RequestRepository requestRepository;
 
+   @Inject
    public TriggerWebhookTask(WebhookRegistrationRepository webhookRegistrationRepository,
          RequestRepository requestRepository) {
       this.webhookRegistrationRepository = webhookRegistrationRepository;
       this.requestRepository = requestRepository;
    }
 
-   @Scheduled(fixedRateString = "3s", initialDelayString = "2s")
+   @Scheduled(every = "3s", delayed = "2s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
    public void triggerFastWebhook() {
       log.trace("Triggering webhook registrations for frequency '3s'");
       triggerWebhook(3000L);
    }
 
-   @Scheduled(fixedRateString = "10s", initialDelayString = "2s")
+   @Scheduled(every = "10s", delayed = "2s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
    public void triggerMediumWebhook() {
       log.trace("Triggering webhook registrations for frequency '10s'");
       triggerWebhook(10000L);
    }
 
-   @Scheduled(fixedRateString = "30s", initialDelayString = "2s")
+   @Scheduled(every = "30s", delayed = "2s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
    public void triggerSlowWebhook() {
       log.trace("Triggering webhook registrations for frequency '30s'");
       triggerWebhook(30000L);
@@ -138,7 +140,7 @@ public class TriggerWebhookTask {
    private void manageUpdatesAndRemovals(List<WebhookRegistration> toUpdate, List<WebhookRegistration> toRemove) {
       if (!toUpdate.isEmpty()) {
          log.debug("Updating {} webhook registrations", toUpdate.size());
-         webhookRegistrationRepository.saveAll(toUpdate);
+         webhookRegistrationRepository.persistOrUpdate(toUpdate);
       }
       if (!toRemove.isEmpty()) {
          log.debug("Removing {} webhook registrations", toRemove.size());

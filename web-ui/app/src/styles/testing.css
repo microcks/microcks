@@ -1,0 +1,37 @@
+/* Additions of the Testing screens on top of the Deep Ink page CSS: markers of simulated / demo data. */
+.tr-sim { margin: 0 0 16px; }
+
+.tests-origin {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--raised);
+  color: var(--text-muted);
+  font: 600 11px/18px var(--font-ui);
+  vertical-align: middle;
+}
+
+.tests-footnote[data-demo] { margin-top: 0; }
+
+/* 9 columns: tighter cells so the actions column is not clipped at 1440px. */
+.tests-table .table th,
+.tests-table .table td { padding-inline: 8px; }
+
+.demo-note {
+  margin: 0;
+  color: var(--text-muted);
+  font: 400 12px/1.5 var(--font-ui);
+}
+.demo-note strong { color: var(--text); font-weight: 600; }
+
+/* Usage: three heatmap figures side by side, and a table tight enough to show every column. */
+.us-heat-facts { --facts-cols: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.us-ops th, .us-ops td { padding-inline: 6px; }
+.us-ops-svc { min-width: 0; max-width: 100%; overflow: hidden; }
+.us-ops tbody th { max-width: 230px; overflow: hidden; }
+
+/* The screen-reader table of the timeline must not widen the page on narrow screens. */
+.test-timeline { position: relative; overflow-x: clip; }
+.tests-endpoint { flex-wrap: wrap; gap: 4px 8px; }
+.tests-endpoint-url { white-space: normal; overflow-wrap: anywhere; }

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.artifact;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
 
 import java.util.List;
 

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.repository.ImportJobRepository;
-import io.github.microcks.security.AuthorizationChecker;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.service.JobService;
+import io.microcks.domain.ImportJob;
+import io.microcks.repository.ImportJobRepository;
+import io.microcks.security.AuthorizationChecker;
+import io.microcks.service.JobService;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,10 +26,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import jakarta.ws.rs.core.Response;
 
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,30 +50,24 @@ class JobControllerTest {
 
    @Test
    void shouldReturnNotFoundWhenActivatingUnknownJob() {
-      UserInfo userInfo = managerUserInfo();
-      Mockito.when(jobRepository.findById(UNKNOWN_JOB_ID)).thenReturn(Optional.empty());
+      Mockito.when(jobRepository.findById(UNKNOWN_JOB_ID)).thenReturn(null);
 
-      ResponseEntity<?> response = sut.activateJob(UNKNOWN_JOB_ID, userInfo);
+      Response response = sut.activateJob(UNKNOWN_JOB_ID);
 
-      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+      assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
       Mockito.verifyNoInteractions(authorizationChecker);
-      Mockito.verify(jobRepository, Mockito.never()).save(Mockito.any());
+      Mockito.verify(jobRepository, Mockito.never()).persistOrUpdate(Mockito.any(ImportJob.class));
    }
 
    @Test
    void shouldReturnNotFoundWhenDeletingUnknownJob() {
-      UserInfo userInfo = managerUserInfo();
-      Mockito.when(jobRepository.findById(UNKNOWN_JOB_ID)).thenReturn(Optional.empty());
+      Mockito.when(jobRepository.findById(UNKNOWN_JOB_ID)).thenReturn(null);
 
-      ResponseEntity<?> response = sut.deleteJob(UNKNOWN_JOB_ID, userInfo);
+      Response response = sut.deleteJob(UNKNOWN_JOB_ID);
 
-      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+      assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
       Mockito.verifyNoInteractions(authorizationChecker);
       Mockito.verify(jobRepository, Mockito.never()).deleteById(Mockito.anyString());
    }
 
-   private static UserInfo managerUserInfo() {
-      return new UserInfo("Test Manager", "test-manager", "Test", "Manager", "manager@example.com",
-            new String[] { AuthorizationChecker.ROLE_MANAGER }, new String[0]);
-   }
 }

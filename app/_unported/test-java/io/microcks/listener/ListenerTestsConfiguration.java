@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +22,6 @@ import org.springframework.context.annotation.Configuration;
  * @author laurent
  */
 @Configuration
-@ComponentScan(basePackages = { "io.github.microcks.listener" }, lazyInit = true)
+@ComponentScan(basePackages = { "io.microcks.listener" }, lazyInit = true)
 public class ListenerTestsConfiguration {
 }

@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TriggerInfo;
-import io.github.microcks.event.AsyncAPITriggerCommand;
-import io.github.microcks.event.RequestSnapshot;
-import io.github.microcks.event.ResponseSnapshot;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.util.AvroUtil;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.TriggerInfo;
+import io.microcks.event.AsyncAPITriggerCommand;
+import io.microcks.event.RequestSnapshot;
+import io.microcks.event.ResponseSnapshot;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.artifact.asyncapi.AvroUtil;
 
 import org.apache.avro.Schema;
 import org.junit.jupiter.api.BeforeEach;

@@ -13,28 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.SafeLogger;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.util.ResourceUtil;
+import io.microcks.util.SafeLogger;
 
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.util.UriUtils;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -44,8 +45,9 @@ import java.util.stream.Stream;
  * A controller for generating API documentation for contracts mocked within Microcks.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class DocumentationController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -59,13 +61,15 @@ public class DocumentationController {
     * Build a new DocumentationController with a resource repository.
     * @param resourceRepository Repository to access resource.
     */
+   @Inject
    public DocumentationController(ResourceRepository resourceRepository) {
       this.resourceRepository = resourceRepository;
    }
 
-   @GetMapping(value = "/documentation/{name}/{resourceType}")
-   public ResponseEntity<byte[]> getDocumentationByResourceName(@PathVariable("name") String name,
-         @PathVariable("resourceType") String resourceType) {
+   @GET
+   @Path("/documentation/{name}/{resourceType}")
+   public Response getDocumentationByResourceName(@PathParam("name") String name,
+         @PathParam("resourceType") String resourceType) {
       log.info("Requesting {} documentation for resource {}", resourceType, name);
 
       Resource resource = null;
@@ -76,63 +80,64 @@ public class DocumentationController {
             if (resourceOpt.isPresent()) {
                resource = resourceOpt.get();
             } else {
-               return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+               return Response.status(Response.Status.BAD_REQUEST).build();
             }
          } else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return Response.status(Response.Status.BAD_REQUEST).build();
          }
       }
 
-      return responseWithResource("/api/resources/" + UriUtils.encodePathSegment(name, StandardCharsets.UTF_8),
-            resourceType, resource);
+      return responseWithResource("/api/resources/" + encodePathSegment(name), resourceType, resource);
    }
 
-   @GetMapping(value = "/documentation/id/{id}/{resourceType}")
-   public ResponseEntity<byte[]> getDocumentationByResourceId(@PathVariable("id") String id,
-         @PathVariable("resourceType") String resourceType) {
+   @GET
+   @Path("/documentation/id/{id}/{resourceType}")
+   public Response getDocumentationByResourceId(@PathParam("id") String id,
+         @PathParam("resourceType") String resourceType) {
       log.info("Requesting {} documentation for resource with id {}", resourceType, id);
 
       Resource resource = null;
       if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
-         Optional<Resource> resourceOpt = resourceRepository.findById(id);
-         if (resourceOpt.isPresent()) {
-            resource = resourceOpt.get();
-         } else {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+         resource = resourceRepository.findById(id);
+         if (resource == null) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
          }
       }
 
-      return responseWithResource("/api/resources/id/" + UriUtils.encodePathSegment(id, StandardCharsets.UTF_8),
-            resourceType, resource);
+      return responseWithResource("/api/resources/id/" + encodePathSegment(id), resourceType, resource);
    }
 
-   private ResponseEntity<byte[]> responseWithResource(String resourceUrl, String resourceType, Resource resource) {
+   private static String encodePathSegment(String segment) {
+      return URLEncoder.encode(segment, StandardCharsets.UTF_8).replace("+", "%20");
+   }
+
+   private Response responseWithResource(String resourceUrl, String resourceType, Resource resource) {
       // Prepare HttpHeaders.
       InputStream stream = null;
-      HttpHeaders headers = new HttpHeaders();
-      org.springframework.core.io.Resource template = null;
+      String templatePath = null;
+      String contentType = null;
 
       // Get the correct template depending on resource type.
       if (ResourceType.OPEN_API_SPEC.toString().equals(resourceType)
             || ResourceType.SWAGGER.toString().equals(resourceType)) {
-         template = new ClassPathResource("templates/redoc.html");
-         headers.setContentType(MediaType.TEXT_HTML);
+         templatePath = "templates/redoc.html";
+         contentType = MediaType.TEXT_HTML;
       } else if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
 
          if (resource.getContent().contains("asyncapi: 3") || resource.getContent().contains("\"asyncapi\": \"3")
                || resource.getContent().contains("'asyncapi': '3")) {
-            template = new ClassPathResource("templates/asyncapi-v3.html");
+            templatePath = "templates/asyncapi-v3.html";
          } else {
-            template = new ClassPathResource("templates/asyncapi.html");
+            templatePath = "templates/asyncapi.html";
          }
-         headers.setContentType(MediaType.TEXT_HTML);
+         contentType = MediaType.TEXT_HTML;
       }
 
-      if (template != null) {
+      if (templatePath != null) {
          try {
-            stream = template.getInputStream();
+            stream = ResourceUtil.getClasspathResource(templatePath);
          } catch (IOException e) {
-            log.error("IOException while reading template {}", template.getDescription(), e);
+            log.error("IOException while reading template {}", templatePath, e);
          }
 
          // Now process the stream, replacing patterns by value.
@@ -142,9 +147,9 @@ public class DocumentationController {
          try (Stream<String> lines = reader.lines()) {
             lines.map(line -> replaceResourceUrlInLing(line, resourceUrl)).forEach(line -> writer.write(line + "\n"));
          }
-         return new ResponseEntity<>(writer.toString().getBytes(), headers, HttpStatus.OK);
+         return Response.ok(writer.toString().getBytes(StandardCharsets.UTF_8)).type(contentType).build();
       }
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return Response.status(Response.Status.BAD_REQUEST).build();
    }
 
    private String replaceResourceUrlInLing(String line, String resourceUrl) {

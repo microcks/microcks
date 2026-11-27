@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.event;
+package io.microcks.event;
 
-import org.springframework.context.ApplicationEvent;
 
 /**
  * Event raised when a Service has been changed (CREATED, UPDATED or DELETED).
  * @author laurent
  */
-public class ServiceChangeEvent extends ApplicationEvent {
+public class ServiceChangeEvent {
 
    /** */
    private final String serviceId;
@@ -30,12 +29,10 @@ public class ServiceChangeEvent extends ApplicationEvent {
 
    /**
     * Creates a new {@code ServiceChangeEvent} with change type.
-    * @param source     Source object for event
     * @param serviceId  Identifier of the updated Service
     * @param changeType Type of changes this event if representing
     */
-   public ServiceChangeEvent(Object source, String serviceId, ChangeType changeType) {
-      super(source);
+   public ServiceChangeEvent(String serviceId, ChangeType changeType) {
       this.serviceId = serviceId;
       this.changeType = changeType;
    }

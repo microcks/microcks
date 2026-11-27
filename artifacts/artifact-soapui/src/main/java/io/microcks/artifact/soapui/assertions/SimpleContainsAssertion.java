@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soapui.assertions;
+package io.microcks.artifact.soapui.assertions;
 
-import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +102,7 @@ public class SimpleContainsAssertion implements SoapUIAssertion {
    }
 
    private String normalize(String string) {
-      if (StringUtils.isNotEmpty(string)) {
+      if (string != null && !string.isEmpty()) {
          string = string.replace("\r\n", "\n");
       }
       return string;

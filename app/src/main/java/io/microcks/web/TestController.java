@@ -13,39 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.OperationsHeaders;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.SecretRef;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestOptionals;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.repository.TestResultRepository;
-import io.github.microcks.service.MessageService;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.service.TestService;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.web.dto.HeaderDTO;
-import io.github.microcks.web.dto.TestCaseReturnDTO;
-import io.github.microcks.web.dto.TestRequestDTO;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.OperationsHeaders;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Secret;
+import io.microcks.domain.SecretRef;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestCaseResult;
+import io.microcks.domain.TestOptionals;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestRunnerType;
+import io.microcks.repository.SecretRepository;
+import io.microcks.repository.TestResultRepository;
+import io.microcks.service.MessageService;
+import io.microcks.service.ServiceService;
+import io.microcks.service.TestService;
+import io.microcks.util.SafeLogger;
+import io.microcks.web.dto.HeaderDTO;
+import io.microcks.web.dto.TestCaseReturnDTO;
+import io.microcks.web.dto.TestRequestDTO;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -60,8 +64,10 @@ import java.util.Set;
  * A Rest controller for API defined on test results.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
-@RequestMapping("/api")
+@ApplicationScoped
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class TestController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -73,7 +79,6 @@ public class TestController {
    private final MessageService messageService;
    private final ServiceService serviceService;
 
-
    /**
     * Create a TestController with required dependencies.
     * @param testService          Service to launch tests and report results
@@ -82,6 +87,7 @@ public class TestController {
     * @param serviceService       Service to get access to Services
     * @param secretRepository     Get access to Secrets
     */
+   @Inject
    public TestController(TestService testService, MessageService messageService, ServiceService serviceService,
          TestResultRepository testResultRepository, SecretRepository secretRepository) {
       this.testService = testService;
@@ -91,25 +97,26 @@ public class TestController {
       this.secretRepository = secretRepository;
    }
 
-   @GetMapping(value = "/tests/service/{serviceId}")
-   public List<TestResult> listTestsByService(@PathVariable("serviceId") String serviceId,
-         @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+   @GET
+   @Path("/tests/service/{serviceId}")
+   public List<TestResult> listTestsByService(@PathParam("serviceId") String serviceId,
+         @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("20") int size) {
       log.debug("Getting tests list for service {}, page {} and size {}", serviceId, page, size);
-      return testResultRepository.findByServiceId(serviceId,
-            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "testNumber")));
+      return testResultRepository.findByServiceId(serviceId, Page.of(page, size), Sort.descending("testNumber"));
    }
 
-   @GetMapping(value = "/tests/service/{serviceId}/count")
-   public Map<String, Long> countTestsByService(@PathVariable("serviceId") String serviceId) {
+   @GET
+   @Path("/tests/service/{serviceId}/count")
+   public Map<String, Long> countTestsByService(@PathParam("serviceId") String serviceId) {
       log.debug("Counting tests for service...");
       Map<String, Long> counter = new HashMap<>();
       counter.put("counter", testResultRepository.countByServiceId(serviceId));
       return counter;
    }
 
-   @PostMapping(value = "/tests")
-   public ResponseEntity<Object> createTest(@RequestBody TestRequestDTO test) {
+   @POST
+   @Path("/tests")
+   public Response createTest(TestRequestDTO test) {
       log.debug("Creating new test for {} on endpoint {}", test.getServiceId(), test.getTestEndpoint());
       // serviceId may have the form of <service_name>:<service_version> or just <service_id>
       Service service = serviceService.getServiceById(test.getServiceId());
@@ -126,57 +133,61 @@ public class TestController {
             secretRef = new SecretRef(secrets.get(0).getId(), secrets.get(0).getName());
          } else {
             log.warn("Secret '" + test.getSecretName() + "' specified in test request but not found");
-            return new ResponseEntity<>(
-                  String.format("Secret '%s' not found. Please ensure the secret exists before creating the test.",
-                        test.getSecretName()),
-                  HttpStatus.BAD_REQUEST);
+            return Response.status(Response.Status.BAD_REQUEST)
+                  .entity(String.format(
+                        "Secret '%s' not found. Please ensure the secret exists before creating " + "the test.",
+                        test.getSecretName()))
+                  .build();
          }
       }
 
       TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(),
             operationsHeaders, test.getOAuth2Context());
       TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, testOptionals);
-      return new ResponseEntity<>(testResult, HttpStatus.CREATED);
+      return Response.status(Response.Status.CREATED).entity(testResult).build();
    }
 
-   @GetMapping(value = "/tests/{id}")
-   public ResponseEntity<TestResult> getTestResult(@PathVariable("id") String testResultId) {
+   @GET
+   @Path("/tests/{id}")
+   public Response getTestResult(@PathParam("id") String testResultId) {
       log.debug("Getting TestResult with id {}", testResultId);
-      return new ResponseEntity<>(testResultRepository.findById(testResultId).orElse(null), HttpStatus.OK);
+      return Response.status(Response.Status.OK).entity(testResultRepository.findById(testResultId)).build();
    }
 
-   @GetMapping(value = "tests/{id}/messages/{testCaseId}")
-   public List<RequestResponsePair> getMessagesForTestCase(@PathVariable("id") String testResultId,
-         @PathVariable("testCaseId") String testCaseId) {
+   @GET
+   @Path("tests/{id}/messages/{testCaseId}")
+   public List<RequestResponsePair> getMessagesForTestCase(@PathParam("id") String testResultId,
+         @PathParam("testCaseId") String testCaseId) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
-      // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
+      // Switched form _ to ! in replacement as less commonly used in URL parameters, as in other frameworks
       testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8);
       testCaseId = testCaseId.replace('!', '/');
       log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
       return messageService.getRequestResponseByTestCase(testCaseId);
    }
 
-   @GetMapping(value = "tests/{id}/events/{testCaseId}")
-   public List<? extends Exchange> getEventMessagesForTestCase(@PathVariable("id") String testResultId,
-         @PathVariable("testCaseId") String testCaseId) {
+   @GET
+   @Path("tests/{id}/events/{testCaseId}")
+   public List<? extends Exchange> getEventMessagesForTestCase(@PathParam("id") String testResultId,
+         @PathParam("testCaseId") String testCaseId) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
-      // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
+      // Switched form _ to ! in replacement as less commonly used in URL parameters, as in other frameworks
       testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8);
       testCaseId = testCaseId.replace('!', '/');
       log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
       return messageService.getEventByTestCase(testCaseId);
    }
 
-   @PostMapping(value = "tests/{id}/testCaseResult")
-   public ResponseEntity<TestCaseResult> reportTestCaseResult(@PathVariable("id") String testResultId,
-         @RequestBody TestCaseReturnDTO testCaseReturn) {
+   @POST
+   @Path("tests/{id}/testCaseResult")
+   public Response reportTestCaseResult(@PathParam("id") String testResultId, TestCaseReturnDTO testCaseReturn) {
       log.debug("Reporting testCase results on test {}", testResultId);
       TestCaseResult testCaseResult = testService.reportTestCaseResult(testResultId, testCaseReturn.getOperationName(),
             testCaseReturn.getTestReturns());
       if (testCaseResult != null) {
-         return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
+         return Response.status(Response.Status.OK).entity(testCaseResult).build();
       }
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return Response.status(Response.Status.BAD_REQUEST).build();
    }
 
    /**

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.el;
+package io.microcks.util.el;
 
 /**
  * A simple implementation of {@code Expression} that managed literals. The rendered value is the given one, unchanged.

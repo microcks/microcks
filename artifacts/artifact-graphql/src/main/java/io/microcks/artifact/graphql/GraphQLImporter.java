@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.graphql;
+package io.microcks.artifact.graphql;
 
 import graphql.schema.idl.ScalarInfo;
 import graphql.schema.idl.TypeInfo;
 import graphql.schema.idl.TypeUtil;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.artifact.MockRepositoryImporter;
 
 import graphql.language.Comment;
 import graphql.language.Definition;

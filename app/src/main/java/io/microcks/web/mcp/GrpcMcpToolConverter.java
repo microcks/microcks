@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.web.mcp;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.util.ai.McpSchema;
-import io.github.microcks.util.ai.McpToolConverter;
-import io.github.microcks.web.GrpcInvocationProcessor;
-import io.github.microcks.web.GrpcResponseResult;
-import io.github.microcks.web.MockInvocationContext;
+import io.microcks.artifact.grpc.GrpcUtil;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.util.ai.McpSchema;
+import io.microcks.util.ai.McpToolConverter;
+import io.microcks.web.GrpcInvocationProcessor;
+import io.microcks.web.GrpcResponseResult;
+import io.microcks.web.MockInvocationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.microcks.util.JsonSchemaValidator.*;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.*;
 
 /**
  * Implementation of McpToolConverter for gRPC services.

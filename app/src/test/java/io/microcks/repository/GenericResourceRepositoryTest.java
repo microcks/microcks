@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.GenericResource;
-import io.github.microcks.domain.Service;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.GenericResource;
+import io.microcks.domain.Service;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 
@@ -32,15 +30,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for DynamicResourceRepository class.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class GenericResourceRepositoryTest {
 
-   @Autowired
+   @Inject
    GenericResourceRepository repository;
 
-   @Autowired
+   @Inject
    ServiceRepository serviceRepository;
 
    @Test
@@ -50,7 +46,7 @@ class GenericResourceRepositoryTest {
       Service service = new Service();
       service.setName("DynamicAPI");
       service.setVersion("1.0");
-      serviceRepository.save(service);
+      serviceRepository.persist(service);
 
       // Define a JSON payload to put into a GenericResource associated to service.
       String jsonString = "{ \"foo\": 1234, \"bar\": \"string value\" }";
@@ -59,7 +55,8 @@ class GenericResourceRepositoryTest {
       resource.setPayload(Document.parse(jsonString));
 
       // Save to repository.
-      GenericResource dynaResource = repository.save(resource);
+      repository.persist(resource);
+      GenericResource dynaResource = resource;
 
       // Test some manipulations of the payload Document.
       Document payload = dynaResource.getPayload();
@@ -74,13 +71,13 @@ class GenericResourceRepositoryTest {
       GenericResource resource1 = new GenericResource();
       resource1.setServiceId(service.getId());
       resource1.setPayload(Document.parse(jsonString));
-      repository.save(resource1);
+      repository.persist(resource1);
 
       jsonString = "{ \"foo\": 1235, \"bar\": \"other value\" }";
       GenericResource resource2 = new GenericResource();
       resource2.setServiceId(service.getId());
       resource2.setPayload(Document.parse(jsonString));
-      repository.save(resource2);
+      repository.persist(resource2);
 
       // Query by example using 1 field.
       List<GenericResource> dynaResources = repository.findByServiceIdAndJSONQuery(service.getId(),

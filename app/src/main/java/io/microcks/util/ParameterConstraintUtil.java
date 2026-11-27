@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.ParameterLocation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.ParameterLocation;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

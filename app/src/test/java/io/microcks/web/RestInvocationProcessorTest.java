@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceStateRepository;
-import io.github.microcks.service.OpenTelemetryResolverService;
-import io.github.microcks.service.ProxyService;
-import io.github.microcks.util.DispatchStyles;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceStateRepository;
+import io.microcks.service.OpenTelemetryResolverService;
+import io.microcks.service.ProxyService;
+import io.microcks.util.DispatchStyles;
 
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,11 +31,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.HttpStatusCode;
+import jakarta.enterprise.event.Event;
 
 import java.net.URI;
 import java.util.*;
@@ -65,14 +64,15 @@ class RestInvocationProcessorTest {
       // Mock all the dependencies needed by the processor.
       ServiceStateRepository stateRepo = mock(ServiceStateRepository.class);
       responseRepo = mock(ResponseRepository.class);
-      ApplicationContext appContext = mock(ApplicationContext.class);
+
       proxyService = mock(ProxyService.class);
       request = mock(HttpServletRequest.class);
       OpenTelemetryResolverService otelResolver = mock(OpenTelemetryResolverService.class);
       OpenTelemetry openTelemetry = OpenTelemetry.noop();
       when(otelResolver.getOpenTelemetry()).thenReturn(openTelemetry);
-      processor = new RestInvocationProcessor(stateRepo, responseRepo, appContext, proxyService, otelResolver);
-      ReflectionTestUtils.setField(processor, "enableBinaryResponseDecode", true);
+      processor = new RestInvocationProcessor(stateRepo, responseRepo, mock(Event.class), mock(Event.class),
+            mock(Event.class), proxyService, otelResolver);
+      processor.enableBinaryResponseDecode = true;
    }
 
    /** Helper method to build a mock response object. */
@@ -116,7 +116,7 @@ class RestInvocationProcessorTest {
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
 
          // Assert
-         assertEquals(HttpStatus.OK, result.status());
+         assertEquals(new HttpStatusCode(200), result.status());
          assertNotNull(result.content());
          assertEquals("{\"message\": \"Hello\"}", new String(result.content()));
          assertEquals("application/json;charset=UTF-8",
@@ -140,7 +140,7 @@ class RestInvocationProcessorTest {
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
 
          // Assert
-         assertEquals(HttpStatus.OK, result.status());
+         assertEquals(new HttpStatusCode(200), result.status());
          assertArrayEquals(binaryData, result.content());
       }
 
@@ -161,7 +161,7 @@ class RestInvocationProcessorTest {
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
 
          // Assert
-         assertEquals(HttpStatus.OK, result.status());
+         assertEquals(new HttpStatusCode(200), result.status());
          // It should pick the first one in the list (XML).
          assertEquals("<message>XML</message>", new String(result.content()));
          assertEquals("application/xml;charset=UTF-8",
@@ -194,7 +194,7 @@ class RestInvocationProcessorTest {
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, "{}", Map.of(), request);
 
          // Assert
-         assertEquals(HttpStatus.BAD_REQUEST, result.status());
+         assertEquals(new HttpStatusCode(400), result.status());
          assertTrue(new String(result.content()).contains("does not exist!"));
       }
 
@@ -217,7 +217,7 @@ class RestInvocationProcessorTest {
 
          // Assert
          // This tests the final fallback in the method.
-         assertEquals(HttpStatus.BAD_REQUEST, result.status());
+         assertEquals(new HttpStatusCode(400), result.status());
          assertNull(result.content());
       }
    }
@@ -240,7 +240,7 @@ class RestInvocationProcessorTest {
                }
                """);
 
-         var proxyResponse = new ResponseEntity<>("from proxy".getBytes(), HttpStatus.OK);
+         var proxyResponse = new ResponseResult(new HttpStatusCode(200), new HttpHeaders(), "from proxy".getBytes());
          when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/proxy"));
          when(proxyService.callExternal(any(), eq(HttpMethod.GET), any(), isNull())).thenReturn(proxyResponse);
 
@@ -248,7 +248,7 @@ class RestInvocationProcessorTest {
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
 
          // Assert
-         assertEquals(HttpStatus.OK, result.status());
+         assertEquals(new HttpStatusCode(200), result.status());
          assertArrayEquals("from proxy".getBytes(), result.content());
          verify(proxyService).callExternal(any(), eq(HttpMethod.GET), any(), isNull());
       }
@@ -262,7 +262,7 @@ class RestInvocationProcessorTest {
          context.operation().setDispatcherRules(
                "https://backend.example.com/runtimes/urn%3Aorg%3Aexample%3Aservice%2Fruntime%2Fexample-ABC123");
 
-         var proxyResponse = new ResponseEntity<>("from proxy".getBytes(), HttpStatus.OK);
+         var proxyResponse = new ResponseResult(new HttpStatusCode(200), new HttpHeaders(), "from proxy".getBytes());
          when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/invocations"));
          when(request.getQueryString()).thenReturn("qualifier=DEFAULT");
          when(proxyService.callExternal(any(), eq(HttpMethod.GET), any(), isNull())).thenReturn(proxyResponse);
@@ -271,7 +271,7 @@ class RestInvocationProcessorTest {
          var result = processor.processInvocation(context, System.currentTimeMillis(), null, null, Map.of(), request);
 
          // Assert
-         assertEquals(HttpStatus.OK, result.status());
+         assertEquals(new HttpStatusCode(200), result.status());
          var forwardedUri = ArgumentCaptor.forClass(URI.class);
          verify(proxyService).callExternal(forwardedUri.capture(), eq(HttpMethod.GET), any(), isNull());
          assertEquals("/runtimes/urn%3Aorg%3Aexample%3Aservice%2Fruntime%2Fexample-ABC123/invocations",

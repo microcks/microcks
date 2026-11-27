@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,18 +39,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for ImportExportService class.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class ImportExportServiceTest {
 
-   @Autowired
+   @Inject
    private ImportExportService service;
 
-   @Autowired
+   @Inject
    private ServiceRepository repository;
 
-   @Autowired
+   @Inject
    private ResourceRepository resourceRepository;
 
    private List<String> ids = new ArrayList<>();
@@ -64,19 +59,19 @@ class ImportExportServiceTest {
       Service service = new Service();
       service.setName("HelloWorld");
       service.setVersion("1.2");
-      repository.save(service);
+      repository.persist(service);
       ids.add(service.getId());
       // with same name and different version ...
       service = new Service();
       service.setName("HelloWorld");
       service.setVersion("1.1");
-      repository.save(service);
+      repository.persist(service);
       ids.add(service.getId());
       // with different name ...
       service = new Service();
       service.setName("MyService-hello");
       service.setVersion("1.1");
-      repository.save(service);
+      repository.persist(service);
       ids.add(service.getId());
 
       // Create associated resources.
@@ -85,7 +80,7 @@ class ImportExportServiceTest {
       resource.setName("Resource 1");
       resource.setType(ResourceType.WSDL);
       resource.setContent("<wsdl></wsdl>");
-      resourceRepository.save(resource);
+      resourceRepository.persist(resource);
    }
 
    @Test
@@ -130,9 +125,9 @@ class ImportExportServiceTest {
    @Test
    void testImportRepository() {
       // Setup and export result.
-      String json = "{\"services\":[{\"name\":\"Imp1\",\"version\":\"1.2\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":25638445759706201468670970602},"
-            + "{\"name\":\"Imp2\",\"version\":\"1.1\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":25638445759706201468670970603}], "
-            + "\"resources\":[{\"name\":\"Resource 1\",\"content\":\"<wsdl></wsdl>\",\"type\":\"WSDL\",\"serviceId\":25638445759706201468670970602,\"id\":25638445759706201468670970605}], "
+      String json = "{\"services\":[{\"name\":\"Imp1\",\"version\":\"1.2\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":\"6626365f24874269b65c6b02\"},"
+            + "{\"name\":\"Imp2\",\"version\":\"1.1\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":\"6626365f24874269b65c6b03\"}], "
+            + "\"resources\":[{\"name\":\"Resource 1\",\"content\":\"<wsdl></wsdl>\",\"type\":\"WSDL\",\"serviceId\":\"6626365f24874269b65c6b02\",\"id\":\"6626365f24874269b65c6b05\"}], "
             + "\"requests\":[], \"responses\":[]}";
 
       boolean result = service.importRepository(json);
@@ -142,7 +137,7 @@ class ImportExportServiceTest {
       assertNotNull(service);
       assertEquals("Imp1", service.getName());
       assertEquals("1.2", service.getVersion());
-      assertEquals("25638445759706201468670970602", service.getId().toString());
+      assertEquals("6626365f24874269b65c6b02", service.getId().toString());
 
       // Get imported resources and assert on content.
       List<Resource> resources = resourceRepository.findByServiceId(service.getId());

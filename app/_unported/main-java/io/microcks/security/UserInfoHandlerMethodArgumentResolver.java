@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.security;
+package io.microcks.security;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

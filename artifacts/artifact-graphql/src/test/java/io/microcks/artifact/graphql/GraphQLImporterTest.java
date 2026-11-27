@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.graphql;
+package io.microcks.artifact.graphql;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import java.io.IOException;
 
@@ -40,7 +40,7 @@ class GraphQLImporterTest {
    void testSimpleGraphQLImport() {
       GraphQLImporter importer = null;
       try {
-         importer = new GraphQLImporter("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+         importer = new GraphQLImporter("target/test-classes/io/microcks/artifact/graphql/films.graphql");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

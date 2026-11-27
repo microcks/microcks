@@ -1,0 +1,6 @@
+/* Usage · key figures: trend line and last request path inside the registry stat cards. */
+.kpi-trend { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); }
+.kpi-trend[data-direction='up'] { color: var(--success); }
+.kpi-trend[data-direction='down'] { color: var(--danger); }
+.kpi-trend > svg { flex: none; }
+.kpi-path { font: 400 12px/1.4 var(--font-mono); color: var(--link); overflow-wrap: anywhere; }

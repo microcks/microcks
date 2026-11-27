@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.artifact.jsonschema;
 
 /**
  * Identifies the JSON Schema draft dialect to use when validating a payload. Decouples Microcks utility APIs from the

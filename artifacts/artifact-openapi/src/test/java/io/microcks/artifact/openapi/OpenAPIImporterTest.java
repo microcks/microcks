@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.artifact.openapi;
 
-import io.github.microcks.domain.CallbackInfo;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.ParameterLocation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.ReferenceResolver;
+import io.microcks.domain.CallbackInfo;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.ParameterLocation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.util.ReferenceResolver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,10 +56,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class OpenAPIImporterTest {
 
    @ParameterizedTest
-   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml",
-         "target/test-classes/io/github/microcks/util/openapi/cars-openapi.json",
-         "target/test-classes/io/github/microcks/util/openapi/cars-openapi-quoted.yaml",
-         "target/test-classes/io/github/microcks/util/openapi/cars-openapi-spacesops.yaml" })
+   @ValueSource(strings = { "target/test-classes/io/microcks/artifact/openapi/cars-openapi.yaml",
+         "target/test-classes/io/microcks/artifact/openapi/cars-openapi.json",
+         "target/test-classes/io/microcks/artifact/openapi/cars-openapi-quoted.yaml",
+         "target/test-classes/io/microcks/artifact/openapi/cars-openapi-spacesops.yaml" })
    void testSimpleOpenAPI(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
@@ -72,8 +72,8 @@ class OpenAPIImporterTest {
    }
 
    @ParameterizedTest
-   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.yaml",
-         "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.json" })
+   @ValueSource(strings = { "target/test-classes/io/microcks/artifact/openapi/cars-openapi-extensions.yaml",
+         "target/test-classes/io/microcks/artifact/openapi/cars-openapi-extensions.json" })
    void testSimpleOpenAPIWithExtensions(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
@@ -89,8 +89,7 @@ class OpenAPIImporterTest {
    void testApicurioPetstoreOpenAPI() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json",
-               null);
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/petstore-openapi.json", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -206,8 +205,8 @@ class OpenAPIImporterTest {
    void testSimpleOpenAPIImportYAMLNoDashesWithJSON() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-with-json.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/cars-openapi-with-json.yaml",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -236,7 +235,7 @@ class OpenAPIImporterTest {
    void testOpenAPIWithOpsPathParameter() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/locations-openapi.json",
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/locations-openapi.json",
                null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -301,7 +300,7 @@ class OpenAPIImporterTest {
    void testOpenAPIImportYAMLWithHeaders() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-headers.yaml",
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/cars-openapi-headers.yaml",
                null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -393,7 +392,7 @@ class OpenAPIImporterTest {
       try {
          ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
          byte[] bytes = Files
-               .readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml"));
+               .readAllBytes(Paths.get("target/test-classes/io/microcks/artifact/openapi/cars-openapi.yaml"));
          JsonNode openapiSpec = mapper.readTree(bytes);
 
          String verb = "get";
@@ -414,8 +413,8 @@ class OpenAPIImporterTest {
    void testCompleteOpenAPIImportYAML() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-complete.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/cars-openapi-complete.yaml",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -568,7 +567,7 @@ class OpenAPIImporterTest {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-3.1-complete.yaml", null);
+               "target/test-classes/io/microcks/artifact/openapi/cars-openapi-3.1-complete.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -721,7 +720,7 @@ class OpenAPIImporterTest {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-uncomplete-params.yaml", null);
+               "target/test-classes/io/microcks/artifact/openapi/cars-openapi-uncomplete-params.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -841,7 +840,7 @@ class OpenAPIImporterTest {
    void testExampleValueDeserializationYAML() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/test-openapi.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -850,9 +849,9 @@ class OpenAPIImporterTest {
    }
 
    @ParameterizedTest
-   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/test-openapi-yaml.yaml",
-         "target/test-classes/io/github/microcks/util/openapi/test-openapi.json",
-         "target/test-classes/io/github/microcks/util/openapi/test-openapi-json.json" })
+   @ValueSource(strings = { "target/test-classes/io/microcks/artifact/openapi/test-openapi-yaml.yaml",
+         "target/test-classes/io/microcks/artifact/openapi/test-openapi.json",
+         "target/test-classes/io/microcks/artifact/openapi/test-openapi-json.json" })
    void testExampleValueDeserialization(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
@@ -869,7 +868,7 @@ class OpenAPIImporterTest {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-complex-refs.yaml", null);
+               "target/test-classes/io/microcks/artifact/openapi/cars-openapi-complex-refs.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -953,7 +952,7 @@ class OpenAPIImporterTest {
    void testParameterRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/param-refs-openapi.yaml",
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/param-refs-openapi.yaml",
                null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -1031,7 +1030,7 @@ class OpenAPIImporterTest {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/query-param-refs-openapi.yaml", null);
+               "target/test-classes/io/microcks/artifact/openapi/query-param-refs-openapi.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -1071,7 +1070,7 @@ class OpenAPIImporterTest {
    void testExamplesRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/examples-ref-openapi.yaml",
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/examples-ref-openapi.yaml",
                null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -1136,8 +1135,7 @@ class OpenAPIImporterTest {
             null, true);
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml",
-               resolver);
+               "target/test-classes/io/microcks/artifact/openapi/weather-forecast-openapi-relative-ref.yaml", resolver);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -1179,7 +1177,7 @@ class OpenAPIImporterTest {
             null, true);
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml",
+               "target/test-classes/io/microcks/artifact/openapi/weather-forecast-openapi-relative-ref-example.yaml",
                resolver);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -1270,8 +1268,7 @@ class OpenAPIImporterTest {
             null, true);
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml",
-               resolver);
+               "target/test-classes/io/microcks/artifact/openapi/weather-forecast-openapi-absolute-ref.yaml", resolver);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -1323,7 +1320,7 @@ class OpenAPIImporterTest {
             null, true);
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref-pointers.yaml",
+               "target/test-classes/io/microcks/artifact/openapi/weather-forecast-openapi-absolute-ref-pointers.yaml",
                resolver);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -1418,7 +1415,7 @@ class OpenAPIImporterTest {
             null, true);
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-recursive-ref.yaml",
+               "target/test-classes/io/microcks/artifact/openapi/weather-forecast-openapi-relative-recursive-ref.yaml",
                resolver);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -1508,8 +1505,8 @@ class OpenAPIImporterTest {
    }
 
    @ParameterizedTest
-   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent.yaml",
-         "target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent-response-ref.yaml" })
+   @ValueSource(strings = { "target/test-classes/io/microcks/artifact/openapi/test-openapi-nocontent.yaml",
+         "target/test-classes/io/microcks/artifact/openapi/test-openapi-nocontent-response-ref.yaml" })
    void testNoContentResponseOpenAPIImport(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
@@ -1838,7 +1835,7 @@ class OpenAPIImporterTest {
    void testSimpleOpenAPIWithObjectQueryParam() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/object-query-params.yaml",
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/object-query-params.yaml",
                null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -2093,7 +2090,7 @@ class OpenAPIImporterTest {
    void testOpenAPIWithExternalValueDataUriBinaryResponse() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/get-image-openapi.yaml",
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/get-image-openapi.yaml",
                null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -2153,7 +2150,7 @@ class OpenAPIImporterTest {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/get-image-openapi-remote-externalvalue.yaml",
+               "target/test-classes/io/microcks/artifact/openapi/get-image-openapi-remote-externalvalue.yaml",
                resolver);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -2197,7 +2194,7 @@ class OpenAPIImporterTest {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/callback-example-openapi.json", null);
+               "target/test-classes/io/microcks/artifact/openapi/callback-example-openapi.json", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -2277,8 +2274,8 @@ class OpenAPIImporterTest {
    void testOpenAPIWithWebhooks() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/webhook-example-openapi.json", null);
+         importer = new OpenAPIImporter("target/test-classes/io/microcks/artifact/openapi/webhook-example-openapi.json",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

@@ -13,36 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.event.ChangeType;
-import io.github.microcks.event.ServiceChangeEvent;
-import io.github.microcks.repository.EventMessageRepository;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.security.AuthorizationChecker;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.MockRepositoryExportException;
-import io.github.microcks.util.MockRepositoryExporter;
-import io.github.microcks.util.MockRepositoryExporterFactory;
-import io.github.microcks.util.metadata.ExamplesExporter;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.event.ChangeType;
+import io.microcks.event.ServiceChangeEvent;
+import io.microcks.repository.EventMessageRepository;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.security.AuthorizationChecker;
+import io.microcks.security.UserInfo;
+import io.microcks.util.IdBuilder;
+import io.microcks.artifact.MockRepositoryExportException;
+import io.microcks.artifact.MockRepositoryExporter;
+import io.microcks.artifact.MockRepositoryExporterFactory;
+import io.microcks.artifact.metadata.ExamplesExporter;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +53,7 @@ import java.util.List;
  * A Service for managing imports and exports of Microcks repository part.
  * @author laurent
  */
-@org.springframework.stereotype.Service
+@ApplicationScoped
 public class ImportExportService {
 
    /** A simple logger for diagnostic messages. */
@@ -64,7 +66,7 @@ public class ImportExportService {
    private final ResponseRepository responseRepository;
    private final EventMessageRepository eventMessageRepository;
    private final ServiceRepository serviceRepository;
-   private final ApplicationContext applicationContext;
+   private final Event<ServiceChangeEvent> serviceChangeEvent;
    private final AuthorizationChecker authorizationChecker;
 
    /**
@@ -76,13 +78,14 @@ public class ImportExportService {
     * @param responseRepository     The repository for responses
     * @param eventMessageRepository The repository for event messages
     * @param serviceRepository      The repository for services
-    * @param applicationContext     The Spring application context
+    * @param serviceChangeEvent     The CDI event used to publish service changes
     * @param authorizationChecker   The authorization checker service
     */
+   @Inject
    public ImportExportService(ServiceService serviceService, MessageService messageService,
          RequestRepository requestRepository, ResourceRepository resourceRepository,
          ResponseRepository responseRepository, EventMessageRepository eventMessageRepository,
-         ServiceRepository serviceRepository, ApplicationContext applicationContext,
+         ServiceRepository serviceRepository, Event<ServiceChangeEvent> serviceChangeEvent,
          AuthorizationChecker authorizationChecker) {
       this.serviceService = serviceService;
       this.messageService = messageService;
@@ -91,7 +94,7 @@ public class ImportExportService {
       this.responseRepository = responseRepository;
       this.eventMessageRepository = eventMessageRepository;
       this.serviceRepository = serviceRepository;
-      this.applicationContext = applicationContext;
+      this.serviceChangeEvent = serviceChangeEvent;
       this.authorizationChecker = authorizationChecker;
    }
 
@@ -117,13 +120,13 @@ public class ImportExportService {
          log.info("Retrieve {} event messages to import into repository",
                model.getEventMessages() != null ? model.getEventMessages().size() : 0);
 
-         serviceRepository.saveAll(model.getServices());
-         resourceRepository.saveAll(model.getResources());
-         responseRepository.saveAll(model.getResponses());
-         requestRepository.saveAll(model.getRequests());
+         serviceRepository.persistOrUpdate(model.getServices());
+         resourceRepository.persistOrUpdate(model.getResources());
+         responseRepository.persistOrUpdate(model.getResponses());
+         requestRepository.persistOrUpdate(model.getRequests());
          // Make it optional to allow importing an old snapshot.
          if (model.getEventMessages() != null) {
-            eventMessageRepository.saveAll(model.getEventMessages());
+            eventMessageRepository.persistOrUpdate(model.getEventMessages());
          }
 
          // Once everything is saved, be sure to fire a change event to allow
@@ -138,8 +141,8 @@ public class ImportExportService {
    /** Publish a ServiceChangeEvent towards minions or some other consumers. */
    private void publishServiceChangeEvent(ImportExportModel model) {
       for (Service service : model.getServices()) {
-         ServiceChangeEvent event = new ServiceChangeEvent(this, service.getId(), ChangeType.UPDATED);
-         applicationContext.publishEvent(event);
+         ServiceChangeEvent event = new ServiceChangeEvent(service.getId(), ChangeType.UPDATED);
+         serviceChangeEvent.fireAsync(event);
          log.debug("Service change event has been published");
       }
    }

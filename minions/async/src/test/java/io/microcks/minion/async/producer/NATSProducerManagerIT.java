@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.util.AvroUtil;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.artifact.asyncapi.AvroUtil;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -234,7 +234,7 @@ class NATSProducerManagerIT {
       // the placement the spec mandates and the one a v3 generator emits.
       String natsUrl = "nats://localhost:" + natsContainer.getMappedPort(NATS_PORT);
       String serviceId = "9f3a0c1e-6b1d-4f2a-9c8e-3d5b7a2f4c10";
-      String asyncAPIContent = Files.readString(Paths.get("target/test-classes/io/github/microcks/minion/async",
+      String asyncAPIContent = Files.readString(Paths.get("target/test-classes/io/microcks/minion/async",
             "user-signedup-avro-multiformat-asyncapi-3.0.yaml"));
 
       String laurentJson = "{\"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";

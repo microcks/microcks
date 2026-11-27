@@ -1,0 +1,103 @@
+/* Catalogue (screen 04). Colours come from the design tokens only. */
+.catalogue { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* Result line: "11 of 11 APIs & services" and the sort order. */
+.catalogue-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.catalogue-result p { margin: 0; }
+.catalogue-result strong { color: var(--text); font-weight: 600; }
+.catalogue-sort { font: 400 12px var(--font-mono); }
+
+/* Table view. */
+.catalogue-table .table { min-width: 1040px; }
+.catalogue-table td[data-align='end'] { color: var(--text-secondary); }
+.catalogue-table td:last-child { padding-inline: 10px; }
+.catalogue-service { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.catalogue-badge-link { display: inline-flex; max-width: 100%; color: inherit; text-decoration: none; border-radius: 5px; }
+.catalogue-badge-link:hover .api-badge-name { text-decoration: underline; }
+.catalogue-format { font-size: 12px; color: var(--text-muted); }
+.catalogue-labels { display: flex; flex-wrap: wrap; gap: 4px; max-width: 300px; }
+.catalogue-labels .chip { white-space: nowrap; }
+.catalogue-test { display: flex; flex-direction: column; gap: 2px; color: inherit; text-decoration: none; }
+.catalogue-test:hover .status > span { text-decoration: underline; }
+.catalogue-test-meta { font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); }
+.catalogue-conformance { display: flex; align-items: center; gap: 10px; }
+.catalogue-score { width: 44px; font: 600 13px var(--font-mono); color: var(--text-muted); }
+.catalogue-score[data-level='success'] { color: var(--success); }
+.catalogue-score[data-level='warning'] { color: var(--warning); }
+.catalogue-score[data-level='danger'] { color: var(--danger); }
+.catalogue-open {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+.catalogue-actions { display: inline-flex; gap: 6px; }
+.catalogue-open:hover { background: var(--raised); color: var(--text); }
+
+/* Badge wall view. */
+.catalogue-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 14px; }
+.catalogue-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--canvas);
+}
+.catalogue-card-head { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.catalogue-card-head > .api-badge { max-width: 100%; }
+.catalogue-shields { display: flex; flex-wrap: wrap; gap: 8px; }
+.catalogue-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Footer: count and pagination. */
+.catalogue-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.catalogue-pager-nav { display: flex; align-items: center; gap: 6px; }
+.catalogue-pager-size { font-size: 12px; }
+.catalogue-pager-nav .button { min-width: 32px; min-height: 32px; padding: 0; }
+.catalogue-pager-nav .button:disabled { opacity: 0.5; } /* Inactive controls: dimmed as in the prototype. */
+.catalogue-pager-page {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  border: 1px solid var(--action);
+  border-radius: 4px;
+  background: var(--selected);
+  color: var(--text);
+  font: 400 12px var(--font-mono);
+}

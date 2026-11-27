@@ -1,0 +1,22 @@
+/* Behavior page (prototype Behavior.dc.html). Colors come from the design tokens only. */
+.behavior-page { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+/* Configuration on the left, the simulator on the right (SplitPane: wraps under it on narrow screens). */
+.behavior-config { display: flex; flex-direction: column; gap: 20px; }
+
+/* Sections: 16/600 heading, a 13px muted lead 4px under it, then 14px between blocks. */
+.behavior-layout .panel-header { align-items: baseline; }
+.behavior-layout .panel-actions { font-size: 13px; }
+.behavior-layout .panel-actions a { color: var(--link); text-decoration: none; }
+.behavior-layout .panel-actions a:hover { text-decoration: underline; }
+.behavior-layout .panel-body { display: flex; flex-direction: column; gap: 14px; }
+.behavior-layout .panel-lead { margin: -8px 0 0; font: 400 13px/1.5 var(--font-ui); color: var(--text-muted); }
+
+
+/* Header: breadcrumb, GET + mono path + API badge, actions; then the saved strip (14px apart). */
+.behavior-head { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.behavior-head .demo-page-description { max-width: 760px; font-size: 15px; }
+.behavior-api-link { display: inline-flex; text-decoration: none; }
+.behavior-unsaved { display: inline-flex; align-items: center; gap: 6px; font: 400 13px/18px var(--font-ui); color: var(--warning); }
+.behavior-saved { display: inline-flex; align-items: center; gap: 6px; color: var(--success); }
+

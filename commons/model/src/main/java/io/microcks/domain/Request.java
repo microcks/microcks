@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
-import org.springframework.data.annotation.Id;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +27,11 @@ import java.util.List;
  * Domain object representing a Microservice operation / action invocation request.
  * @author laurent
  */
+@MongoEntity(collection = "request")
 public class Request extends Message {
 
-   @Id
+   @BsonId
+   @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
    private String responseId;
    private String callbackName;

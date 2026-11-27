@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.metadata;
+package io.microcks.artifact.metadata;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.Service;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.Service;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import java.io.IOException;
 
@@ -39,7 +39,7 @@ class MetadataImporterTest {
       MetadataImporter importer = null;
       try {
          importer = new MetadataImporter(
-               "target/test-classes/io/github/microcks/util/metadata/hello-grpc-v1-metadata.yml");
+               "target/test-classes/io/microcks/artifact/metadata/hello-grpc-v1-metadata.yml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -75,7 +75,7 @@ class MetadataImporterTest {
       MetadataImporter importer = null;
       try {
          importer = new MetadataImporter(
-               "target/test-classes/io/github/microcks/util/metadata/APIPastry-2.0-metadata.yml");
+               "target/test-classes/io/microcks/artifact/metadata/APIPastry-2.0-metadata.yml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

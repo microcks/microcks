@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.Date;
 
@@ -25,15 +26,15 @@ import java.util.Date;
  * An ephemeral Service state that can be used to create stateful mocks.
  * @author laurent
  */
-@Document
+@MongoEntity(collection = "serviceState")
 public class ServiceState {
 
-   @Id
+   @BsonId
+   @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
    private String serviceId;
    private String key;
    private String value;
-   @Indexed(expireAfterSeconds = 0)
    private Date expireAt;
 
 

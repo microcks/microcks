@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
+import io.quarkus.test.junit.QuarkusTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
-import io.github.microcks.web.dto.GenericResourceServiceDTO;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
+import io.microcks.web.dto.GenericResourceServiceDTO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import io.microcks.testsupport.http.HttpEntity;
+import io.microcks.testsupport.http.HttpHeaders;
+import io.microcks.testsupport.http.HttpMethod;
+import io.microcks.testsupport.http.MediaType;
+import io.microcks.testsupport.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration test for the DynamicMockRestController covering CRUD operations on dynamic mock resources.
  * @author laurent
  */
+@QuarkusTest
 class DynamicMockRestControllerIT extends AbstractBaseIT {
 
    private static final String SERVICE_NAME = "DynaMock API";
@@ -363,7 +365,7 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
             operation.setDefaultDelayStrategy("FIXED");
          }
       }
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       String body = "{\"productId\": \"DELAY2\", \"quantity\": 1}";
 
@@ -382,7 +384,7 @@ class DynamicMockRestControllerIT extends AbstractBaseIT {
             operation.setDefaultDelayStrategy(null);
          }
       }
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
    }
 
    @Test

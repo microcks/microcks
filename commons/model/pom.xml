@@ -17,9 +17,9 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <artifactId>microcks</artifactId>
-    <groupId>io.github.microcks</groupId>
-    <version>1.16.0-SNAPSHOT</version>
+    <artifactId>microcks-parent</artifactId>
+    <groupId>io.microcks</groupId>
+    <version>2.0.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -34,16 +34,16 @@
   </properties>
 
   <dependencies>
+    <!-- Framework-neutral persistence annotations (@BsonId...). Collections and indexes are handled by the store layer. -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-mongodb</artifactId>
-      <!-- Avoid pull Snakeyaml here as it resolves 1.33, full of CVEs -->
-      <exclusions>
-        <exclusion>
-          <groupId>org.yaml</groupId>
-          <artifactId>snakeyaml</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.mongodb</groupId>
+      <artifactId>bson</artifactId>
+    </dependency>
+    <!-- Annotation-only (@MongoEntity collection names): provided, so the model has no Quarkus runtime dependency. -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-mongodb-panache-common</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.postman;
+package io.microcks.artifact.postman;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Parameter;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.URIBuilder;
-import io.github.microcks.util.test.AbstractTestRunner;
-import io.github.microcks.util.test.TestRunnerCommons;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Parameter;
+import io.microcks.domain.Request;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestReturn;
+import io.microcks.test.ResourceReader;
+import io.microcks.util.URIBuilder;
+import io.microcks.test.AbstractTestRunner;
+import io.microcks.test.TestRunnerCommons;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,10 +37,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpResponse;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.ClientHttpRequest;
+import io.microcks.util.http.ClientHttpRequestFactory;
+import io.microcks.util.http.ClientHttpResponse;
 
 import java.io.IOException;
 import java.net.URI;
@@ -65,7 +65,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    private JsonNode collection;
 
-   private final ResourceRepository resourceRepository;
+   private final ResourceReader resourceReader;
    private ClientHttpRequestFactory clientHttpRequestFactory;
 
    private String testsCallbackUrl = null;
@@ -74,10 +74,10 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    /**
     * Build a new PostmanTestStepsRunner for a collection.
-    * @param resourceRepository The repository that contains Postman Collection to test
+    * @param resourceReader The repository that contains Postman Collection to test
     */
-   public PostmanTestStepsRunner(ResourceRepository resourceRepository) {
-      this.resourceRepository = resourceRepository;
+   public PostmanTestStepsRunner(ResourceReader resourceReader) {
+      this.resourceReader = resourceReader;
    }
 
    /**
@@ -105,7 +105,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
       // Retrieve the resource corresponding to OpenAPI specification if any.
       Resource collectionResource = null;
-      List<Resource> resources = resourceRepository.findByServiceId(service.getId());
+      List<Resource> resources = resourceReader.findByServiceId(service.getId());
       for (Resource resource : resources) {
          if (ResourceType.POSTMAN_COLLECTION.equals(resource.getType())) {
             collectionResource = resource;

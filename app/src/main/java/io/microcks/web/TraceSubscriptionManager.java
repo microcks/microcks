@@ -13,21 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.event.TraceEvent;
-import io.github.microcks.service.SpanStorageService;
-import io.github.microcks.util.tracing.SpanFilterUtil;
+import io.microcks.event.TraceEvent;
+import io.microcks.service.SpanStorageService;
+import io.microcks.util.tracing.SpanFilterUtil;
 
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.quarkus.scheduler.Scheduled;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.subscription.MultiEmitter;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.sse.OutboundSseEvent;
+import jakarta.ws.rs.sse.Sse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * on service name and operation name, and will receive updates when matching traces are updated.
  * @author Apoorva Srinivas Appadoo
  */
-@Component
+@ApplicationScoped
 public class TraceSubscriptionManager {
 
    /** A commons logger for diagnostic messages. */
@@ -47,43 +50,36 @@ public class TraceSubscriptionManager {
    private final SpanStorageService spanStorageService;
    private final List<Subscription> subscriptions = new CopyOnWriteArrayList<>();
 
+   @Inject
    public TraceSubscriptionManager(SpanStorageService spanStorageService) {
       this.spanStorageService = spanStorageService;
    }
 
    /**
     * Register a new subscription with filters.
+    * @param sse           The JAX-RS SSE factory used to build events
+    * @param serviceName   The service name filter
+    * @param operationName The operation name filter
+    * @param clientAddress The client address filter
+    * @return A stream of SSE events, without timeout
     */
-   public SseEmitter subscribe(String serviceName, String operationName, String clientAddress) {
-      SseEmitter emitter = new SseEmitter(0L); // No timeout
-      subscribe(emitter, serviceName, operationName, clientAddress);
-      return emitter;
-   }
+   public Multi<OutboundSseEvent> subscribe(Sse sse, String serviceName, String operationName, String clientAddress) {
+      return Multi.createFrom().emitter(emitter -> {
+         Subscription sub = new Subscription(sse, emitter, serviceName, operationName, clientAddress);
+         subscriptions.add(sub);
+         emitter.onTermination(() -> subscriptions.remove(sub));
 
-   /**
-    * Subscribe to Custom Emitter
-    */
-   public void subscribe(SseEmitter emitter, String serviceName, String operationName, String clientAddress) {
-      Subscription sub = new Subscription(emitter, serviceName, operationName, clientAddress);
-
-      subscriptions.add(sub);
-
-      emitter.onCompletion(() -> subscriptions.remove(sub));
-      emitter.onTimeout(() -> subscriptions.remove(sub));
-      emitter.onError(e -> subscriptions.remove(sub));
-
-      // send initial heartbeat
-      try {
-         emitter.send(SseEmitter.event().name("heartbeat").data(Collections.emptyList()));
-      } catch (IOException ignored) {
-      }
+         // Send initial heartbeat.
+         emitter.emit(sse.newEventBuilder().name("heartbeat")
+               .mediaType(jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE).data(Collections.emptyList()).build());
+      });
    }
 
    /**
     * Handle trace updates and push data to matching subscribers.
+    * @param event The trace event
     */
-   @EventListener
-   public void onTraceUpdated(TraceEvent event) {
+   public void onTraceUpdated(@ObservesAsync TraceEvent event) {
       log.trace("Received trace update event for traceId='{}'", event.traceId());
       List<SpanData> spans = spanStorageService.getSpansForTrace(event.traceId());
       if (spans.isEmpty())
@@ -91,12 +87,8 @@ public class TraceSubscriptionManager {
 
       for (Subscription sub : subscriptions) {
          if (SpanFilterUtil.matchesTraceEvent(event, sub.serviceName(), sub.operationName(), sub.clientAddress())) {
-            try {
-               sub.emitter().send(SseEmitter.event().name("trace").data(spans));
-            } catch (IOException e) {
-               sub.emitter().complete();
-               subscriptions.remove(sub);
-            }
+            sub.emitter().emit(sub.sse().newEventBuilder().name("trace")
+                  .mediaType(jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE).data(spans).build());
          }
       }
    }
@@ -104,20 +96,17 @@ public class TraceSubscriptionManager {
    /**
     * Periodic heartbeat to keep connections alive.
     */
-   @Scheduled(fixedRate = 15000)
+   @Scheduled(every = "15s")
    public void sendHeartbeats() {
       for (Subscription sub : subscriptions) {
-         try {
-            sub.emitter().send(SseEmitter.event().name("heartbeat").data(Collections.emptyList())
-                  .id(String.valueOf(Instant.now().toEpochMilli())));
-         } catch (IOException e) {
-            sub.emitter().complete();
-            subscriptions.remove(sub);
-         }
+         sub.emitter()
+               .emit(sub.sse().newEventBuilder().name("heartbeat")
+                     .mediaType(jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE).data(Collections.emptyList())
+                     .id(String.valueOf(Instant.now().toEpochMilli())).build());
       }
    }
 
-
-   private record Subscription(SseEmitter emitter, String serviceName, String operationName, String clientAddress) {
+   private record Subscription(Sse sse, MultiEmitter<? super OutboundSseEvent> emitter, String serviceName,
+         String operationName, String clientAddress) {
    }
 }

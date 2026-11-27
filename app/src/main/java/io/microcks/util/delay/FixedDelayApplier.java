@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.delay;
+package io.microcks.util.delay;
 
 /**
  * A {@link DelayApplier} that returns fixed value.

@@ -1,0 +1,30 @@
+.ad-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.ad-toolbar > .filter-bar-search { flex: 0 1 360px; min-width: 220px; }
+
+.ad-users .table { min-width: 900px; table-layout: fixed; }
+/* Prototype grid: minmax(220,1.4fr) minmax(200,1.2fr) minmax(180,1fr) minmax(170,1fr) 150px, gap 12, padding 16. */
+.ad-users .table th, .ad-users .table td { padding: 10px 12px 10px 0; }
+.ad-users .table tr > :first-child { padding-inline-start: 16px; }
+.ad-users .table tr > :last-child { padding-inline-end: 16px; }
+.ad-users .table thead th { padding-block: 9px; }
+/* The last column is 150px + its 16px end padding; the four others share the rest 1.4 : 1.2 : 1 : 1. */
+.ad-users .table th:nth-child(1) { width: 27%; }
+.ad-users .table th:nth-child(2) { width: 23%; }
+.ad-users .table th:nth-child(3) { width: 19%; }
+.ad-users .table th:nth-child(4) { width: 19%; }
+.ad-users .table th:nth-child(5) { width: 166px; box-sizing: border-box; }
+.ad-users .table .table-empty { padding: 18px 16px; font-size: 14px; color: var(--text-secondary); }
+
+.ad-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ad-user-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ad-user-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-user-you { margin-inline-start: 6px; font-size: 12px; font-weight: 400; color: var(--text-muted); }
+.ad-user-id { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+.ad-user-email { font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
+
+.ad-pills { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+/* Role pill: user (neutral), manager (link), admin (selected + action border). */
+
+.ad-role-cell { display: flex; flex-direction: column; gap: 3px; }
+.ad-role-cell > .select { width: 100%; min-height: 34px; font-size: 13px; }
+.ad-role-cell > .select:disabled { opacity: 0.6; }

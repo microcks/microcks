@@ -1,7 +1,7 @@
 apiVersion: mocks.microcks.io/v1alpha1
 kind: APIExamples
 metadata:
-  name: io.github.microcks.grpc.hello.v1.HelloService
+  name: io.microcks.grpc.hello.v1.HelloService
   version: v1
 operations:
   'greeting':

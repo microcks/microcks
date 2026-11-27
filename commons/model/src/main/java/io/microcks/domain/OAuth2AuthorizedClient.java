@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
-import org.springframework.data.annotation.Transient;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
 
 /**
  * Represent persisted information for an OAuth2 authorization/authentication done before launching a test.
@@ -27,7 +27,7 @@ public class OAuth2AuthorizedClient {
    private String principalName;
    private String tokenUri;
    private String scopes;
-   @Transient
+   @BsonIgnore
    private String encodedAccessToken;
 
    public OAuth2AuthorizedClient() {

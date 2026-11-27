@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util.asyncapi;
+package io.microcks.artifact.asyncapi;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.RequestReplyEvent;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.ReferenceResolver;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.RequestReplyEvent;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.util.ReferenceResolver;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml", null);
+               "target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0.yaml", null);
       } catch (IOException ioe) {
          Assertions.fail("Exception should not be thrown");
       }
@@ -86,7 +86,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-nameless.yaml", null);
+               "target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0-nameless.yaml", null);
       } catch (IOException ioe) {
          Assertions.fail("Exception should not be thrown");
       }
@@ -138,7 +138,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-static.yaml", null);
+               "target/test-classes/io/microcks/artifact/asyncapi/streetlights-asyncapi-3.0-static.yaml", null);
       } catch (IOException ioe) {
          Assertions.fail("Exception should not be thrown");
       }
@@ -217,7 +217,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-dynamic.yaml", null);
+               "target/test-classes/io/microcks/artifact/asyncapi/streetlights-asyncapi-3.0-dynamic.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -296,7 +296,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-ref.yaml",
+               "target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0-ref.yaml",
                new ReferenceResolver(
                      "https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-ref.yaml",
                      null, true));
@@ -363,7 +363,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml",
+               "target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml",
                new ReferenceResolver(
                      "https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml",
                      null, true));
@@ -423,7 +423,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-absolute-ref.yaml",
+               "target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0-avro-absolute-ref.yaml",
                new ReferenceResolver(
                      "https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-absolute-ref.yaml",
                      null, true));
@@ -558,7 +558,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-lifecycle-asyncapi-3.0-multi-messages.yaml",
+               "target/test-classes/io/microcks/artifact/asyncapi/user-lifecycle-asyncapi-3.0-multi-messages.yaml",
                null);
       } catch (IOException ioe) {
          Assertions.fail("Exception should not be thrown");
@@ -617,7 +617,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-reply.yaml", null);
+               "target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0-reply.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -668,7 +668,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-reply.yaml", null);
+               "target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0-reply.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -706,7 +706,7 @@ class AsyncAPI3ImporterTest {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer(
-               "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-3.0-ibmmq.yaml", null);
+               "target/test-classes/io/microcks/artifact/asyncapi/account-service-asyncapi-3.0-ibmmq.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

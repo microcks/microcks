@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.artifact;
 
-import io.github.microcks.util.metadata.ExamplesExporter;
-import io.github.microcks.util.openapi.OpenAPIOverlayExporter;
+import io.microcks.artifact.metadata.ExamplesExporter;
+import io.microcks.artifact.openapi.OpenAPIOverlayExporter;
 
 import org.junit.jupiter.api.Test;
 

@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.handler;
+package io.microcks.minion.async.handler;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Header;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.producer.KafkaProducerManager;
-import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
+import io.microcks.domain.Binding;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Header;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.minion.async.producer.KafkaProducerManager;
+import io.microcks.util.el.EvaluableRequest;
+import io.microcks.util.el.TemplateEngine;
+import io.microcks.util.el.TemplateEngineFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

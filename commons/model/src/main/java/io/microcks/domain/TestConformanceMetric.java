@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
-import org.springframework.data.annotation.Id;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +28,11 @@ import java.util.Map;
  * objects. If classification is allowed then aggregation can be realized using the {@code aggregationLabelValue} field.
  * @author laurent
  */
+@MongoEntity(collection = "testConformanceMetric")
 public class TestConformanceMetric {
 
-   @Id
+   @BsonId
+   @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
    private String serviceId;
    private String aggregationLabelValue;

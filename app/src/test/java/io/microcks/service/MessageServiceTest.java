@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.RequestReplyEvent;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.repository.EventMessageRepository;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
-import io.github.microcks.util.IdBuilder;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.RequestReplyEvent;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.repository.EventMessageRepository;
+import io.microcks.util.IdBuilder;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 
@@ -40,15 +37,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for MessageService class.
  * @author adamhicks
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class MessageServiceTest {
 
-   @Autowired
+   @Inject
    private MessageService messageService;
 
-   @Autowired
+   @Inject
    private EventMessageRepository eventMessageRepository;
 
    @Test
@@ -70,13 +65,13 @@ class MessageServiceTest {
       event1.setName("event1");
       event1.setContent("{\"data\": \"test1\"}");
       event1.setOperationId(operationId);
-      eventMessageRepository.save(event1);
+      eventMessageRepository.persist(event1);
 
       EventMessage event2 = new EventMessage();
       event2.setName("event2");
       event2.setContent("{\"data\": \"test2\"}");
       event2.setOperationId(operationId);
-      eventMessageRepository.save(event2);
+      eventMessageRepository.persist(event2);
 
       // Execute
       List<? extends Exchange> results = messageService.getEventByOperation(operationId);
@@ -113,7 +108,7 @@ class MessageServiceTest {
       replyMessage.setName("reply1");
       replyMessage.setContent("{\"result\": \"success\"}");
       replyMessage.setOperationId(operationId);
-      eventMessageRepository.save(replyMessage);
+      eventMessageRepository.persist(replyMessage);
 
       // Create request message with replyId
       EventMessage requestMessage = new EventMessage();
@@ -121,7 +116,7 @@ class MessageServiceTest {
       requestMessage.setContent("{\"action\": \"process\"}");
       requestMessage.setOperationId(operationId);
       requestMessage.setReplyId(replyMessage.getId());
-      eventMessageRepository.save(requestMessage);
+      eventMessageRepository.persist(requestMessage);
 
       // Execute
       List<? extends Exchange> results = messageService.getEventByOperation(operationId);
@@ -157,7 +152,7 @@ class MessageServiceTest {
       replyMessage.setName("orderReply");
       replyMessage.setContent("{\"status\": \"confirmed\"}");
       replyMessage.setOperationId(operationId);
-      eventMessageRepository.save(replyMessage);
+      eventMessageRepository.persist(replyMessage);
 
       // Create and save request message AFTER with reference to reply
       EventMessage requestMessage = new EventMessage();
@@ -165,7 +160,7 @@ class MessageServiceTest {
       requestMessage.setContent("{\"order\": \"123\"}");
       requestMessage.setOperationId(operationId);
       requestMessage.setReplyId(replyMessage.getId());
-      eventMessageRepository.save(requestMessage);
+      eventMessageRepository.persist(requestMessage);
 
       // Execute
       List<? extends Exchange> results = messageService.getEventByOperation(operationId);
@@ -200,7 +195,7 @@ class MessageServiceTest {
       requestMessage.setContent("{\"action\": \"test\"}");
       requestMessage.setOperationId(operationId);
       requestMessage.setReplyId("non-existent-id-12345");
-      eventMessageRepository.save(requestMessage);
+      eventMessageRepository.persist(requestMessage);
 
       // Execute
       List<? extends Exchange> results = messageService.getEventByOperation(operationId);
@@ -229,14 +224,14 @@ class MessageServiceTest {
       unidirectional1.setName("notification");
       unidirectional1.setContent("{\"type\": \"info\"}");
       unidirectional1.setOperationId(operationId);
-      eventMessageRepository.save(unidirectional1);
+      eventMessageRepository.persist(unidirectional1);
 
       // Create reply message
       EventMessage replyMessage = new EventMessage();
       replyMessage.setName("commandReply");
       replyMessage.setContent("{\"result\": \"ok\"}");
       replyMessage.setOperationId(operationId);
-      eventMessageRepository.save(replyMessage);
+      eventMessageRepository.persist(replyMessage);
 
       // Create request message with replyId
       EventMessage requestMessage = new EventMessage();
@@ -244,14 +239,14 @@ class MessageServiceTest {
       requestMessage.setContent("{\"command\": \"execute\"}");
       requestMessage.setOperationId(operationId);
       requestMessage.setReplyId(replyMessage.getId());
-      eventMessageRepository.save(requestMessage);
+      eventMessageRepository.persist(requestMessage);
 
       // Create another unidirectional event
       EventMessage unidirectional2 = new EventMessage();
       unidirectional2.setName("alert");
       unidirectional2.setContent("{\"type\": \"warning\"}");
       unidirectional2.setOperationId(operationId);
-      eventMessageRepository.save(unidirectional2);
+      eventMessageRepository.persist(unidirectional2);
 
       // Execute
       List<? extends Exchange> results = messageService.getEventByOperation(operationId);
@@ -286,7 +281,7 @@ class MessageServiceTest {
       replyMessage.setName("testReply");
       replyMessage.setContent("{\"result\": \"pass\"}");
       replyMessage.setTestCaseId(testCaseId);
-      eventMessageRepository.save(replyMessage);
+      eventMessageRepository.persist(replyMessage);
 
       // Create request message with replyId
       EventMessage requestMessage = new EventMessage();
@@ -294,7 +289,7 @@ class MessageServiceTest {
       requestMessage.setContent("{\"test\": \"data\"}");
       requestMessage.setTestCaseId(testCaseId);
       requestMessage.setReplyId(replyMessage.getId());
-      eventMessageRepository.save(requestMessage);
+      eventMessageRepository.persist(requestMessage);
 
       // Execute
       List<? extends Exchange> results = messageService.getEventByTestCase(testCaseId);
@@ -328,28 +323,28 @@ class MessageServiceTest {
       reply1.setName("reply1");
       reply1.setContent("{\"result\": \"1\"}");
       reply1.setOperationId(operationId);
-      eventMessageRepository.save(reply1);
+      eventMessageRepository.persist(reply1);
 
       EventMessage request1 = new EventMessage();
       request1.setName("request1");
       request1.setContent("{\"action\": \"1\"}");
       request1.setOperationId(operationId);
       request1.setReplyId(reply1.getId());
-      eventMessageRepository.save(request1);
+      eventMessageRepository.persist(request1);
 
       // Create second pair
       EventMessage reply2 = new EventMessage();
       reply2.setName("reply2");
       reply2.setContent("{\"result\": \"2\"}");
       reply2.setOperationId(operationId);
-      eventMessageRepository.save(reply2);
+      eventMessageRepository.persist(reply2);
 
       EventMessage request2 = new EventMessage();
       request2.setName("request2");
       request2.setContent("{\"action\": \"2\"}");
       request2.setOperationId(operationId);
       request2.setReplyId(reply2.getId());
-      eventMessageRepository.save(request2);
+      eventMessageRepository.persist(request2);
 
       // Execute
       List<? extends Exchange> results = messageService.getEventByOperation(operationId);

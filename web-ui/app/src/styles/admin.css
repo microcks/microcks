@@ -1,0 +1,54 @@
+/* Administration: shared pieces of the five tabs (prototype Admin.dc.html). */
+/* The prototype keeps the browser line-height (normal) except where it sets 1.5. */
+.ad-tab { display: flex; flex-direction: column; gap: 14px; line-height: normal; }
+.ad-mono { font-family: var(--font-mono); }
+.ad-meta { font-size: 13px; color: var(--text-muted); }
+.ad-note { font-size: 12px; color: var(--text-muted); }
+.ad-note-sm { font-size: 11px; color: var(--text-muted); }
+.ad-scroll { overflow-x: auto; }
+
+/* Bare bordered card around a table or a list, no title. */
+.ad-card { border: 1px solid var(--border); border-radius: var(--radius-panel); background: var(--canvas); overflow: hidden; }
+
+/* h2 + lead on the left, meta or action on the right. */
+.ad-section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.ad-section-title { display: flex; flex-direction: column; gap: 4px; max-width: 760px; }
+.ad-section-title > h2 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.4; }
+.ad-section-title > p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+
+.ad-legend { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+.ad-legend-sm { align-items: center; gap: 8px 20px; font-size: 12px; }
+.ad-legend-full { flex-basis: 100%; }
+.ad-legend-key { font-family: var(--font-mono); color: var(--text-secondary); }
+
+.ad-avatar {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: var(--radius-pill);
+  background: var(--raised); color: var(--text-secondary); font-size: 12px; font-weight: 600;
+}
+.ad-avatar-sm { width: 28px; height: 28px; font-size: 11px; }
+
+/* Lock note (Configuration, secret form). */
+.ad-lock-note {
+  display: flex; align-items: flex-start; gap: 8px; max-width: 900px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
+  font-size: 13px; line-height: 1.5; color: var(--text-secondary);
+}
+.ad-lock-note > .icon { flex: none; margin-top: 3px; }
+
+/* Status row under the tab list; it hides itself after 4 s. */
+.ad-toast-region:not(:empty) { padding-block-start: 20px; }
+.ad-toast {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--success); border-radius: 6px; background: var(--surface); font-size: 14px;
+}
+.ad-toast-icon { flex: none; color: var(--success); }
+.ad-toast-text { flex: 1; min-width: 0; }
+.ad-toast-close {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text-secondary); cursor: pointer;
+}
+.ad-toast-close:hover { background: var(--raised); color: var(--text); }
+.tabs > .ad-panel { padding-block-start: 20px; }
+.ad-section-title > h2:focus { outline: none; }
+.ad-section-title > h2:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }

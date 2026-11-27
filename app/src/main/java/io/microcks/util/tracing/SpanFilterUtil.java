@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.tracing;
+package io.microcks.util.tracing;
 
-import io.github.microcks.event.TraceEvent;
+import io.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;

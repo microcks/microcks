@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
 /**
  * A simple bean for wrapping a test exchange (whether request/response or async event) code, elapsed time and exchange

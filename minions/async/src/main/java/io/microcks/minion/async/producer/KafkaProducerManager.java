@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.util.el.TemplateEngine;
+import io.microcks.domain.EventMessage;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.util.el.TemplateEngine;
 
 import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
 import io.apicurio.registry.serde.config.SerdeConfig;
@@ -231,11 +231,11 @@ public class KafkaProducerManager {
     * @param headers The Microcks event message headers definition.
     * @return A set of Kafka headers.
     */
-   public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<io.github.microcks.domain.Header> headers) {
+   public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<io.microcks.domain.Header> headers) {
       if (headers != null && !headers.isEmpty()) {
          Set<Header> renderedHeaders = HashSet.newHashSet(headers.size());
 
-         for (io.github.microcks.domain.Header header : headers) {
+         for (io.microcks.domain.Header header : headers) {
             // For Kafka, header is mono valued so just consider the first value.
             Optional<String> firstValueOpt = header.getValues().stream().findFirst();
             if (firstValueOpt.isPresent()) {

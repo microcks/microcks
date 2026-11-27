@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.artifact.grpc;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.util.test.AbstractTestRunner;
-import io.github.microcks.util.test.TestRunnerCommons;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Secret;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestReturn;
+import io.microcks.test.ResourceReader;
+import io.microcks.test.ResponseReader;
+import io.microcks.test.AbstractTestRunner;
+import io.microcks.test.TestRunnerCommons;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
@@ -52,7 +52,7 @@ import io.grpc.TlsChannelCredentials;
 import io.grpc.stub.ClientCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
+import io.microcks.util.http.HttpMethod;
 
 import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayInputStream;
@@ -83,8 +83,8 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
    public static final CallOptions.Key<Metadata> METADATA_CUSTOM_CALL_OPTION = CallOptions.Key
          .createWithDefault(CUSTOM_CALL_OPTION_NAME, null);
 
-   private final ResourceRepository resourceRepository;
-   private final ResponseRepository responseRepository;
+   private final ResourceReader resourceReader;
+   private final ResponseReader responseReader;
 
    private final boolean validateResponseCode;
 
@@ -94,14 +94,13 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
    /**
     * Build a new GrpcTestRunner.
-    * @param resourceRepository   Access to resources repository
-    * @param responseRepository   Access to response repository
+    * @param resourceReader       Access to resources repository
+    * @param responseReader       Access to response repository
     * @param validateResponseCode whether to validate response code
     */
-   public GrpcTestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository,
-         boolean validateResponseCode) {
-      this.resourceRepository = resourceRepository;
-      this.responseRepository = responseRepository;
+   public GrpcTestRunner(ResourceReader resourceReader, ResponseReader responseReader, boolean validateResponseCode) {
+      this.resourceReader = resourceReader;
+      this.responseReader = responseReader;
       this.validateResponseCode = validateResponseCode;
    }
 
@@ -147,7 +146,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
       // In order to produce outgoing byte array, we need the Protobuf binary descriptor that should
       // have been processed while importing the .proto schema for the service.
-      List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
+      List<Resource> resources = resourceReader.findByServiceIdAndType(service.getId(),
             ResourceType.PROTOBUF_DESCRIPTOR);
       if (resources == null || resources.size() != 1) {
          log.error("Could not found any pre-processed Protobuf binary descriptor...");
@@ -213,7 +212,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          // If required, compare response code to expected ones.
          if (validateResponseCode) {
             // If we have to validate response code, don't consider this as a failure.
-            Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
+            Response expectedResponse = responseReader.findById(request.getResponseId());
             if (expectedResponse != null) {
                log.debug("Response expected status code: {}", expectedResponse.getStatus());
                // Beware of people putting 200 as expected code instead of OK.

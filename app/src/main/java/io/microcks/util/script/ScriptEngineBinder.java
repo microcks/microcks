@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.script;
+package io.microcks.util.script;
 
-import io.github.microcks.service.StateStore;
-import io.github.microcks.util.http.HttpHeadersUtil;
+import io.microcks.service.StateStore;
+import io.microcks.util.http.HttpHeadersUtil;
+import io.microcks.util.http.StringToStringsMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,8 @@ import javax.script.ScriptEngine;
 import javax.script.SimpleScriptContext;
 import java.util.Map;
 
-import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
-import static io.github.microcks.util.tracing.TraceUtil.LogLevel;
+import static io.microcks.util.tracing.TraceUtil.addSpanLogEvent;
+import static io.microcks.util.tracing.TraceUtil.LogLevel;
 
 /**
  * Utility class that holds methods for creating binding environments and evaluation context for a JSR 233 ScriptEngine.
@@ -171,7 +172,7 @@ public class ScriptEngineBinder {
     */
    public static String ensureSoapUICompatibility(String script) {
       if (script.contains("com.eviware.soapui.support.XmlHolder")) {
-         return script.replaceAll("com.eviware.soapui.support.XmlHolder", "io.github.microcks.util.soapui.XmlHolder");
+         return script.replaceAll("com.eviware.soapui.support.XmlHolder", "io.microcks.artifact.soapui.XmlHolder");
       }
       return script;
    }

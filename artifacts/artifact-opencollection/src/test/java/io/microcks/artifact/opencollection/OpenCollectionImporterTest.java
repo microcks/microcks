@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.opencollection;
+package io.microcks.artifact.opencollection;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Message;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.MockRepositoryImporterFactory;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Message;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.artifact.MockRepositoryImporter;
+import io.microcks.artifact.MockRepositoryImporterFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -67,7 +67,7 @@ class OpenCollectionImporterTest {
 
    @Test
    void testSimpleProjectImport() {
-      File collection = new File("../samples/PetstoreAPI-opencollection.yml");
+      File collection = new File("../../samples/PetstoreAPI-opencollection.yml");
       MockRepositoryImporter importer = assertDoesNotThrow(
             () -> MockRepositoryImporterFactory.getMockRepositoryImporter(collection, null));
 
@@ -350,7 +350,7 @@ class OpenCollectionImporterTest {
    @Test
    void testJsonRenderingIsImported() {
       File collection = new File(
-            "target/test-classes/io/github/microcks/util/opencollection/petstore-opencollection.json");
+            "target/test-classes/io/microcks/artifact/opencollection/petstore-opencollection.json");
       MockRepositoryImporter importer = assertDoesNotThrow(
             () -> MockRepositoryImporterFactory.getMockRepositoryImporter(collection, null));
 
@@ -398,7 +398,7 @@ class OpenCollectionImporterTest {
 
    private static OpenCollectionImporter importerFor(String fixture) {
       return assertDoesNotThrow(
-            () -> new OpenCollectionImporter("target/test-classes/io/github/microcks/util/opencollection/" + fixture));
+            () -> new OpenCollectionImporter("target/test-classes/io/microcks/artifact/opencollection/" + fixture));
    }
 
    private static List<Response> responsesOf(MockRepositoryImporter importer, Service service, Operation operation) {

@@ -13,37 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.ai.McpError;
-import io.github.microcks.util.ai.McpSchema;
-import io.github.microcks.util.ai.McpToolConverter;
-import io.github.microcks.util.graphql.GraphQLMcpToolConverter;
-import io.github.microcks.util.grpc.GrpcMcpToolConverter;
-import io.github.microcks.util.openapi.OpenAPIMcpToolConverter;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.util.ai.McpError;
+import io.microcks.util.ai.McpSchema;
+import io.microcks.util.ai.McpToolConverter;
+import io.microcks.web.mcp.GraphQLMcpToolConverter;
+import io.microcks.web.mcp.GrpcMcpToolConverter;
+import io.microcks.web.mcp.OpenAPIMcpToolConverter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.subscription.Cancellable;
+import io.smallrye.mutiny.subscription.MultiEmitter;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.sse.OutboundSseEvent;
+import jakarta.ws.rs.sse.Sse;
 
 import java.time.Duration;
 import java.util.List;
@@ -51,14 +60,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * This controller handles the MCP protocol with HTTP/SEE transport to use Microcks mocks as tools.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
+@ApplicationScoped
+@Path("/mcp")
 public class McpController {
 
    /** A simple logger for diagnostic messages. */
@@ -71,7 +79,6 @@ public class McpController {
    private final GraphQLInvocationProcessor graphQLInvocationProcessor;
 
    private final ConcurrentHashMap<String, SseTransportChannel> channelsBySessionId = new ConcurrentHashMap<>();
-   private final ExecutorService sseMvcExecutor = Executors.newSingleThreadExecutor();
    private final ObjectMapper mapper = new ObjectMapper();
 
    /**
@@ -82,6 +89,7 @@ public class McpController {
     * @param grpcInvocationProcessor    The invocation processor to apply GRPC mocks dispatching logic
     * @param graphQLInvocationProcessor The invocation processor to apply GraphQL mocks dispatching logic
     */
+   @Inject
    public McpController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
          RestInvocationProcessor restInvocationProcessor, GrpcInvocationProcessor grpcInvocationProcessor,
          GraphQLInvocationProcessor graphQLInvocationProcessor) {
@@ -98,41 +106,37 @@ public class McpController {
     * @param version     The version of the service to connect to.
     * @return The SSE emitter to use for the connection.
     */
-   @RequestMapping(value = "/mcp/{service}/{version}/sse", method = { RequestMethod.GET })
-   public SseEmitter handleSSE(@PathVariable("service") String serviceName, @PathVariable("version") String version) {
+   @GET
+   @Path("/{service}/{version}/sse")
+   @Produces(MediaType.SERVER_SENT_EVENTS)
+   public Multi<OutboundSseEvent> handleSSE(@PathParam("service") String serviceName,
+         @PathParam("version") String version, @Context Sse sse) {
       log.info("Handling a Mcp SSE for service {} and version {}", serviceName, version);
 
       String sessionId = UUID.randomUUID().toString();
       log.debug("Creating new SSE connection for session: {}", sessionId);
 
-      SseEmitter emitter = new SseEmitter(Duration.ofSeconds(600).toMillis());
-      emitter.onCompletion(() -> {
-         log.debug("SSE connection completed for session: {}", sessionId);
-         channelsBySessionId.remove(sessionId);
-      });
-      emitter.onTimeout(() -> {
-         log.debug("SSE connection timed out for session: {}", sessionId);
-         channelsBySessionId.remove(sessionId);
-      });
-
-      channelsBySessionId.put(sessionId, new SseTransportChannel(sessionId, emitter));
-
       // If serviceName was encoded with '+' instead of '%20', remove them.
-      if (serviceName.contains("+")) {
-         serviceName = serviceName.replace('+', ' ');
-      }
-      final String serviceNameFinal = serviceName;
-      sseMvcExecutor.execute(() -> {
-         try {
-            SseEmitter.SseEventBuilder event = SseEmitter.event().name("endpoint").id(sessionId)
-                  .data("/mcp/" + serviceNameFinal + "/" + version + "/message?sessionId=" + sessionId);
-            emitter.send(event);
-         } catch (Exception e) {
-            log.error("Failed to send initial endpoint event: {}", e.getMessage());
-            emitter.completeWithError(e);
-         }
+      final String serviceNameFinal = serviceName.replace('+', ' ');
+
+      return Multi.createFrom().<OutboundSseEvent>emitter(emitter -> {
+         channelsBySessionId.put(sessionId, new SseTransportChannel(sessionId, emitter, sse));
+
+         // Same 600s lifetime as the 1.x SSE emitter.
+         Cancellable timeout = Uni.createFrom().voidItem().onItem().delayIt().by(Duration.ofSeconds(600)).subscribe()
+               .with(v -> {
+                  log.debug("SSE connection timed out for session: {}", sessionId);
+                  emitter.complete();
+               });
+         emitter.onTermination(() -> {
+            log.debug("SSE connection completed for session: {}", sessionId);
+            timeout.cancel();
+            channelsBySessionId.remove(sessionId);
+         });
+
+         emitter.emit(sse.newEventBuilder().name("endpoint").id(sessionId)
+               .data("/mcp/" + serviceNameFinal + "/" + version + "/message?sessionId=" + sessionId).build());
       });
-      return emitter;
    }
 
    /**
@@ -143,29 +147,37 @@ public class McpController {
     * @param request     The MCP request to handle.
     * @return The response entity.
     */
-   @PostMapping(value = "/mcp/{service}/{version}/message", produces = "text/event-stream")
-   public ResponseEntity<?> handleMessage(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "sessionId") String sessionId,
-         @RequestBody McpSchema.JSONRPCRequest request, @RequestHeader HttpHeaders headers) {
+   @POST
+   @Path("/{service}/{version}/message")
+   @Consumes(MediaType.APPLICATION_JSON)
+   @Produces(MediaType.SERVER_SENT_EVENTS)
+   @RunOnVirtualThread
+   public jakarta.ws.rs.core.Response handleMessage(@PathParam("service") String serviceName,
+         @PathParam("version") String version, @QueryParam("sessionId") String sessionId,
+         McpSchema.JSONRPCRequest request, @Context HttpHeaders headers) {
 
       log.info("Handling a {} Mcp request for service {} and version {}", request.method(), serviceName, version);
 
       // Check session is known and valid.
-      SseTransportChannel channel = channelsBySessionId.get(sessionId);
+      SseTransportChannel channel = sessionId == null ? null : channelsBySessionId.get(sessionId);
       if (channel == null) {
          log.debug("Session {} not found", sessionId);
-         return ResponseEntity.badRequest().body(new McpError("Session not found: " + sessionId));
+         return badRequest(new McpError("Session not found: " + sessionId));
       }
 
       McpSchema.JSONRPCResponse response = null;
       try {
          response = handleMcpRequest(serviceName, version, request, headers);
       } catch (McpError e) {
-         return ResponseEntity.badRequest().body(e);
+         return badRequest(e);
       }
       sendSseMessage(channel, response);
 
-      return ResponseEntity.ok().build();
+      return jakarta.ws.rs.core.Response.ok().build();
+   }
+
+   private static jakarta.ws.rs.core.Response badRequest(McpError error) {
+      return jakarta.ws.rs.core.Response.status(400).type(MediaType.APPLICATION_JSON).entity(error).build();
    }
 
    /**
@@ -175,18 +187,21 @@ public class McpController {
     * @param request     The MCP request to handle.
     * @return The response entity.
     */
-   @PostMapping(value = "/mcp/{service}/{version}", produces = { "application/json" })
-   public ResponseEntity<?> handleHttpStreamable(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestBody McpSchema.JSONRPCRequest request,
-         @RequestHeader HttpHeaders headers) {
+   @POST
+   @Path("/{service}/{version}")
+   @Consumes(MediaType.APPLICATION_JSON)
+   @Produces(MediaType.APPLICATION_JSON)
+   @RunOnVirtualThread
+   public jakarta.ws.rs.core.Response handleHttpStreamable(@PathParam("service") String serviceName,
+         @PathParam("version") String version, McpSchema.JSONRPCRequest request, @Context HttpHeaders headers) {
 
       log.info("Handling a Mcp Http streamable call for service {} and version {}", serviceName, version);
 
       try {
          McpSchema.JSONRPCResponse response = handleMcpRequest(serviceName, version, request, headers);
-         return ResponseEntity.ok(response);
+         return jakarta.ws.rs.core.Response.ok(response).build();
       } catch (McpError e) {
-         return ResponseEntity.badRequest().body(e);
+         return badRequest(e);
       }
    }
 
@@ -213,7 +228,7 @@ public class McpController {
             result = handleToolsListRequest(request, service);
          }
          case McpSchema.METHOD_TOOLS_CALL -> {
-            result = handleToolsCallRequest(request, headers.asMultiValueMap(), service);
+            result = handleToolsCallRequest(request, headers.getRequestHeaders(), service);
          }
       }
 
@@ -230,7 +245,7 @@ public class McpController {
    }
 
    /** Internal record to hold a SSE transport channel with its emitter. */
-   record SseTransportChannel(String sessionId, SseEmitter emitter) {
+   record SseTransportChannel(String sessionId, MultiEmitter<? super OutboundSseEvent> emitter, Sse sse) {
    }
 
    /** Handle the MCP initialize request. */
@@ -293,21 +308,14 @@ public class McpController {
 
    /** Send a JSONRCPResponse as an SSE event. */
    private void sendSseMessage(SseTransportChannel channel, McpSchema.JSONRPCResponse response) {
-      sseMvcExecutor.execute(() -> {
-         try {
-            // spotless:off
-            String jsonText = mapper.writeValueAsString(response);
-            SseEmitter.SseEventBuilder event = SseEmitter.event()
-                  .name("message")
-                  .id(channel.sessionId())
-                  .data(jsonText);
-            channel.emitter.send(event);
-            // spotless:on
-         } catch (Exception e) {
-            log.error("Failed to send message to session {}: {}", channel.sessionId(), e.getMessage());
-            channel.emitter.completeWithError(e);
-         }
-      });
+      try {
+         String jsonText = mapper.writeValueAsString(response);
+         channel.emitter()
+               .emit(channel.sse().newEventBuilder().name("message").id(channel.sessionId()).data(jsonText).build());
+      } catch (Exception e) {
+         log.error("Failed to send message to session {}: {}", channel.sessionId(), e.getMessage());
+         channel.emitter().fail(e);
+      }
    }
 
 

@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.service.SpanStorageService;
+import io.quarkus.test.junit.QuarkusTest;
+import io.microcks.service.SpanStorageService;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.TestPropertySource;
+import jakarta.inject.Inject;
+import io.microcks.testsupport.http.ParameterizedTypeReference;
+import io.microcks.testsupport.http.HttpMethod;
+import io.microcks.testsupport.http.HttpStatus;
+import io.microcks.testsupport.http.ResponseEntity;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,15 +47,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author microcks-team
  */
-@TestPropertySource(properties = { "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none",
-      "otel.instrumentation.annotations.enabled=true", "otel.sdk.disabled=false",
-      "otel.instrumentation.spring-web.enabled=false" })
+@QuarkusTest
 class TracingControllerIT extends AbstractBaseIT {
 
    record SseFrame(String key, String value) {
    }
 
-   @Autowired
+   @Inject
    private SpanStorageService spanStorageService;
 
    private List<SseFrame> sseFrames;
@@ -68,7 +66,7 @@ class TracingControllerIT extends AbstractBaseIT {
       spanStorageService.clearAll();
 
       // Upload a test artifact that will generate traces when invoked
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-details-openapi.yaml", true);
 
       sseFrames = new ArrayList<>();
       sseClientExecutor = Executors.newSingleThreadExecutor();
@@ -221,7 +219,8 @@ class TracingControllerIT extends AbstractBaseIT {
    }
 
    private void parseAndStoreSseFrame(String line, List<SseFrame> sseFrames) {
-      if (line.contains(":")) {
+      // Quarkus REST adds a non-standard "content-type" field to SSE events carrying a JSON payload: ignore it.
+      if (line.contains(":") && !line.startsWith("content-type")) {
          String key = line.substring(0, line.indexOf(':'));
          String value = line.substring(line.indexOf(':') + 1).trim();
          sseFrames.add(new SseFrame(key, value));

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.client.dto;
+package io.microcks.minion.async.client.dto;
 
-import io.github.microcks.domain.TestReturn;
+import io.microcks.domain.TestReturn;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 

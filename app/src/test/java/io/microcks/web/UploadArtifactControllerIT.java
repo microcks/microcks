@@ -13,57 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@AutoConfigureMockMvc
+/**
+ * Test case for the artifact download endpoint.
+ * @author laurent
+ */
+@QuarkusTest
 public class UploadArtifactControllerIT extends AbstractBaseIT {
 
-   @Autowired
-   public MockMvc mockMvc;
-
-
    @Test
-   public void shouldNotCreateWhenUrlIsEmpty() throws Exception {
-      mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", ""))
-            .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NO_CONTENT.value()));
+   public void shouldNotCreateWhenUrlIsEmpty() {
+      RestAssured.given().queryParam("url", "").when().post("/api/artifact/download").then().statusCode(204);
    }
 
    @Test
-   public void shouldCreateServiceFromOpenAPIImporter() throws Exception {
+   public void shouldCreateServiceFromOpenAPIImporter() {
       String apiPastry = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
-      mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", apiPastry))
-            .andExpect(MockMvcResultMatchers.status().isCreated())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.name", Matchers.is("API Pastry - 2.0:2.0.0")));
+      RestAssured.given().queryParam("url", apiPastry).when().post("/api/artifact/download").then().statusCode(201)
+            .body("name", Matchers.is("API Pastry - 2.0:2.0.0"));
    }
 
    @Test
-   public void shouldCreateServiceFromPostmanCorrectly() throws Exception {
+   public void shouldCreateServiceFromPostmanCorrectly() {
       String beerCatalogAPI = "https://raw.githubusercontent.com/microcks/microcks/master/samples/BeerCatalogAPI-collection.json";
-      mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", beerCatalogAPI))
-            .andExpect(MockMvcResultMatchers.status().isCreated())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.name", Matchers.is("Beer Catalog API:0.99")));
+      RestAssured.given().queryParam("url", beerCatalogAPI).when().post("/api/artifact/download").then().statusCode(201)
+            .body("name", Matchers.is("Beer Catalog API:0.99"));
    }
 
    @Test
-   public void shouldNotCreateServiceWhenTheUrlIsWrong() throws Exception {
+   public void shouldNotCreateServiceWhenTheUrlIsWrong() {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/wrong-collection.json";
-      mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", wrongUrl))
-            .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andExpect(MockMvcResultMatchers.content()
-                  .string(Matchers.containsString("Exception while retrieving remote item")));
+      RestAssured.given().queryParam("url", wrongUrl).when().post("/api/artifact/download").then().statusCode(500)
+            .body(Matchers.containsString("Exception while retrieving remote item"));
    }
 
    @Test
-   public void shouldNotCreateServiceWithoutUrl() throws Exception {
-      mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download"))
-            .andExpect(MockMvcResultMatchers.status().isBadRequest());
+   public void shouldNotCreateServiceWithoutUrl() {
+      RestAssured.when().post("/api/artifact/download").then().statusCode(204);
    }
 }

@@ -1,0 +1,33 @@
+# microcksId: Petstore Graph API : 1.0
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Pet {
+  id: ID!
+  name: String!
+  color: String!
+}
+
+type NewPet {
+  name: String!
+  color: String!
+}
+
+type Filter {
+  name: String!
+  value: String!
+}
+
+type Query {
+  # Retrieve all pets from the store.
+  # This is not a paginated query.
+  allPets: [Pet]!
+  searchPets(name: String!): [Pet]
+  advancedSearchPets(filters: [Filter]!): [Pet]
+}
+
+type Mutation {
+  createPet(newPet: NewPet!): Pet
+}

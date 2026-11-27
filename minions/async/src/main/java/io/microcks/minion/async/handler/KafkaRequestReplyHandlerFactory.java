@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.handler;
+package io.microcks.minion.async.handler;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.producer.KafkaProducerManager;
+import io.microcks.domain.Binding;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.minion.async.producer.KafkaProducerManager;
 
 import org.eclipse.microprofile.config.Config;
 import org.jboss.logging.Logger;

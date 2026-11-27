@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util;
+package io.microcks.artifact;
 
 /**
  * Typed exception for reporting problem during a mock repository export.

@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.springframework.util.unit.DataSize;
 import org.yaml.snakeyaml.LoaderOptions;
 
 /**
@@ -39,11 +38,27 @@ public class ObjectMapperFactory {
     * @param maxFileSize The size using standard Spring data unit expression
     */
    public static void configureMaxFileSize(String maxFileSize) {
-      int codePointLimitCandidate = (int) DataSize.parse(maxFileSize).toBytes();
+      int codePointLimitCandidate = (int) parseDataSize(maxFileSize);
       // Only update of more than default value.
       if (codePointLimitCandidate > codePointLimit) {
          codePointLimit = codePointLimitCandidate;
       }
+   }
+
+   /** Parse an expression such as "3MB", "512KB" or "1024" (bytes) into a number of bytes. */
+   private static long parseDataSize(String size) {
+      String value = size.trim().toUpperCase();
+      long multiplier = 1;
+      for (String[] unit : new String[][] { { "TB", "1099511627776" }, { "GB", "1073741824" }, { "MB", "1048576" },
+            { "KB", "1024" }, { "B", "1" }, { "T", "1099511627776" }, { "G", "1073741824" }, { "M", "1048576" },
+            { "K", "1024" } }) {
+         if (value.endsWith(unit[0])) {
+            multiplier = Long.parseLong(unit[1]);
+            value = value.substring(0, value.length() - unit[0].length()).trim();
+            break;
+         }
+      }
+      return Long.parseLong(value) * multiplier;
    }
 
    /** @return A Jackson ObjectMapper configured for JSON parsing with common settings. */

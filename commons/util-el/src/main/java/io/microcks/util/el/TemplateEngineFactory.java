@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.el;
+package io.microcks.util.el;
 
-import io.github.microcks.util.el.function.*;
+import io.microcks.util.el.function.*;
 
 /**
  * Helper class holding commodity methods for getting {@code TemplateEngine} instances..

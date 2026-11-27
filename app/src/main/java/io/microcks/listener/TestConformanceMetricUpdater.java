@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.event.TestCompletionEvent;
-import io.github.microcks.service.MetricsService;
+import io.microcks.event.TestCompletionEvent;
+import io.microcks.service.MetricsService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
 
 /**
  * Application event listener that updates TestCoverageMetric on test completion.
  * @author laurent
  */
-@Component
-public class TestConformanceMetricUpdater implements ApplicationListener<TestCompletionEvent> {
+@ApplicationScoped
+public class TestConformanceMetricUpdater {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(TestConformanceMetricUpdater.class);
@@ -44,9 +43,7 @@ public class TestConformanceMetricUpdater implements ApplicationListener<TestCom
       this.metricsService = metricsService;
    }
 
-   @Override
-   @Async
-   public void onApplicationEvent(TestCompletionEvent event) {
+   public void onApplicationEvent(@ObservesAsync TestCompletionEvent event) {
       log.debug("Received a TestCompletionEvent on {}", event.getResult().getId());
       metricsService.updateTestConformanceMetricOnTestResult(event.getResult());
       log.debug("Processing of TestCompletionEvent done !");

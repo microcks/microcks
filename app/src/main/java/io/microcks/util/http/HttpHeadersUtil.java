@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.http;
+package io.microcks.util.http;
 
 import java.util.Collections;
 
-import io.github.microcks.util.script.HttpHeadersStringToStringsMap;
-import io.github.microcks.util.script.StringToStringsMap;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**

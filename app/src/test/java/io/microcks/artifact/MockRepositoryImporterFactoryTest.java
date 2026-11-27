@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.artifact;
 
-import io.github.microcks.util.asyncapi.AsyncAPI3Importer;
-import io.github.microcks.util.asyncapi.AsyncAPIImporter;
-import io.github.microcks.util.graphql.GraphQLImporter;
-import io.github.microcks.util.grpc.ProtobufImporter;
-import io.github.microcks.util.har.HARImporter;
-import io.github.microcks.util.metadata.MetadataImporter;
-import io.github.microcks.util.openapi.OpenAPIImporter;
-import io.github.microcks.util.openapi.SwaggerImporter;
-import io.github.microcks.util.opencollection.OpenCollectionImporter;
-import io.github.microcks.util.postman.PostmanCollectionImporter;
-import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
-import io.github.microcks.util.soapui.SoapUIProjectImporter;
+import io.microcks.artifact.asyncapi.AsyncAPI3Importer;
+import io.microcks.artifact.asyncapi.AsyncAPIImporter;
+import io.microcks.artifact.graphql.GraphQLImporter;
+import io.microcks.artifact.grpc.ProtobufImporter;
+import io.microcks.artifact.har.HARImporter;
+import io.microcks.artifact.metadata.MetadataImporter;
+import io.microcks.artifact.openapi.OpenAPIImporter;
+import io.microcks.artifact.openapi.SwaggerImporter;
+import io.microcks.artifact.opencollection.OpenCollectionImporter;
+import io.microcks.artifact.postman.PostmanCollectionImporter;
+import io.microcks.artifact.postman.PostmanWorkspaceCollectionImporter;
+import io.microcks.artifact.soapui.SoapUIProjectImporter;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -79,7 +79,7 @@ class MockRepositoryImporterFactoryTest {
 
       // Load a Postman Workspace file.
       File postmanWorkspaceCollection = new File(
-            "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
+            "target/test-classes/io/microcks/artifact/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(postmanWorkspaceCollection, null);
@@ -90,7 +90,7 @@ class MockRepositoryImporterFactoryTest {
 
       // Load an OpenAPI YAML file.
       importer = null;
-      File openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml");
+      File openAPISpec = new File("target/test-classes/io/microcks/artifact/openapi/cars-openapi.yaml");
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
       } catch (Throwable t) {
@@ -99,7 +99,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof OpenAPIImporter);
 
       // Load an OpenAPI JSON file.
-      openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/cars-openapi.json");
+      openAPISpec = new File("target/test-classes/io/microcks/artifact/openapi/cars-openapi.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
@@ -109,7 +109,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof OpenAPIImporter);
 
       // Load an OpenAPI JSON oneliner file.
-      openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/openapi-oneliner.json");
+      openAPISpec = new File("target/test-classes/io/microcks/artifact/openapi/openapi-oneliner.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
@@ -119,7 +119,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof OpenAPIImporter);
 
       // Load an AsyncAPI JSON file.
-      File asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.json");
+      File asyncAPISpec = new File("target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
@@ -129,8 +129,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof AsyncAPIImporter);
 
       // Load an AsyncAPI JSON oneliner file.
-      asyncAPISpec = new File(
-            "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-oneliner.json");
+      asyncAPISpec = new File("target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-oneliner.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
@@ -140,7 +139,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof AsyncAPIImporter);
 
       // Load an AsyncAPI YAML file.
-      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml");
+      asyncAPISpec = new File("target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi.yaml");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
@@ -150,7 +149,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof AsyncAPIImporter);
 
       // Load an AsyncAPI v3 YAML file.
-      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml");
+      asyncAPISpec = new File("target/test-classes/io/microcks/artifact/asyncapi/user-signedup-asyncapi-3.0.yaml");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
@@ -160,7 +159,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof AsyncAPI3Importer);
 
       // Load a Protobuf schema file.
-      File protobufSchema = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");
+      File protobufSchema = new File("target/test-classes/io/microcks/artifact/grpc/hello-v1.proto");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(protobufSchema, null);
@@ -170,7 +169,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof ProtobufImporter);
 
       // Load an APIMetadata file.
-      File apiMetadata = new File("target/test-classes/io/github/microcks/util/metadata/hello-grpc-v1-metadata.yml");
+      File apiMetadata = new File("target/test-classes/io/microcks/artifact/metadata/hello-grpc-v1-metadata.yml");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(apiMetadata, null);
@@ -180,7 +179,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof MetadataImporter);
 
       // Load a GraphQL schema file.
-      File graphQLSchema = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+      File graphQLSchema = new File("target/test-classes/io/microcks/artifact/graphql/films.graphql");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(graphQLSchema, null);
@@ -190,7 +189,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof GraphQLImporter);
 
       // Load a Swagger v2 YAML file.
-      File swaggerSpec = new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml");
+      File swaggerSpec = new File("target/test-classes/io/microcks/artifact/openapi/beer-catalog-api-swagger.yaml");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(swaggerSpec, null);
@@ -200,7 +199,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof SwaggerImporter);
 
       // Load a Swagger v2 JSON file.
-      swaggerSpec = new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json");
+      swaggerSpec = new File("target/test-classes/io/microcks/artifact/openapi/beer-catalog-api-swagger.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(swaggerSpec, null);
@@ -210,7 +209,7 @@ class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof SwaggerImporter);
 
       // Load a HAR JSON file.
-      File harFile = new File("target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1.har");
+      File harFile = new File("target/test-classes/io/microcks/artifact/har/api-pastries-0.0.1.har");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(harFile, null);
@@ -222,8 +221,7 @@ class MockRepositoryImporterFactoryTest {
 
    @Test
    void testOpenCollectionParsingError() {
-      File unreadable = new File(
-            "target/test-classes/io/github/microcks/util/opencollection/invalid-opencollection.yml");
+      File unreadable = new File("target/test-classes/io/microcks/artifact/opencollection/invalid-opencollection.yml");
 
       IOException exception = assertThrows(IOException.class,
             () -> MockRepositoryImporterFactory.getMockRepositoryImporter(unreadable, null));

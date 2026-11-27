@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.ai;
+package io.microcks.util.ai;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.DispatchStyles;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.util.DispatchStyles;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -33,14 +33,12 @@ import com.theokanning.openai.completion.chat.ChatMessageRole;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.restclient.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,7 +83,9 @@ public class OpenAICopilot implements AICopilot {
    private static final String PREVIOUS_OUTPUT_TAG = "previous_output";
    private static final String RETRY_PROMPT_SUFFIX = "Please regenerate a valid example and avoid this issue.";
 
-   private RestTemplate restTemplate;
+   private final ObjectMapper mapper;
+
+   private final HttpClient httpClient;
 
    private String apiUrl = OPENAI_BASE_URL;
 
@@ -126,10 +126,10 @@ public class OpenAICopilot implements AICopilot {
       // Finally retrieve the OpenAI Api key.
       apiKey = configuration.get(API_KEY_CONFIG);
 
-      // Initialize a Rest template for interacting with OpenAI API.
-      // We need to register a custom Jackson converter to handle serialization of name and function_call of messages.
-      restTemplate = new RestTemplateBuilder().readTimeout(timeout)
-            .additionalMessageConverters(mappingJacksonHttpMessageConverter()).build();
+      // Initialize a HTTP client and a custom Jackson mapper for interacting with OpenAI API.
+      // The mapper handles serialization of name and function_call of messages.
+      mapper = customObjectMapper();
+      httpClient = HttpClient.newHttpClient();
    }
 
    /**
@@ -237,24 +237,12 @@ public class OpenAICopilot implements AICopilot {
       return prompt.toString();
    }
 
-   private MappingJackson2HttpMessageConverter mappingJacksonHttpMessageConverter() {
-      MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-      converter.setObjectMapper(customObjectMapper());
-      return converter;
-   }
-
    private static ObjectMapper customObjectMapper() {
       ObjectMapper mapper = new ObjectMapper();
       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
       mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
       return mapper;
-   }
-
-   private HttpHeaders createAuthenticationHeaders() {
-      HttpHeaders headers = new HttpHeaders();
-      headers.set("Authorization", "Bearer " + apiKey);
-      return headers;
    }
 
    private List<? extends Exchange> suggestSampleExchangesWithRetry(Service service, Operation operation,
@@ -286,17 +274,22 @@ public class OpenAICopilot implements AICopilot {
       return new ArrayList<>();
    }
 
-   private String requestCompletionContent(String prompt) {
+   private String requestCompletionContent(String prompt) throws IOException, InterruptedException {
       log.debug("Asking OpenAI to suggest samples for this prompt: {}", prompt);
 
       final List<ChatMessage> messages = Collections
             .singletonList(new ChatMessage(ChatMessageRole.ASSISTANT.value(), prompt));
 
-      HttpEntity<Map<String, Object>> request = new HttpEntity<>(buildChatCompletionPayload(messages),
-            createAuthenticationHeaders());
-      ResponseEntity<ChatCompletionResult> responseEntity = restTemplate.exchange(apiUrl + "/v1/chat/completions",
-            HttpMethod.POST, request, ChatCompletionResult.class);
-      ChatCompletionResult completionResult = responseEntity.getBody();
+      HttpRequest request = HttpRequest.newBuilder(URI.create(apiUrl + "/v1/chat/completions")).timeout(timeout)
+            .header("Authorization", "Bearer " + apiKey).header("Content-Type", "application/json")
+            .header("Accept", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(buildChatCompletionPayload(messages))))
+            .build();
+      HttpResponse<byte[]> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+      if (httpResponse.statusCode() / 100 != 2) {
+         throw new IOException("OpenAI API call failed with status " + httpResponse.statusCode());
+      }
+      ChatCompletionResult completionResult = mapper.readValue(httpResponse.body(), ChatCompletionResult.class);
 
       if (completionResult == null || completionResult.getChoices() == null
             || completionResult.getChoices().isEmpty()) {

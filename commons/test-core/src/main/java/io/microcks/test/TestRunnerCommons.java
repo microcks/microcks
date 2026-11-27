@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.test;
+package io.microcks.test;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Parameter;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Parameter;
+import io.microcks.domain.Request;
+import io.microcks.domain.TestResult;
+import io.microcks.util.el.EvaluableRequest;
+import io.microcks.util.el.TemplateEngine;
+import io.microcks.util.el.TemplateEngineFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

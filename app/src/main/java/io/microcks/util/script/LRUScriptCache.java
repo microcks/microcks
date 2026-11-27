@@ -1,4 +1,4 @@
-package io.github.microcks.util.script;
+package io.microcks.util.script;
 
 import io.roastedroot.quickjs4j.core.ScriptCache;
 import org.codehaus.groovy.runtime.memoize.LRUCache;

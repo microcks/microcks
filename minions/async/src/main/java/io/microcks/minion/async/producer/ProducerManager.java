@@ -13,29 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.TriggerInfo;
-import io.github.microcks.event.AsyncAPITriggerCommand;
-import io.github.microcks.event.RequestSnapshot;
-import io.github.microcks.event.ResponseSnapshot;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.Constants;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.util.AvroUtil;
-import io.github.microcks.util.SchemaMap;
-import io.github.microcks.util.asyncapi.AsyncAPISchemaUtil;
-import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
-import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.el.EvaluableResponse;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.TriggerInfo;
+import io.microcks.event.AsyncAPITriggerCommand;
+import io.microcks.event.RequestSnapshot;
+import io.microcks.event.ResponseSnapshot;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.Constants;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.artifact.asyncapi.AvroUtil;
+import io.microcks.artifact.asyncapi.SchemaMap;
+import io.microcks.artifact.asyncapi.AsyncAPISchemaUtil;
+import io.microcks.artifact.asyncapi.AsyncAPISchemaValidator;
+import io.microcks.util.el.EvaluableRequest;
+import io.microcks.util.el.EvaluableResponse;
+import io.microcks.util.el.TemplateEngine;
+import io.microcks.util.el.TemplateEngineFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.nats.client.impl.Headers;

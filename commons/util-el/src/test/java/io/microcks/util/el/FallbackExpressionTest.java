@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util.el;
+package io.microcks.util.el;
 
-import io.github.microcks.util.el.function.RandomBooleanELFunction;
+import io.microcks.util.el.function.RandomBooleanELFunction;
 
 import org.junit.jupiter.api.Test;
 

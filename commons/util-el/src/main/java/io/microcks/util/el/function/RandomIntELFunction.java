@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.el.function;
+package io.microcks.util.el.function;
 
-import io.github.microcks.util.el.EvaluationContext;
+import io.microcks.util.el.EvaluationContext;
 
 /**
  * This is an implementation of ELFunction that generates random integer values. When invoked with no arg a integer

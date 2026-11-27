@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.el;
+package io.microcks.util.el;
 
 /**
  * An engine that can evaluate String templates holding some Expression Language {@code Expression}. Engine can be

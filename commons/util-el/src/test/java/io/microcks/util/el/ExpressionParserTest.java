@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.el;
+package io.microcks.util.el;
 
-import io.github.microcks.util.el.function.NowELFunction;
-import io.github.microcks.util.el.function.PutInContextELFunction;
-import io.github.microcks.util.el.function.RandomBooleanELFunction;
-import io.github.microcks.util.el.function.UUIDELFunction;
+import io.microcks.util.el.function.NowELFunction;
+import io.microcks.util.el.function.PutInContextELFunction;
+import io.microcks.util.el.function.RandomBooleanELFunction;
+import io.microcks.util.el.function.UUIDELFunction;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.ServiceState;
-import io.github.microcks.repository.ServiceStateRepository;
+import io.microcks.domain.ServiceState;
+import io.microcks.repository.ServiceStateRepository;
 
 import javax.annotation.Nullable;
 import java.util.Date;
@@ -68,7 +68,7 @@ public class ServiceStateStore implements StateStore {
       }
       state.setValue(value);
       state.setExpireAt(new Date(System.currentTimeMillis() + (secondsTTL * 1000L)));
-      repository.save(state);
+      repository.persistOrUpdate(state);
    }
 
    @Nullable

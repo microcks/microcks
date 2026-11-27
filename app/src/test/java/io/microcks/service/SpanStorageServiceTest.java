@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.event.TraceEvent;
+import io.microcks.event.TraceEvent;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Nested;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.context.ApplicationEventPublisher;
+import jakarta.enterprise.event.Event;
 
 import java.util.List;
 import java.util.Set;
@@ -54,11 +54,11 @@ class SpanStorageServiceTest {
 
    private SpanStorageService spanStorageService;
    @Mock
-   private ApplicationEventPublisher mockEventPublisher;
+   private Event<TraceEvent> mockEventPublisher;
 
    @BeforeEach
    void setUp() {
-      mockEventPublisher = mock(ApplicationEventPublisher.class);
+      mockEventPublisher = mock(Event.class);
       spanStorageService = new SpanStorageService(mockEventPublisher);
    }
 
@@ -252,7 +252,7 @@ class SpanStorageServiceTest {
 
          // Then
          ArgumentCaptor<TraceEvent> eventCaptor = ArgumentCaptor.forClass(TraceEvent.class);
-         verify(mockEventPublisher).publishEvent(eventCaptor.capture());
+         verify(mockEventPublisher).fireAsync(eventCaptor.capture());
 
          TraceEvent publishedEvent = eventCaptor.getValue();
          assertEquals(traceId, publishedEvent.traceId());
@@ -271,7 +271,7 @@ class SpanStorageServiceTest {
          spanStorageService.storeSpan(childSpan);
 
          // Then
-         verify(mockEventPublisher, never()).publishEvent(any());
+         verify(mockEventPublisher, never()).fireAsync(any());
       }
 
       @Test
@@ -286,7 +286,7 @@ class SpanStorageServiceTest {
 
          // Then
          ArgumentCaptor<TraceEvent> eventCaptor = ArgumentCaptor.forClass(TraceEvent.class);
-         verify(mockEventPublisher).publishEvent(eventCaptor.capture());
+         verify(mockEventPublisher).fireAsync(eventCaptor.capture());
 
          TraceEvent publishedEvent = eventCaptor.getValue();
          assertEquals(traceId, publishedEvent.traceId());
@@ -318,7 +318,7 @@ class SpanStorageServiceTest {
 
          // Then
          ArgumentCaptor<TraceEvent> eventCaptor = ArgumentCaptor.forClass(TraceEvent.class);
-         verify(mockEventPublisher).publishEvent(eventCaptor.capture());
+         verify(mockEventPublisher).fireAsync(eventCaptor.capture());
 
          TraceEvent publishedEvent = eventCaptor.getValue();
          assertEquals(traceId, publishedEvent.traceId());
@@ -341,7 +341,7 @@ class SpanStorageServiceTest {
          spanStorageService.storeSpan(rootSpan2);
 
          // Then - Should have published exactly 2 events (one for each root span)
-         verify(mockEventPublisher, times(2)).publishEvent(any(TraceEvent.class));
+         verify(mockEventPublisher, times(2)).fireAsync(any(TraceEvent.class));
       }
    }
 

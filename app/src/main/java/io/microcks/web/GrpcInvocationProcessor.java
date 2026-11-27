@@ -13,29 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.event.AsyncAPITriggerEvent;
-import io.github.microcks.event.RequestSnapshot;
-import io.github.microcks.event.ResponseSnapshot;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceStateRepository;
-import io.github.microcks.service.OpenTelemetryResolverService;
-import io.github.microcks.service.ServiceStateStore;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
-import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.grpc.GrpcMetadataUtil;
-import io.github.microcks.util.script.JsScriptEngineBinder;
-import io.github.microcks.util.script.ScriptEngineBinder;
-import io.github.microcks.util.script.StringToStringsMap;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.event.AsyncAPITriggerEvent;
+import io.microcks.event.MockInvocationEvent;
+import io.microcks.event.RequestSnapshot;
+import io.microcks.event.ResponseSnapshot;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceStateRepository;
+import io.microcks.service.OpenTelemetryResolverService;
+import io.microcks.service.ServiceStateStore;
+import io.microcks.util.DispatchCriteriaHelper;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.IdBuilder;
+import io.microcks.util.dispatcher.FallbackSpecification;
+import io.microcks.util.dispatcher.JsonEvaluationSpecification;
+import io.microcks.util.dispatcher.JsonExpressionEvaluator;
+import io.microcks.util.dispatcher.JsonMappingException;
+import io.microcks.artifact.grpc.GrpcMetadataUtil;
+import io.microcks.util.script.JsScriptEngineBinder;
+import io.microcks.util.script.ScriptEngineBinder;
+import io.microcks.util.http.StringToStringsMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,11 +50,13 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.roastedroot.quickjs4j.core.Engine;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -63,19 +66,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.tracing.CommonAttributes;
-import io.github.microcks.util.tracing.CommonEvents;
-import io.github.microcks.util.tracing.TraceUtil;
+import io.microcks.util.delay.DelaySpec;
+import io.microcks.util.tracing.CommonAttributes;
+import io.microcks.util.tracing.CommonEvents;
+import io.microcks.util.tracing.TraceUtil;
 
-import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
+import static io.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A processor for handling gRPC invocations. It is responsible for applying the dispatching logic and finding the most
  * appropriate response based on the request context.
  * @author laurent
  */
-@Component
+@ApplicationScoped
 public class GrpcInvocationProcessor {
 
    /** A simple logger for diagnostic messages. */
@@ -85,30 +88,35 @@ public class GrpcInvocationProcessor {
 
    private final ServiceStateRepository serviceStateRepository;
    private final ResponseRepository responseRepository;
-   private final ApplicationContext applicationContext;
+   private final Event<MockInvocationEvent> mockInvocationEvents;
+   private final Event<AsyncAPITriggerEvent> asyncTriggerEvents;
    private final ObjectMapper mapper = new ObjectMapper();
 
    private final ScriptEngine scriptEngine;
    private final OpenTelemetryResolverService opentelemetryResolverService;
 
-   @Value("${mocks.enable-invocation-stats}")
-   private Boolean enableInvocationStats;
+   @ConfigProperty(name = "mocks.enable-invocation-stats", defaultValue = "true")
+   Boolean enableInvocationStats;
 
-   @Value("${mocks.service-state-store.default-ttl:10}")
-   private int defaultTtl;
+   @ConfigProperty(name = "mocks.service-state-store.default-ttl", defaultValue = "10")
+   int defaultTtl;
 
    /**
     * Build a GrpcInvocationProcessor with required dependencies.
     * @param serviceStateRepository       The repository to access service state
     * @param responseRepository           The repository to access responses definitions
-    * @param applicationContext           The Spring application context
+    * @param mockInvocationEvents         The publisher of mock invocation events
+    * @param asyncTriggerEvents           The publisher of AsyncAPI trigger events
     * @param opentelemetryResolverService The opentelemetry resolver
     */
+   @Inject
    public GrpcInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
-         ApplicationContext applicationContext, OpenTelemetryResolverService opentelemetryResolverService) {
+         Event<MockInvocationEvent> mockInvocationEvents, Event<AsyncAPITriggerEvent> asyncTriggerEvents,
+         OpenTelemetryResolverService opentelemetryResolverService) {
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
-      this.applicationContext = applicationContext;
+      this.mockInvocationEvents = mockInvocationEvents;
+      this.asyncTriggerEvents = asyncTriggerEvents;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
       this.opentelemetryResolverService = opentelemetryResolverService;
    }
@@ -180,7 +188,7 @@ public class GrpcInvocationProcessor {
 
          // Publish an invocation event before returning if enabled.
          if (Boolean.TRUE.equals(enableInvocationStats)) {
-            MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
+            MockControllerCommons.publishMockInvocation(mockInvocationEvents, ic.service(), response, startTime);
          }
 
          // Check and emit AsyncAPI trigger if needed.
@@ -353,9 +361,9 @@ public class GrpcInvocationProcessor {
       if (ic.operation().getTriggerInfos() != null && !ic.operation().getTriggerInfos().isEmpty()) {
          RequestSnapshot requestSnapshot = new RequestSnapshot(jsonBbody);
          ResponseSnapshot responseSnapshot = new ResponseSnapshot(responseContent);
-         AsyncAPITriggerEvent event = new AsyncAPITriggerEvent(this, ic.service().getId(), ic.operation(),
-               requestSnapshot, responseSnapshot);
-         applicationContext.publishEvent(event);
+         AsyncAPITriggerEvent event = new AsyncAPITriggerEvent(ic.service().getId(), ic.operation(), requestSnapshot,
+               responseSnapshot);
+         asyncTriggerEvents.fireAsync(event);
       }
    }
 

@@ -13,29 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.ImportJob;
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.repository.ImportJobRepository;
-import io.github.microcks.security.AuthorizationChecker;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.service.JobService;
-import io.github.microcks.util.SafeLogger;
+import io.microcks.domain.ImportJob;
+import io.microcks.domain.Metadata;
+import io.microcks.repository.ImportJobRepository;
+import io.microcks.security.AuthorizationChecker;
+import io.microcks.security.UserInfo;
+import io.microcks.service.JobService;
+import io.microcks.util.SafeLogger;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -46,8 +50,9 @@ import java.util.Map;
  * A Rest controller for API defined on importers.
  * @author laurent
  */
-@RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class JobController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -63,6 +68,7 @@ public class JobController {
     * @param jobService           to have access to ImportJob service (activate, start, stop)
     * @param authorizationChecker to check authorization for operations
     */
+   @Inject
    public JobController(ImportJobRepository jobRepository, JobService jobService,
          AuthorizationChecker authorizationChecker) {
       this.jobRepository = jobRepository;
@@ -70,29 +76,31 @@ public class JobController {
       this.authorizationChecker = authorizationChecker;
    }
 
-   @GetMapping(value = "/jobs")
-   public List<ImportJob> listJobs(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size,
-         @RequestParam(value = "name", required = false) String name) {
+   @GET
+   @Path("/jobs")
+   public List<ImportJob> listJobs(@QueryParam("page") @DefaultValue("0") int page,
+         @QueryParam("size") @DefaultValue("20") int size, @QueryParam("name") String name) {
       log.debug("Getting job list for page {} and size {}", page, size);
       if (name != null) {
          return jobRepository.findByNameLike(name);
       }
-      return jobRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))).getContent();
+      return jobRepository.findAll(Sort.ascending("name")).page(Page.of(page, size)).list();
    }
 
-   @GetMapping(value = "/jobs/search")
-   public List<ImportJob> searchJobs(@RequestParam Map<String, String> queryMap) {
+   @GET
+   @Path("/jobs/search")
+   public List<ImportJob> searchJobs(@Context UriInfo uriInfo) {
       // Parse params from queryMap.
       String name = null;
       Map<String, String> labels = new HashMap<>();
-      for (Map.Entry<String, String> paramEntry : queryMap.entrySet()) {
+      for (Map.Entry<String, List<String>> paramEntry : uriInfo.getQueryParameters().entrySet()) {
+         String paramValue = paramEntry.getValue().isEmpty() ? null : paramEntry.getValue().get(0);
          String paramKey = paramEntry.getKey();
          if ("name".equals(paramKey)) {
-            name = paramEntry.getValue();
+            name = paramValue;
          }
          if (paramKey.startsWith("labels.")) {
-            labels.put(paramKey.substring(paramKey.indexOf('.') + 1), paramEntry.getValue());
+            labels.put(paramKey.substring(paramKey.indexOf('.') + 1), paramValue);
          }
       }
 
@@ -108,7 +116,8 @@ public class JobController {
       return jobRepository.findByLabelsAndNameLike(labels, name);
    }
 
-   @GetMapping(value = "/jobs/count")
+   @GET
+   @Path("/jobs/count")
    public Map<String, Long> countJobs() {
       log.debug("Counting jobs...");
       Map<String, Long> counter = new HashMap<>();
@@ -116,8 +125,9 @@ public class JobController {
       return counter;
    }
 
-   @PostMapping(value = "/jobs")
-   public ResponseEntity<ImportJob> createJob(@RequestBody ImportJob job) {
+   @POST
+   @Path("/jobs")
+   public Response createJob(ImportJob job) {
       log.debug("Creating new job: {}", job);
       // Store labels somewhere before reinitializing metadata to ensure createdOn is correct.
       Map<String, String> labels = null;
@@ -130,100 +140,111 @@ public class JobController {
       if (labels != null) {
          job.getMetadata().setLabels(labels);
       }
-      return new ResponseEntity<>(jobRepository.save(job), HttpStatus.CREATED);
+      return Response.status(Response.Status.CREATED).entity(save(job)).build();
    }
 
-   @GetMapping(value = "/jobs/{id}")
-   public ResponseEntity<ImportJob> getJob(@PathVariable("id") String jobId) {
+   @GET
+   @Path("/jobs/{id}")
+   public Response getJob(@PathParam("id") String jobId) {
       log.debug("Retrieving job with id {}", jobId);
-      return new ResponseEntity<>(jobRepository.findById(jobId).orElse(null), HttpStatus.OK);
+      return Response.status(Response.Status.OK).entity(jobRepository.findById(jobId)).build();
    }
 
-   @PostMapping(value = "/jobs/{id}")
-   public ResponseEntity<ImportJob> saveJob(@RequestBody ImportJob job, UserInfo userInfo) {
+   @POST
+   @Path("/jobs/{id}")
+   public Response saveJob(ImportJob job) {
       log.debug("Saving existing job: {}", job);
-      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
-            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+      if (authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(null, AuthorizationChecker.ROLE_MANAGER, job)) {
          initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
-         return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+         return Response.status(Response.Status.OK).entity(save(job)).build();
       }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      return Response.status(Response.Status.FORBIDDEN).build();
    }
 
-   @PutMapping(value = "/jobs/{id}/activate")
-   public ResponseEntity<ImportJob> activateJob(@PathVariable("id") String jobId, UserInfo userInfo) {
+   @PUT
+   @Path("/jobs/{id}/activate")
+   public Response activateJob(@PathParam("id") String jobId) {
       log.debug("Activating job with id {}", jobId);
-      ImportJob job = jobRepository.findById(jobId).orElse(null);
+      ImportJob job = jobRepository.findById(jobId);
 
       if (job == null) {
-         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
 
-      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
-            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+      if (authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(null, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(true);
          initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
-         return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+         return Response.status(Response.Status.OK).entity(save(job)).build();
       }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      return Response.status(Response.Status.FORBIDDEN).build();
    }
 
-   @PutMapping(value = "/jobs/{id}/start")
-   public ResponseEntity<ImportJob> startJob(@PathVariable("id") String jobId, UserInfo userInfo) {
+   @PUT
+   @Path("/jobs/{id}/start")
+   public Response startJob(@PathParam("id") String jobId) {
       log.debug("Starting job with id {}", jobId);
-      ImportJob job = jobRepository.findById(jobId).orElse(null);
+      ImportJob job = jobRepository.findById(jobId);
 
       if (job == null) {
-         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
 
-      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
-            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+      if (authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(null, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(true);
          initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
          jobService.doImportJob(job);
-         return new ResponseEntity<>(job, HttpStatus.OK);
+         return Response.status(Response.Status.OK).entity(job).build();
       }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      return Response.status(Response.Status.FORBIDDEN).build();
    }
 
-   @PutMapping(value = "/jobs/{id}/stop")
-   public ResponseEntity<ImportJob> stopJob(@PathVariable("id") String jobId, UserInfo userInfo) {
+   @PUT
+   @Path("/jobs/{id}/stop")
+   public Response stopJob(@PathParam("id") String jobId) {
       log.debug("Stopping job with id {}", jobId);
-      ImportJob job = jobRepository.findById(jobId).orElse(null);
+      ImportJob job = jobRepository.findById(jobId);
 
       if (job == null) {
-         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
 
-      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
-            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+      if (authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(null, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(false);
          initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
-         return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+         return Response.status(Response.Status.OK).entity(save(job)).build();
       }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      return Response.status(Response.Status.FORBIDDEN).build();
    }
 
-   @DeleteMapping(value = "/jobs/{id}")
-   public ResponseEntity<String> deleteJob(@PathVariable("id") String jobId, UserInfo userInfo) {
+   @DELETE
+   @Path("/jobs/{id}")
+   public Response deleteJob(@PathParam("id") String jobId) {
       log.debug("Removing job with id {}", jobId);
-      ImportJob job = jobRepository.findById(jobId).orElse(null);
+      ImportJob job = jobRepository.findById(jobId);
 
       if (job == null) {
-         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
 
-      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
-            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+      if (authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(null, AuthorizationChecker.ROLE_MANAGER, job)) {
          jobRepository.deleteById(jobId);
-         return new ResponseEntity<>(HttpStatus.OK);
+         return Response.status(Response.Status.OK).build();
       }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      return Response.status(Response.Status.FORBIDDEN).build();
+   }
+
+   private ImportJob save(ImportJob job) {
+      jobRepository.persistOrUpdate(job);
+      return job;
    }
 
    private void initMetadataIfMissing(ImportJob job) {

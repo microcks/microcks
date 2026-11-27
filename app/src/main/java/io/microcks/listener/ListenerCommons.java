@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.event.HttpServletRequestSnapshot;
-import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
+import io.microcks.event.HttpServletRequestSnapshot;
+import io.microcks.util.el.EvaluableRequest;
+import io.microcks.util.el.TemplateEngine;
+import io.microcks.util.el.TemplateEngineFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

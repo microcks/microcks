@@ -1,0 +1,130 @@
+{
+  "realm": "microcks-demo",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "microcks-app",
+      "name": "Microcks",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "microcks-demo-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:18080/api/auth/callback/oidc"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "firstName": "Alice",
+      "lastName": "Admin",
+      "email": "alice@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alice",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/microcks-admin"
+      ]
+    },
+    {
+      "username": "bob",
+      "firstName": "Bob",
+      "lastName": "Manager",
+      "email": "laurent.broudoux@gmail.com",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/microcks-manager"
+      ]
+    },
+    {
+      "username": "carol",
+      "firstName": "Carol",
+      "lastName": "User",
+      "email": "carol@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "carol",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/microcks-user"
+      ]
+    },
+    {
+      "username": "dave",
+      "firstName": "Dave",
+      "lastName": "Newcomer",
+      "email": "dave@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dave",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/microcks-user"
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "name": "microcks-user"
+    },
+    {
+      "name": "microcks-manager"
+    },
+    {
+      "name": "microcks-admin"
+    }
+  ]
+}

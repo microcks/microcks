@@ -1,0 +1,61 @@
+/*
+ * Tailwind 4 theme bridge for the Deep Ink tokens.
+ * The tokens stay the single source of truth (deep-ink.css, `data-theme` dark | light);
+ * Tailwind utilities and the shadcn-svelte variables only reference them, so both themes follow.
+ */
+@custom-variant dark (&:is([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant light (&:is([data-theme="light"], [data-theme="light"] *));
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-control: var(--border-control);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-action: var(--action);
+  --color-on-action: var(--on-action);
+  --color-link: var(--link);
+  --color-selected: var(--selected);
+  --color-live: var(--live);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-running: var(--running);
+  --color-success-tint: var(--success-tint);
+  --color-danger-tint: var(--danger-tint);
+  --color-warning-tint: var(--warning-tint);
+  --color-info-tint: var(--info-tint);
+  --color-proto-rest: var(--proto-rest);
+  --color-proto-soap: var(--proto-soap);
+  --color-proto-event: var(--proto-event);
+  --color-proto-grpc: var(--proto-grpc);
+  --color-proto-graphql: var(--proto-graphql);
+  --color-proto-direct: var(--proto-direct);
+  --color-proto-a2a: var(--proto-a2a);
+  --font-heading: var(--font-brand);
+  --font-sans: var(--font-ui);
+
+  /* shadcn-svelte semantic names */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--raised);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--action);
+  --color-primary-foreground: var(--on-action);
+  --color-secondary: var(--raised);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--surface);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--selected);
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--danger);
+  --color-input: var(--border-control);
+  --color-ring: var(--action);
+}

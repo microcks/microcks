@@ -1,0 +1,60 @@
+/* Mock URL tab of the Workflow page: the Mock URL panel and the possible answers. */
+
+.wf-mu-tab { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; min-width: 0; }
+.wf-mu-panel {
+  min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 18px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--canvas); font: 400 13px/1.4 var(--font-ui);
+}
+.wf-mu-panel[data-size='wide'] { flex: 3 1 560px; }
+.wf-mu-panel[data-size='narrow'] { flex: 2 1 360px; gap: 12px; }
+.wf-mu-panel h2 { margin: 0; font: 600 16px/1.3 var(--font-ui); }
+.wf-mu-intro { display: flex; flex-direction: column; gap: 6px; }
+.wf-mu-intro p { margin: 0; max-width: 72ch; font-size: 14px; line-height: 1.55; color: var(--text-secondary); }
+.wf-mu-mono { font-family: var(--font-mono); }
+.wf-mu-field { display: flex; flex-direction: column; gap: 8px; }
+.wf-mu-field label { font-weight: 600; }
+.wf-mu-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.wf-mu-input {
+  flex: 1 1 320px; min-width: 0; box-sizing: border-box; height: 38px; padding: 0 12px;
+  border: 1px solid var(--border-strong); border-radius: 4px; background: var(--surface); color: var(--link); font: 400 13px/1 var(--font-mono);
+}
+.wf-mu-help { font-size: 12px; color: var(--text-muted); }
+.wf-mu-boxes { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+.wf-mu-box { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.wf-mu-box[data-size='curl'] { flex-basis: 320px; }
+.wf-mu-box-head {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px;
+  background: var(--surface); border-bottom: 1px solid var(--border); font-size: 12px;
+}
+.wf-mu-box-head[data-kind='mono'] { display: block; font: 400 11px/1.4 var(--font-mono); color: var(--text-secondary); overflow-wrap: anywhere; }
+.wf-mu-box-title { font-weight: 600; color: var(--text-secondary); }
+.wf-mu-box-sub { font-weight: 400; color: var(--text-muted); }
+.wf-mu-pre { flex: 1; margin: 0; padding: 10px 12px; background: var(--bg); color: var(--text); font: 400 12px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.wf-mu-pre[data-tone='secondary'] { color: var(--text-secondary); }
+.wf-mu-code { flex: none; min-width: 34px; box-sizing: border-box; text-align: center; padding: 1px 6px; border-radius: 4px; font: 600 12px/1.4 var(--font-mono); color: var(--on-status); }
+.wf-mu-code[data-tone='success'] { background: var(--success); }
+.wf-mu-code[data-tone='warning'] { background: var(--warning); }
+.wf-mu-code[data-tone='danger'] { background: var(--danger); }
+.wf-mu-last { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 12px; border-radius: 6px; background: var(--surface); }
+.wf-mu-last-text { color: var(--text-secondary); }
+.wf-mu-verdict { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.wf-mu-verdict[data-tone='success'] { color: var(--success); }
+.wf-mu-verdict[data-tone='danger'] { color: var(--danger); }
+.wf-mu-muted { color: var(--text-muted); }
+.wf-mu-runs { margin-left: auto; }
+.wf-mu-answers { display: flex; flex-direction: column; gap: 6px; }
+.wf-mu-answer {
+  display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.wf-mu-answer:hover { border-color: var(--border-strong); }
+.wf-mu-answer[aria-pressed='true'] { border-color: var(--action); background: var(--selected); }
+.wf-mu-answer-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wf-mu-answer-title { font-weight: 600; }
+.wf-mu-answer-when { font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
+.wf-mu-note { font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.wf-mu-panel[data-size='narrow'] .wf-mu-box { flex: none; }
+.wf-mu-box[data-size='curl'] .wf-mu-box-head { flex-wrap: nowrap; }
+.wf-mu-box[data-size='curl'] .wf-mu-box-title { min-width: 0; }
+.wf-mu-box-head .button { flex: none; }
+.wf-mu-row > .method { display: inline-flex; align-items: center; height: 38px; padding: 0 10px; box-sizing: border-box; font-size: 12px; }

@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soapui;
+package io.microcks.artifact.soapui;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/RefTest-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/RefTest-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -122,7 +122,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/HelloService-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -201,7 +201,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/RefTest-script-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/RefTest-script-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -275,7 +275,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/RefTest-Product-GetProductElements-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/RefTest-Product-GetProductElements-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -317,7 +317,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/Test-REST-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/Test-REST-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -441,7 +441,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/RefTest-no-version-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/RefTest-no-version-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -462,7 +462,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/HelloAPI-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/HelloAPI-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -481,7 +481,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/GetDrivers-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/GetDrivers-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -518,7 +518,7 @@ class SoapUIProjectImporterTest {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
-               "target/test-classes/io/github/microcks/util/soapui/VIES-soapui-project.xml");
+               "target/test-classes/io/microcks/artifact/soapui/VIES-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }

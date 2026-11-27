@@ -13,38 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.OAuth2AuthorizedClient;
-import io.github.microcks.domain.OAuth2ClientContext;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.domain.TestStepResult;
-import io.github.microcks.event.TestCompletionEvent;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.repository.TestResultRepository;
-import io.github.microcks.security.AuthorizationException;
-import io.github.microcks.security.OAuth2AuthorizedClientProvider;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.asyncapi.AsyncAPITestRunner;
-import io.github.microcks.util.graphql.GraphQLTestRunner;
-import io.github.microcks.util.grpc.GrpcTestRunner;
-import io.github.microcks.util.openapi.OpenAPITestRunner;
-import io.github.microcks.util.postman.PostmanTestStepsRunner;
-import io.github.microcks.util.soapui.SoapUIAssertionsTestRunner;
-import io.github.microcks.util.test.AbstractTestRunner;
-import io.github.microcks.util.test.HttpTestRunner;
-import io.github.microcks.util.test.SoapHttpTestRunner;
+import io.microcks.domain.OAuth2AuthorizedClient;
+import io.microcks.domain.OAuth2ClientContext;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Response;
+import io.microcks.domain.Secret;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestCaseResult;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestReturn;
+import io.microcks.domain.TestRunnerType;
+import io.microcks.domain.TestStepResult;
+import io.microcks.event.TestCompletionEvent;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.SecretRepository;
+import io.microcks.repository.TestResultRepository;
+import io.microcks.security.AuthorizationException;
+import io.microcks.security.OAuth2AuthorizedClientProvider;
+import io.microcks.util.IdBuilder;
+import io.microcks.test.AbstractTestRunner;
+import io.microcks.test.http.ApacheClientHttpRequestFactory;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.test.TestRunnerContext;
+import io.microcks.test.TestRunnerFactory;
 
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -55,15 +51,14 @@ import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.Timeout;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.scheduling.annotation.Async;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
@@ -81,7 +76,7 @@ import java.util.concurrent.CompletableFuture;
  * Bean managing the launch of new Tests.
  * @author laurent
  */
-@org.springframework.stereotype.Service
+@ApplicationScoped
 public class TestRunnerService {
 
    /** A simple logger for diagnostic messages. */
@@ -97,19 +92,19 @@ public class TestRunnerService {
    private final ResponseRepository responseRepository;
    private final TestResultRepository testResultRepository;
    private final SecretRepository secretRepository;
-   private final ApplicationContext applicationContext;
+   private final Event<TestCompletionEvent> testCompletionEvent;
 
-   @Value("${tests-callback.url}")
-   private String testsCallbackUrl = null;
+   @ConfigProperty(name = "tests-callback.url", defaultValue = "http://localhost:8080")
+   String testsCallbackUrl;
 
-   @Value("${postman-runner.url}")
-   private String postmanRunnerUrl = null;
+   @ConfigProperty(name = "postman-runner.url", defaultValue = "http://localhost:3000")
+   String postmanRunnerUrl;
 
-   @Value("${async-minion.url}")
-   private String asyncMinionUrl = null;
+   @ConfigProperty(name = "async-minion.url", defaultValue = "http://localhost:8081")
+   String asyncMinionUrl;
 
-   @Value("${validation.resourceUrl}")
-   private String validationResourceUrl = null;
+   @ConfigProperty(name = "validation.resourceUrl", defaultValue = "http://localhost:8080/api/resources/")
+   String validationResourceUrl;
 
    /**
     * Build a new TestRunnerService with the required dependencies.
@@ -118,17 +113,18 @@ public class TestRunnerService {
     * @param responseRepository   The repository to manage persistent responses
     * @param testResultRepository The repository to manage persistent testResults
     * @param secretRepository     The repository to manage persistent secrets
-    * @param applicationContext   The Spring application context
+    * @param testCompletionEvent  The CDI event used to publish test completions
     */
+   @Inject
    public TestRunnerService(ResourceRepository resourceRepository, RequestRepository requestRepository,
          ResponseRepository responseRepository, TestResultRepository testResultRepository,
-         SecretRepository secretRepository, ApplicationContext applicationContext) {
+         SecretRepository secretRepository, Event<TestCompletionEvent> testCompletionEvent) {
       this.resourceRepository = resourceRepository;
       this.requestRepository = requestRepository;
       this.responseRepository = responseRepository;
       this.testResultRepository = testResultRepository;
       this.secretRepository = secretRepository;
-      this.applicationContext = applicationContext;
+      this.testCompletionEvent = testCompletionEvent;
    }
 
    /**
@@ -139,12 +135,30 @@ public class TestRunnerService {
     * @param oAuth2Context An optional OAuth2ClientContext that may complement Secret information
     * @return A Future wrapping test results
     */
-   @Async
    public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service,
          TestRunnerType runnerType, OAuth2ClientContext oAuth2Context) {
+      log.info("Launching test {} on {} with runner {}", testResult.getId(), testResult.getTestedEndpoint(),
+            runnerType);
+      return CompletableFuture.supplyAsync(() -> runTests(testResult, service, runnerType, oAuth2Context))
+            .exceptionally(t -> failTest(testResult, t));
+   }
+
+   /** Nothing else observes the async future: log the failure and do not leave the test in progress forever. */
+   private TestResult failTest(TestResult testResult, Throwable t) {
+      log.error("Test {} failed unexpectedly", testResult.getId(), t);
+      testResult.setSuccess(false);
+      testResult.setInProgress(false);
+      testResult.setElapsedTime(0);
+      testResult.setRunnerMessage("Test execution failed: " + t.getMessage());
+      testResultRepository.persistOrUpdate(testResult);
+      return testResult;
+   }
+
+   private TestResult runTests(TestResult testResult, Service service, TestRunnerType runnerType,
+         OAuth2ClientContext oAuth2Context) {
       // Found next build number for this test.
-      List<TestResult> older = testResultRepository.findByServiceId(service.getId(),
-            PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
+      List<TestResult> older = testResultRepository.findByServiceId(service.getId(), Page.ofSize(2),
+            Sort.descending("testNumber"));
       if (older != null && !older.isEmpty() && older.get(0).getTestNumber() != null) {
          testResult.setTestNumber(older.get(0).getTestNumber() + 1L);
       } else {
@@ -153,7 +167,7 @@ public class TestRunnerService {
 
       Secret secret = null;
       if (testResult.getSecretRef() != null) {
-         secret = secretRepository.findById(testResult.getSecretRef().getSecretId()).orElse(null);
+         secret = secretRepository.findById(testResult.getSecretRef().getSecretId());
          log.debug("Using a secret to test endpoint? '{}'", secret != null ? secret.getName() : "none");
       }
 
@@ -180,8 +194,8 @@ public class TestRunnerService {
             testResult.setInProgress(false);
             testResult.setElapsedTime(0);
             testResult.setRunnerMessage("OAuth2 token flow failed: " + authorizationException.getMessage());
-            testResultRepository.save(testResult);
-            return CompletableFuture.completedFuture(testResult);
+            testResultRepository.persistOrUpdate(testResult);
+            return testResult;
          }
       }
 
@@ -194,8 +208,8 @@ public class TestRunnerService {
          testResult.setInProgress(false);
          testResult.setElapsedTime(0);
          testResult.setRunnerMessage("Could not retrieve runner for " + runnerType);
-         testResultRepository.save(testResult);
-         return CompletableFuture.completedFuture(testResult);
+         testResultRepository.persistOrUpdate(testResult);
+         return testResult;
       }
 
       for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
@@ -225,7 +239,7 @@ public class TestRunnerService {
             testCaseResult.setSuccess(false);
             testCaseResult.setElapsedTime(0);
             testResult.setRunnerMessage("URISyntaxException on endpoint: " + testResult.getTestedEndpoint());
-            testResultRepository.save(testResult);
+            testResultRepository.persistOrUpdate(testResult);
             break;
          } catch (Throwable t) {
             log.error("Throwable while testing operation {}", operation.getName(), t);
@@ -236,17 +250,17 @@ public class TestRunnerService {
          if (results == null) {
             testCaseResult.setSuccess(false);
             testCaseResult.setElapsedTime(0);
-            testResultRepository.save(testResult);
+            testResultRepository.persistOrUpdate(testResult);
          } else if (!results.isEmpty()) {
             updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
-            testResultRepository.save(testResult);
+            testResultRepository.persistOrUpdate(testResult);
          }
       }
 
       // Update success, progress indicators and total time before saving and returning.
       updateTestResult(testResult);
 
-      return CompletableFuture.completedFuture(testResult);
+      return testResult;
    }
 
    /**
@@ -255,6 +269,14 @@ public class TestRunnerService {
     */
    public void setTestsCallbackUrl(String testsCallbackUrl) {
       this.testsCallbackUrl = testsCallbackUrl;
+   }
+
+   /**
+    * Update the postmanRunnerUrl property. This is just here for testing purposes.
+    * @param postmanRunnerUrl The URL to set
+    */
+   public void setPostmanRunnerUrl(String postmanRunnerUrl) {
+      this.postmanRunnerUrl = postmanRunnerUrl;
    }
 
    /**
@@ -287,14 +309,14 @@ public class TestRunnerService {
 
       // Save the responses into repository to get their ids.
       log.debug("Saving {} responses with testCaseId {}", responses.size(), testCaseId);
-      responseRepository.saveAll(responses);
+      responseRepository.persistOrUpdate(responses);
 
       // Associate responses to requests before saving requests.
       for (int i = 0; i < actualRequests.size(); i++) {
          actualRequests.get(i).setResponseId(responses.get(i).getId());
       }
       log.debug("Saving {} requests with testCaseId {}", responses.size(), testCaseId);
-      requestRepository.saveAll(actualRequests);
+      requestRepository.persistOrUpdate(actualRequests);
 
       // Update and save the completed TestCaseResult.
       // We cannot consider as success if we have no TestStepResults associated...
@@ -331,7 +353,7 @@ public class TestRunnerService {
       testResult.setInProgress(globalProgressFlag);
       testResult.setElapsedTime(totalElapsedTime);
 
-      testResultRepository.save(testResult);
+      testResultRepository.persistOrUpdate(testResult);
 
       // If test is completed, publish a completion event.
       if (!testResult.isInProgress()) {
@@ -389,61 +411,18 @@ public class TestRunnerService {
                   .setResponseTimeout(Timeout.ofMilliseconds(runnerTimeout)).build())
             .build();
 
-      HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+      ApacheClientHttpRequestFactory factory = new ApacheClientHttpRequestFactory(httpClient);
 
-      switch (runnerType) {
-         case SOAP_HTTP:
-            SoapHttpTestRunner soapRunner = new SoapHttpTestRunner(resourceRepository);
-            soapRunner.setClientHttpRequestFactory(factory);
-            soapRunner.setResourceUrl(validationResourceUrl);
-            soapRunner.setSecret(secret);
-            return soapRunner;
-         case OPEN_API_SCHEMA:
-            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, true);
-            openApiRunner.setClientHttpRequestFactory(factory);
-            openApiRunner.setResourceUrl(validationResourceUrl);
-            openApiRunner.setSecret(secret);
-            return openApiRunner;
-         case ASYNC_API_SCHEMA:
-            AsyncAPITestRunner asyncApiRunner = new AsyncAPITestRunner(resourceRepository, secretRepository);
-            asyncApiRunner.setClientHttpRequestFactory(factory);
-            asyncApiRunner.setAsyncMinionUrl(asyncMinionUrl);
-            return asyncApiRunner;
-         case GRPC_PROTOBUF:
-            GrpcTestRunner grpcRunner = new GrpcTestRunner(resourceRepository, responseRepository, true);
-            grpcRunner.setSecret(secret);
-            grpcRunner.setTimeout(runnerTimeout);
-            return grpcRunner;
-         case GRAPHQL_SCHEMA:
-            GraphQLTestRunner graphqlRunner = new GraphQLTestRunner(resourceRepository);
-            graphqlRunner.setClientHttpRequestFactory(factory);
-            graphqlRunner.setSecret(secret);
-            return graphqlRunner;
-         case POSTMAN:
-            PostmanTestStepsRunner postmanRunner = new PostmanTestStepsRunner(resourceRepository);
-            postmanRunner.setClientHttpRequestFactory(factory);
-            postmanRunner.setTestsCallbackUrl(testsCallbackUrl);
-            postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
-            return postmanRunner;
-         case SOAP_UI:
-            SoapUIAssertionsTestRunner soapUIRunner = new SoapUIAssertionsTestRunner(resourceRepository);
-            soapUIRunner.setClientHttpRequestFactory(factory);
-            soapUIRunner.setResourceUrl(validationResourceUrl);
-            soapUIRunner.setSecret(secret);
-            return soapUIRunner;
-         default:
-            HttpTestRunner httpRunner = new HttpTestRunner();
-            httpRunner.setClientHttpRequestFactory(factory);
-            httpRunner.setSecret(secret);
-            return httpRunner;
-      }
+      TestRunnerContext context = new TestRunnerContext(resourceRepository, responseRepository, secretRepository,
+            factory, secret, runnerTimeout, validationResourceUrl, asyncMinionUrl, testsCallbackUrl, postmanRunnerUrl);
+      return TestRunnerFactory.getTestRunner(runnerType, context);
    }
 
    /** Build a customer truststore with provided certificate in PEM format. */
    private KeyStore buildCustomCaCertTruststore(String caCertPem) throws Exception {
       // First compute a stripped PEM certificate and decode it from base64.
       String strippedPem = caCertPem.replace(BEGIN_CERTIFICATE, "").replace(END_CERTIFICATE, "");
-      InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
+      InputStream is = new ByteArrayInputStream(java.util.Base64.getMimeDecoder().decode(strippedPem));
 
       // Generate a new x509 certificate from the stripped decoded pem.
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -458,8 +437,8 @@ public class TestRunnerService {
 
    /** Publish a TestCompletionEvent towards asynchronous consumers. */
    private void publishTestCompletionEvent(TestResult testResult) {
-      TestCompletionEvent event = new TestCompletionEvent(this, testResult);
-      applicationContext.publishEvent(event);
+      TestCompletionEvent event = new TestCompletionEvent(testResult);
+      testCompletionEvent.fireAsync(event);
       log.debug("Test completion event has been published");
    }
 }

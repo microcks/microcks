@@ -1,0 +1,19 @@
+{
+  "name": "microcks-web-ui",
+  "private": true,
+  "description": "Microcks v2 Web UI workspace: the Deep Ink Svelte design-system package and the SvelteKit app.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "app"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w app",
+    "build": "npm run build -w app",
+    "check": "npm run check -w app",
+    "screenshots": "npm run screenshots -w app"
+  }
+}

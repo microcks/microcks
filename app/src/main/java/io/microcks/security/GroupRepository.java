@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
 
-import io.github.microcks.domain.GenericResource;
+package io.microcks.security;
 
-import java.util.List;
+import io.microcks.repository.ObjectIdRepository;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Custom repository interface for GenericResource domain objects.
+ * Repository for {@code Group} objects.
  * @author laurent
  */
-public interface CustomGenericResourceRepository {
+@ApplicationScoped
+public class GroupRepository implements ObjectIdRepository<Group> {
 
-   List<GenericResource> findByServiceIdAndJSONQuery(String serviceId, String jsonQuery);
+   public Group findByName(String name) {
+      return find("name", name).firstResult();
+   }
 }

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.asyncapi;
+package io.microcks.artifact.asyncapi;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.BindingsHolder;
-import io.github.microcks.domain.Header;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.domain.BindingsHolder;
+import io.microcks.domain.Header;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

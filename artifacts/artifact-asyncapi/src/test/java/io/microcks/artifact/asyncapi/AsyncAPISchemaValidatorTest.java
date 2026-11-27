@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.asyncapi;
+package io.microcks.artifact.asyncapi;
 
-import io.github.microcks.util.SchemaMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.Schema;
@@ -46,7 +45,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-schema.json"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-schema.json"),
                StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = AsyncAPISchemaValidator.isJsonValid(schemaText, jsonText);
@@ -67,7 +66,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-schema.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-schema.yaml"),
                StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = AsyncAPISchemaValidator.isJsonValid(schemaText, jsonText);
@@ -88,7 +87,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-schema.json"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-schema.json"),
                StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = AsyncAPISchemaValidator.isJsonValid(schemaText, jsonText);
@@ -109,7 +108,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-schema.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-schema.yaml"),
                StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = AsyncAPISchemaValidator.isJsonValid(schemaText, jsonText);
@@ -138,7 +137,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -172,7 +171,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/account-service-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -208,7 +207,8 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-ref-asyncapi.yaml"),
+               new File(
+                     "target/test-classes/io/microcks/artifact/asyncapi/validation/account-service-ref-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -233,8 +233,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-ref-ref-asyncapi.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/account-service-ref-ref-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -278,8 +278,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/spring-cloud-stream-asyncapi-nulls.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/spring-cloud-stream-asyncapi-nulls.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -309,7 +309,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -341,7 +341,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-out-asyncapi.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-out-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -367,7 +367,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/streetlights-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -394,7 +394,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/streetlights-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -427,8 +427,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-oneof-2.1.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/account-service-asyncapi-oneof-2.1.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -460,8 +460,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-oneof-2.3.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/account-service-asyncapi-oneof-2.3.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -494,7 +494,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml"),
+               new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-asyncapi-3.0.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -524,8 +524,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-oneof-3.0.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-asyncapi-oneof-3.0.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -554,8 +554,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-json-ref-asyncapi.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-json-ref-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -580,14 +580,15 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml"),
+               new File(
+                     "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
 
          // Load schema from file.
          avroSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup.avsc"));
 
          GenericRecord data = new GenericData.Record(avroSchema);
          data.put("fullName", "Laurent Broudoux");
@@ -611,14 +612,15 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml"),
+               new File(
+                     "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
 
          // Load schema from file.
          avroSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-bad.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-bad.avsc"));
 
          GenericRecord data = new GenericData.Record(avroSchema);
          data.put("name", "Laurent");
@@ -658,15 +660,15 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-ref-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
 
          // Load schema from file.
          avroSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup.avsc"));
 
          GenericRecord data = new GenericData.Record(avroSchema);
          data.put("fullName", "Laurent Broudoux");
@@ -704,15 +706,15 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-ref-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
 
          // Load schema from file.
          avroSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-bad.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-bad.avsc"));
 
          GenericRecord data = new GenericData.Record(avroSchema);
          data.put("name", "Laurent");
@@ -737,15 +739,15 @@ class AsyncAPISchemaValidatorTest {
       Schema avroSchema = null;
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi-3.0.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-asyncapi-3.0.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
 
          // Load schema from file.
          avroSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup.avsc"));
 
          GenericRecord data = new GenericData.Record(avroSchema);
          data.put("fullName", "Laurent Broudoux");
@@ -769,15 +771,15 @@ class AsyncAPISchemaValidatorTest {
       Schema avroSchema = null;
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi-3.0.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-asyncapi-3.0.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
 
          // Load schema from file.
          avroSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-bad.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-bad.avsc"));
 
          GenericRecord data = new GenericData.Record(avroSchema);
          data.put("name", "Laurent");
@@ -817,16 +819,15 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File(
-                     "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi-3.0.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-ref-asyncapi-3.0.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
 
          // Load schema from file.
          avroSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup.avsc"));
 
          GenericRecord data = new GenericData.Record(avroSchema);
          data.put("fullName", "Laurent Broudoux");
@@ -855,9 +856,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File(
-                     "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi-oneof-2.3.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-asyncapi-oneof-2.3.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -925,7 +925,7 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(new File(
-               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi-oneof-2.3.yaml"),
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-ref-asyncapi-oneof-2.3.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -964,9 +964,8 @@ class AsyncAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         asyncAPIText = FileUtils.readFileToString(
-               new File(
-                     "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi-oneof-3.0.yaml"),
+         asyncAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-asyncapi-oneof-3.0.yaml"),
                StandardCharsets.UTF_8);
          // Extract JSON node using AsyncAPISchemaValidator method.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
@@ -999,7 +998,8 @@ class AsyncAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          String asyncAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml"),
+               new File(
+                     "target/test-classes/io/microcks/artifact/asyncapi/validation/user-signedup-avro-asyncapi.yaml"),
                StandardCharsets.UTF_8);
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
       } catch (Exception e) {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.artifact.grpc;
 
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;

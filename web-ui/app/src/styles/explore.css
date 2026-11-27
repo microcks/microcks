@@ -1,0 +1,20 @@
+/* Layout helpers of the Explore and Enrich pages (WP7). Colors come from the design tokens only. */
+.ex-stack { display: grid; gap: 16px; min-width: 0; }
+.ex-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+.ex-muted { color: var(--text-muted); }
+.ex-secondary { color: var(--text-secondary); }
+.ex-mono { font-family: var(--font-mono); }
+.ex-small { font: var(--type-small); }
+.ex-radio-cards { display: flex; flex-wrap: wrap; gap: 8px; }
+.ex-radio-cards > .ex-radio-card { flex: 1 1 150px; }
+.ex-radio-card { display: grid; gap: 4px; align-content: start; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); cursor: pointer; }
+.ex-radio-card .ex-small { font-size: 12px; line-height: 1.4; }
+.ex-radio-card:has(input:checked) { border-color: var(--action); background: var(--selected); }
+.ex-radio-card:has(input:focus-visible) { box-shadow: var(--shadow-focus); }
+.ex-radio-card input { position: absolute; opacity: 0; pointer-events: none; }
+.ex-radio-card-title { justify-content: space-between; font: 600 12px/16px var(--font-mono); color: var(--text-secondary); }
+.ex-radio-card:has(input:checked) .ex-radio-card-title { color: var(--text); }
+.ex-radio-card-title .icon { color: var(--action); }
+.ex-radio-card .ex-radio-card-tag { justify-self: start; padding: 0 5px; border: 1px solid var(--border); border-radius: 4px; font: 400 10px/16px var(--font-mono); color: var(--text-muted); }
+.ex-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 8px; }
+.ex-fieldset > legend { padding: 0; font-weight: 600; margin-bottom: 4px; }

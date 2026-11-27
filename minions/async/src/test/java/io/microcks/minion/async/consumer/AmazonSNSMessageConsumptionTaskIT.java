@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.consumer;
+package io.microcks.minion.async.consumer;
 
-import io.github.microcks.domain.Secret;
-import io.github.microcks.minion.async.AsyncTestSpecification;
+import io.microcks.domain.Secret;
+import io.microcks.minion.async.AsyncTestSpecification;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;

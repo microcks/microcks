@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.domain.RequestReplyEvent;
-import io.github.microcks.event.ChangeType;
-import io.github.microcks.event.ServiceViewChangeEvent;
-import io.github.microcks.minion.async.handler.RequestReplyHandlerManager;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.ServiceView;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.domain.RequestReplyEvent;
+import io.microcks.event.ChangeType;
+import io.microcks.event.ServiceViewChangeEvent;
+import io.microcks.minion.async.handler.RequestReplyHandlerManager;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -36,8 +35,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * This bean is responsible for listening the incoming <code>ServiceViewChangeEvent</code> on
- * <code>microcks-services-updates</code> Kafka topic and updating the AsyncMockRepository accordingly.
+ * This bean is responsible for applying the <code>ServiceViewChangeEvent</code> received from Microcks
+ * <code>/api/services-updates</code> WebSocket endpoint and updating the AsyncMockRepository accordingly.
  *
  * @author laurent
  */
@@ -69,14 +68,6 @@ public class AsyncMockDefinitionUpdater {
       this.mockRepository = mockRepository;
       this.schemaRegistry = schemaRegistry;
       this.requestReplyHandlerManager = requestReplyHandlerManager;
-   }
-
-   @Incoming("microcks-services-updates")
-   public void onServiceUpdate(ServiceViewChangeEvent serviceViewChangeEvent) {
-      logger.infof("Received a new change event [%s] for '%s', at %d", serviceViewChangeEvent.getChangeType(),
-            serviceViewChangeEvent.getServiceId(), serviceViewChangeEvent.getTimestamp());
-
-      applyServiceChangeEvent(serviceViewChangeEvent);
    }
 
    public void applyServiceChangeEvent(ServiceViewChangeEvent serviceViewChangeEvent) {

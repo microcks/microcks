@@ -1,0 +1,55 @@
+####
+# This Dockerfile is used in order to build a container that runs the Microcks Uber application in JVM mode
+#
+# Before building the container image run:
+#
+# mvn package
+#
+# Then, build the image with:
+#
+# docker build -f src/main/docker/Dockerfile.jvm -t microcks/microcks-uber .
+#
+# Then run the container using (in-memory data, add -v and -e MONGODB_STORAGE_PATH=/data/microcks.mv to persist):
+#
+# docker run -i --rm -p 8080:8080 microcks/microcks-uber
+#
+###
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1785906621
+
+LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.authors="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.title="Microcks Application Uber" \
+      org.opencontainers.image.description="Microcks is Open Source cloud-native native tool for API Mocking and Testing" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.documentation="https://github.com/microcks/microcks/tree/master/distro/uber" \
+      io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/distro/uber/README.md"
+
+ARG JAVA_PACKAGE=java-25-openjdk-headless
+ARG RUN_JAVA_VERSION=1.3.8
+
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+
+RUN microdnf install openssl curl-minimal ca-certificates ${JAVA_PACKAGE} -y \
+    && microdnf update -y \
+    && microdnf clean all \
+    && rm /var/lib/rpm/rpmdb.sqlite \
+    && mkdir /deployments \
+    && chown 1001 /deployments \
+    && chmod "g+rwX" /deployments \
+    && chown 1001:root /deployments \
+    && curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/${RUN_JAVA_VERSION}/run-java-sh-${RUN_JAVA_VERSION}-sh.sh -o /deployments/run-java.sh \
+    && chown 1001 /deployments/run-java.sh \
+    && chmod 550 /deployments/run-java.sh \
+    && echo "securerandom.source=file:/dev/urandom" >> /etc/alternatives/jre/lib/security/java.security
+
+ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+
+COPY --chown=1001 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=1001 target/quarkus-app/*.jar /deployments/
+COPY --chown=1001 target/quarkus-app/app/ /deployments/app/
+COPY --chown=1001 target/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8080
+USER 1001
+
+ENTRYPOINT [ "/deployments/run-java.sh" ]

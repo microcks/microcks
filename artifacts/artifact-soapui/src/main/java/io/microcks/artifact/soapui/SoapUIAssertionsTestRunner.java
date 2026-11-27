@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soapui;
+package io.microcks.artifact.soapui;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.MalformedXmlException;
-import io.github.microcks.util.soapui.assertions.AssertionFactory;
-import io.github.microcks.util.soapui.assertions.AssertionStatus;
-import io.github.microcks.util.soapui.assertions.ExchangeContext;
-import io.github.microcks.util.soapui.assertions.RequestResponseExchange;
-import io.github.microcks.util.soapui.assertions.SoapUIAssertion;
-import io.github.microcks.util.test.HttpTestRunner;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestReturn;
+import io.microcks.test.ResourceReader;
+import io.microcks.artifact.soap.MalformedXmlException;
+import io.microcks.artifact.soapui.assertions.AssertionFactory;
+import io.microcks.artifact.soapui.assertions.AssertionStatus;
+import io.microcks.artifact.soapui.assertions.ExchangeContext;
+import io.microcks.artifact.soapui.assertions.RequestResponseExchange;
+import io.microcks.artifact.soapui.assertions.SoapUIAssertion;
+import io.microcks.test.HttpTestRunner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.client.ClientHttpResponse;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.ClientHttpResponse;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -47,9 +47,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.getConfigDirectChildren;
-import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.getConfigUniqueDirectChild;
-import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.hasConfigDirectChild;
+import static io.microcks.artifact.soapui.SoapUIProjectParserUtils.getConfigDirectChildren;
+import static io.microcks.artifact.soapui.SoapUIProjectParserUtils.getConfigUniqueDirectChild;
+import static io.microcks.artifact.soapui.SoapUIProjectParserUtils.hasConfigDirectChild;
 
 /**
  * This is a utility class for running Service tests using assertions defined under a corresponding SoapUI project.
@@ -63,7 +63,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
    /** The URL of resources used for validation. */
    private String resourceUrl = null;
 
-   private final ResourceRepository resourceRepository;
+   private final ResourceReader resourceReader;
    private final Map<ResourceType, Resource> cachedResources = new HashMap<>();
 
    private Element projectElement;
@@ -73,8 +73,8 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
    private long startTimestamp;
 
 
-   public SoapUIAssertionsTestRunner(ResourceRepository resourceRepository) {
-      this.resourceRepository = resourceRepository;
+   public SoapUIAssertionsTestRunner(ResourceReader resourceReader) {
+      this.resourceReader = resourceReader;
    }
 
    /**
@@ -112,7 +112,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
 
       // If first request of this runner, we should retrieve resources and cache them.
       if (cachedResources.isEmpty()) {
-         List<Resource> resources = resourceRepository.findByServiceId(service.getId());
+         List<Resource> resources = resourceReader.findByServiceId(service.getId());
          for (Resource resource : resources) {
             cachedResources.put(resource.getType(), resource);
          }

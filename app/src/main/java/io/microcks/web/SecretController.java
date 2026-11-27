@@ -13,27 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Secret;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.security.AuthorizationChecker;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.util.SafeLogger;
+import io.microcks.domain.Secret;
+import io.microcks.repository.SecretRepository;
+import io.microcks.security.AuthorizationChecker;
+import io.microcks.security.UserInfo;
+import io.microcks.util.SafeLogger;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,8 +45,9 @@ import java.util.Map;
  * A Rest controller for API defined on services.
  * @author laurent
  */
-@RestController
-@RequestMapping("/api")
+@Path("/api")
+@Produces(MediaType.APPLICATION_JSON)
+@RunOnVirtualThread
 public class SecretController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -58,36 +61,40 @@ public class SecretController {
     * @param secretRepository     to have access to Secrets definition
     * @param authorizationChecker to check user authorization
     */
+   @Inject
    public SecretController(SecretRepository secretRepository, AuthorizationChecker authorizationChecker) {
       this.secretRepository = secretRepository;
       this.authorizationChecker = authorizationChecker;
    }
 
-   @GetMapping(value = "/secrets")
-   public List<Secret> listSecrets(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size, UserInfo userInfo) {
+   @GET
+   @Path("/secrets")
+   public List<Secret> listSecrets(@QueryParam("page") @DefaultValue("0") int page,
+         @QueryParam("size") @DefaultValue("20") int size) {
       log.debug("Getting secrets list for page {} and size {}", page, size);
 
-      if (!authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)) {
-         return secretRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))).getContent()
-               .stream().map(this::filterSensitiveData).toList();
+      if (!authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)) {
+         return secretRepository.findAll(Sort.ascending("name")).page(Page.of(page, size)).list().stream()
+               .map(this::filterSensitiveData).toList();
       }
       // We're admin, so we can return all secrets with sensitive data.
-      return secretRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))).getContent();
+      return secretRepository.findAll(Sort.ascending("name")).page(Page.of(page, size)).list();
    }
 
-   @GetMapping(value = "/secrets/search")
-   public List<Secret> searchSecrets(@RequestParam(value = "name") String name, UserInfo userInfo) {
+   @GET
+   @Path("/secrets/search")
+   public List<Secret> searchSecrets(@QueryParam("name") String name) {
       log.debug("Searching secrets corresponding to {}", name);
       List<Secret> secrets = secretRepository.findByNameLike(name);
-      if (!authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)) {
+      if (!authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)) {
          return secrets.stream().map(this::filterSensitiveData).toList();
       }
       // We're admin, so we can return all secrets with sensitive data.
       return secrets;
    }
 
-   @GetMapping(value = "/secrets/count")
+   @GET
+   @Path("/secrets/count")
    public Map<String, Long> countSecrets() {
       log.debug("Counting secrets...");
       Map<String, Long> counter = new HashMap<>();
@@ -95,38 +102,48 @@ public class SecretController {
       return counter;
    }
 
-   @PostMapping(value = "/secrets")
-   public ResponseEntity<Secret> createSecret(@RequestBody Secret secret) {
+   @POST
+   @Path("/secrets")
+   public Response createSecret(Secret secret) {
       log.debug("Creating new secret: {}", secret);
-      return new ResponseEntity<>(secretRepository.save(secret), HttpStatus.CREATED);
+      return saveAndRespond(secret, Response.Status.CREATED);
    }
 
-   @GetMapping(value = "/secrets/{id}")
-   public ResponseEntity<Secret> getSecret(@PathVariable("id") String secretId, UserInfo userInfo) {
+   @GET
+   @Path("/secrets/{id}")
+   public Response getSecret(@PathParam("id") String secretId) {
       log.debug("Getting secret with id {}", secretId);
 
-      if (!authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)) {
-         Secret secret = secretRepository.findById(secretId).orElse(null);
+      if (!authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)) {
+         Secret secret = secretRepository.findById(secretId);
          if (secret != null) {
-            return new ResponseEntity<>(filterSensitiveData(secret), HttpStatus.OK);
+            return Response.status(Response.Status.OK).entity(filterSensitiveData(secret)).build();
          }
-         return new ResponseEntity<Secret>((Secret) null, HttpStatus.OK);
+         return Response.ok().build();
       }
       // We're admin, so we can return all secrets with sensitive data.
-      return new ResponseEntity<Secret>(secretRepository.findById(secretId).orElse(null), HttpStatus.OK);
+      Secret found = secretRepository.findById(secretId);
+      return found == null ? Response.ok().build() : Response.ok(found).build();
    }
 
-   @PutMapping(value = "/secrets/{id}")
-   public ResponseEntity<Secret> saveSecret(@PathVariable("id") String secretId, @RequestBody Secret secret) {
+   @PUT
+   @Path("/secrets/{id}")
+   public Response saveSecret(@PathParam("id") String secretId, Secret secret) {
       log.debug("Saving existing secret: {}", secret);
-      return new ResponseEntity<>(secretRepository.save(secret), HttpStatus.OK);
+      return saveAndRespond(secret, Response.Status.OK);
    }
 
-   @DeleteMapping(value = "/secrets/{id}")
-   public ResponseEntity<String> deleteService(@PathVariable("id") String secretId) {
+   private Response saveAndRespond(Secret secret, Response.Status status) {
+      secretRepository.persistOrUpdate(secret);
+      return Response.status(status).entity(secret).build();
+   }
+
+   @DELETE
+   @Path("/secrets/{id}")
+   public Response deleteService(@PathParam("id") String secretId) {
       log.debug("Removing secret with id {}", secretId);
       secretRepository.deleteById(secretId);
-      return new ResponseEntity<>(HttpStatus.OK);
+      return Response.status(Response.Status.OK).build();
    }
 
    /** Filter sensitive data from a Secret before returning it to the user. */

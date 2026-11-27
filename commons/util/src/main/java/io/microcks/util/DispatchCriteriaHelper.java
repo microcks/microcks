@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.microcks.domain.Operation;
+import io.microcks.util.dispatcher.FallbackSpecification;
+import io.microcks.util.dispatcher.JsonMappingException;
+import io.microcks.util.dispatcher.ProxyFallbackSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

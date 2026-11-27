@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.ParameterConstraintUtil;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.graphql.GraphQLHttpRequest;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.util.ParameterConstraintUtil;
+import io.microcks.util.SafeLogger;
+import io.microcks.web.GraphQLHttpRequest;
+import io.microcks.util.http.HttpHeaders;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,19 +52,22 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.parser.Parser;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriInfo;
+import io.vertx.core.http.HttpServerRequest;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -73,14 +77,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.github.microcks.util.delay.DelaySpec;
+import io.microcks.util.delay.DelaySpec;
 
 /**
  * A controller for mocking GraphQL responses.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
-@RequestMapping("/graphql")
+@ApplicationScoped
+@Path("/graphql")
+@RunOnVirtualThread
 public class GraphQLController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -100,12 +105,31 @@ public class GraphQLController {
    private final ObjectMapper mapper = new ObjectMapper();
 
 
+   /** The request parameters and context of a GraphQL mock invocation. */
+   public static class GraphQLParams {
+      @PathParam("service")
+      String service;
+      @PathParam("version")
+      String version;
+      @QueryParam("delay")
+      Long delay;
+      @QueryParam("delayStrategy")
+      String delayStrategy;
+      @Context
+      UriInfo uriInfo;
+      @Context
+      jakarta.ws.rs.core.HttpHeaders headers;
+      @Context
+      HttpServerRequest httpRequest;
+   }
+
    /**
     * Build a GraphQLController with required dependencies.
     * @param serviceRepository   The repository to access services definitions
     * @param resourceRepository  The repository to access resources artifacts
     * @param invocationProcessor The invocation processor to use for processing the call
     */
+   @Inject
    public GraphQLController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
          GraphQLInvocationProcessor invocationProcessor) {
       this.serviceRepository = serviceRepository;
@@ -113,13 +137,30 @@ public class GraphQLController {
       this.invocationProcessor = invocationProcessor;
    }
 
+   @GET
+   @Path("/{service}/{version}{path:(/.*)?}")
+   public jakarta.ws.rs.core.Response get(@BeanParam GraphQLParams params) {
+      return execute("GET", params, null);
+   }
 
-   @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.GET, RequestMethod.POST })
-   public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long requestedDelay,
-         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
-         @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
-         HttpMethod method) {
+   @POST
+   @Path("/{service}/{version}{path:(/.*)?}")
+   public jakarta.ws.rs.core.Response post(@BeanParam GraphQLParams params, String body) {
+      return execute("POST", params, body);
+   }
+
+   private jakarta.ws.rs.core.Response execute(String method, GraphQLParams params, String body) {
+      String serviceName = params.service;
+      String version = params.version;
+      Long requestedDelay = params.delay;
+      String requestedDelayStrategy = params.delayStrategy;
+      HttpServletRequest request = ContainerHttpServletRequest.from(method, params.uriInfo, params.headers,
+            params.httpRequest);
+      HttpHeaders headers = new HttpHeaders();
+      headers.putAll(params.headers.getRequestHeaders());
+      if (body != null && body.isEmpty()) {
+         body = null;
+      }
 
       log.info("Servicing GraphQL mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
@@ -133,9 +174,7 @@ public class GraphQLController {
 
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       if (service == null) {
-         return new ResponseEntity<>(
-               String.format("The service %s with version %s does not exist!", serviceName, version),
-               HttpStatus.NOT_FOUND);
+         return text(404, String.format("The service %s with version %s does not exist!", serviceName, version));
       }
 
       GraphQLHttpRequest graphqlHttpReq;
@@ -145,7 +184,7 @@ public class GraphQLController {
          graphqlRequest = requestParser.parseDocument(graphqlHttpReq.getQuery());
       } catch (Exception e) {
          log.error("Error parsing GraphQL request: {}", e.getMessage());
-         return new ResponseEntity<>("Error parsing GraphQL request: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+         return text(400, "Error parsing GraphQL request: " + e.getMessage());
       }
 
       // GraphQL clients (Apollo, urql, Relay...) emit fragment definitions before the operation, so the
@@ -159,8 +198,7 @@ public class GraphQLController {
 
       if (graphqlOperation == null) {
          log.error("No matching operation definition found in GraphQL request");
-         return new ResponseEntity<>("No matching operation definition found in GraphQL request",
-               HttpStatus.BAD_REQUEST);
+         return text(400, "No matching operation definition found in GraphQL request");
       }
 
       log.debug("Got this graphqlOperation: {}", graphqlOperation);
@@ -189,9 +227,9 @@ public class GraphQLController {
             responseContent = mapper.writeValueAsString(executionResult);
          } catch (JsonProcessingException jpe) {
             log.error("Unknown Json processing exception", jpe);
-            return new ResponseEntity<>(jpe.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return text(500, jpe.getMessage());
          }
-         return new ResponseEntity<>(responseContent, HttpStatus.OK);
+         return jakarta.ws.rs.core.Response.ok(responseContent).type(MediaType.APPLICATION_JSON).build();
       }
 
       // Then deal with one or many regular GraphQL selection queries.
@@ -222,7 +260,7 @@ public class GraphQLController {
             }
          } catch (GraphQLQueryProcessingException e) {
             log.error("Caught a GraphQL processing exception", e);
-            return new ResponseEntity<>(e.getMessage(), e.getStatus());
+            return text(e.getStatus(), e.getMessage());
          }
       }
 
@@ -249,7 +287,7 @@ public class GraphQLController {
          }
       }
       if (!responseHeaders.containsHeader("Content-Type") && !responseHeaders.containsHeader("content-type")) {
-         responseHeaders.addAll("Content-Type", List.of("application/json"));
+         responseHeaders.set("Content-Type", "application/json");
       }
 
       // Waiting for delay if any.
@@ -332,9 +370,17 @@ public class GraphQLController {
          responseContent = mapper.writeValueAsString(responseNode);
       } catch (JsonProcessingException e) {
          log.error("Unknown Json processing exception", e);
-         return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+         return text(500, e.getMessage());
       }
-      return new ResponseEntity<>(responseContent, responseHeaders, HttpStatus.OK);
+      jakarta.ws.rs.core.Response.ResponseBuilder builder = jakarta.ws.rs.core.Response.ok(responseContent);
+      responseHeaders.headerSet()
+            .forEach(header -> header.getValue().forEach(value -> builder.header(header.getKey(), value)));
+      return builder.build();
+   }
+
+   /** Build a plain text response. */
+   private static jakarta.ws.rs.core.Response text(int status, String message) {
+      return jakarta.ws.rs.core.Response.status(status).type(MediaType.TEXT_PLAIN).entity(message).build();
    }
 
    /**
@@ -386,8 +432,7 @@ public class GraphQLController {
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
          String violationMsg = validateParameterConstraintsIfAny(rOperation, request);
          if (violationMsg != null) {
-            throw new GraphQLQueryProcessingException(violationMsg + ". Check parameter constraints.",
-                  HttpStatus.BAD_REQUEST);
+            throw new GraphQLQueryProcessingException(violationMsg + ". Check parameter constraints.", 400);
          }
 
          // We must compute query parameters from the field selection.
@@ -420,20 +465,19 @@ public class GraphQLController {
                result.setJsonResponse(responseJson);
             } catch (Exception pe) {
                log.error("Exception while filtering response according GraphQL field selection", pe);
-               throw new GraphQLQueryProcessingException("Exception while filtering response JSON",
-                     HttpStatus.INTERNAL_SERVER_ERROR);
+               throw new GraphQLQueryProcessingException("Exception while filtering response JSON", 500);
             }
          }
 
-         if (HttpStatus.BAD_REQUEST.equals(responseResult.status())) {
+         if (responseResult.status().value() == 400) {
             log.debug("No response found. Throwing a BAD_REQUEST exception...");
-            throw new GraphQLQueryProcessingException("No matching response found", HttpStatus.BAD_REQUEST);
+            throw new GraphQLQueryProcessingException("No matching response found", 400);
          }
 
          return result;
       }
       log.debug("No valid operation found. Throwing a NOT_FOUND exception...");
-      throw new GraphQLQueryProcessingException("No '" + operationName + "' operation found", HttpStatus.NOT_FOUND);
+      throw new GraphQLQueryProcessingException("No '" + operationName + "' operation found", 404);
    }
 
    /** Validate the parameter constraints and return a single string with violation message if any. */
@@ -593,13 +637,13 @@ public class GraphQLController {
    /** Simple exception wrapping a processing error. */
    protected static class GraphQLQueryProcessingException extends Exception {
 
-      final HttpStatus status;
+      final int status;
 
-      public HttpStatus getStatus() {
+      public int getStatus() {
          return status;
       }
 
-      public GraphQLQueryProcessingException(String message, HttpStatus status) {
+      public GraphQLQueryProcessingException(String message, int status) {
          super(message);
          this.status = status;
       }

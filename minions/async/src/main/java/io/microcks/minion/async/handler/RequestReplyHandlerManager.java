@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.handler;
+package io.microcks.minion.async.handler;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;

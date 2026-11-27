@@ -1,0 +1,6 @@
+/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/src/main/java/io/microcks/soap/MalformedXmlException.java
+/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/src/main/java/io/microcks/soap/SoapMessageValidator.java
+/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/src/main/java/io/microcks/soap/XmlErrorHandler.java
+/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/src/main/java/io/microcks/soap/XmlSchemaURLResolver.java
+/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/src/main/java/io/microcks/soap/XmlSchemaValidator.java
+/home/laurent/orca/workspaces/microcks/microcks-2.0-study/v2/artifacts/artifact-soap/src/main/java/io/microcks/soap/XmlUtil.java

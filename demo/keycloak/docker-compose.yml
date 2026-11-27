@@ -1,0 +1,14 @@
+# Keycloak with the "microcks-demo" realm (client microcks-app, groups microcks-user/manager/admin, users alice/bob/carol/dave,
+# password = username). Microcks itself is started by run-demo.sh against http://localhost:8180/realms/microcks-demo.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: "8180"
+      KC_HOSTNAME: http://localhost:8180
+    network_mode: host
+    volumes:
+      - ./microcks-demo-realm.json:/opt/keycloak/data/import/microcks-demo-realm.json:ro

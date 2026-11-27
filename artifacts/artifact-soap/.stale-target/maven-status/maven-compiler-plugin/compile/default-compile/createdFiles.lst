@@ -1,0 +1,7 @@
+io/microcks/soap/XmlSchemaURLResolver.class
+io/microcks/soap/XmlUtil.class
+io/microcks/soap/XmlErrorHandler.class
+io/microcks/soap/XmlSchemaURLResolver$Input.class
+io/microcks/soap/SoapMessageValidator.class
+io/microcks/soap/XmlSchemaValidator.class
+io/microcks/soap/MalformedXmlException.class

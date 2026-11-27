@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
 @TestConfiguration
-@ComponentScan(basePackages = { "io.github.microcks.web" })
+@ComponentScan(basePackages = { "io.microcks.web" })
 public class ControllerTestsConfiguration {
 }

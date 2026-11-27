@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.web.grpc;
 
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
+import io.microcks.artifact.grpc.GrpcUtil;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
 
 import com.google.protobuf.Descriptors;
 import io.grpc.BindableService;
@@ -173,7 +174,7 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
             sendFileDescriptorForService(service, request);
          } else {
             // This could be a 'describe' request on a method or inner type like:
-            // grpcurl -plaintext localhost:9090 describe io.github.microcks.grpc.hello.v1.HelloService.greeting
+            // grpcurl -plaintext localhost:8080 describe io.microcks.grpc.hello.v1.HelloService.greeting
             serviceName = serviceName.substring(0, serviceName.lastIndexOf("."));
             version = getVersionFromServiceName(serviceName);
 

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
-import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
+import io.microcks.minion.async.AsyncMockDefinition;
 
 import org.junit.jupiter.api.Test;
 

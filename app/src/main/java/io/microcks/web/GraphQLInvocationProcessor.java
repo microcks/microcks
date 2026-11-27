@@ -13,40 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceStateRepository;
-import io.github.microcks.service.ProxyService;
-import io.github.microcks.service.ServiceStateStore;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
-import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
-import io.github.microcks.util.graphql.GraphQLHttpRequest;
-import io.github.microcks.util.script.JsScriptEngineBinder;
-import io.github.microcks.util.script.ScriptEngineBinder;
+import io.microcks.domain.Header;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.event.MockInvocationEvent;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceStateRepository;
+import io.microcks.service.ProxyService;
+import io.microcks.service.ServiceStateStore;
+import io.microcks.util.DispatchCriteriaHelper;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.IdBuilder;
+import io.microcks.util.SafeLogger;
+import io.microcks.util.dispatcher.FallbackSpecification;
+import io.microcks.util.dispatcher.JsonEvaluationSpecification;
+import io.microcks.util.dispatcher.JsonExpressionEvaluator;
+import io.microcks.util.dispatcher.JsonMappingException;
+import io.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.microcks.web.GraphQLHttpRequest;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.HttpStatusCode;
+import io.microcks.util.script.JsScriptEngineBinder;
+import io.microcks.util.script.ScriptEngineBinder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.roastedroot.quickjs4j.core.Engine;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -64,7 +66,7 @@ import java.util.Optional;
  * the most appropriate response to return based on the request context.
  * @author laurent
  */
-@Component
+@ApplicationScoped
 public class GraphQLInvocationProcessor {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -72,30 +74,32 @@ public class GraphQLInvocationProcessor {
 
    private final ServiceStateRepository serviceStateRepository;
    private final ResponseRepository responseRepository;
-   private final ApplicationContext applicationContext;
+   private final Event<MockInvocationEvent> mockInvocationEvents;
    private final ProxyService proxyService;
    private final ObjectMapper mapper = new ObjectMapper();
 
-   private ScriptEngine scriptEngine;
+   private final ScriptEngine scriptEngine;
 
-   @Value("${mocks.enable-invocation-stats}")
-   private Boolean enableInvocationStats;
+   @ConfigProperty(name = "mocks.enable-invocation-stats", defaultValue = "true")
+   Boolean enableInvocationStats;
 
-   @Value("${mocks.service-state-store.default-ttl:10}")
-   private int defaultTtl;
+   @ConfigProperty(name = "mocks.service-state-store.default-ttl", defaultValue = "10")
+   int defaultTtl;
 
    /**
     * Build a GraphQLInvocationProcessor with required dependencies.
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
-    * @param applicationContext     The Spring application context
+    * @param mockInvocationEvents   The publisher of mock invocation events
     * @param proxyService           The proxy to external URLs or services
     */
+   @Inject
    public GraphQLInvocationProcessor(ServiceStateRepository serviceStateRepository,
-         ResponseRepository responseRepository, ApplicationContext applicationContext, ProxyService proxyService) {
+         ResponseRepository responseRepository, Event<MockInvocationEvent> mockInvocationEvents,
+         ProxyService proxyService) {
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
-      this.applicationContext = applicationContext;
+      this.mockInvocationEvents = mockInvocationEvents;
       this.proxyService = proxyService;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
    }
@@ -158,14 +162,8 @@ public class GraphQLInvocationProcessor {
       Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules, "",
             proxyFallback, request, response);
       if (proxyUrl.isPresent()) {
-         // Translate generic headers into Spring ones.
-         HttpHeaders httpHeaders = new HttpHeaders();
-         httpHeaders.putAll(headers);
-
          // If we've got a proxyUrl, that's the moment to tell about it!
-         ResponseEntity<byte[]> proxyResponse = proxyService.callExternal(proxyUrl.get(),
-               HttpMethod.valueOf(request.getMethod()), httpHeaders, body);
-         return new ResponseResult(proxyResponse.getStatusCode(), proxyResponse.getHeaders(), proxyResponse.getBody());
+         return proxyService.callExternal(proxyUrl.get(), HttpMethod.valueOf(request.getMethod()), headers, body);
       }
 
       if (response == null) {
@@ -181,8 +179,8 @@ public class GraphQLInvocationProcessor {
       }
 
       if (response != null) {
-         HttpStatus status = (response.getStatus() != null ? HttpStatus.valueOf(Integer.parseInt(response.getStatus()))
-               : HttpStatus.OK);
+         HttpStatusCode status = new HttpStatusCode(
+               response.getStatus() != null ? Integer.parseInt(response.getStatus()) : 200);
 
          // Prepare headers for evaluation.
          Map<String, String> evaluableHeaders = new HashMap<>();
@@ -207,7 +205,7 @@ public class GraphQLInvocationProcessor {
 
          // Publish an invocation event before returning if enabled.
          if (Boolean.TRUE.equals(enableInvocationStats)) {
-            MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
+            MockControllerCommons.publishMockInvocation(mockInvocationEvents, ic.service(), response, startTime);
          }
 
          // Return response content.
@@ -216,7 +214,7 @@ public class GraphQLInvocationProcessor {
       }
 
       // e found no response => return 400 as per #819 and #1132.
-      return new ResponseResult(HttpStatus.BAD_REQUEST, null, null);
+      return new ResponseResult(new HttpStatusCode(400), null, null);
    }
 
    /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */

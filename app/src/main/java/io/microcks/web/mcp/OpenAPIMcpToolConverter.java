@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.web.mcp;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.ObjectMapperFactory;
-import io.github.microcks.util.URIBuilder;
-import io.github.microcks.util.ai.McpSchema;
-import io.github.microcks.util.ai.McpToolConverter;
-import io.github.microcks.web.BasicHttpServletRequest;
-import io.github.microcks.web.MockControllerCommons;
-import io.github.microcks.web.MockInvocationContext;
-import io.github.microcks.web.ResponseResult;
-import io.github.microcks.web.RestInvocationProcessor;
+import io.microcks.artifact.openapi.OpenAPISchemaValidator;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ResourceType;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.util.ObjectMapperFactory;
+import io.microcks.util.URIBuilder;
+import io.microcks.util.ai.McpSchema;
+import io.microcks.util.ai.McpToolConverter;
+import io.microcks.web.BasicHttpServletRequest;
+import io.microcks.web.MockControllerCommons;
+import io.microcks.web.MockInvocationContext;
+import io.microcks.web.ResponseResult;
+import io.microcks.web.RestInvocationProcessor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -47,9 +48,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
 
 /**
  * Implementation of McpToolConverter for OpenAPI services.

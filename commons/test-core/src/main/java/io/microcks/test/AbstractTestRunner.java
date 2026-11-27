@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.test;
+package io.microcks.test;
 
-import io.github.microcks.domain.*;
+import io.microcks.domain.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

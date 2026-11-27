@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util.metadata;
+package io.microcks.artifact.metadata;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Parameter;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Parameter;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +45,7 @@ class ExamplesImporterTest {
       ExamplesImporter importer = null;
       try {
          importer = new ExamplesImporter(
-               "target/test-classes/io/github/microcks/util/metadata/APIPastry-2.0-examples.yml");
+               "target/test-classes/io/microcks/artifact/metadata/APIPastry-2.0-examples.yml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -134,7 +134,7 @@ class ExamplesImporterTest {
       ExamplesImporter importer = null;
       try {
          importer = new ExamplesImporter(
-               "target/test-classes/io/github/microcks/util/metadata/weather-forecast-examples.yml");
+               "target/test-classes/io/microcks/artifact/metadata/weather-forecast-examples.yml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -188,7 +188,7 @@ class ExamplesImporterTest {
       ExamplesImporter importer = null;
       try {
          importer = new ExamplesImporter(
-               "target/test-classes/io/github/microcks/util/metadata/weather-forecast-headers-examples.yml");
+               "target/test-classes/io/microcks/artifact/metadata/weather-forecast-headers-examples.yml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -241,7 +241,7 @@ class ExamplesImporterTest {
       ExamplesImporter importer = null;
       try {
          importer = new ExamplesImporter(
-               "target/test-classes/io/github/microcks/util/metadata/hello-grpc-v1-examples.yml");
+               "target/test-classes/io/microcks/artifact/metadata/hello-grpc-v1-examples.yml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -255,7 +255,7 @@ class ExamplesImporterTest {
       }
       assertEquals(1, services.size());
       Service service = services.get(0);
-      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", service.getName());
+      assertEquals("io.microcks.grpc.hello.v1.HelloService", service.getName());
       assertEquals("v1", service.getVersion());
 
       assertEquals(1, service.getOperations().size());
@@ -299,7 +299,7 @@ class ExamplesImporterTest {
       ExamplesImporter importer = null;
       try {
          importer = new ExamplesImporter(
-               "target/test-classes/io/github/microcks/util/metadata/user-signedup-0.1.0-examples.yml");
+               "target/test-classes/io/microcks/artifact/metadata/user-signedup-0.1.0-examples.yml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

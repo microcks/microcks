@@ -1,0 +1,14 @@
+/* Groups: one section per group, members as a list, inline add row. */
+.ad-group-form { padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-panel); }
+.ad-group-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; background: var(--surface); }
+.ad-group-title { flex: 1 1 240px; min-width: 0; }
+.ad-group-confirm { margin: 10px 16px 0; }
+.ad-members { margin: 0; padding: 0; list-style: none; }
+.ad-members > li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 16px; border-top: 1px solid var(--border); }
+.ad-member-id { flex: 1 1 220px; min-width: 0; font: 400 13px/normal var(--font-mono); overflow-wrap: anywhere; }
+.ad-members-empty { margin: 0; padding: 10px 16px; }
+.ad-member-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); }
+.ad-member-add > .input { flex: 1 1 240px; min-width: 0; }
+
+.ad-coverage { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 12px; font-weight: 600; color: var(--warning); }
+.ad-coverage[data-ok] { color: var(--success); }

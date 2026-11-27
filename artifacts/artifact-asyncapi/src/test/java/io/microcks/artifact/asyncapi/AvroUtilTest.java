@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.artifact.asyncapi;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -53,7 +53,7 @@ class AvroUtilTest {
       try {
          // Load schema from file.
          schema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/avro/user-signedup-bad.avsc"));
 
          GenericRecord user1 = new GenericData.Record(schema);
          user1.put("name", "Laurent");
@@ -113,7 +113,7 @@ class AvroUtilTest {
       try {
          // Load schema from file.
          Schema schema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/avro/user-signedup-bad.avsc"));
 
          // Convert back and forth to and from JSON.
          byte[] avroBinary = AvroUtil.jsonToAvro(jsonText, schema);
@@ -179,7 +179,7 @@ class AvroUtilTest {
       try {
          // Load schema from file.
          Schema schema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/avro/user-signedup-bad.avsc"));
 
          GenericRecord genericRecord = AvroUtil.jsonToAvroRecord(jsonText, schema);
          assertEquals("Laurent Broudoux", genericRecord.get("name").toString());
@@ -197,14 +197,14 @@ class AvroUtilTest {
       try {
          // Load schema from file.
          Schema writeSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/avro/user-signedup-bad.avsc"));
 
          // Convert back and forth to and from JSON.
          byte[] avroBinary = AvroUtil.jsonToAvro(jsonText, writeSchema);
          System.err.println("binaryEncoding: \n" + new String(avroBinary, "UTF-8"));
 
          Schema readSchema = new Schema.Parser()
-               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup.avsc"));
+               .parse(new File("target/test-classes/io/microcks/artifact/asyncapi/avro/user-signedup.avsc"));
          String jsonRepresentation = AvroUtil.avroToJson(avroBinary, readSchema);
          System.err.println("\njsonRepresentation: \n" + jsonRepresentation);
 

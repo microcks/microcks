@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
-
-import io.github.microcks.util.metadata.ExamplesExporter;
-import io.github.microcks.util.openapi.OpenAPIOverlayExporter;
+package io.microcks.artifact;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ServiceLoader;
+
 /**
- * Factory for building/retrieving mock repository exporter implementations.
+ * Factory for building/retrieving mock repository exporter implementations. Exporters are contributed by artifact
+ * format modules as {@link MockRepositoryExporterProvider} discovered through {@link ServiceLoader}.
  * @author laurent
  */
 public class MockRepositoryExporterFactory {
@@ -45,13 +45,19 @@ public class MockRepositoryExporterFactory {
     * @return An instance of MockRepositoryExporter implementation
     */
    public static MockRepositoryExporter getMockRepositoryExporter(String format) {
-      if (API_EXAMPLES_FORMAT.equalsIgnoreCase(format)) {
-         return new ExamplesExporter();
-      } else if (OPENAPI_OVERLAY_FORMAT.equalsIgnoreCase(format)) {
-         return new OpenAPIOverlayExporter();
-      } else {
-         log.info("The request format {} is unknown. Returning an APIExamples exporter as the default.", format);
-         return new ExamplesExporter();
+      MockRepositoryExporter fallback = null;
+      for (MockRepositoryExporterProvider provider : ServiceLoader.load(MockRepositoryExporterProvider.class)) {
+         if (provider.format().equalsIgnoreCase(format)) {
+            return provider.create();
+         }
+         if (API_EXAMPLES_FORMAT.equalsIgnoreCase(provider.format())) {
+            fallback = provider.create();
+         }
       }
+      log.info("The request format {} is unknown. Returning an APIExamples exporter as the default.", format);
+      if (fallback == null) {
+         throw new IllegalStateException("No exporter registered for format " + format + " and no default exporter");
+      }
+      return fallback;
    }
 }

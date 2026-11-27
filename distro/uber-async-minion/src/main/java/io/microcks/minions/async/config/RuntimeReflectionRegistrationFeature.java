@@ -13,28 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minions.async.config;
+package io.microcks.minions.async.config;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.CallbackInfo;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Message;
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Parameter;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.ReplyInfo;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.event.AsyncAPITriggerCommand;
-import io.github.microcks.event.ServiceViewChangeEvent;
-import io.github.microcks.minion.async.client.AsyncAPITriggerCommandDeserializer;
-import io.github.microcks.minion.async.client.ServiceViewChangeEventDeserializer;
+import io.microcks.domain.Binding;
+import io.microcks.domain.CallbackInfo;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Message;
+import io.microcks.domain.Metadata;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Parameter;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.ReplyInfo;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Response;
+import io.microcks.domain.ServiceView;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.event.AsyncAPITriggerCommand;
+import io.microcks.event.ServiceViewChangeEvent;
 
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
@@ -52,9 +50,7 @@ public class RuntimeReflectionRegistrationFeature implements Feature {
    @Override
    public void beforeAnalysis(BeforeAnalysisAccess access) {
       registerClassForReflection(ServiceViewChangeEvent.class);
-      registerClassForReflection(ServiceViewChangeEventDeserializer.class);
       registerClassForReflection(AsyncAPITriggerCommand.class);
-      registerClassForReflection(AsyncAPITriggerCommandDeserializer.class);
 
       registerClassForReflection(ServiceView.class);
       registerClassForReflection(Metadata.class);

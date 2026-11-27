@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
 
-import io.github.microcks.service.OpenTelemetryResolverService;
-import io.github.microcks.util.grpc.GrpcMetadataUtil;
-import io.github.microcks.util.grpc.GrpcUtil;
-import io.github.microcks.util.tracing.CommonAttributes;
-import io.github.microcks.util.tracing.CommonEvents;
-import io.github.microcks.util.tracing.TraceUtil;
+import io.microcks.service.OpenTelemetryResolverService;
+import io.microcks.artifact.grpc.GrpcMetadataUtil;
+import io.microcks.artifact.grpc.GrpcUtil;
+import io.microcks.util.tracing.CommonAttributes;
+import io.microcks.util.tracing.CommonEvents;
+import io.microcks.util.tracing.TraceUtil;
 
 import io.grpc.Metadata;
 import io.grpc.ServerCallHandler;
@@ -45,7 +45,9 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -54,7 +56,7 @@ import java.util.List;
  * A Handler for GRPC Server calls invocation that is using Microcks dispatching and mock definitions.
  * @author laurent
  */
-@Component
+@ApplicationScoped
 public class GrpcServerCallHandler {
 
    /** A simple logger for diagnostic messages. */
@@ -73,6 +75,7 @@ public class GrpcServerCallHandler {
     * @param invocationProcessor          The invocation processor to apply gRPC mocks dispatching logic
     * @param opentelemetryResolverService The opentelemetry resolver
     */
+   @Inject
    public GrpcServerCallHandler(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
          GrpcInvocationProcessor invocationProcessor, OpenTelemetryResolverService opentelemetryResolverService) {
       this.serviceRepository = serviceRepository;

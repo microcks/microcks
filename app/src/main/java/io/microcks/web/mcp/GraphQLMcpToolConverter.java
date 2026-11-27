@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.graphql;
+package io.microcks.web.mcp;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.util.ai.McpSchema;
-import io.github.microcks.util.ai.McpToolConverter;
-import io.github.microcks.web.BasicHttpServletRequest;
-import io.github.microcks.web.GraphQLInvocationProcessor;
-import io.github.microcks.web.MockControllerCommons;
-import io.github.microcks.web.MockInvocationContext;
-import io.github.microcks.web.ResponseResult;
+import io.microcks.web.GraphQLHttpRequest;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.util.ai.McpSchema;
+import io.microcks.util.ai.McpToolConverter;
+import io.microcks.web.BasicHttpServletRequest;
+import io.microcks.web.GraphQLInvocationProcessor;
+import io.microcks.web.MockControllerCommons;
+import io.microcks.web.MockInvocationContext;
+import io.microcks.web.ResponseResult;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,12 +52,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
-import static io.github.microcks.util.graphql.GraphQLImporter.VALID_OPERATION_TYPES;
-import static io.github.microcks.util.graphql.JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEMENT;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
+import static io.microcks.artifact.graphql.GraphQLImporter.VALID_OPERATION_TYPES;
+import static io.microcks.artifact.graphql.JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM;
 
 /**
  * Implementation of McpToolConverter for GraphQL services.

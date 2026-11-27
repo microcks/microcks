@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.graphql;
+package io.microcks.artifact.graphql;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +59,7 @@ class GraphQLSchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/graphql/basic-heroes.graphql"),
+               new File("target/test-classes/io/microcks/artifact/graphql/validation/basic-heroes.graphql"),
                StandardCharsets.UTF_8);
          // Build JsonSchema for response.
          responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(schemaText, queryText);
@@ -157,7 +157,7 @@ class GraphQLSchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/graphql/basic-heroes.graphql"),
+               new File("target/test-classes/io/microcks/artifact/graphql/validation/basic-heroes.graphql"),
                StandardCharsets.UTF_8);
          // Build JsonSchema for response.
          responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(schemaText, queryText);
@@ -229,7 +229,8 @@ class GraphQLSchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/graphql/films.graphql"), StandardCharsets.UTF_8);
+               new File("target/test-classes/io/microcks/artifact/graphql/validation/films.graphql"),
+               StandardCharsets.UTF_8);
          // Build JsonSchema for response.
          responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(schemaText, queryText);
 

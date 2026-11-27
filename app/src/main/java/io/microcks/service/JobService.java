@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.ImportJob;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceRef;
-import io.github.microcks.repository.ImportJobRepository;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.ImportJob;
+import io.microcks.domain.Secret;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceRef;
+import io.microcks.repository.ImportJobRepository;
+import io.microcks.repository.SecretRepository;
+import io.microcks.artifact.MockRepositoryImportException;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +35,7 @@ import java.util.List;
  * Bean defining service operations around ImportJob domain objects.
  * @author laurent
  */
-@org.springframework.stereotype.Service
+@ApplicationScoped
 public class JobService {
 
    /** A simple logger for diagnostic messages. */
@@ -49,6 +51,7 @@ public class JobService {
     * @param secretRepository The secret repository to use.
     * @param serviceService   The service service to use.
     */
+   @Inject
    public JobService(ImportJobRepository jobRepository, SecretRepository secretRepository,
          ServiceService serviceService) {
       this.jobRepository = jobRepository;
@@ -67,7 +70,7 @@ public class JobService {
       Secret jobSecret = null;
       if (job.getSecretRef() != null) {
          log.debug("Retrieving secret {} for job {}", job.getSecretRef().getName(), job.getName());
-         jobSecret = secretRepository.findById(job.getSecretRef().getSecretId()).orElse(null);
+         jobSecret = secretRepository.findById(job.getSecretRef().getSecretId());
       }
 
       // Reinitialize service references and import errors before new import.
@@ -89,7 +92,7 @@ public class JobService {
          }
       }
       job.setLastImportDate(new Date());
-      jobRepository.save(job);
+      jobRepository.persistOrUpdate(job);
       log.info("Import of job '{}' done", job.getName());
    }
 }

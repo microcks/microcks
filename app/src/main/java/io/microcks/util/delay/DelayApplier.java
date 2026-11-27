@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.delay;
+package io.microcks.util.delay;
 
 /**
  * This interface defines a strategy for computing delays based on a base value.

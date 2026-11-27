@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.ai;
+package io.microcks.util.ai;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.util.DispatchStyles;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.util.DispatchStyles;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -1026,7 +1026,7 @@ class AICopilotHelperTest {
    @Test
    void testRemoveTokensFromSpecWithCircularDependencies() throws Exception {
       String specification = FileUtils.readFileToString(
-            new File("target/test-classes/io/github/microcks/util/ai/openwealth-custodyServicesAPI.yaml"),
+            new File("target/test-classes/io/microcks/util/ai/openwealth-custodyServicesAPI.yaml"),
             StandardCharsets.UTF_8);
 
       String operationName = "GET /accounts/{accountId}/positions";
@@ -1040,7 +1040,7 @@ class AICopilotHelperTest {
    @Test
    void testRemoveTokensFromLightSpecWithCircularDependencies() throws Exception {
       String specification = FileUtils.readFileToString(
-            new File("target/test-classes/io/github/microcks/util/ai/stripe-light.yaml"), StandardCharsets.UTF_8);
+            new File("target/test-classes/io/microcks/util/ai/stripe-light.yaml"), StandardCharsets.UTF_8);
 
       String operationName = "GET /v1/products";
       // Call the removeTokensFromSpec method
@@ -1053,7 +1053,7 @@ class AICopilotHelperTest {
    @Test
    void testRemoveTokensFromHugeSpecWithCircularDependencies() throws Exception {
       String specification = FileUtils.readFileToString(
-            new File("target/test-classes/io/github/microcks/util/ai/stripe-spec3.yaml"), StandardCharsets.UTF_8);
+            new File("target/test-classes/io/microcks/util/ai/stripe-spec3.yaml"), StandardCharsets.UTF_8);
 
       String operationName = "GET /v1/products";
       // Call the removeTokensFromSpec method

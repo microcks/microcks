@@ -1,0 +1,2 @@
+io.microcks.artifact.openapi.OpenAPIImporterProvider
+io.microcks.artifact.openapi.SwaggerImporterProvider

@@ -13,34 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestOptionals;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.domain.TestStepResult;
-import io.github.microcks.event.TestCompletionEvent;
-import io.github.microcks.repository.EventMessageRepository;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.TestResultRepository;
-import io.github.microcks.util.IdBuilder;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestCaseResult;
+import io.microcks.domain.TestOptionals;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestReturn;
+import io.microcks.domain.TestRunnerType;
+import io.microcks.domain.TestStepResult;
+import io.microcks.event.TestCompletionEvent;
+import io.microcks.repository.EventMessageRepository;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.TestResultRepository;
+import io.microcks.util.IdBuilder;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -48,7 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Bean defining service operations around Test domain objects.
  * @author laurent
  */
-@org.springframework.stereotype.Service
+@ApplicationScoped
 public class TestService {
 
    /** A simple logger for diagnostic messages. */
@@ -59,7 +63,8 @@ public class TestService {
    private final EventMessageRepository eventMessageRepository;
    private final TestResultRepository testResultRepository;
    private final TestRunnerService testRunnerService;
-   private final ApplicationContext applicationContext;
+   private final Event<TestCompletionEvent> testCompletionEvent;
+   private final Map<String, Object> testResultLocks = new ConcurrentHashMap<>();
 
    /**
     * Build a new TestService with the required dependencies.
@@ -68,17 +73,18 @@ public class TestService {
     * @param eventMessageRepository The repository to manage persistent eventMessages
     * @param testResultRepository   The repository to manage persistent testResults
     * @param testRunnerService      The service for running tests
-    * @param applicationContext     The Spring application context
+    * @param testCompletionEvent    The CDI event used to publish test completions
     */
+   @Inject
    public TestService(RequestRepository requestRepository, ResponseRepository responseRepository,
          EventMessageRepository eventMessageRepository, TestResultRepository testResultRepository,
-         TestRunnerService testRunnerService, ApplicationContext applicationContext) {
+         TestRunnerService testRunnerService, Event<TestCompletionEvent> testCompletionEvent) {
       this.requestRepository = requestRepository;
       this.responseRepository = responseRepository;
       this.eventMessageRepository = eventMessageRepository;
       this.testResultRepository = testResultRepository;
       this.testRunnerService = testRunnerService;
-      this.applicationContext = applicationContext;
+      this.testCompletionEvent = testCompletionEvent;
    }
 
    /**
@@ -102,7 +108,7 @@ public class TestService {
 
       // Initialize the TestCaseResults containers before saving it.
       initializeTestCaseResults(testResult, service, testOptionals);
-      testResultRepository.save(testResult);
+      testResultRepository.persistOrUpdate(testResult);
 
       // Launch test asynchronously before returning result.
       log.debug("Calling launchTestsInternal() marked as Async");
@@ -119,8 +125,16 @@ public class TestService {
     * @return A completed TestCaseResult object
     */
    public TestCaseResult reportTestCaseResult(String testResultId, String operationName, List<TestReturn> testReturns) {
+      // No optimistic locking with Panache: serialize concurrent reports on the same testResult (single node).
+      synchronized (testResultLocks.computeIfAbsent(testResultId, k -> new Object())) {
+         return doReportTestCaseResult(testResultId, operationName, testReturns);
+      }
+   }
+
+   private TestCaseResult doReportTestCaseResult(String testResultId, String operationName,
+         List<TestReturn> testReturns) {
       log.info("Reporting a TestCaseResult for testResult {} on operation '{}'", testResultId, operationName);
-      TestResult testResult = testResultRepository.findById(testResultId).orElse(null);
+      TestResult testResult = testResultRepository.findById(testResultId);
       AtomicReference<TestCaseResult> updatedTestCaseResult = new AtomicReference<>();
 
       // This part can be done safely with no race condition because we only
@@ -137,7 +151,7 @@ public class TestService {
       }
 
       // There may be a race condition while updating testResult at each testReturn report.
-      // So be prepared to catch a org.springframework.dao.OptimisticLockingFailureException and retry
+      // So be prepared to catch a persistence exception and retry
       // saving a bunch of time. Hopefully, we'll succeed. It does not matter if it takes time because
       // everything runs asynchronously.
       int times = 0;
@@ -171,12 +185,12 @@ public class TestService {
             if (!testResult.isInProgress()) {
                publishTestCompletionEvent(testResult);
             }
-         } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
+         } catch (com.mongodb.MongoException me) {
             // Update counter and refresh domain object.
-            log.warn("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
+            log.warn("Caught a MongoException, trying refreshing for {} times", times);
             saved = false;
             waitSomeRandomMS(5, 50);
-            testResult = testResultRepository.findById(testResult.getId()).orElse(null);
+            testResult = testResultRepository.findById(testResult.getId());
             times++;
          }
       }
@@ -219,20 +233,20 @@ public class TestService {
       if (!responses.isEmpty() && !actualRequests.isEmpty()) {
          // Save the responses into repository to get their ids.
          log.debug("Saving {} responses with testCaseId {}", responses.size(), testCaseId);
-         responseRepository.saveAll(responses);
+         responseRepository.persistOrUpdate(responses);
 
          // Associate responses to requests before saving requests.
          for (int i = 0; i < actualRequests.size(); i++) {
             actualRequests.get(i).setResponseId(responses.get(i).getId());
          }
          log.debug("Saving {} requests with testCaseId {}", responses.size(), testCaseId);
-         requestRepository.saveAll(actualRequests);
+         requestRepository.persistOrUpdate(actualRequests);
       }
 
       if (!eventMessages.isEmpty()) {
          // Save the eventMessages into repository.
          log.debug("Saving {} eventMessages with testCaseId {}", eventMessages.size(), testCaseId);
-         eventMessageRepository.saveAll(eventMessages);
+         eventMessageRepository.persistOrUpdate(eventMessages);
       }
    }
 
@@ -302,7 +316,7 @@ public class TestService {
 
       log.debug("Trying to update testResult {} with {} elapsedTime and success flag to {}", testResult.getId(),
             testResult.getElapsedTime(), testResult.isSuccess());
-      testResultRepository.save(testResult);
+      testResultRepository.persistOrUpdate(testResult);
    }
 
    // Suppress SonarCloud warning about catching InterruptedException: we absolutely need not propagate it to not lose data.
@@ -318,8 +332,8 @@ public class TestService {
 
    /** Publish a TestCompletionEvent towards asynchronous consumers. */
    private void publishTestCompletionEvent(TestResult testResult) {
-      TestCompletionEvent event = new TestCompletionEvent(this, testResult);
-      applicationContext.publishEvent(event);
+      TestCompletionEvent event = new TestCompletionEvent(testResult);
+      testCompletionEvent.fireAsync(event);
       log.debug("Test completion event has been published");
    }
 }

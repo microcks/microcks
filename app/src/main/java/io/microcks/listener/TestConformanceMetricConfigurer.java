@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.domain.Service;
-import io.github.microcks.event.ChangeType;
-import io.github.microcks.event.ServiceChangeEvent;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.service.MetricsService;
+import io.microcks.domain.Service;
+import io.microcks.event.ChangeType;
+import io.microcks.event.ServiceChangeEvent;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.service.MetricsService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
 
 /**
  * Event Listener that deals with TestCoverageMetric operations depending on event type.
  * @author laurent
  */
-@Component
-public class TestConformanceMetricConfigurer implements ApplicationListener<ServiceChangeEvent> {
+@ApplicationScoped
+public class TestConformanceMetricConfigurer {
 
    /** A commons logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(TestConformanceMetricConfigurer.class);
@@ -50,15 +49,13 @@ public class TestConformanceMetricConfigurer implements ApplicationListener<Serv
       this.metricsService = metricsService;
    }
 
-   @Override
-   @Async
-   public void onApplicationEvent(ServiceChangeEvent event) {
+   public void onApplicationEvent(@ObservesAsync ServiceChangeEvent event) {
       log.debug("Received a ServiceChangeEvent on {}", event.getServiceId());
 
       if (event.getChangeType().equals(ChangeType.DELETED)) {
          metricsService.removeTestConformanceMetric(event.getServiceId());
       } else {
-         Service service = serviceRepository.findById(event.getServiceId()).orElse(null);
+         Service service = serviceRepository.findById(event.getServiceId());
          if (service != null) {
             metricsService.configureTestConformanceMetric(service);
          } else {

@@ -13,28 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.test;
+package io.microcks.test;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.soap.SoapMessageValidator;
-/*
-import io.github.microcks.util.SoapMessageValidator;
-import org.apache.xmlbeans.XmlError;
-import org.apache.xmlbeans.XmlException;
- */
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.TestReturn;
+import io.microcks.util.http.ClientHttpResponse;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.artifact.soap.SoapMessageValidator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.web.util.UriUtils;
 
 import javax.xml.namespace.QName;
 import java.util.List;
@@ -53,14 +45,14 @@ public class SoapHttpTestRunner extends HttpTestRunner {
    /** The URL of resources used for validation. */
    private String resourceUrl = null;
 
-   private ResourceRepository resourceRepository;
+   private ResourceReader resourceReader;
 
    /**
-    *
-    * @param resourceRepository
+    * Build a runner reading its WSDL from the provided resources.
+    * @param resourceReader Access to the resources of a service
     */
-   public SoapHttpTestRunner(ResourceRepository resourceRepository) {
-      this.resourceRepository = resourceRepository;
+   public SoapHttpTestRunner(ResourceReader resourceReader) {
+      this.resourceReader = resourceReader;
    }
 
    /**
@@ -99,7 +91,7 @@ public class SoapHttpTestRunner extends HttpTestRunner {
          return code;
       }
 
-      Resource wsdlResource = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL).get(0);
+      Resource wsdlResource = resourceReader.findByServiceIdAndType(service.getId(), ResourceType.WSDL).get(0);
       List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(),
             new QName(service.getXmlNS(), operation.getOutputName()), responseContent, resourceUrl);
 
@@ -110,16 +102,6 @@ public class SoapHttpTestRunner extends HttpTestRunner {
          return TestReturn.FAILURE_CODE;
       }
 
-      /*
-       * try{ // Validate Soap message body according to operation output part. List<XmlError> errors =
-       * SoapMessageValidator.validateSoapMessage( operation.getOutputName(), service.getXmlNS(), responseContent,
-       * resourceUrl + UriUtils.encodeFragment(service.getName(), "UTF-8") + "-" + service.getVersion() + ".wsdl", true
-       * );
-       * 
-       * if (!errors.isEmpty()){ log.debug("Soap validation errors found " + errors.size() +
-       * ", marking test as failed."); return TestReturn.FAILURE_CODE; } } catch (XmlException e) {
-       * log.debug("XmlException while validating Soap response message", e); return TestReturn.FAILURE_CODE; }
-       */
       return code;
    }
 }

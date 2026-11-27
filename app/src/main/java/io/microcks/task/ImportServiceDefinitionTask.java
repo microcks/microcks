@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.task;
+package io.microcks.task;
 
-import io.github.microcks.domain.ImportJob;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.repository.ImportJobRepository;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.service.JobService;
-import io.github.microcks.util.HTTPDownloader;
+import io.microcks.domain.ImportJob;
+import io.microcks.domain.Secret;
+import io.microcks.repository.ImportJobRepository;
+import io.microcks.repository.SecretRepository;
+import io.microcks.service.JobService;
+import io.microcks.util.HTTPDownloader;
 
+import io.quarkus.panache.common.Page;
+import io.quarkus.scheduler.Scheduled;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +37,7 @@ import java.util.List;
  * scan.
  * @author laurent
  */
-@Component
+@ApplicationScoped
 public class ImportServiceDefinitionTask {
 
    /** A simple logger for diagnostic messages. */
@@ -54,6 +55,7 @@ public class ImportServiceDefinitionTask {
     * @param secretRepository The secret repository to use.
     * @param jobService       The job service to use.
     */
+   @Inject
    public ImportServiceDefinitionTask(ImportJobRepository jobRepository, SecretRepository secretRepository,
          JobService jobService) {
       this.jobRepository = jobRepository;
@@ -61,7 +63,7 @@ public class ImportServiceDefinitionTask {
       this.jobService = jobService;
    }
 
-   @Scheduled(cron = "${services.update.interval}")
+   @Scheduled(cron = "{services.update.interval}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
    public void importServiceDefinition() {
       // Prepare some flags.
       int updated = 0;
@@ -73,7 +75,7 @@ public class ImportServiceDefinitionTask {
       log.debug("Found {} jobs to check. Splitting in {} chunks.", numJobs, (numJobs / CHUNK_SIZE + 1));
 
       for (int i = 0; i < numJobs / CHUNK_SIZE + 1; i++) {
-         List<ImportJob> jobs = jobRepository.findAll(PageRequest.of(i, CHUNK_SIZE)).getContent();
+         List<ImportJob> jobs = jobRepository.findAll().page(Page.of(i, CHUNK_SIZE)).list();
          log.debug("Found {} jobs into chunk {}", jobs.size(), i);
 
          for (ImportJob job : jobs) {
@@ -84,7 +86,7 @@ public class ImportServiceDefinitionTask {
                Secret jobSecret = null;
                if (job.getSecretRef() != null) {
                   log.debug("Retrieving secret {} for job {}", job.getSecretRef().getName(), job.getName());
-                  jobSecret = secretRepository.findById(job.getSecretRef().getSecretId()).orElse(null);
+                  jobSecret = secretRepository.findById(job.getSecretRef().getSecretId());
                }
 
                // Get older and fresh Etag if any.

@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.minion.async.client.MicrocksAPIConnector;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -143,6 +143,11 @@ public class SchemaRegistry {
     */
    public void clearRegistryForService(String serviceId) {
       schemaEntries.remove(serviceId);
+   }
+
+   /** Clear the registry for all services. */
+   public void clearRegistry() {
+      schemaEntries.clear();
    }
 
    /**

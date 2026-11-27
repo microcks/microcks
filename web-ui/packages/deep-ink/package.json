@@ -1,0 +1,30 @@
+{
+  "name": "@microcks/deep-ink",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Deep Ink for Svelte 5: design tokens (CSS + Tailwind theme + JSON) and components built on the Deep Ink CSS class API.",
+  "svelte": "./src/lib/index.ts",
+  "types": "./src/lib/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/lib/index.ts",
+      "svelte": "./src/lib/index.ts",
+      "default": "./src/lib/index.ts"
+    },
+    "./styles.css": "./src/styles/deep-ink.css",
+    "./tailwind.css": "./src/styles/tailwind.css",
+    "./tokens.json": "./src/styles/tokens.json",
+    "./assets/microcks-logo.svg": "./src/assets/microcks-logo.svg"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "sync-styles": "node scripts/sync-styles.mjs"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  }
+}

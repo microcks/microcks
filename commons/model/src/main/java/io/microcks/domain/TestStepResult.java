@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
 /**
  * TestStepResult is an entity embedded within TestCaseResult. They are created for each request or message associated

@@ -1,0 +1,182 @@
+/* Behavior · Request simulator (prototype Behavior.dc.html, right column). Colors come from the design tokens only. */
+.sim.panel { border-color: var(--action); }
+.sim .panel-title { display: flex; align-items: center; gap: 8px; }
+.sim .sim-title-icon { color: var(--action); }
+
+.sim-form { display: flex; flex-direction: column; gap: 14px; margin: 0; }
+.sim-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+/* Joined control: the method segment flush with the path input. */
+.sim-request {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+.sim-request:focus-within { outline: 2px solid var(--action); outline-offset: 2px; }
+.sim-method {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  background: var(--sim-proto);
+  color: var(--on-proto);
+  font: 600 11px/1 var(--font-mono);
+}
+.sim-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: 400 13px/1 var(--font-mono);
+}
+.sim-input:focus { outline: none; }
+.sim-base { font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+
+.sim-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.sim-preset {
+  margin: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: 400 11px/14px var(--font-mono);
+  cursor: pointer;
+}
+.sim-preset:hover { color: var(--text); border-color: var(--border-strong); }
+
+.sim-send { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.sim-send .choice { align-items: center; gap: 8px; }
+.sim-send .choice-label { font: 400 13px/18px var(--font-ui); color: var(--text-secondary); }
+.sim-send .checkbox { width: 18px; height: 18px; }
+
+/* Result card. */
+.sim-result {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+}
+.sim-result-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sim-line { min-width: 0; font: 400 12px/1.5 var(--font-mono); color: var(--text-secondary); overflow-wrap: anywhere; }
+.sim-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-control);
+  background: var(--danger);
+  color: var(--on-status);
+  font: 600 12px/16px var(--font-mono);
+}
+.sim-status[data-kind='ok'] { background: var(--success); }
+.sim-status[data-kind='fwd'] { background: var(--running); }
+.sim-chain {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: 400 12px/1.6 var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.sim-steps { list-style: none; margin: 0; padding: 6px 0; display: flex; flex-direction: column; }
+.sim-step { display: flex; align-items: flex-start; gap: 10px; padding: 6px 12px; }
+.sim-step-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 18px; color: var(--text-muted); }
+.sim-step[data-kind='ok'] .sim-step-icon { color: var(--success); }
+.sim-step[data-kind='fail'] .sim-step-icon { color: var(--danger); }
+.sim-step[data-kind='warn'] .sim-step-icon { color: var(--warning); }
+.sim-step[data-kind='info'] .sim-step-icon { color: var(--link); }
+.sim-step-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.sim-step-label { font: 600 11px/16px var(--font-ui); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.sim-step-value { font: 400 12px/1.5 var(--font-mono); color: var(--text); overflow-wrap: anywhere; }
+.sim-step[data-kind='fail'] .sim-step-value { color: var(--danger); }
+.sim-step[data-kind='skip'] .sim-step-value { color: var(--text-muted); }
+
+.sim-response { border-top: 1px solid var(--border); }
+.sim-response-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  font: 600 11px/16px var(--font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.sim-media { font: 400 11px/16px var(--font-mono); letter-spacing: 0; text-transform: none; }
+.sim-headers {
+  margin: 0;
+  padding: 0 12px 6px;
+  overflow-x: auto;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: 400 11px/1.6 var(--font-mono);
+  white-space: pre;
+}
+.sim-body {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 220px;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font: 400 12px/1.6 var(--font-mono);
+  white-space: pre-wrap;
+}
+.sim-body[data-kind='ok'] { color: var(--text); }
+
+/* Recent runs. */
+.sim-history { display: flex; flex-direction: column; gap: 6px; }
+.sim-history-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sim-history-title { margin: 0; font: inherit; letter-spacing: inherit; color: inherit; }
+.sim-clear {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--link);
+  font: 600 12px/16px var(--font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+}
+.sim-clear:hover { text-decoration: underline; }
+.sim-history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sim-run {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: 400 12px/18px var(--font-mono);
+  text-align: left;
+  cursor: pointer;
+}
+.sim-run:hover { border-color: var(--border-strong); }
+.sim-run-code { flex: none; min-width: 34px; font-weight: 600; color: var(--danger); }
+.sim-run-code[data-code='ok'] { color: var(--success); }
+.sim-run-code[data-code='fwd'] { color: var(--running); }
+.sim-run-path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sim-run-what { flex: none; color: var(--text-muted); }

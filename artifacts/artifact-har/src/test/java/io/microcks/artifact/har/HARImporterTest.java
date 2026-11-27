@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.har;
+package io.microcks.artifact.har;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import java.io.IOException;
 
@@ -42,7 +42,7 @@ class HARImporterTest {
    void testSimpleHARImport() {
       HARImporter importer = null;
       try {
-         importer = new HARImporter("target/test-classes/io/github/microcks/util/har/api-pastry-2.0.har");
+         importer = new HARImporter("target/test-classes/io/microcks/artifact/har/api-pastry-2.0.har");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -82,7 +82,7 @@ class HARImporterTest {
    void testMissingCommentHARImport() {
       HARImporter importer = null;
       try {
-         importer = new HARImporter("target/test-classes/io/github/microcks/util/har/microcks.har");
+         importer = new HARImporter("target/test-classes/io/microcks/artifact/har/microcks.har");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -102,7 +102,7 @@ class HARImporterTest {
    void testComplexHARImport() {
       HARImporter importer = null;
       try {
-         importer = new HARImporter("target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1.har");
+         importer = new HARImporter("target/test-classes/io/microcks/artifact/har/api-pastries-0.0.1.har");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -248,8 +248,7 @@ class HARImporterTest {
    void testComplexHARImportWithAPIPrefix() {
       HARImporter importer = null;
       try {
-         importer = new HARImporter(
-               "target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1-with-prefix.har");
+         importer = new HARImporter("target/test-classes/io/microcks/artifact/har/api-pastries-0.0.1-with-prefix.har");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -348,7 +347,7 @@ class HARImporterTest {
    void testGraphQLMessageImportWithExistingOperation() {
       HARImporter importer = null;
       try {
-         importer = new HARImporter("target/test-classes/io/github/microcks/util/har/movie-graph-api-1.0.har");
+         importer = new HARImporter("target/test-classes/io/microcks/artifact/har/movie-graph-api-1.0.har");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.ai;
+package io.microcks.util.ai;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.web.ResponseResult;
-
-import org.springframework.http.HttpHeaders;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.web.ResponseResult;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -89,7 +87,7 @@ public abstract class McpToolConverter {
       String responseContent = null;
       if (result.headers() != null) {
          // Response content can be compressed with gzip if we used the proxy.
-         List<String> encodings = result.headers().get(HttpHeaders.CONTENT_ENCODING);
+         List<String> encodings = result.headers().get("Content-Encoding");
          if (encodings != null && encodings.contains("gzip")) {
             // Unzip the response content.
             try (BufferedInputStream bis = new BufferedInputStream(

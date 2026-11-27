@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.event.AsyncAPITriggerCommand;
-import io.github.microcks.minion.async.producer.ProducerManager;
+import io.microcks.event.AsyncAPITriggerCommand;
+import io.microcks.minion.async.producer.ProducerManager;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 /**
- * This bean is responsible for listening the incoming <code>AsyncAPITriggerCommand</code> on
- * <code>microcks-asyncapi-triggers</code> Kafka topic and triggering the production of asynchronous messages
+ * This bean is responsible for applying the <code>AsyncAPITriggerCommand</code> received from Microcks
+ * <code>/api/asyncapi-triggers</code> WebSocket endpoint and triggering the production of asynchronous messages
  * accordingly.
  * @author laurent
  */
@@ -41,13 +40,6 @@ public class AsyncMockProducerTrigger {
     */
    public AsyncMockProducerTrigger(ProducerManager producerManager) {
       this.producerManager = producerManager;
-   }
-
-   @Incoming("microcks-asyncapi-triggers")
-   public void onAsyncAPITriggerCommand(AsyncAPITriggerCommand asyncAPITriggerCommand) {
-      logger.debugf("Received AsyncAPI trigger command for service %s", asyncAPITriggerCommand.getServiceId());
-
-      applyAsyncAPITriggerCommand(asyncAPITriggerCommand);
    }
 
    public void applyAsyncAPITriggerCommand(AsyncAPITriggerCommand asyncAPITriggerCommand) {

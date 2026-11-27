@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util.asyncapi;
+package io.microcks.artifact.asyncapi;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ReplyInfo;
-import io.github.microcks.domain.RequestReplyEvent;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.util.AbstractJsonRepositoryImporter;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.ReferenceResolver;
-import io.github.microcks.util.URIBuilder;
-import io.github.microcks.util.metadata.MetadataExtensions;
-import io.github.microcks.util.metadata.MetadataExtractor;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Header;
+import io.microcks.domain.Metadata;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ReplyInfo;
+import io.microcks.domain.RequestReplyEvent;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.artifact.AbstractJsonRepositoryImporter;
+import io.microcks.util.DispatchCriteriaHelper;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.artifact.MockRepositoryImporter;
+import io.microcks.util.ReferenceResolver;
+import io.microcks.util.URIBuilder;
+import io.microcks.artifact.metadata.MetadataExtensions;
+import io.microcks.artifact.metadata.MetadataExtractor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static io.github.microcks.util.asyncapi.AsyncAPICommons.*;
+import static io.microcks.artifact.asyncapi.AsyncAPICommons.*;
 
 /**
  * An implementation of MockRepositoryImporter that deals with AsyncAPI v3.0.x specification file ; whether encoding

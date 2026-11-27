@@ -13,55 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.repository.ServiceStateRepository;
-import io.github.microcks.service.ProxyService;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
-import io.github.microcks.util.script.JsScriptEngineBinder;
-import io.github.microcks.util.script.ScriptEngineBinder;
-import io.github.microcks.service.ServiceStateStore;
-import io.github.microcks.util.soap.SoapMessageValidator;
-import io.github.microcks.util.soapui.SoapUIXPathBuilder;
-import io.github.microcks.util.tracing.CommonAttributes;
-import io.github.microcks.util.tracing.CommonEvents;
-import io.github.microcks.util.tracing.TraceUtil;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.repository.ServiceStateRepository;
+import io.microcks.event.MockInvocationEvent;
+import io.microcks.service.ProxyService;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.IdBuilder;
+import io.microcks.util.SafeLogger;
+import io.microcks.util.delay.DelaySpec;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.dispatcher.FallbackSpecification;
+import io.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.microcks.util.script.JsScriptEngineBinder;
+import io.microcks.util.script.ScriptEngineBinder;
+import io.microcks.service.ServiceStateStore;
+import io.microcks.artifact.soap.SoapMessageValidator;
+import io.microcks.artifact.soapui.SoapUIXPathBuilder;
+import io.microcks.util.tracing.CommonAttributes;
+import io.microcks.util.tracing.CommonEvents;
+import io.microcks.util.tracing.TraceUtil;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.roastedroot.quickjs4j.core.Engine;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.vertx.core.http.HttpServerRequest;
 import org.apache.commons.lang3.RandomUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.server.ResponseStatusException;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.xml.sax.InputSource;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriInfo;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -77,14 +80,15 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
+import static io.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A controller for mocking Soap responses.
  * @author laurent
  */
-@org.springframework.web.bind.annotation.RestController
-@RequestMapping("/soap")
+@ApplicationScoped
+@Path("/soap")
+@RunOnVirtualThread
 public class SoapController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -101,20 +105,49 @@ public class SoapController {
    private final ServiceStateRepository serviceStateRepository;
    private final ResponseRepository responseRepository;
    private final ResourceRepository resourceRepository;
-   private final ApplicationContext applicationContext;
+   private final Event<MockInvocationEvent> mockInvocationEvents;
    private final ProxyService proxyService;
 
-   private ScriptEngine scriptEngine;
+   private final ScriptEngine scriptEngine;
 
-   @Value("${mocks.enable-invocation-stats}")
-   private Boolean enableInvocationStats;
+   @ConfigProperty(name = "mocks.enable-invocation-stats", defaultValue = "true")
+   Boolean enableInvocationStats;
 
-   @Value("${validation.resourceUrl}")
-   private String resourceUrl;
+   @ConfigProperty(name = "validation.resourceUrl", defaultValue = "http://localhost:8080/api/resources/")
+   String resourceUrl;
 
-   @Value("${mocks.service-state-store.default-ttl:10}")
-   private int defaultTtl;
+   @ConfigProperty(name = "mocks.service-state-store.default-ttl", defaultValue = "10")
+   int defaultTtl;
 
+   /** The request parameters and context of a SOAP mock invocation. */
+   public static class SoapParams {
+      @PathParam("service")
+      String service;
+      @PathParam("version")
+      String version;
+      @QueryParam("validate")
+      Boolean validate;
+      @QueryParam("delay")
+      Long delay;
+      @QueryParam("delayStrategy")
+      String delayStrategy;
+      @Context
+      UriInfo uriInfo;
+      @Context
+      jakarta.ws.rs.core.HttpHeaders headers;
+      @Context
+      HttpServerRequest httpRequest;
+   }
+
+   /** Internal failure carrying the HTTP status to return. */
+   private static class DispatchException extends RuntimeException {
+      private final int status;
+
+      DispatchException(int status, String message) {
+         super(message);
+         this.status = status;
+      }
+   }
 
    /**
     * Build a SoapController with required dependencies.
@@ -122,28 +155,38 @@ public class SoapController {
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
     * @param resourceRepository     The repository to access resources artifacts
-    * @param applicationContext     The Spring application context
+    * @param mockInvocationEvents   The publisher of mock invocation events
     * @param proxyService           The proxy to external URLs or services
     */
+   @Inject
    public SoapController(ServiceRepository serviceRepository, ServiceStateRepository serviceStateRepository,
          ResponseRepository responseRepository, ResourceRepository resourceRepository,
-         ApplicationContext applicationContext, ProxyService proxyService) {
+         Event<MockInvocationEvent> mockInvocationEvents, ProxyService proxyService) {
       this.serviceRepository = serviceRepository;
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
-      this.applicationContext = applicationContext;
+      this.mockInvocationEvents = mockInvocationEvents;
       this.proxyService = proxyService;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
    }
 
-
-   @PostMapping(value = "/{service}/{version}/**")
-   public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "validate", required = false) Boolean validate,
-         @RequestParam(value = "delay", required = false) Long requestedDelay,
-         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
-         @RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+   @POST
+   @Path("/{service}/{version}{path:(/.*)?}")
+   public jakarta.ws.rs.core.Response execute(@BeanParam SoapParams params, String body) {
+      String serviceName = params.service;
+      String version = params.version;
+      Boolean validate = params.validate;
+      Long requestedDelay = params.delay;
+      String requestedDelayStrategy = params.delayStrategy;
+      HttpMethod method = HttpMethod.POST;
+      HttpServletRequest request = ContainerHttpServletRequest.from("POST", params.uriInfo, params.headers,
+            params.httpRequest);
+      HttpHeaders headers = new HttpHeaders();
+      headers.putAll(params.headers.getRequestHeaders());
+      if (body != null && body.isEmpty()) {
+         body = null;
+      }
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
 
@@ -174,7 +217,7 @@ public class SoapController {
          String msg = String.format("The service %s with version %s does not exist!", serviceName, version);
          span.addEvent(CommonEvents.SERVICE_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
          span.setStatus(StatusCode.ERROR, msg);
-         return new ResponseEntity<>(msg, HttpStatus.NOT_FOUND);
+         return text(404, msg);
       }
       span.setAttribute(CommonAttributes.SERVICE_NAME, service.getName());
       span.setAttribute(CommonAttributes.SERVICE_VERSION, service.getVersion());
@@ -184,7 +227,7 @@ public class SoapController {
       String action = extractSoapAction(request);
       log.debug("Extracted SOAP action from headers: {}", action);
 
-      if (StringUtils.hasText(action)) {
+      if (StringUtils.isNotBlank(action)) {
          for (Operation operation : service.getOperations()) {
             if (action.equals(operation.getAction())) {
                rOperation = operation;
@@ -197,7 +240,7 @@ public class SoapController {
       // Enhancement : if not found, try getting operation from soap:body directly!
       if (rOperation == null) {
          String operationName = extractOperationName(body);
-         if (!StringUtils.hasText(action)) {
+         if (StringUtils.isBlank(action)) {
             // if the action is not in the header, we override it with the action from the body
             action = operationName;
          }
@@ -228,9 +271,8 @@ public class SoapController {
             List<Resource> wsdlResources = resourceRepository.findByServiceIdAndType(service.getId(),
                   ResourceType.WSDL);
             if (wsdlResources.isEmpty()) {
-               return new ResponseEntity<>(
-                     String.format("The service %s with version %s does not have a wsdl!", serviceName, version),
-                     HttpStatus.PRECONDITION_FAILED);
+               return text(412,
+                     String.format("The service %s with version %s does not have a wsdl!", serviceName, version));
             }
             Resource wsdlResource = wsdlResources.get(0);
             List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(),
@@ -240,7 +282,7 @@ public class SoapController {
 
             // Return a 400 http code with errors.
             if (errors != null && !errors.isEmpty()) {
-               return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+               return jakarta.ws.rs.core.Response.status(400).type(MediaType.APPLICATION_JSON).entity(errors).build();
             }
          }
 
@@ -281,11 +323,10 @@ public class SoapController {
             } else if (DispatchStyles.PROXY.equals(dispatcher)) {
                dispatchContext = new DispatchContext(DispatchStyles.PROXY, null);
             } else {
-               return new ResponseEntity<>(String.format("The dispatch %s is not supported!", dispatcher),
-                     HttpStatus.NOT_FOUND);
+               return text(404, String.format("The dispatch %s is not supported!", dispatcher));
             }
-         } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getMessage(), e.getStatusCode());
+         } catch (DispatchException e) {
+            return text(e.status, e.getMessage());
          }
 
          if (dispatchContext.dispatchCriteria() != null) {
@@ -325,7 +366,8 @@ public class SoapController {
                   TraceUtil.explainSpanEventBuilder("Proxying request to external service")
                         .put("proxy.url", proxyUrl.get().toString())
                         .put("proxy.method", method != null ? method.toString() : "POST").build());
-            return proxyService.callExternal(proxyUrl.get(), method, headers, body);
+            return RestController
+                  .toResponse(proxyService.callExternal(proxyUrl.get(), method, headers.asMultiValueMap(), body));
          }
 
          if (!responses.isEmpty()) {
@@ -337,9 +379,7 @@ public class SoapController {
                         .put(CommonAttributes.DISPATCH_CRITERIA, dispatchContext.dispatchCriteria())
                         .put(CommonAttributes.ERROR_STATUS, 400).build());
             span.setStatus(StatusCode.ERROR, "No matching response found for dispatch criteria");
-            return new ResponseEntity<>(
-                  String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()),
-                  HttpStatus.BAD_REQUEST);
+            return text(400, String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()));
          }
 
          span.addEvent(CommonEvents.RESPONSE_SELECTED.getEventName(),
@@ -349,15 +389,15 @@ public class SoapController {
                      .build());
 
          // Set Content-Type to "text/xml".
-         HttpHeaders responseHeaders = new HttpHeaders();
+         String responseContentType;
 
          // Check to see if we are processing a SOAP 1.2 request
          if (request.getContentType() == null || request.getContentType().startsWith("application/soap+xml")) {
             // we are; set Content-Type to "application/soap+xml"
-            responseHeaders.setContentType(MediaType.valueOf("application/soap+xml;charset=UTF-8"));
+            responseContentType = "application/soap+xml;charset=UTF-8";
          } else {
             // Set Content-Type to "text/xml".
-            responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
+            responseContentType = "text/xml;charset=UTF-8";
          }
 
          // Render response content before waiting and returning.
@@ -381,19 +421,22 @@ public class SoapController {
 
          // Publish an invocation event before returning if enabled.
          if (Boolean.TRUE.equals(enableInvocationStats)) {
-            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+            MockControllerCommons.publishMockInvocation(mockInvocationEvents, service, response, startTime);
          }
 
-         if (response.isFault()) {
-            return new ResponseEntity<>(responseContent, responseHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
-         }
-         return new ResponseEntity<>(responseContent, responseHeaders, HttpStatus.OK);
+         return jakarta.ws.rs.core.Response.status(response.isFault() ? 500 : 200)
+               .header("Content-Type", responseContentType).entity(responseContent).build();
       }
 
       String msg = String.format("The operation %s does not exist!", action);
       span.addEvent(CommonEvents.OPERATION_NOT_FOUND.getEventName(), TraceUtil.explainSpanEventBuilder(msg).build());
       span.setStatus(StatusCode.ERROR, msg);
-      return new ResponseEntity<>(msg, HttpStatus.NOT_FOUND);
+      return text(404, msg);
+   }
+
+   /** Build a plain text response. */
+   private static jakarta.ws.rs.core.Response text(int status, String message) {
+      return jakarta.ws.rs.core.Response.status(status).type(MediaType.TEXT_PLAIN).entity(message).build();
    }
 
    /**
@@ -419,6 +462,9 @@ public class SoapController {
     * @return The wrapping Xml element name with body if matches SOAP. Null otherwise.
     */
    protected static String extractOperationName(String payload) {
+      if (payload == null) {
+         return null;
+      }
       Matcher matcher = OPERATION_CAPTURE_PATTERN.matcher(payload);
       if (matcher.find()) {
          return matcher.group("operation");
@@ -475,8 +521,7 @@ public class SoapController {
          Span.current().setStatus(StatusCode.ERROR, "Error during Xpath evaluation");
 
          log.error("Error during Xpath evaluation", e);
-         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-               "Error during Xpath evaluation: " + e.getMessage());
+         throw new DispatchException(500, "Error during Xpath evaluation: " + e.getMessage());
       }
    }
 
@@ -501,8 +546,7 @@ public class SoapController {
          Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
 
          log.error("Error during Script evaluation", e);
-         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-               "Error during Script evaluation: " + e.getMessage());
+         throw new DispatchException(500, "Error during Script evaluation: " + e.getMessage());
       }
    }
 
@@ -518,8 +562,7 @@ public class SoapController {
                requestContext);
       } catch (Exception e) {
          log.error("Error during JS evaluation", e);
-         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-               "Error during JS evaluation: " + e.getMessage());
+         throw new DispatchException(500, "Error during JS evaluation: " + e.getMessage());
       }
    }
 

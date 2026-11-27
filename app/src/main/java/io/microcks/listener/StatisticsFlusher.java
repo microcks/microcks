@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.listener;
+package io.microcks.listener;
 
 /**
  * StatisticsFlusher is an interface for components that flush statistics to a database.

@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
+import io.quarkus.test.junit.QuarkusTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
-import org.springframework.boot.http.client.HttpRedirects;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import io.quarkus.test.junit.mockito.InjectSpy;
+import io.microcks.testsupport.http.HttpEntity;
+import io.microcks.testsupport.http.HttpHeaders;
+import io.microcks.testsupport.http.HttpMethod;
+import io.microcks.testsupport.http.MediaType;
+import io.microcks.testsupport.http.ResponseEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,15 +45,16 @@ import static org.mockito.Mockito.verify;
  * Test case for all the Rest mock controller.
  * @author laurent
  */
+@QuarkusTest
 class RestControllerIT extends AbstractBaseIT {
 
-   @MockitoSpyBean
+   @InjectSpy
    private RestController restController;
 
    @Test
    void testOpenAPIMocking() {
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/petstore-openapi.json", true);
 
       // Check its different mocked operations.
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets", String.class);
@@ -80,7 +81,7 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testOpenAPIMockingWithValidation() {
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-details-openapi.yaml", true);
 
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
@@ -112,8 +113,8 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testSwaggerMocking() {
       // Upload Beer Catalog API swagger and then Postman collection artifacts.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-collection.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/beer-catalog-api-swagger.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/beer-catalog-api-collection.json", false);
 
       // Check its different mocked operations.
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0",
@@ -139,7 +140,7 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testNoFallbackMatchingWithRegex() {
       // Upload modified pastry spec
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-details-openapi.yaml", true);
 
       ObjectMapper mapper = new ObjectMapper();
 
@@ -216,26 +217,26 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testOpenCollectionMocking() {
       // Issue #2365: OpenCollection examples are served as mock responses, without dispatcher for now.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/opencollection/petstore-mock-opencollection.yml",
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/opencollection/petstore-mock-opencollection.yml",
             true);
 
       ResponseEntity<String> response = restTemplate
             .getForEntity("/rest/Petstore+Mock+API/1.0/pet/findByStatus?status=available", String.class);
       assertEquals(200, response.getStatusCode().value());
-      assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()));
+      assertTrue(response.getHeaders().getFirst("Content-Type").startsWith("application/json"));
       assertEquals("[{\"id\":190192062,\"name\":\"doggie\",\"status\":\"available\"}]", response.getBody());
 
       // '/pet/2' reaches 'GET /pet/:petId' through its resource path.
       response = restTemplate.getForEntity("/rest/Petstore+Mock+API/1.0/pet/2", String.class);
       assertEquals(200, response.getStatusCode().value());
-      assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()));
+      assertTrue(response.getHeaders().getFirst("Content-Type").startsWith("application/json"));
       assertEquals("{\"id\":2,\"name\":\"cat\"}", response.getBody());
    }
 
    @Test
    void testHeadersTemplating() {
       // Upload modified pastry-with-headers-openapi spec
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-headers-openapi.yaml", true);
 
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry", String.class);
       assertEquals(200, response.getStatusCode().value());
@@ -252,9 +253,9 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testHeadersOnlyResponse() {
       // Upload simple-oidc-redirect-openapi spec
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/simple-oidc-redirect-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate.withRedirects(HttpRedirects.DONT_FOLLOW)
+      ResponseEntity<String> response = restTemplate.withoutRedirects()
             .getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
                   + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
                   String.class);
@@ -272,16 +273,16 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testProxyFallback() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
       Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst()
             .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // If we have the mock, we should get the response from the mock.
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
@@ -306,16 +307,16 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testProxyFallbackWithDelay() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
       Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst()
             .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // If we have the mock, we should get the response from the mock.
       long startTime = System.currentTimeMillis();
@@ -344,7 +345,7 @@ class RestControllerIT extends AbstractBaseIT {
       long delay = 150l;
       op.setDefaultDelay(delay);
       op.setDefaultDelayStrategy("fixed");
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // If we have the mock, we should get the response from the mock.
       startTime = System.currentTimeMillis();
@@ -381,9 +382,9 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testProxyFallbackWithEqualsOriginAndExternalUrls() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Set original URL to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
@@ -391,21 +392,21 @@ class RestControllerIT extends AbstractBaseIT {
             .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
             .replaceFirst("pastry-real", "pastry-proxy"));
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // Check that we don't fall into infinite loop and that we can't locally handle the call (error 400)
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
       assertEquals(400, response.getStatusCode().value());
-      verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any(), any());
+      verify(restController, times(1)).get(any(), any());
    }
 
    @Test
    void testProxyFallbackWithHttpError() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Broke external URL in the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
@@ -413,7 +414,7 @@ class RestControllerIT extends AbstractBaseIT {
             .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
             .replaceFirst("pastry-real", "not-found"));
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
@@ -423,15 +424,15 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testProxy() {
       // Upload pastry-with-proxy and pastry-for-proxy specs
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
       Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
             .findFirst().orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // Event if `donut` is defined on our mock, we should always have the response coming for real backend.
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
@@ -447,7 +448,7 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testScriptDispatcher() {
       // Upload modified pastry spec
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-script-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-with-script-openapi.yaml", true);
 
       ObjectMapper mapper = new ObjectMapper();
 
@@ -471,7 +472,7 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testDelay() {
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/petstore-openapi.json", true);
 
       // Check a delayed mocked operations.
       long startTime = System.currentTimeMillis();
@@ -500,7 +501,7 @@ class RestControllerIT extends AbstractBaseIT {
    @Test
    void testDelayWithStrategyFixed() {
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/petstore-openapi.json", true);
 
       // Check a delayed mocked operations with fixed strategy.
       long startTime = System.currentTimeMillis();
@@ -531,7 +532,7 @@ class RestControllerIT extends AbstractBaseIT {
    void testDelayStrategyRandom() {
       Long schedulingDelay = 50l;
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/petstore-openapi.json", true);
 
       // Check a delayed mocked operations with random strategy.
       long startTime = System.currentTimeMillis();
@@ -566,7 +567,7 @@ class RestControllerIT extends AbstractBaseIT {
    void testDelayStrategyRangedRandom() {
       Long schedulingDelay = 50l;
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/petstore-openapi.json", true);
 
       // Check a delayed mocked operations with random strategy.
       long startTime = System.currentTimeMillis();

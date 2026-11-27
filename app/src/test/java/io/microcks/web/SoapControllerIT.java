@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
+import io.quarkus.test.junit.QuarkusTest;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
+import io.microcks.testsupport.http.HttpEntity;
+import io.microcks.testsupport.http.HttpHeaders;
+import io.microcks.testsupport.http.ResponseEntity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,12 +34,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for the Soap mock controller.
  * @author laurent
  */
+@QuarkusTest
 class SoapControllerIT extends AbstractBaseIT {
 
    @Test
    void testHelloSoapWSMocking() {
       // Upload Hello Service SoapUI project.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/soapui/HelloService-soapui-project.xml", true);
 
       // Create SOAP 1.2 headers for sayHello operation.
       HttpHeaders headers = new HttpHeaders();
@@ -131,7 +133,7 @@ class SoapControllerIT extends AbstractBaseIT {
 
 
       // Upload Hello Service SoapUI project.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-random-soapui-project.xml",
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/soapui/HelloService-random-soapui-project.xml",
             true);
 
       // Create SOAP 1.2 headers for sayHello operation.
@@ -165,17 +167,17 @@ class SoapControllerIT extends AbstractBaseIT {
    @Test
    void testProxy() {
       // Upload SoapUI projects for proxy test.
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/soapui/HelloService-to-set-proxy-soapui-project.xml",
+            true);
       uploadArtifactFile(
-            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);
-      uploadArtifactFile(
-            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
+            "target/test-classes/io/microcks/artifact/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
 
       // Override the dispatcher to PROXY
       Service service = serviceRepository.findByNameAndVersion("HelloService Mock", "0.9");
       Operation operation = service.getOperations().stream().findFirst().orElseThrow();
       operation.setDispatcher("PROXY");
       operation.setDispatcherRules(getServerUrl() + "/soap/HelloService+Real/0.9");
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // Build the request.
       HttpEntity<String> entity = createBaseEntityForName("Andrew");
@@ -188,10 +190,10 @@ class SoapControllerIT extends AbstractBaseIT {
    @Test
    void testProxyFallback() {
       // Upload SoapUI projects for proxy test.
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/soapui/HelloService-to-set-proxy-soapui-project.xml",
+            true);
       uploadArtifactFile(
-            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);
-      uploadArtifactFile(
-            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
+            "target/test-classes/io/microcks/artifact/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
 
       // Override the dispatcher to PROXY_FALLBACK
       Service service = serviceRepository.findByNameAndVersion("HelloService Mock", "0.9");
@@ -201,7 +203,7 @@ class SoapControllerIT extends AbstractBaseIT {
             {"dispatcher": "QUERY_MATCH",
             "dispatcherRules": "declare namespace ser='http://www.example.com/hello';\\n//ser:sayHello/name",
             "proxyUrl": "%s/soap/HelloService+Real/0.9"}""", getServerUrl()));
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // Build the request that matches QUERY_MATCH.
       HttpEntity<String> entity = createBaseEntityForName("Andrew");

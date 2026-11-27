@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.event.HttpServletRequestSnapshot;
+import io.microcks.event.HttpServletRequestSnapshot;
 
 import org.junit.jupiter.api.Test;
 

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.util.http.HttpStatusCode;
 
 import java.util.Arrays;
 import java.util.Objects;

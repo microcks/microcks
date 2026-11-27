@@ -13,34 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.service.ArtifactInfo;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.util.HTTPDownloader;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.ReferenceResolver;
-import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.SimpleReferenceURLBuilder;
+import io.microcks.domain.Secret;
+import io.microcks.domain.Service;
+import io.microcks.repository.SecretRepository;
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
+import io.microcks.util.HTTPDownloader;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.util.ReferenceResolver;
+import io.microcks.util.RelativeReferenceURLBuilderFactory;
+import io.microcks.util.SafeLogger;
+import io.microcks.util.SimpleReferenceURLBuilder;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -50,8 +55,8 @@ import java.util.UUID;
  * This is a controller for managing import of uploaded or downloaded artifact contract files.
  * @author laurent
  */
-@RestController
-@RequestMapping("/api")
+@Path("/api")
+@RunOnVirtualThread
 public class UploadArtifactController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -60,24 +65,27 @@ public class UploadArtifactController {
    private final ServiceService serviceService;
    private final SecretRepository secretRepository;
 
-   @Value("${default-artifacts-repository.url:#{null}}")
-   private Optional<String> defaultArtifactsRepositoryUrl;
+   @ConfigProperty(name = "default-artifacts-repository.url")
+   Optional<String> defaultArtifactsRepositoryUrl;
 
    /**
     * Build a new UploadArtifactController with its dependencies.
     * @param serviceService   to perform business logic on Services
     * @param secretRepository to retrieve requested Secrets
     */
+   @Inject
    public UploadArtifactController(ServiceService serviceService, SecretRepository secretRepository) {
       this.serviceService = serviceService;
       this.secretRepository = secretRepository;
    }
 
-   @PostMapping(value = "/artifact/download")
-   public ResponseEntity<String> importArtifact(@RequestParam(value = "url", required = true) String url,
-         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact,
-         @RequestParam(value = "secretName", required = false) String secretName) {
-      if (!url.isEmpty()) {
+   @POST
+   @Path("/artifact/download")
+   @Produces(MediaType.APPLICATION_JSON)
+   public Response downloadArtifact(@QueryParam("url") String url,
+         @QueryParam("mainArtifact") @DefaultValue("true") boolean mainArtifact,
+         @QueryParam("secretName") String secretName) {
+      if (url != null && !url.isEmpty()) {
          List<Service> services = null;
 
          Secret secret = null;
@@ -101,10 +109,11 @@ public class UploadArtifactController {
                   new ArtifactInfo(url, mainArtifact));
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item {}", url, ioe);
-            return new ResponseEntity<>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                  .entity("Exception while retrieving remote item").build();
          } catch (MockRepositoryImportException mrie) {
             log.error("Exception while reading remote item {}", url, mrie);
-            return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+            return Response.status(Response.Status.BAD_REQUEST).entity(mrie.getMessage()).build();
          } finally {
             // Cleanup and remove local file.
             if (localFile != null && !localFile.delete()) {
@@ -113,19 +122,25 @@ public class UploadArtifactController {
          }
 
          if (services != null && !services.isEmpty()) {
-            return new ResponseEntity<>(
-                  "{\"name\": \"" + services.get(0).getName() + ":" + services.get(0).getVersion() + "\"}",
-                  HttpStatus.CREATED);
+            return Response.status(Response.Status.CREATED)
+                  .entity("{\"name\": \"" + services.get(0).getName() + ":" + services.get(0).getVersion() + "\"}")
+                  .build();
          }
       }
-      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+      return Response.status(Response.Status.NO_CONTENT).build();
    }
 
-   @PostMapping(value = "/artifact/upload")
-   public ResponseEntity<String> importArtifact(@RequestParam(value = "file") MultipartFile file,
-         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
-      if (!file.isEmpty()) {
-         log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
+   @POST
+   @Path("/artifact/upload")
+   @Consumes(MediaType.MULTIPART_FORM_DATA)
+   @Produces(MediaType.TEXT_PLAIN)
+   public Response uploadArtifact(@RestForm("file") FileUpload file,
+         @QueryParam("mainArtifact") Boolean mainArtifactParam, @RestForm("mainArtifact") Boolean mainArtifactForm) {
+      // Spring accepted the flag as query or form parameter: keep both, defaulting to true.
+      boolean mainArtifact = mainArtifactParam != null ? mainArtifactParam
+            : (mainArtifactForm == null || mainArtifactForm);
+      if (file != null && file.size() > 0) {
+         log.debug("Content type of {} is {}", file.fileName(), file.contentType());
 
          List<Service> services = null;
          String localFile = null;
@@ -133,23 +148,19 @@ public class UploadArtifactController {
             // Save upload to local file before import.
             localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + UUID.randomUUID() + ".artifact";
 
-            try (ReadableByteChannel rbc = Channels.newChannel(file.getInputStream());
-                  FileOutputStream fos = new FileOutputStream(localFile)) {
-               fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            }
+            Files.copy(file.uploadedFile(), Paths.get(localFile), StandardCopyOption.REPLACE_EXISTING);
 
             // Now try importing services.
-            ReferenceResolver referenceResolver = getDefaultReferenceResolver(file.getOriginalFilename());
+            ReferenceResolver referenceResolver = getDefaultReferenceResolver(file.fileName());
             services = serviceService.importServiceDefinition(new File(localFile), referenceResolver,
-                  new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
-
-
+                  new ArtifactInfo(file.fileName(), mainArtifact));
          } catch (IOException ioe) {
-            log.error("Exception while writing uploaded item {}", file.getOriginalFilename(), ioe);
-            return new ResponseEntity<>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Exception while writing uploaded item {}", file.fileName(), ioe);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                  .entity("Exception while writing uploaded item").build();
          } catch (MockRepositoryImportException mrie) {
-            log.error("Exception while reading uploaded item {}", file.getOriginalFilename(), mrie);
-            return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+            log.error("Exception while reading uploaded item {}", file.fileName(), mrie);
+            return Response.status(Response.Status.BAD_REQUEST).entity(mrie.getMessage()).build();
          } finally {
             // Cleanup and remove local file.
             if (localFile != null) {
@@ -161,15 +172,15 @@ public class UploadArtifactController {
          }
 
          if (services != null && !services.isEmpty()) {
-            return new ResponseEntity<>(services.get(0).getName() + ":" + services.get(0).getVersion(),
-                  HttpStatus.CREATED);
+            return Response.status(Response.Status.CREATED)
+                  .entity(services.get(0).getName() + ":" + services.get(0).getVersion()).build();
          }
       }
-      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+      return Response.status(Response.Status.NO_CONTENT).build();
    }
 
    private ReferenceResolver getDefaultReferenceResolver(String fileName) {
-      log.debug("defaultArtifactsRepositoryUrl is {}", defaultArtifactsRepositoryUrl);
+      log.debug("defaultArtifactsRepositoryUrl is {}", defaultArtifactsRepositoryUrl.orElse(null));
       if (defaultArtifactsRepositoryUrl.isPresent()) {
          String repositoryUrl = defaultArtifactsRepositoryUrl.get();
          String baseRepositoryUrl = repositoryUrl.endsWith("/") ? repositoryUrl + fileName

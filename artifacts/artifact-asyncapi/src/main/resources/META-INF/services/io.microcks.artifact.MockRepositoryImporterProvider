@@ -1,0 +1,2 @@
+io.microcks.artifact.asyncapi.AsyncAPIImporterProvider
+io.microcks.artifact.asyncapi.AsyncAPI3ImporterProvider

@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.domain.DailyStatistic;
-import io.github.microcks.event.MockInvocationEvent;
-import io.github.microcks.repository.DailyStatisticRepository;
+import io.microcks.domain.DailyStatistic;
+import io.microcks.event.MockInvocationEvent;
+import io.microcks.repository.DailyStatisticRepository;
 
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -39,8 +38,8 @@ import java.util.concurrent.TimeUnit;
  * Application event listener that updates daily statistics on incoming event.
  * @author laurent
  */
-@Component
-public class DailyStatisticsFeeder implements StatisticsFlusher, ApplicationListener<MockInvocationEvent> {
+@ApplicationScoped
+public class DailyStatisticsFeeder implements StatisticsFlusher {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(DailyStatisticsFeeder.class);
@@ -102,7 +101,7 @@ public class DailyStatisticsFeeder implements StatisticsFlusher, ApplicationList
                   statistic.setDailyCount(count);
                   statistic.getHourlyCount().put(hourKey, count);
                   statistic.getMinuteCount().put(minuteKey, count);
-                  statisticsRepository.save(statistic);
+                  statisticsRepository.persist(statistic);
                } else {
                   // Already a statistic document for this day, increment fields.
                   log.debug("Found an existing statistic document for {}", day);
@@ -116,9 +115,7 @@ public class DailyStatisticsFeeder implements StatisticsFlusher, ApplicationList
       }
    }
 
-   @Override
-   @Async
-   public void onApplicationEvent(MockInvocationEvent event) {
+   public void onApplicationEvent(@ObservesAsync MockInvocationEvent event) {
       log.debug("Received a MockInvocationEvent on {} - v{}", event.getServiceName(), event.getServiceVersion());
 
       // Compute day string representation.

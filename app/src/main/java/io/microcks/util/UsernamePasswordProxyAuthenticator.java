@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
-import io.github.microcks.config.ProxySettings;
+import io.microcks.config.ProxySettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,0 +1,31 @@
+/* Application footer (not in the Deep Ink demo, which has none). Tokens only. */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font: 400 12px/18px var(--font-ui);
+}
+.app-footer ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app-footer a {
+  color: var(--link);
+  text-decoration: none;
+}
+.app-footer a:hover {
+  text-decoration: underline;
+}
+.app-footer code {
+  font: 400 12px var(--font-mono);
+}

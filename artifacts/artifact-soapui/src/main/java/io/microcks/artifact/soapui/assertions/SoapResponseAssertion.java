@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soapui.assertions;
+package io.microcks.artifact.soapui.assertions;
 
-import io.github.microcks.util.soap.SoapMessageValidator;
+import io.microcks.artifact.soap.SoapMessageValidator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

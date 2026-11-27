@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.Service;
+import io.microcks.domain.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -25,8 +25,6 @@ import java.util.Map;
  * @author laurent
  */
 public interface CustomServiceRepository {
-
-   List<Service> findByIdIn(List<String> ids);
 
    List<Service> findByLabels(Map<String, String> labels);
 

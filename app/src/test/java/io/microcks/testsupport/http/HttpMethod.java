@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class User {
-  username?: string;
-  login?: string;
-  name?: string;
-  email?: string;
+package io.microcks.testsupport.http;
 
-  constructor() {
-    this.login = '';
-    this.username = '';
-    this.name = '';
-    this.email = '';
-  }
+/**
+ * HTTP methods supported by the integration test HTTP client.
+ * @author laurent
+ */
+public enum HttpMethod {
+   GET,
+   POST,
+   PUT,
+   DELETE,
+   PATCH,
+   HEAD,
+   OPTIONS
 }

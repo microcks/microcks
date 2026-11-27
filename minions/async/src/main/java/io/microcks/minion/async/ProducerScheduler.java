@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.minion.async.producer.ProducerManager;
+import io.microcks.minion.async.producer.ProducerManager;
 
 import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -103,6 +103,10 @@ public class ProducerScheduler {
 
    /** Schedule a Quartz Job and associate trigger for specified frewqency. */
    private void scheduleProducerForFrequency(Long frequency) {
+      if (triggerKeys.contains(TriggerKey.triggerKey(String.valueOf(frequency)))) {
+         logger.debug("Producer Job at frequency " + frequency + " is already scheduled");
+         return;
+      }
       logger.info("Scheduling a new Producer Job at frequency " + frequency);
 
       // Create a job detail which is holding its frequency as a param.

@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.handler;
+package io.microcks.minion.async.handler;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ReplyInfo;
-import io.github.microcks.domain.Service;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.producer.KafkaProducerManager;
-import io.github.microcks.minion.async.SchemaRegistry;
+import io.microcks.domain.Binding;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ReplyInfo;
+import io.microcks.domain.Service;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.producer.KafkaProducerManager;
+import io.microcks.minion.async.SchemaRegistry;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

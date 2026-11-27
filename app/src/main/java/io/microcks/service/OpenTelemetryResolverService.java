@@ -13,42 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
- * A resolver class to obtain an OpenTelemetry instance from the Spring application context. If no OpenTelemetry bean is
- * found, it falls back to the global OpenTelemetry instance.
- *
+ * A resolver class to obtain an OpenTelemetry instance from the CDI container. If no OpenTelemetry bean is found, it
+ * falls back to the global OpenTelemetry instance.
+ * @author laurent
  */
-@Service
+@ApplicationScoped
 public class OpenTelemetryResolverService {
-   private final ApplicationContext applicationContext;
+
+   private final Instance<OpenTelemetry> openTelemetry;
 
    /**
-    * Build a resolver service with the given application context.
-    * @param applicationContext The Spring application context
+    * Build a resolver service.
+    * @param openTelemetry The lazily resolved OpenTelemetry bean
     */
-   public OpenTelemetryResolverService(ApplicationContext applicationContext) {
-      this.applicationContext = applicationContext;
+   @Inject
+   public OpenTelemetryResolverService(Instance<OpenTelemetry> openTelemetry) {
+      this.openTelemetry = openTelemetry;
    }
 
    /**
-    * Get an OpenTelemetry instance from the application context or fall back to the global instance.
+    * Get an OpenTelemetry instance from the container or fall back to the global instance.
     * @return An OpenTelemetry instance
     */
    public OpenTelemetry getOpenTelemetry() {
-      OpenTelemetry openTelemetry;
-      try {
-         openTelemetry = applicationContext.getBean(OpenTelemetry.class);
-      } catch (Exception ignored) {
-         // Fall back to global if no bean is available (tests/non-boot contexts)
-         openTelemetry = GlobalOpenTelemetry.get();
+      if (openTelemetry != null && openTelemetry.isResolvable()) {
+         return openTelemetry.get();
       }
-      return openTelemetry;
+      return GlobalOpenTelemetry.get();
    }
 }

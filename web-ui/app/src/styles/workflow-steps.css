@@ -1,0 +1,31 @@
+/* Steps tab of the Workflow page: one panel with the run picker, the steps table and the footnote. */
+
+.wf-steps-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--canvas); min-width: 0; }
+.wf-steps-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.wf-steps-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.wf-steps-title h2 { margin: 0; font: 600 16px/1.3 var(--font-ui); }
+.wf-steps-sub { font: 400 13px/1.4 var(--font-ui); color: var(--text-muted); }
+.wf-steps-foot { margin: 0; max-width: 110ch; font: 400 12px/1.6 var(--font-ui); color: var(--text-muted); }
+.wf-steps-foot code { font-family: var(--font-mono); }
+
+/* Steps table cells (also the Loom fallback) */
+.wf-st-scroll { overflow-x: auto; min-width: 0; }
+.wf-st-scroll .table { min-width: 1040px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.wf-st-stack { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; white-space: normal; }
+.wf-st-strong, .wf-st-id { font-family: var(--font-mono); font-weight: 600; }
+.wf-st-desc { max-width: 220px; font-size: 12px; color: var(--text-muted); }
+.wf-st-op { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.wf-st-path { font-family: var(--font-mono); color: var(--link); text-decoration: none; }
+a.wf-st-path:hover { text-decoration: underline; text-underline-offset: 3px; }
+.wf-st-opref { max-width: 260px; margin-top: 1px; font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.wf-st-crit { max-width: 250px; font: 400 12px/1.4 var(--font-mono); overflow-wrap: anywhere; }
+.wf-st-muted { color: var(--text-muted); }
+.wf-st-act { max-width: 260px; font-size: 12px; color: var(--text); }
+.wf-st-act[data-muted] { color: var(--text-muted); }
+.wf-st-outs { font: 400 12px/1.4 var(--font-mono); }
+.wf-st-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.wf-st-status[data-tone='pass'], .wf-st-check [data-tone='pass'] { color: var(--success); }
+.wf-st-status[data-tone='fail'], .wf-st-check [data-tone='fail'] { color: var(--danger); }
+.wf-st-status[data-tone='off'], .wf-st-check [data-tone='off'] { color: var(--text-muted); }
+.wf-st-check { display: flex; align-items: center; gap: 5px; margin-top: 1px; font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.wf-st-res { margin-top: 1px; font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); }

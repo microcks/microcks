@@ -1,0 +1,2 @@
+io.microcks.artifact.metadata.MetadataImporterProvider
+io.microcks.artifact.metadata.ExamplesImporterProvider

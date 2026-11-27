@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.minion.async.client.MicrocksAPIConnector;
 
 import com.ibm.mq.MQDestination;
 import com.ibm.mq.MQException;
@@ -140,8 +140,8 @@ class IBMMQProducerManagerIT {
 
    /** Build the mock definition, repository, schema registry and wired producer manager shared by the tests. */
    private TestContext arrange() throws Exception {
-      String asyncAPIContent = Files.readString(
-            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0.yaml"));
+      String asyncAPIContent = Files
+            .readString(Paths.get("target/test-classes/io/microcks/minion/async", "user-signedup-asyncapi-3.0.yaml"));
 
       // Prepare some event messages.
       EventMessage aliceEvent = new EventMessage();

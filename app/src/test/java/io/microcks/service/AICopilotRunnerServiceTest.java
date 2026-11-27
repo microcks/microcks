@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.util.ai.AICopilot;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.util.ai.AICopilot;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
+import jakarta.enterprise.inject.Instance;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,7 +54,11 @@ class AICopilotRunnerServiceTest {
 
    @Test
    void shouldContinueBulkGenerationWhenOperationsFailOrReturnNoExchanges() throws Exception {
-      AICopilotRunnerService runnerService = new AICopilotRunnerService(serviceService, Optional.of(copilot));
+      @SuppressWarnings("unchecked")
+      Instance<AICopilot> copilotInstance = org.mockito.Mockito.mock(Instance.class);
+      when(copilotInstance.isResolvable()).thenReturn(true);
+      when(copilotInstance.get()).thenReturn(copilot);
+      AICopilotRunnerService runnerService = new AICopilotRunnerService(serviceService, copilotInstance);
       Service service = buildService();
       Resource contract = new Resource();
 

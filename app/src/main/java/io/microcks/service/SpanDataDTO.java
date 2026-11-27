@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentelemetry.api.common.Attributes;

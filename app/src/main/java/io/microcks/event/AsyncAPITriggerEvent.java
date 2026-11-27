@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.event;
+package io.microcks.event;
 
-import io.github.microcks.domain.Operation;
-import org.springframework.context.ApplicationEvent;
+import io.microcks.domain.Operation;
 
 /**
  * @author laurent
  */
-public class AsyncAPITriggerEvent extends ApplicationEvent {
+public class AsyncAPITriggerEvent {
 
    private final String serviceId;
    private final Operation operation;
@@ -30,15 +29,13 @@ public class AsyncAPITriggerEvent extends ApplicationEvent {
 
    /**
     * Create a new AsyncAPITriggerEvent.
-    * @param source    Source object for event
     * @param serviceId Id of invoked service
     * @param operation Operation invoked
     * @param request   Snapshot of incoming request
     * @param response  Snapshot of response returned
     */
-   public AsyncAPITriggerEvent(Object source, String serviceId, Operation operation, RequestSnapshot request,
+   public AsyncAPITriggerEvent(String serviceId, Operation operation, RequestSnapshot request,
          ResponseSnapshot response) {
-      super(source);
       this.serviceId = serviceId;
       this.operation = operation;
       this.request = request;

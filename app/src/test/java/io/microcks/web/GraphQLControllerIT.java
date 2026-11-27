@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
+import io.quarkus.test.junit.QuarkusTest;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +27,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.RegularExpressionValueMatcher;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
-import org.springframework.http.ResponseEntity;
+import io.microcks.testsupport.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,15 +35,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for all the GraphQL mock controller.
  * @author laurent
  */
+@QuarkusTest
 class GraphQLControllerIT extends AbstractBaseIT {
 
    @Test
    void testFilmsGraphQLAPIMocking() {
       // Upload the 2 required reference artifacts.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-postman.json", false);
       // Adding some more metadata for mutation dispatching.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-metadata.yml", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-metadata.yml", false);
 
       ObjectMapper mapper = new ObjectMapper();
 
@@ -360,8 +362,8 @@ class GraphQLControllerIT extends AbstractBaseIT {
 
    @Test
    void testFilmsGraphQLAPIMockingErrorsAndExtensions() {
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-1.0-examples.yml", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-1.0-examples.yml", false);
 
       ObjectMapper mapper = new ObjectMapper();
       String subQuery = """
@@ -415,11 +417,11 @@ class GraphQLControllerIT extends AbstractBaseIT {
    @Test
    void testProxy() {
       // Upload the required reference artifacts.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-postman.json", false);
 
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy-postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-to-test-proxy.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-to-test-proxy-postman.json", false);
 
       // Override the dispatcher to PROXY
       Service service = serviceRepository.findByNameAndVersion("Movie Graph API", "1.0");
@@ -427,7 +429,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
             .orElseThrow();
       operation.setDispatcher("PROXY");
       operation.setDispatcherRules(getServerUrl() + "/graphql/Movie+Graph+Original+API/1.0");
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // Execute and assert that it was proxy.
       String query = """
@@ -439,11 +441,11 @@ class GraphQLControllerIT extends AbstractBaseIT {
    @Test
    void testProxyFallback() {
       // Upload the required reference artifacts.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-postman.json", false);
 
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy-postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-to-test-proxy.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-to-test-proxy-postman.json", false);
 
       // Override the dispatcher to PROXY
       Service service = serviceRepository.findByNameAndVersion("Movie Graph API", "1.0");
@@ -454,7 +456,7 @@ class GraphQLControllerIT extends AbstractBaseIT {
             {"dispatcher": "QUERY_ARGS",
             "dispatcherRules": "id",
             "proxyUrl": "%s/graphql/Movie+Graph+Original+API/1.0"}""", getServerUrl()));
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
 
       // Execute and assert that it wasn't proxy.
       String query = """
@@ -474,8 +476,8 @@ class GraphQLControllerIT extends AbstractBaseIT {
    @Test
    void testGraphQLErrorAPIMocking() {
       // Upload the 2 required reference artifacts.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/films-postman.json", false);
 
       ObjectMapper mapper = new ObjectMapper();
 

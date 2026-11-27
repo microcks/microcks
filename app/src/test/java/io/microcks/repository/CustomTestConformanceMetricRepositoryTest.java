@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.TestConformanceMetric;
-import io.github.microcks.domain.WeightedMetricValue;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.TestConformanceMetric;
+import io.microcks.domain.WeightedMetricValue;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 
@@ -32,12 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Test case for CustomTestConformanceMetricRepository class.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class CustomTestConformanceMetricRepositoryTest {
 
-   @Autowired
+   @Inject
    TestConformanceMetricRepository repository;
 
    @Test
@@ -55,9 +51,9 @@ class CustomTestConformanceMetricRepositoryTest {
       m3.setAggregationLabelValue("domain2");
       m3.setCurrentScore(85);
 
-      repository.save(m1);
-      repository.save(m2);
-      repository.save(m3);
+      repository.persist(m1);
+      repository.persist(m2);
+      repository.persist(m3);
 
       // Query domain aggregates and assert.
       List<WeightedMetricValue> domainValues = repository.aggregateTestConformanceMetric();

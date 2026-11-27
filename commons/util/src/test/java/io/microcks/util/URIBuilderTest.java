@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
-import io.github.microcks.domain.Parameter;
+import io.microcks.domain.Parameter;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;

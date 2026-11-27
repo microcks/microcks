@@ -1,0 +1,55 @@
+/* Runs tab of the Workflow page: origin filters, the run rows with their step band and note, the pipeline bar. */
+
+.wf-runs-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--canvas); min-width: 0; font: 400 13px/normal var(--font-ui); }
+.wf-runs-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.wf-runs-left { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.wf-runs-count { color: var(--text-muted); }
+.wf-runs-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.wf-runs-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
+.wf-runs-list { list-style: none; margin: 0; padding: 0; min-width: 1080px; }
+.wf-runs-row { display: flex; align-items: center; gap: 16px; padding: 11px 14px; }
+.wf-runs-header { padding: 8px 14px; background: var(--surface); font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.wf-runs-row [data-col='run'] { flex: 0 0 44px; }
+.wf-runs-row [data-col='result'] { flex: 0 0 76px; }
+.wf-runs-row [data-col='origin'] { flex: 0 0 180px; min-width: 0; }
+.wf-runs-row [data-col='inputs'] { flex: 0 0 150px; }
+.wf-runs-row [data-col='steps'] { flex: 0 0 136px; }
+.wf-runs-row [data-col='end'] { flex: 0 0 160px; }
+.wf-runs-row [data-col='dur'] { flex: 0 0 60px; }
+.wf-runs-row [data-col='started'] { flex: 1 1 140px; min-width: 0; }
+.wf-runs-row [data-col='chev'] { flex: 0 0 14px; }
+.wf-runs-item { border-top: 1px solid var(--border); }
+.wf-runs-link { color: var(--text); text-decoration: none; }
+.wf-runs-link:hover { background: var(--surface); }
+.wf-runs-id { font: 600 13px/1.4 var(--font-mono); }
+.wf-runs-result { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.wf-runs-result[data-tone='pass'] { color: var(--success); }
+.wf-runs-result[data-tone='fail'] { color: var(--danger); }
+.wf-runs-result[data-tone='off'] { color: var(--text-muted); }
+.wf-runs-origin { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.wf-runs-sub { font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.wf-runs-inputs { font: 400 12px/1.4 var(--font-mono); color: var(--text-secondary); }
+.wf-runs-band { display: flex; gap: 4px; }
+.wf-runs-cell {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 22px; box-sizing: border-box;
+  border: 1px solid var(--border-strong); border-radius: 4px; background: transparent; color: var(--text-muted);
+}
+.wf-runs-cell[data-size='sm'] { width: 18px; height: 14px; border-radius: 3px; }
+.wf-runs-cell[data-status='passed'] { border-color: var(--success); background: var(--success); color: var(--on-status); }
+.wf-runs-cell[data-status='failed'] { border-color: var(--danger); background: var(--danger); color: var(--on-status); }
+.wf-runs-end { color: var(--text-secondary); }
+.wf-runs-end[data-tone='fail'] { color: var(--danger); }
+.wf-runs-dur { font: 400 12px/1.4 var(--font-mono); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.wf-runs-started { display: flex; flex-direction: column; gap: 1px; }
+.wf-runs-by { font-size: 12px; color: var(--text-muted); }
+.wf-runs-chev { display: inline-flex; color: var(--text-muted); }
+.wf-runs-note { padding: 0 14px 11px 74px; font-size: 12px; color: var(--text-muted); }
+.wf-runs-note[data-tone='fail'] { color: var(--danger); }
+.wf-runs-note[data-tone='pass'] { color: var(--success); }
+.wf-runs-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--text-muted); }
+.wf-runs-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.wf-runs-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 28px 20px; border: 1px dashed var(--border-strong); border-radius: 8px; }
+.wf-runs-empty-title { font-size: 15px; font-weight: 600; }
+.wf-runs-pipeline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border-radius: 6px; background: var(--surface); }
+.wf-runs-pipeline-label { color: var(--text-secondary); }
+.wf-runs-api { flex: 1 1 360px; min-width: 0; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 400 12px/1.4 var(--font-mono); overflow-wrap: anywhere; }

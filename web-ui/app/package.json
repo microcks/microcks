@@ -1,0 +1,38 @@
+{
+  "name": "@microcks/web-ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "vite dev --host 127.0.0.1 --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "screenshots": "node scripts/screenshots.mjs"
+  },
+  "dependencies": {
+    "@fontsource/alegreya-sans-sc": "5.2.5",
+    "@fontsource/ibm-plex-sans": "5.2.5",
+    "@fontsource/jetbrains-mono": "5.2.5",
+    "@microcks/deep-ink": "*",
+    "@sveltejs/kit": "3.0.0",
+    "highlight.js": "^11.12.0",
+    "svelte": "5.57.3",
+    "tailwindcss": "4.3.3",
+    "yaml": "2.8.1"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "6.0.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@tailwindcss/vite": "4.3.0",
+    "@types/node": "25.9.1",
+    "playwright": "1.55.0",
+    "svelte-check": "4.7.7",
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  }
+}

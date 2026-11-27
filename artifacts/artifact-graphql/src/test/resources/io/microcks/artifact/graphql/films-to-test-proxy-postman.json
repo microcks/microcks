@@ -1,0 +1,98 @@
+{
+	"info": {
+		"_postman_id": "7c00b563-d454-421a-a3b0-17c4e3254cb9",
+		"name": "Movie Graph Original API",
+		"description": "version=1.0 - A simple Graph API for testing proxy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "queries",
+			"item": [
+				{
+					"name": "film",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query film ($id: String) {\n    film (id: $id) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n    }\n}",
+								"variables": "{\n  \"id\": \"\"\n}"
+							}
+						},
+						"url": {
+							"raw": "http://film",
+							"protocol": "http",
+							"host": [
+								"film"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "film ZmlsbXM6Mg==",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query film ($id: String) {\n    film (id: $id) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n        comment\n    }\n}",
+										"variables": "{\n  \"id\": \"ZmlsbXM6Mg==\"\n}"
+									}
+								},
+								"url": {
+									"raw": "{{url}}",
+									"host": [
+										"{{url}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"film\": {\n            \"id\": \"ZmlsbXM6Mg==\",\n            \"title\": \"The Empire Strikes Back\",\n            \"episodeID\": 5,\n            \"director\": \"Irvin Kershner\",\n            \"starCount\": 433,\n            \"rating\": 4.3,\n            \"comment\": \"Original!!!\"\n        }\n    }\n}"
+						},
+						{
+							"name": "film ZmlsbXM6MA==",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query film ($id: String) {\n    film (id: $id) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n        comment\n    }\n}",
+										"variables": "{\n  \"id\": \"ZmlsbXM6MA==\"\n}"
+									}
+								},
+								"url": {
+									"raw": "{{url}}",
+									"host": [
+										"{{url}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"film\": {\n            \"id\": \"ZmlsbXM6MA==\",\n            \"title\": \"The Force Awakens\",\n            \"episodeID\": 7,\n            \"director\": \"J. J. Abrams\",\n            \"starCount\": 200,\n            \"rating\": 3.0,\n            \"comment\": \"Original!!!\"\n        }\n    }\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "",
+			"type": "any",
+			"description": "URL for the request."
+		}
+	]
+}

@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.domain.CallbackInfo;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Parameter;
-import io.github.microcks.domain.Request;
-import io.github.microcks.event.CallbackTriggerEvent;
-import io.github.microcks.event.HttpServletRequestSnapshot;
-import io.github.microcks.repository.RequestRepository;
+import io.microcks.domain.CallbackInfo;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Parameter;
+import io.microcks.domain.Request;
+import io.microcks.event.CallbackTriggerEvent;
+import io.microcks.event.HttpServletRequestSnapshot;
+import io.microcks.repository.RequestRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationContext;
+import jakarta.enterprise.event.Event;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -54,7 +54,7 @@ class CallbackTriggerTest {
    private RequestRepository requestRepository;
 
    @Mock
-   private ApplicationContext applicationContext;
+   private Event<CallbackTriggerEvent> callbackEvents;
 
    @InjectMocks
    private CallbackTrigger callbackTrigger;
@@ -71,13 +71,13 @@ class CallbackTriggerTest {
       operation.setName("POST /test");
 
       HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/test", Map.of(), Map.of(), null);
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       // Should return early without calling the repository.
       callbackTrigger.onApplicationEvent(event);
 
       verifyNoInteractions(requestRepository);
-      verifyNoInteractions(applicationContext);
+      verifyNoInteractions(callbackEvents);
    }
 
    @Test
@@ -85,15 +85,15 @@ class CallbackTriggerTest {
       // Operation with empty callback infos map.
       Operation operation = new Operation();
       operation.setName("POST /test");
-      operation.setCallbackInfso(new HashMap<>());
+      operation.setCallbackInfos(new HashMap<>());
 
       HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/test", Map.of(), Map.of(), null);
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       callbackTrigger.onApplicationEvent(event);
 
       verifyNoInteractions(requestRepository);
-      verifyNoInteractions(applicationContext);
+      verifyNoInteractions(callbackEvents);
    }
 
    @Test
@@ -117,7 +117,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       // Execute - this will trigger the callback sending asynchronously.
       // The Thread.sleep(3s) is part of the implementation, we interrupt the thread to speed up.
@@ -155,7 +155,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -190,7 +190,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -216,7 +216,7 @@ class CallbackTriggerTest {
       // Snapshot without the expected query parameter.
       HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/subscribe", Map.of(), Map.of(), null);
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       // Should log warning and not call the repository.
       callbackTrigger.onApplicationEvent(event);
@@ -244,13 +244,13 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(otherRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       callbackTrigger.onApplicationEvent(event);
 
       // Should call repository but no further action since no matching callback request.
       verify(requestRepository).findByOperationIdAndName(anyString(), anyString());
-      verifyNoInteractions(applicationContext);
+      verifyNoInteractions(callbackEvents);
    }
 
    @Test
@@ -269,7 +269,7 @@ class CallbackTriggerTest {
       Map<String, CallbackInfo> callbackInfos = new LinkedHashMap<>();
       callbackInfos.put("secondEvent", secondCallback);
       callbackInfos.put("firstEvent", firstCallback);
-      operation.setCallbackInfso(callbackInfos);
+      operation.setCallbackInfos(callbackInfos);
 
       // Provide query parameter for the first callback (order=1).
       HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot("/subscribe", Map.of(),
@@ -284,7 +284,7 @@ class CallbackTriggerTest {
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
       // Step 0 should select the callback with order=1 (the first in sorted order).
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -324,7 +324,7 @@ class CallbackTriggerTest {
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
       // Start at step 0 with 2 callbacks → should re-emit for step 1.
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -336,7 +336,7 @@ class CallbackTriggerTest {
 
       // Verify that a new event was published for the next step.
       ArgumentCaptor<CallbackTriggerEvent> eventCaptor = ArgumentCaptor.forClass(CallbackTriggerEvent.class);
-      verify(applicationContext).publishEvent(eventCaptor.capture());
+      verify(callbackEvents).fireAsync(eventCaptor.capture());
 
       CallbackTriggerEvent reEmittedEvent = eventCaptor.getValue();
       assertEquals(1, reEmittedEvent.getStep());
@@ -364,7 +364,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -375,7 +375,7 @@ class CallbackTriggerTest {
       }
 
       // Should NOT re-emit event since there is only 1 callback.
-      verifyNoInteractions(applicationContext);
+      verifyNoInteractions(callbackEvents);
    }
 
    @Test
@@ -400,7 +400,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot);
 
       // The sendCallbackRequest will fail with invalid URL but that's expected.
       // We just verify the repository interaction.
@@ -443,7 +443,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -482,7 +482,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -515,7 +515,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -547,7 +547,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -581,7 +581,7 @@ class CallbackTriggerTest {
 
       when(requestRepository.findByOperationIdAndName(anyString(), anyString())).thenReturn(List.of(callbackRequest));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       Thread testThread = new Thread(() -> callbackTrigger.onApplicationEvent(event));
       testThread.start();
@@ -617,13 +617,13 @@ class CallbackTriggerTest {
       when(requestRepository.findByOperationIdAndName(anyString(), anyString()))
             .thenReturn(List.of(requestWithoutCallbackName));
 
-      CallbackTriggerEvent event = new CallbackTriggerEvent(this, "serviceId", operation, "response", snapshot, 0);
+      CallbackTriggerEvent event = new CallbackTriggerEvent("serviceId", operation, "response", snapshot, 0);
 
       callbackTrigger.onApplicationEvent(event);
 
       verify(requestRepository).findByOperationIdAndName(anyString(), anyString());
       // Should not re-emit since no matching callback request was found.
-      verifyNoInteractions(applicationContext);
+      verifyNoInteractions(callbackEvents);
    }
 }
 

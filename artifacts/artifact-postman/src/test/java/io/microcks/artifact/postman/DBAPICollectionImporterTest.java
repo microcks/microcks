@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util.postman;
+package io.microcks.artifact.postman;
 
-import io.github.microcks.domain.*;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.*;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import java.io.IOException;
 
@@ -37,7 +37,7 @@ class DBAPICollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/DBAPI.postman_collection.json");
+               "target/test-classes/io/microcks/artifact/postman/DBAPI.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -83,7 +83,7 @@ class DBAPICollectionImporterTest {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
-               "target/test-classes/io/github/microcks/util/postman/DBAPI.reorganised.postman_collection.json");
+               "target/test-classes/io/microcks/artifact/postman/DBAPI.reorganised.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

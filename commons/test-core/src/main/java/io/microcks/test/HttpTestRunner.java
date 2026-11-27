@@ -13,28 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.test;
+package io.microcks.test;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.util.URIBuilder;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Request;
+import io.microcks.domain.Response;
+import io.microcks.domain.Secret;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestReturn;
+import io.microcks.util.URIBuilder;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpResponse;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.ClientHttpRequest;
+import io.microcks.util.http.ClientHttpRequestFactory;
+import io.microcks.util.http.ClientHttpResponse;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -291,9 +290,9 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
          response.setStatus(String.valueOf(httpResponse.getStatusCode().value()));
          log.debug("Response Content-Type: {}", httpResponse.getHeaders().getContentType());
 
-         MediaType contentType = httpResponse.getHeaders().getContentType();
+         String contentType = httpResponse.getHeaders().getContentType();
          if (contentType != null) {
-            response.setMediaType(contentType.toString());
+            response.setMediaType(contentType);
          }
          Set<Header> headers = buildHeaders(httpResponse);
          if (!headers.isEmpty()) {

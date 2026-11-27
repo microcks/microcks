@@ -1,39 +1,57 @@
 /*
- * Copyright The Microcks Authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to Laurent Broudoux (the "Author") under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. Author licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-package io.github.microcks.security;
+package io.microcks.security;
 
-import io.github.microcks.domain.ImportJob;
-import io.github.microcks.domain.Service;
+import io.microcks.domain.ImportJob;
+import io.microcks.domain.Service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.PropertySources;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ContextNotActiveException;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
- * A Spring component that holds security checking related utility methods.
+ * Security checking component. When authentication is disabled everything is authorized. Otherwise a null
+ * {@code UserInfo} means "the user of the current HTTP request"; outside a request context it is not authorized.
  * @author laurent
  */
-@Component
-@PropertySources({ @PropertySource("features.properties"),
-      @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true),
-      @PropertySource("application.properties"), })
+@ApplicationScoped
 public class AuthorizationChecker {
+
+   /** The prefix used for Microcks groups name. */
+   private static final String MICROCKS_GROUPS_PREFIX = "/microcks/";
+
+   @Inject
+   AuthConfig authConfig;
+
+   @Inject
+   Instance<CurrentUser> currentUser;
+
+   @ConfigProperty(name = "features.feature.repository-tenancy.enabled", defaultValue = "false")
+   boolean tenancyEnabled;
+
+   @ConfigProperty(name = "features.feature.repository-filter.label-key", defaultValue = "domain")
+   String filterLabelKey;
 
    /** The Microcks user role name. */
    public static final String ROLE_USER = "user";
@@ -42,18 +60,6 @@ public class AuthorizationChecker {
    /** The Microcks admin role name. */
    public static final String ROLE_ADMIN = "admin";
 
-   /** The prefix used for Microcks groups name. */
-   private static final String MICROCKS_GROUPS_PREFIX = "/microcks/";
-
-   @Value("${keycloak.enabled}")
-   private final Boolean authenticationEnabled = true;
-
-   @Value("${features.feature.repository-tenancy.enabled}")
-   private final Boolean authorizationEnabled = false;
-
-   @Value("${features.feature.repository-filter.label-key}")
-   private final String filterLabelKey = null;
-
    /**
     * Check if provided user is having a specific role at the global level.
     * @param userInfo The information representing user to check access for.
@@ -61,10 +67,11 @@ public class AuthorizationChecker {
     * @return True if authorized, false otherwise.
     */
    public boolean hasRole(UserInfo userInfo, String role) {
-      if (authenticationEnabled && userInfo.getRoles() != null) {
-         return Arrays.stream(userInfo.getRoles()).anyMatch(role::equals);
+      if (!authConfig.enabled()) {
+         return true;
       }
-      return true;
+      UserInfo user = resolve(userInfo);
+      return user != null && user.getRoles() != null && Arrays.asList(user.getRoles()).contains(role);
    }
 
    /**
@@ -75,13 +82,9 @@ public class AuthorizationChecker {
     * @return True if authorized, false otherwise.
     */
    public boolean hasRoleForService(UserInfo userInfo, String role, Service service) {
-      if (authorizationEnabled && userInfo.getRoles() != null && service.getMetadata().getLabels() != null) {
-         // Build the full rolePath that is checked for group membership.
-         String rolePath = MICROCKS_GROUPS_PREFIX + role + "/" + service.getMetadata().getLabels().get(filterLabelKey);
-         boolean serviceRole = Arrays.stream(userInfo.getGroups()).anyMatch(rolePath::equals);
-         return serviceRole || hasRole(userInfo, role);
+      if (service.getMetadata() != null) {
+         return hasRoleForLabels(userInfo, role, service.getMetadata().getLabels());
       }
-      // Default to global role endorsing.
       return hasRole(userInfo, role);
    }
 
@@ -93,13 +96,35 @@ public class AuthorizationChecker {
     * @return True if authorized, false otherwise.
     */
    public boolean hasRoleForImportJob(UserInfo userInfo, String role, ImportJob job) {
-      if (authorizationEnabled && job.getMetadata().getLabels() != null) {
-         // Build the full rolePath that is checked for group membership.
-         String rolePath = MICROCKS_GROUPS_PREFIX + role + "/" + job.getMetadata().getLabels().get(filterLabelKey);
-         boolean jobRole = Arrays.stream(userInfo.getGroups()).anyMatch(rolePath::equals);
-         return jobRole || hasRole(userInfo, role);
+      if (job.getMetadata() != null) {
+         return hasRoleForLabels(userInfo, role, job.getMetadata().getLabels());
+      }
+      return hasRole(userInfo, role);
+   }
+
+   private boolean hasRoleForLabels(UserInfo userInfo, String role, Map<String, String> labels) {
+      if (authConfig.enabled() && tenancyEnabled && labels != null) {
+         UserInfo user = resolve(userInfo);
+         if (user != null && user.getGroups() != null) {
+            // Build the full rolePath that is checked for group membership.
+            String rolePath = MICROCKS_GROUPS_PREFIX + role + "/" + labels.get(filterLabelKey);
+            if (Arrays.asList(user.getGroups()).contains(rolePath)) {
+               return true;
+            }
+         }
       }
       // Default to global role endorsing.
       return hasRole(userInfo, role);
+   }
+
+   private UserInfo resolve(UserInfo userInfo) {
+      if (userInfo != null) {
+         return userInfo;
+      }
+      try {
+         return currentUser.isResolvable() ? currentUser.get().get() : null;
+      } catch (ContextNotActiveException e) {
+         return null;
+      }
    }
 }

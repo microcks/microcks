@@ -1,0 +1,71 @@
+/* Header: "Connected to https://hub.microcks.io/api" */
+.hb-connected { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+.hb-connected > .icon { color: var(--success); }
+.hb-connected-url { font: 400 12px/16px var(--font-mono); color: var(--link); }
+
+/* Search row and category pills */
+/* The prototype header section keeps 14px between the description and the search row (the page gap is 20px). */
+.hb-filters { display: flex; flex-direction: column; gap: 14px; margin-block-start: -6px; }
+.hb-search-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.hb-count { font-size: 13px; color: var(--text-muted); }
+.hb-cats { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* Package grid + detail */
+.hb-empty { flex: 1 1 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 22px; border: 1px dashed var(--border-strong); border-radius: var(--radius-panel); color: var(--text-secondary); font-size: 14px; }
+.hb-empty-reset { padding: 0; border: 0; background: transparent; color: var(--link); font: 600 14px/20px var(--font-ui); cursor: pointer; }
+.hb-installed { display: inline-flex; align-items: center; gap: 6px; padding: 0 4px; color: var(--success); font-size: 14px; font-weight: 600; }
+.hb-installed > .icon { stroke-width: 2.4; }
+.hb-mono { font-family: var(--font-mono); }
+
+.hb-detail > * { display: flex; flex-direction: column; gap: 18px; }
+.hb-detail-head { display: flex; flex-direction: column; gap: 6px; }
+.hb-detail-title { display: flex; flex-wrap: nowrap; white-space: nowrap; align-items: center; justify-content: space-between; gap: 8px; }
+.hb-detail-title > h2 { min-width: 0; margin: 0; font: 800 26px/1.1 var(--font-brand); color: var(--text); }
+.hb-detail-desc { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
+.hb-detail-meta { font-size: 12px; color: var(--text-muted); }
+.hb-block { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+/* One card per API, with its version picker */
+.hb-api { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-badge); background: var(--surface); }
+.hb-api-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.hb-api-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--text-muted); }
+.hb-exists { display: inline-flex; align-items: center; gap: 5px; color: var(--success); }
+.hb-exists > .icon { stroke-width: 2.6; }
+.hb-versions { margin-inline-start: auto; display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--canvas); }
+.hb-versions > button { height: 24px; padding: 0 8px; border: 0; border-radius: 3px; background: transparent; color: var(--text-muted); font: 400 12px/16px var(--font-mono); cursor: pointer; }
+.hb-versions > button:hover { color: var(--text); }
+.hb-versions > button[aria-pressed='true'] { background: var(--selected); color: var(--text); font-weight: 600; }
+
+/* Install options: two stacked card fieldsets */
+.hb-options { display: flex; flex-wrap: wrap; gap: 14px; }
+.hb-fieldset { flex: 1 1 220px; gap: 6px; }
+.hb-fieldset > legend { margin-block-end: 6px; }
+
+/* Catalogue preview: one row of badges per API */
+.hb-preview-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.hb-preview-head > h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.hb-preview-head > span { font-size: 12px; color: var(--text-muted); }
+.hb-preview { margin: 0; padding: 10px; list-style: none; display: flex; flex-direction: column; gap: 6px; border: 1px dashed var(--border-strong); border-radius: var(--radius-panel); background: var(--bg); }
+.hb-preview-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; border-radius: var(--radius-badge); background: var(--canvas); }
+.hb-preview-row[data-skipped] { opacity: 0.55; }
+.hb-tag { --tag: var(--link); flex: none; min-width: 64px; padding: 1px 5px; text-align: center; font: 600 10px/11px var(--font-mono); letter-spacing: 0.06em; color: var(--tag); border: 1px solid var(--tag); border-radius: var(--radius-control); }
+.hb-tag[data-tag='update'], .hb-tag[data-tag='merge'] { --tag: var(--warning); }
+.hb-tag[data-tag='skipped'] { --tag: var(--text-muted); }
+.hb-tag[data-tag='in-catalogue'] { --tag: var(--success); }
+
+/* What will be created */
+.hb-created { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.hb-created > li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.hb-sign { flex: none; width: 18px; font-family: var(--font-mono); font-weight: 600; color: var(--text-muted); }
+.hb-sign[data-tone='success'] { color: var(--success); }
+.hb-sign[data-tone='warning'] { color: var(--warning); }
+.hb-sign[data-tone='link'] { color: var(--link); }
+.hb-created-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.hb-created-text > span:first-child { color: var(--text); }
+.hb-created-sub { font: 400 12px/1.5 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+
+
+/* Action bar */
+.hb-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 14px; border-top: 1px solid var(--border); }
+.hb-hint { font-size: 12px; color: var(--text-muted); }
+.hb-detail-title > .tile-tag { flex: none; }

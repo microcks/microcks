@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.consumer;
+package io.microcks.minion.async.consumer;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;

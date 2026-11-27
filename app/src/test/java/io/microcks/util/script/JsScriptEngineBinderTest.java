@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.script;
+package io.microcks.util.script;
 
-import io.github.microcks.service.StateStore;
+import io.microcks.service.StateStore;
 import io.roastedroot.quickjs4j.core.Engine;
 import jakarta.servlet.http.Cookie;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
+import io.microcks.testsupport.MockServletRequest;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -125,7 +125,7 @@ class JsScriptEngineBinderTest {
             return fooHeader[0];
             """);
 
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       request.addHeader("foo", "bar");
 
       Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request);
@@ -145,7 +145,7 @@ class JsScriptEngineBinderTest {
             return "no-foo";
             """);
 
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       request.addHeader("baz", "bar");
 
       Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request);
@@ -165,7 +165,7 @@ class JsScriptEngineBinderTest {
             return "no-foo";
             """);
 
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       request.addHeader("foo", "bar");
 
       Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request);
@@ -183,7 +183,7 @@ class JsScriptEngineBinderTest {
             """);
 
       String body = "content";
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       request.setQueryString("foobar");
 
       Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, null, null, request);
@@ -201,7 +201,7 @@ class JsScriptEngineBinderTest {
             """);
 
       String body = "content";
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       request.setCookies(new Cookie("bar", "baz"));
 
       Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, null, null, request);
@@ -218,7 +218,7 @@ class JsScriptEngineBinderTest {
             return fooParam ?? "null";
             """);
 
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       Map<String, String> uriParameters = new HashMap<>();
       uriParameters.put("foo", "bar");
 
@@ -239,7 +239,7 @@ class JsScriptEngineBinderTest {
             return "params-ko";
             """);
 
-      MockHttpServletRequest request = new MockHttpServletRequest();
+      MockServletRequest request = new MockServletRequest();
       Map<String, String> uriParameters = new HashMap<>();
       uriParameters.put("foo", "bar");
       uriParameters.put("baz", "xyz");

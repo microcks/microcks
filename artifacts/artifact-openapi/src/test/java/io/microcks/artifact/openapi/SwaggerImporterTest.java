@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.artifact.openapi;
 
-import io.github.microcks.domain.*;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.microcks.domain.*;
+import io.microcks.util.DispatchStyles;
+import io.microcks.artifact.MockRepositoryImportException;
 
-import io.github.microcks.util.openapi.SwaggerImporter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +38,7 @@ class SwaggerImporterTest {
       SwaggerImporter importer = null;
       try {
          importer = new SwaggerImporter(
-               "target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml", null);
+               "target/test-classes/io/microcks/artifact/openapi/beer-catalog-api-swagger.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -52,7 +51,7 @@ class SwaggerImporterTest {
       SwaggerImporter importer = null;
       try {
          importer = new SwaggerImporter(
-               "target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json", null);
+               "target/test-classes/io/microcks/artifact/openapi/beer-catalog-api-swagger.json", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

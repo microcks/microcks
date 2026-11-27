@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util;
+package io.microcks.util;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,0 +1,31 @@
+/* Usage · daily heatmap. Heat steps are the action colour at 18 / 38 / 62 / 92 % (no text sits on them). */
+.us-heat-card > .panel-body { display: flex; flex-direction: column; gap: 12px; padding: 18px; }
+.us-heat-head { display: flex; flex-direction: column; gap: 4px; }
+.us-heat-head h2 { margin: 0; font: 600 16px/1.3 var(--font-ui); }
+.us-heat-head > span { font-size: 13px; color: var(--text-muted); }
+.us-heat {
+  display: grid; grid-template-columns: 32px repeat(var(--heat-weeks, 12), minmax(0, 1fr)); grid-template-rows: auto repeat(7, 20px);
+  gap: 3px; align-items: center;
+}
+.us-heat-month, .us-heat-weekday { font: 400 10px/1.4 var(--font-mono); color: var(--text-muted); white-space: nowrap; }
+.us-heat-month { overflow: visible; }
+.us-day, .us-heat-swatch { --heat: color-mix(in srgb, var(--action) 18%, transparent); }
+.us-day[data-level='1'], .us-heat-swatch[data-level='1'] { --heat: color-mix(in srgb, var(--action) 38%, transparent); }
+.us-day[data-level='2'], .us-heat-swatch[data-level='2'] { --heat: color-mix(in srgb, var(--action) 62%, transparent); }
+.us-day[data-level='3'], .us-heat-swatch[data-level='3'] { --heat: color-mix(in srgb, var(--action) 92%, transparent); }
+.us-day {
+  box-sizing: border-box; height: 20px; min-width: 0; padding: 0; border-radius: 3px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--action) 12%, transparent); background: var(--heat);
+}
+.us-day[aria-pressed='true'] { border: 2px solid var(--text); }
+.us-day:focus-visible { outline: 3px solid var(--action); outline-offset: 2px; }
+.us-day-future { box-sizing: border-box; height: 20px; border: 1px dashed var(--border); border-radius: 3px; }
+.us-heat-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; }
+.us-heat-sel-day { color: var(--text-muted); }
+.us-heat-sel-value { font-family: var(--font-mono); font-weight: 600; }
+.us-heat-legend { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); }
+.us-heat-swatch { box-sizing: border-box; width: 12px; height: 12px; border: 1px solid var(--border); border-radius: 2px; background: var(--heat); }
+.us-heat-swatch[data-level='none'] { background: var(--surface); }
+
+.us-heat-facts { padding-top: 10px; border-top: 1px solid var(--border); }
+.us-heat-facts > .facts-row > dd { line-height: 1.4; }

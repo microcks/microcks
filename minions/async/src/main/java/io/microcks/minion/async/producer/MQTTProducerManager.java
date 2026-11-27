@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.domain.EventMessage;
+import io.microcks.minion.async.AsyncMockDefinition;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;

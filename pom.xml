@@ -1,27 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright The Microcks Authors.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~  http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!--
+  Microcks 2.0 study reactor. Independent from the 1.x reactor (pom.xml): new groupId (io.microcks),
+  new Quarkus-based webapp and a Spring-free copy of the commons modules.
+  Build with: mvn -f pom.xml verify
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>io.github.microcks</groupId>
-  <artifactId>microcks</artifactId>
+  <groupId>io.microcks</groupId>
+  <artifactId>microcks-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.16.0-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <modules>
-    <module>commons/util</module>
     <module>commons/model</module>
     <module>commons/util-el</module>
-    <module>webapp</module>
+    <module>commons/util</module>
+    <module>artifacts/artifact-core</module>
+    <module>artifacts/artifact-jsonschema</module>
+    <module>artifacts/artifact-soap</module>
+    <module>artifacts/artifact-metadata</module>
+    <module>commons/test-core</module>
+    <module>artifacts/artifact-openapi</module>
+    <module>artifacts/artifact-asyncapi</module>
+    <module>artifacts/artifact-graphql</module>
+    <module>artifacts/artifact-grpc</module>
+    <module>artifacts/artifact-soapui</module>
+    <module>artifacts/artifact-postman</module>
+    <module>artifacts/artifact-har</module>
+    <module>artifacts/artifact-opencollection</module>
+    <module>app</module>
     <module>minions/async</module>
     <module>distro</module>
   </modules>
 
-  <name>Microcks</name>
+  <name>Microcks 2.0 (study)</name>
   <description>Microcks: easy mocks for your microservices</description>
   <url>http://microcks.github.io</url>
-  <organization>
-    <name>Microcks</name>
-    <url>http://microcks.github.io</url>
-  </organization>
 
   <licenses>
     <license>
@@ -31,74 +61,31 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <id>microcks</id>
-      <name>Microcks Development Team</name>
-      <organizationUrl>https://microcks.github.io/</organizationUrl>
-    </developer>
-  </developers>
-
-  <scm>
-    <connection>scm:git:https://github.com/microcks/microcks.git</connection>
-    <developerConnection>scm:git:https://github.com/microcks/microcks.git</developerConnection>
-    <url>http://github.com/microcks/microcks/</url>
-    <tag>HEAD</tag>
-  </scm>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>oss-sonatype-staging</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-    <repository>
-      <id>oss-sonatype-staging</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>${project.basedir}</multi-project.rootdir>
-    <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>4.1.1</spring-boot.version>
+    <java.version>25</java.version>
+    <maven.compiler.release>25</maven.compiler.release>
     <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
-    <sonar.organization>microcks</sonar.organization>
-    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <git.hooks.skip>false</git.hooks.skip>
+    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+    <quarkus.platform.version>3.40.1.2</quarkus.platform.version>
+    <commons-io.version>2.22.0</commons-io.version>
+    <hazelcast.version>5.7.0</hazelcast.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <!-- Pin Jackson 2.x. Spring Boot 4 defaults to Jackson 3, but Quarkus 3 (used by
-           the async minion) and shared commons modules still rely on Jackson 2.x APIs.
-           Keep this aligned with the jackson-annotations version expected by Jackson 3. -->
       <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>2.21.5</version>
-        <type>pom</type>
-        <scope>import</scope>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
       </dependency>
-
-      <!-- Pin Groovy 4.x. Spring Boot 4 BOM manages Groovy 5.0.5, but GraalVM's
-         polyglot Groovy substitution still targets v7.IndyInterface
-         (see oracle/graal#13096, fix in #12986 not yet released). Once a GraalVM
-         release containing the Groovy 5 substitution lands in the Paketo
-         native-image buildpack, this can be removed. -->
       <dependency>
-        <groupId>org.apache.groovy</groupId>
-        <artifactId>groovy-bom</artifactId>
-        <version>4.0.28</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>${spring-boot.version}</version>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>${quarkus.platform.artifact-id}</artifactId>
+        <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -140,156 +127,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <!-- Point Git at the versioned .githooks directory instead of copying scripts into
-         $GIT_DIR/hooks. The setting is written to the repository-local config only
-         (git config with the local scope), so it never leaks to the user's global/system Git setup nor
-         to any other project. A relative core.hooksPath is resolved from the top level of
-         the working tree, so this single repository-local setting works for the main
-         checkout and for every git worktree, where .git is a file and has no hooks
-         directory of its own.
-         Activated only when a .git entry is present (skipped for source tarballs) and
-         executed once, from the aggregator root. Disable with -Dgit.hooks.skip=true. -->
-    <profile>
-      <id>git-hooks</id>
-      <activation>
-        <file>
-          <exists>${basedir}/.git</exists>
-        </file>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <version>3.5.0</version>
-            <inherited>false</inherited>
-            <executions>
-              <execution>
-                <id>configure-git-hooks</id>
-                <phase>validate</phase>
-                <goals>
-                  <goal>exec</goal>
-                </goals>
-                <configuration>
-                  <skip>${git.hooks.skip}</skip>
-                  <executable>git</executable>
-                  <workingDirectory>${basedir}</workingDirectory>
-                  <arguments>
-                    <argument>config</argument>
-                    <argument>--local</argument>
-                    <argument>core.hooksPath</argument>
-                    <argument>.githooks</argument>
-                  </arguments>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>coverage</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${maven-surefire-plugin.version}</version>
-            <configuration>
-              <includes>
-                <include>**/*Test.java</include>
-                <include>**/*IT.java</include>
-              </includes>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.15</version>
-            <executions>
-              <execution>
-                <id>prepare-agent</id>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>report</id>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-                <configuration>
-                  <formats>
-                    <format>XML</format>
-                  </formats>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.12.0</version>
-            <executions>
-              <execution>
-                <id>attach-javadoc</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>3.4.0</version>
-            <executions>
-              <execution>
-                <id>attach-source</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.spdx</groupId>
-            <artifactId>spdx-maven-plugin</artifactId>
-            <version>1.0.3</version>
-            <executions>
-              <execution>
-                <id>build-spdx</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>createSPDX</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <spdxFile>${project.reporting.outputDirectory}/${project.artifactId}-${project.version}.spdx-sbom.json</spdxFile>
-              <spdxDocumentNamespace>http://spdx.org/spdxpackages/${project.artifactId}-${project.version}</spdxDocumentNamespace>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.jreleaser</groupId>
-            <artifactId>jreleaser-maven-plugin</artifactId>
-            <version>1.19.0</version>
-            <inherited>false</inherited>
-            <configuration>
-              <configFile>jreleaser.yml</configFile>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

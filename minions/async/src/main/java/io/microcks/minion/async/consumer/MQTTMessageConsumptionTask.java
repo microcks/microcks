@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.consumer;
+package io.microcks.minion.async.consumer;
 
-import io.github.microcks.minion.async.AsyncTestSpecification;
+import io.microcks.minion.async.AsyncTestSpecification;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.jboss.logging.Logger;
 
 import java.io.File;
@@ -161,9 +160,8 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
 
       // Create the subscriber and connect it to server using the properties.
       // Generate a unique clientId for each publication to avoid collisions (cleanSession is true).
-      // Use in-memory persistence as nothing has to survive the session (avoids file persistence issues).
       subscriber = new MqttClient(protocolPragma + endpointBrokerUrl,
-            "microcks-async-minion-test-" + System.currentTimeMillis(), new MemoryPersistence());
+            "microcks-async-minion-test-" + System.currentTimeMillis());
       subscriber.connect(connectOptions);
    }
 }

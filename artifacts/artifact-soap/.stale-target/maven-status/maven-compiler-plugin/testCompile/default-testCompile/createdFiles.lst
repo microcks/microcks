@@ -1,0 +1,5 @@
+io/microcks/soap/XmlErrorHandlerTest.class
+io/microcks/soap/XmlSchemaValidatorTest.class
+io/microcks/soap/XmlUtilTest.class
+io/microcks/soap/XmlSchemaURLResolverTest.class
+io/microcks/soap/SoapMessageValidatorTest.class

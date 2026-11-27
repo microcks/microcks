@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.util.asyncapi.AsyncAPISchemaUtil;
-import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
+import io.microcks.artifact.asyncapi.AsyncAPISchemaUtil;
+import io.microcks.artifact.asyncapi.AsyncAPISchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Assertions;

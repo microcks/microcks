@@ -13,29 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.web.mcp;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.listener.ListenerTestsConfiguration;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.service.ArtifactInfo;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.util.ai.McpSchema;
-import io.github.microcks.web.ControllerTestsConfiguration;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
+import io.microcks.util.ai.McpSchema;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.File;
 import java.util.List;
@@ -46,17 +41,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test class for GRPCMcpToolConverter.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ControllerTestsConfiguration.class,
-      ListenerTestsConfiguration.class })
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class GrpcMcpToolConverterTest {
 
-   @Autowired
+   @Inject
    private ServiceService serviceService;
 
-   @Autowired
+   @Inject
    private ResourceRepository resourceRepository;
 
    private Service servicev1;
@@ -67,8 +59,8 @@ public class GrpcMcpToolConverterTest {
    @BeforeAll
    void setUp() throws Exception {
       // Import the petstore service definition from the GRPC tutorial.
-      File artifactFilev1 = new File("target/test-classes/io/github/microcks/util/grpc/petstore-v1.proto");
-      File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/grpc/petstore-v2.proto");
+      File artifactFilev1 = new File("target/test-classes/io/microcks/artifact/grpc/petstore-v1.proto");
+      File artifactFilev2 = new File("target/test-classes/io/microcks/artifact/grpc/petstore-v2.proto");
       // Extract service and resource. + tool converters.
       List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
             new ArtifactInfo("petstore-v1.proto", true));

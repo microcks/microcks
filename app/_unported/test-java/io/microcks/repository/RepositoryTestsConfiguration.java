@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -32,8 +32,8 @@ import java.net.InetSocketAddress;
  * @author laurent
  */
 @TestConfiguration
-@ComponentScan(basePackages = { "io.github.microcks.security", "io.github.microcks.service" })
-@EnableMongoRepositories(basePackages = { "io.github.microcks.repository" })
+@ComponentScan(basePackages = { "io.microcks.security", "io.microcks.service" })
+@EnableMongoRepositories(basePackages = { "io.microcks.repository" })
 public class RepositoryTestsConfiguration extends AbstractMongoClientConfiguration {
 
    private MongoClient client;

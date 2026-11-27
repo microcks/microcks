@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 
@@ -33,12 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Test case for ResourceRepository implementation.
  * @author laurent
  */
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class ResourceRepositoryTest {
 
-   @Autowired
+   @Inject
    ResourceRepository repository;
 
 
@@ -50,7 +46,7 @@ class ResourceRepositoryTest {
       resource.setServiceId("6626365f24874269b65c69db");
       resource.setPath("github-oidc-1.1.4-openapi.yaml");
       resource.setMainArtifact(true);
-      repository.save(resource);
+      repository.persist(resource);
 
       resource = new Resource();
       resource.setName("GitHub OIDC-1.1.4.yaml");
@@ -58,7 +54,7 @@ class ResourceRepositoryTest {
       resource.setServiceId("6626365f24874269b65c69db");
       resource.setPath("github-oidc-1.1.4-openapi-metadata.yaml");
       resource.setMainArtifact(false);
-      repository.save(resource);
+      repository.persist(resource);
    }
 
    @Test

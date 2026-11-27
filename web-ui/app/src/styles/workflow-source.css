@@ -1,0 +1,55 @@
+/* Source tab of the Workflow page: outline nav and the YAML with line numbers, syntax colours and folding. */
+
+.wf-source-tab { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; min-width: 0; }
+.wf-src-outline {
+  flex: 1 1 220px; max-width: 280px; min-width: 0; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 4px; padding: 12px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--canvas);
+}
+.wf-src-outline h2 { margin: 0 0 2px; padding: 0 6px; font: 600 13px/1.4 var(--font-ui); }
+.wf-outline-file { padding: 0 6px 6px; font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.wf-outline-item {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 6px;
+  border: none; border-radius: 4px; background: transparent; color: var(--text-secondary);
+  font: 400 12px/16px var(--font-mono); text-align: left; cursor: pointer;
+}
+.wf-outline-item[data-nested] { padding-left: 16px; }
+.wf-outline-item:hover { background: var(--raised); }
+.wf-outline-item[aria-pressed='true'] { background: var(--selected); color: var(--text); font-weight: 600; }
+.wf-outline-label { min-width: 0; overflow-wrap: anywhere; }
+.wf-outline-range { flex: none; font-size: 11px; font-weight: 400; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.wf-outline-fold { margin-top: 8px; padding: 8px 6px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); }
+
+.wf-src {
+  flex: 999 1 560px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--canvas); overflow: hidden;
+}
+.wf-src-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.wf-src-caption { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.wf-src-where { font: 400 12px/1.4 var(--font-mono); color: var(--text-secondary); }
+.wf-src-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.wf-src-band { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--surface); font: 400 13px/1.4 var(--font-ui); }
+.wf-src-band-line { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.wf-src-valid, .wf-src-invalid { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.wf-src-valid { color: var(--success); }
+.wf-src-invalid { color: var(--danger); }
+.wf-src-muted { color: var(--text-muted); }
+.wf-src-refs { font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.wf-src-issues { margin: 0; padding-inline-start: 1.25em; }
+
+.wf-src-code { overflow-x: auto; padding: 8px 0; background: var(--bg); }
+.wf-src-code:focus-visible { outline: 2px solid var(--action); outline-offset: -2px; }
+.wf-src-lines { min-width: max-content; font: 400 12px/20px var(--font-mono); font-variant-numeric: tabular-nums; }
+.wf-yaml-row { display: flex; align-items: center; }
+.wf-yaml-row[data-selected] { background: var(--selected); }
+.wf-src-n { flex: none; width: 44px; padding-right: 14px; box-sizing: border-box; text-align: right; color: var(--text-muted); user-select: none; }
+.wf-yaml-row[data-selected] .wf-src-n { color: var(--link); }
+.wf-src-text { white-space: pre; padding-right: 16px; color: var(--text); }
+.wf-src-fold { width: 100%; min-height: 24px; padding: 0; border: none; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.wf-src-fold:hover { background: var(--raised); }
+.wf-src-fold .wf-src-text { padding-right: 0; }
+.wf-src-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; padding: 0 6px; border-radius: 4px; background: var(--raised); color: var(--text-secondary); font-size: 11px; line-height: 18px; }
+.wf-src-text .y-key, .wf-src-text .y-lit { color: var(--text-secondary); }
+.wf-src-text .y-mark { color: var(--text-muted); }
+.wf-src-text .y-expr { color: var(--link); font-weight: 600; }
+.wf-src-text .y-comment { color: var(--text-muted); font-style: italic; }

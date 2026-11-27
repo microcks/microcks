@@ -13,21 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.service.SpanStorageService;
-import io.github.microcks.util.SafeLogger;
+import io.microcks.service.SpanStorageService;
+import io.microcks.util.SafeLogger;
 
 import io.opentelemetry.sdk.trace.data.SpanData;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.smallrye.mutiny.Multi;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.sse.OutboundSseEvent;
+import jakarta.ws.rs.sse.Sse;
 
 import java.util.List;
 import java.util.Set;
@@ -37,8 +44,8 @@ import java.util.Set;
  * retrieve traces, spans
  * @author Apoorva Srinivas Appadoo
  */
-@RestController
-@RequestMapping("/api/traces")
+@Path("/api/traces")
+@Produces(MediaType.APPLICATION_JSON)
 public class TracingController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -52,6 +59,7 @@ public class TracingController {
     * @param spanStorageService       the span storage service
     * @param traceSubscriptionManager the trace subscription manager
     */
+   @Inject
    public TracingController(SpanStorageService spanStorageService, TraceSubscriptionManager traceSubscriptionManager) {
       this.spanStorageService = spanStorageService;
       this.traceSubscriptionManager = traceSubscriptionManager;
@@ -61,9 +69,10 @@ public class TracingController {
     * Get all trace IDs currently stored.
     * @return Set of trace IDs
     */
-   @GetMapping
-   public ResponseEntity<Set<String>> getAllTraceIds() {
-      return ResponseEntity.ok(spanStorageService.getAllTraceIds());
+   @GET
+   @RunOnVirtualThread
+   public Set<String> getAllTraceIds() {
+      return spanStorageService.getAllTraceIds();
    }
 
    /**
@@ -71,42 +80,49 @@ public class TracingController {
     * @param traceId The trace ID to look up
     * @return List of spans for the trace
     */
-   @GetMapping("/{traceId}/spans")
-   public ResponseEntity<List<SpanData>> getSpansForTrace(@PathVariable("traceId") String traceId) {
+   @GET
+   @Path("/{traceId}/spans")
+   @RunOnVirtualThread
+   public Response getSpansForTrace(@PathParam("traceId") String traceId) {
       List<SpanData> spans = spanStorageService.getSpansForTrace(traceId);
       if (spans.isEmpty()) {
-         return ResponseEntity.notFound().build();
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
-      return ResponseEntity.ok(spans);
+      return Response.ok(spans).build();
    }
 
-   @GetMapping("/operations")
-   public ResponseEntity<List<List<SpanData>>> getTracesForOperation(@RequestParam("serviceName") String serviceName,
-         @RequestParam("operationName") String operationName,
-         @RequestParam(value = "clientAddress", defaultValue = ".*") String clientAddress) {
+   @GET
+   @Path("/operations")
+   @RunOnVirtualThread
+   public Response getTracesForOperation(@QueryParam("serviceName") String serviceName,
+         @QueryParam("operationName") String operationName,
+         @QueryParam("clientAddress") @DefaultValue(".*") String clientAddress) {
       List<String> traceIds = spanStorageService.queryTraceIdsByPatterns(serviceName, operationName, clientAddress);
       if (traceIds.isEmpty()) {
-         return ResponseEntity.notFound().build();
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
 
       List<List<SpanData>> spansByTraceId = traceIds.stream().map(spanStorageService::getSpansForTrace).toList();
 
-      return ResponseEntity.ok(spansByTraceId);
+      return Response.ok(spansByTraceId).build();
    }
 
    /**
     * Clear all stored traces and spans.
     * @return Success message
     */
-   @DeleteMapping
-   public ResponseEntity<String> clearAllTraces() {
+   @DELETE
+   @RunOnVirtualThread
+   public Response clearAllTraces() {
       spanStorageService.clearAll();
-      return ResponseEntity.ok("All traces and spans have been cleared");
+      return Response.ok("All traces and spans have been cleared").type(MediaType.TEXT_PLAIN).build();
    }
 
-   @GetMapping(value = "/operations/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-   public SseEmitter streamTraces(@RequestParam("serviceName") String serviceName,
-         @RequestParam("operationName") String operationName, @RequestParam("clientAddress") String clientAddress) {
-      return traceSubscriptionManager.subscribe(serviceName, operationName, clientAddress);
+   @GET
+   @Path("/operations/stream")
+   @Produces(MediaType.SERVER_SENT_EVENTS)
+   public Multi<OutboundSseEvent> streamTraces(@Context Sse sse, @QueryParam("serviceName") String serviceName,
+         @QueryParam("operationName") String operationName, @QueryParam("clientAddress") String clientAddress) {
+      return traceSubscriptionManager.subscribe(sse, serviceName, operationName, clientAddress);
    }
 }

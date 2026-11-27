@@ -1,0 +1,3 @@
+io/microcks/graphql/GraphQLSchemaValidatorTest.class
+io/microcks/graphql/JsonSchemaBuilderQueryVisitorTest.class
+io/microcks/graphql/GraphQLImporterTest.class

@@ -1,0 +1,303 @@
+/*
+ * Demo-specific layout glue (prefix `demo-`). Components and the design system live in
+ * `@microcks/deep-ink/styles.css` (plain class names, no prefix); this file only covers what the demo shell adds around them.
+ * Colors come from the tokens; no alpha or color-mix behind text.
+ */
+
+.demo-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-brand);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: inherit;
+}
+
+.demo-brand img {
+  width: 30px;
+  height: 26px;
+  object-fit: contain;
+}
+
+/* Content text is 13-14px with a normal line height in the prototype; the shell's 15px body size stays for the chrome. */
+.main {
+  font-size: 14px;
+  line-height: normal;
+}
+/* Catalogue, Workflows and Import use 28px above and below the content (others: 24px 32px 40px). */
+.main:has(> [data-main-pad='roomy']) {
+  padding-block: 28px;
+}
+
+/* Top bar search: a field-looking button that opens the command bar. */
+.demo-search {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: 400 14px/20px var(--font-ui);
+  text-align: start;
+  cursor: pointer;
+}
+.demo-search:hover {
+  border-color: var(--border-strong);
+}
+.demo-search-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.demo-search kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 400 12px/16px var(--font-mono);
+}
+
+.demo-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  font: 600 13px/1 var(--font-ui);
+  border: 1px solid var(--border);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+.demo-avatar:hover {
+  border-color: var(--accent, currentColor);
+}
+.demo-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.demo-user {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.demo-user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 220px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface, var(--raised));
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+}
+.demo-user-menu-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font: 400 12px/1.4 var(--font-ui);
+  color: var(--text-muted);
+}
+.demo-user-menu-id strong {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+}
+.demo-user-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: 400 13px/1.4 var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+.demo-user-menu-item:hover,
+.demo-user-menu-item:focus-visible {
+  background: var(--raised);
+}
+
+/* Page header: breadcrumb row, then title row (title + meta + badge, description) and the actions. */
+.demo-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.demo-page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.demo-page-header[data-align='start'] .demo-page-header-row {
+  align-items: flex-start;
+}
+
+.demo-page-header-text {
+  display: flex;
+  flex: 1 1 320px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.demo-page-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.demo-page-title {
+  margin: 0;
+  font: 800 32px/1 var(--font-brand);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.demo-page-title[data-size='sm'] {
+  font-size: 30px;
+}
+.demo-page-title[data-size='lg'] {
+  font-size: 34px;
+  line-height: 1.05;
+}
+.demo-page-title[data-variant='plain'] {
+  font: 600 28px/1.2 var(--font-ui);
+}
+.demo-page-title[data-variant='subtitle'] {
+  font: 700 26px/1 var(--font-brand);
+  color: var(--text-secondary);
+}
+/* Badge title (Service, Agent, Workflow): the h1 is the api-badge, the row centres the chips beside it. */
+.demo-page-title[data-variant='badge'] {
+  display: inline-flex;
+  font: inherit;
+}
+.demo-page-header[data-variant='badge'] .demo-page-title-row {
+  align-items: center;
+}
+.demo-page-header[data-variant='badge'] .demo-page-header-text {
+  flex-basis: 420px;
+  gap: 10px;
+}
+.demo-page-header[data-variant='badge'] .demo-page-description {
+  max-width: 760px;
+  font-size: 15px;
+}
+.demo-page-title[data-variant='mono'] {
+  font: 600 24px/1.2 var(--font-mono);
+}
+/* A leading node (Tests badge, Behavior method tag): centred with the title, 12px apart. */
+.demo-page-title-row[data-leading] {
+  align-items: center;
+  gap: 12px;
+}
+
+.demo-page-meta {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: 400 13px/18px var(--font-mono);
+}
+/* Inside the meta text, a link is underlined so it is not told apart by colour alone (RGAA 10.6). */
+/*
+ * Link inside the meta pill: no underline (prototype), but semibold, so it is not told apart from the
+ * pill text by colour alone (RGAA 10.6; axe link-in-text-block accepts a weight difference).
+ */
+.demo-page-meta a {
+  color: var(--link);
+  font-weight: 600;
+  text-decoration: none;
+}
+.demo-page-meta a:hover {
+  text-decoration: underline;
+}
+
+.demo-page-description {
+  max-width: 720px;
+  margin: 0;
+  color: var(--text-muted);
+  font: 400 14px/1.5 var(--font-ui);
+}
+.demo-page-description[data-tone='secondary'] {
+  color: var(--text-secondary);
+}
+/* Plain title (Import): breadcrumb 6px above the title, 15px description up to 680px. */
+.demo-page-header:has(.demo-page-title[data-variant='plain']) {
+  gap: 6px;
+}
+.demo-page-header:has(.demo-page-title[data-variant='plain']) .demo-page-description {
+  max-width: 680px;
+  font-size: 15px;
+}
+
+.demo-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.demo-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font: 400 13px/18px var(--font-ui);
+}
+.demo-breadcrumb li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.demo-breadcrumb-sep {
+  display: inline-flex;
+}
+.demo-breadcrumb a {
+  color: var(--link);
+  text-decoration: none;
+}
+.demo-breadcrumb a:hover {
+  text-decoration: underline;
+}
+.demo-breadcrumb [aria-current='page'] {
+  color: var(--text-secondary);
+}
+
+.demo-map {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

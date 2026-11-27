@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestStepResult;
-import io.github.microcks.service.TestRunnerService;
+import io.quarkus.test.junit.QuarkusTest;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.TestStepResult;
+import io.microcks.service.TestRunnerService;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import jakarta.inject.Inject;
+import io.microcks.testsupport.http.HttpEntity;
+import io.microcks.testsupport.http.HttpHeaders;
+import io.microcks.testsupport.http.MediaType;
+import io.microcks.testsupport.http.ResponseEntity;
+import io.quarkus.test.junit.mockito.InjectSpy;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -48,6 +48,7 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
  * @author laurent
  */
 @Testcontainers
+@QuarkusTest
 class TestControllerIT extends AbstractBaseIT {
 
    private static Network network = Network.newNetwork();
@@ -70,22 +71,22 @@ class TestControllerIT extends AbstractBaseIT {
    public static GenericContainer<?> goodPastryImpl = new GenericContainer("quay.io/microcks/contract-testing-demo:03")
          .withNetwork(network).withNetworkAliases("good-pastry-impl").withExposedPorts(3003);
 
-   @DynamicPropertySource
-   static void postmanRunnerEndpoint(DynamicPropertyRegistry registry) {
-      registry.add("postman-runner.url", () -> String.format("http://localhost:%d", postmanRunner.getMappedPort(3000)));
+   @BeforeEach
+   void postmanRunnerEndpoint() {
+      testRunnerService.setPostmanRunnerUrl(String.format("http://localhost:%d", postmanRunner.getMappedPort(3000)));
    }
 
 
-   @Autowired
+   @Inject
    private TestRunnerService testRunnerService;
 
-   @MockitoSpyBean
+   @InjectSpy
    private TestController testController;
 
    @Test
    void testOpenAPITesting() {
       // Upload PetStore reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/web/pastry-for-test-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/web/pastry-for-test-openapi.yaml", true);
 
       String testEndpoint = String.format("http://localhost:%d", pastryImpl.getMappedPort(8282));
 
@@ -128,9 +129,8 @@ class TestControllerIT extends AbstractBaseIT {
    @Test
    void testPostmanTesting() {
       // Upload API Pastry Contract Testing demo reference artifacts.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/postman/apipastries-openapi.yaml", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/postman/apipastries-postman-collection.json",
-            false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/postman/apipastries-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/postman/apipastries-postman-collection.json", false);
 
       org.testcontainers.Testcontainers.exposeHostPorts(getServerPort());
       String testEndpoint = "http://good-pastry-impl:3003";
@@ -174,7 +174,7 @@ class TestControllerIT extends AbstractBaseIT {
    @Test
    void testSoapUITesting() {
       // Upload Hello Service SoapUI project.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/soapui/HelloService-soapui-project.xml", true);
 
       String testEndpoint = getServerUrl() + "/soap/HelloService+Mock/0.9";
 
@@ -233,9 +233,9 @@ class TestControllerIT extends AbstractBaseIT {
    @Test
    void testGRPCTesting() {
       // Upload GRPC reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
+      uploadArtifactFile("target/test-classes/io/microcks/web/remote-grpc/hello-v1.proto", true);
+      uploadArtifactFile("target/test-classes/io/microcks/web/remote-grpc/HelloService.postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/web/remote-grpc/HelloService.metadata.yml", false);
 
       String testEndpoint = String.format("http://localhost:%d", helloWorldImpl.getMappedPort(9000));
 
@@ -266,7 +266,9 @@ class TestControllerIT extends AbstractBaseIT {
       testResult = response.getBody();
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
-      assertTrue(testResult.isSuccess());
+      TestResult finalResult = testResult;
+      assertTrue(testResult.isSuccess(), () -> "GRPC test failed: " + finalResult.getTestCaseResults().stream()
+            .flatMap(tc -> tc.getTestStepResults().stream()).map(TestStepResult::getMessage).toList());
 
       // Now try accessing messages for basic operation.
       String testCaseId = testResult.getId() + "-" + testResult.getTestNumber() + "-greeting";
@@ -281,9 +283,9 @@ class TestControllerIT extends AbstractBaseIT {
    @Test
    void testGRPCTestingFailing() {
       // Upload GRPC reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
+      uploadArtifactFile("target/test-classes/io/microcks/web/remote-grpc/hello-v1.proto", true);
+      uploadArtifactFile("target/test-classes/io/microcks/web/remote-grpc/HelloService.postman.json", false);
+      uploadArtifactFile("target/test-classes/io/microcks/web/remote-grpc/HelloService.metadata.yml", false);
 
       String testEndpoint = "http://localhost:50051"; // unreachable address, will lead to UNAVAILABLE
 

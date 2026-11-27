@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.*;
-import io.github.microcks.repository.GenericResourceRepository;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.EntityAlreadyExistsException;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.MockRepositoryImportException;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.*;
+import io.microcks.repository.GenericResourceRepository;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.EntityAlreadyExistsException;
+import io.microcks.util.IdBuilder;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.File;
 import java.util.List;
@@ -43,27 +40,25 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for ServiceService class.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class ServiceServiceTest {
 
-   @Autowired
+   @Inject
    private ServiceService service;
 
-   @Autowired
+   @Inject
    private ServiceRepository repository;
 
-   @Autowired
+   @Inject
    private ResourceRepository resourceRepository;
 
-   @Autowired
+   @Inject
    private GenericResourceRepository genericResourceRepository;
 
-   @Autowired
+   @Inject
    private RequestRepository requestRepository;
 
-   @Autowired
+   @Inject
    private ResponseRepository responseRepository;
 
 
@@ -71,7 +66,7 @@ class ServiceServiceTest {
    void testImportServiceDefinition() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-openapi.yaml");
+         File artifactFile = new File("target/test-classes/io/microcks/service/weather-forecast-openapi.yaml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
@@ -294,8 +289,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainAndSecondary() {
       List<Service> services = null;
       try {
-         File artifactFile = new File(
-               "target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
+         File artifactFile = new File("target/test-classes/io/microcks/service/weather-forecast-raw-openapi.yaml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
@@ -333,7 +327,7 @@ class ServiceServiceTest {
       assertEquals(0, responses.size());
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-postman.json");
+         File artifactFile = new File("target/test-classes/io/microcks/service/weather-forecast-postman.json");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-postman.json", false));
       } catch (MockRepositoryImportException mrie) {
@@ -390,8 +384,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainAndSecondarySoapUI() {
       List<Service> services = null;
       try {
-         File artifactFile = new File(
-               "target/test-classes/io/github/microcks/service/custom-service-primary-openapi.json");
+         File artifactFile = new File("target/test-classes/io/microcks/service/custom-service-primary-openapi.json");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("custom-service-primary-openapi.json", true));
       } catch (MockRepositoryImportException mrie) {
@@ -429,8 +422,7 @@ class ServiceServiceTest {
       assertEquals(0, responses.size());
 
       try {
-         File artifactFile = new File(
-               "target/test-classes/io/github/microcks/service/custom-service-secondary-soapui.xml");
+         File artifactFile = new File("target/test-classes/io/microcks/service/custom-service-secondary-soapui.xml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("custom-service-secondary-soapui.xml", false));
       } catch (MockRepositoryImportException mrie) {
@@ -489,7 +481,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainGraphQLAndSecondaryPostman() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/graphql/films.graphql");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films.graphql", true));
       } catch (MockRepositoryImportException mrie) {
          mrie.printStackTrace();
@@ -518,7 +510,7 @@ class ServiceServiceTest {
       assertEquals(0, responses.size());
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films-postman.json");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/graphql/films-postman.json");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films-postman.json", false));
       } catch (MockRepositoryImportException mrie) {
          mrie.printStackTrace();
@@ -554,7 +546,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainGraphQLAndSecondaryExamples() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/graphql/films.graphql");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films.graphql", true));
       } catch (MockRepositoryImportException mrie) {
          fail("No MockRepositoryImportException should have be thrown");
@@ -582,7 +574,7 @@ class ServiceServiceTest {
       assertEquals(0, responses.size());
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films-1.0-examples.yml");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/graphql/films-1.0-examples.yml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("films-1.0-examples.yml", false));
       } catch (MockRepositoryImportException mrie) {
@@ -634,7 +626,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainGrpcAndSecondaryPostman() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/grpc/hello-v1.proto");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("hello-v1.proto", true));
       } catch (MockRepositoryImportException mrie) {
          mrie.printStackTrace();
@@ -646,7 +638,7 @@ class ServiceServiceTest {
 
       // Inspect Service own attributes.
       Service importedSvc = services.get(0);
-      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("io.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
       assertEquals("v1", importedSvc.getVersion());
       assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
       assertNotNull(importedSvc.getMetadata());
@@ -667,7 +659,7 @@ class ServiceServiceTest {
       assertEquals(0, responses.size());
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/grpc/HelloService.postman.json");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("HelloService.postman.json", false));
       } catch (MockRepositoryImportException mrie) {
@@ -677,7 +669,7 @@ class ServiceServiceTest {
 
       // Inspect Service own attributes.
       importedSvc = services.get(0);
-      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("io.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
       assertEquals("v1", importedSvc.getVersion());
       assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
       assertNotNull(importedSvc.getMetadata());
@@ -711,7 +703,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainGrpcAndSecondaryExamples() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/grpc/hello-v1.proto");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("hello-v1.proto", true));
       } catch (MockRepositoryImportException mrie) {
          fail("No MockRepositoryImportException should have be thrown");
@@ -722,7 +714,7 @@ class ServiceServiceTest {
 
       // Inspect Service own attributes.
       Service importedSvc = services.get(0);
-      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("io.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
       assertEquals("v1", importedSvc.getVersion());
       assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
       assertNotNull(importedSvc.getMetadata());
@@ -743,7 +735,7 @@ class ServiceServiceTest {
       assertEquals(0, responses.size());
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1-examples.yml");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/grpc/hello-v1-examples.yml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("hello-v1-examples.yml", false));
       } catch (MockRepositoryImportException mrie) {
@@ -752,7 +744,7 @@ class ServiceServiceTest {
 
       // Inspect Service own attributes.
       importedSvc = services.get(0);
-      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("io.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
       assertEquals("v1", importedSvc.getVersion());
       assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
       assertNotNull(importedSvc.getMetadata());
@@ -786,8 +778,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainAndSecondariesWithAPIMetadata() {
       List<Service> services = null;
       try {
-         File artifactFile = new File(
-               "target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
+         File artifactFile = new File("target/test-classes/io/microcks/service/weather-forecast-raw-openapi.yaml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
@@ -796,7 +787,7 @@ class ServiceServiceTest {
       }
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-postman.json");
+         File artifactFile = new File("target/test-classes/io/microcks/service/weather-forecast-postman.json");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-postman.json", false));
       } catch (MockRepositoryImportException mrie) {
@@ -805,7 +796,7 @@ class ServiceServiceTest {
       }
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-metadata.yaml");
+         File artifactFile = new File("target/test-classes/io/microcks/service/weather-forecast-metadata.yaml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-metadata.yaml", false));
       } catch (MockRepositoryImportException mrie) {
@@ -836,7 +827,7 @@ class ServiceServiceTest {
    void testImportServiceDefinitionMainGraphQLAndSecondaryHAR() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/graphql/films.graphql");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films.graphql", true));
       } catch (MockRepositoryImportException mrie) {
          fail("No MockRepositoryImportException should have be thrown");
@@ -868,7 +859,7 @@ class ServiceServiceTest {
       assertEquals(0, responses.size());
 
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/util/har/movie-graph-api-1.0.har");
+         File artifactFile = new File("target/test-classes/io/microcks/artifact/har/movie-graph-api-1.0.har");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("movie-graph-api-1.0.har", false));
       } catch (MockRepositoryImportException mrie) {
@@ -911,7 +902,7 @@ class ServiceServiceTest {
       assertNotNull(created.getId());
 
       // Retrieve object by id and assert on what has been persisted.
-      Service retrieved = repository.findById(created.getId()).orElse(null);
+      Service retrieved = repository.findById(created.getId());
       assertEquals("Order Service", retrieved.getName());
       assertEquals("1.0", retrieved.getVersion());
       assertEquals(ServiceType.GENERIC_REST, retrieved.getType());
@@ -991,7 +982,7 @@ class ServiceServiceTest {
       assertNotNull(created.getId());
 
       // Retrieve object by id and assert on what has been persisted.
-      Service retrieved = repository.findById(created.getId()).orElse(null);
+      Service retrieved = repository.findById(created.getId());
       assertEquals("Order Service", retrieved.getName());
       assertEquals("2.0", retrieved.getVersion());
       assertEquals(ServiceType.GENERIC_EVENT, retrieved.getType());

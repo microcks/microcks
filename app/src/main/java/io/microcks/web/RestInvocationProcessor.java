@@ -13,43 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.ParameterLocation;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.event.AsyncAPITriggerEvent;
-import io.github.microcks.event.CallbackTriggerEvent;
-import io.github.microcks.event.HttpServletRequestSnapshot;
-import io.github.microcks.event.RequestSnapshot;
-import io.github.microcks.event.ResponseSnapshot;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceStateRepository;
-import io.github.microcks.service.ProxyService;
-import io.github.microcks.service.ServiceStateStore;
-import io.github.microcks.util.AbsoluteUrlMatcher;
-import io.github.microcks.util.DataUriUtil;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.UTF8ContentTypeChecker;
-import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
-import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
-import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.script.JsScriptEngineBinder;
-import io.github.microcks.util.script.ScriptEngineBinder;
-import io.github.microcks.util.tracing.CommonAttributes;
-import io.github.microcks.util.tracing.CommonEvents;
-import io.github.microcks.service.OpenTelemetryResolverService;
-import io.github.microcks.util.tracing.TraceUtil;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.ParameterLocation;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.event.AsyncAPITriggerEvent;
+import io.microcks.event.CallbackTriggerEvent;
+import io.microcks.event.HttpServletRequestSnapshot;
+import io.microcks.event.MockInvocationEvent;
+import io.microcks.event.RequestSnapshot;
+import io.microcks.event.ResponseSnapshot;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceStateRepository;
+import io.microcks.service.ProxyService;
+import io.microcks.service.ServiceStateStore;
+import io.microcks.util.AbsoluteUrlMatcher;
+import io.microcks.util.DataUriUtil;
+import io.microcks.util.DispatchCriteriaHelper;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.IdBuilder;
+import io.microcks.util.SafeLogger;
+import io.microcks.util.UTF8ContentTypeChecker;
+import io.microcks.util.delay.DelaySpec;
+import io.microcks.util.dispatcher.FallbackSpecification;
+import io.microcks.util.dispatcher.JsonEvaluationSpecification;
+import io.microcks.util.dispatcher.JsonExpressionEvaluator;
+import io.microcks.util.dispatcher.JsonMappingException;
+import io.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.microcks.util.el.EvaluableRequest;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.util.http.HttpMethod;
+import io.microcks.util.http.HttpStatusCode;
+import io.microcks.util.script.JsScriptEngineBinder;
+import io.microcks.util.script.ScriptEngineBinder;
+import io.microcks.util.tracing.CommonAttributes;
+import io.microcks.util.tracing.CommonEvents;
+import io.microcks.service.OpenTelemetryResolverService;
+import io.microcks.util.tracing.TraceUtil;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -59,22 +63,18 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.roastedroot.quickjs4j.core.Engine;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,50 +84,60 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
+import static io.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A processor for handling REST invocations. It is responsible for applying the dispatching logic and finding the most
  * appropriate response based on the request context.
  * @author laurent
  */
-@Component
+@ApplicationScoped
 public class RestInvocationProcessor {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
    private static final SafeLogger log = SafeLogger.getLogger(RestInvocationProcessor.class);
 
+   private static final HttpStatusCode BAD_REQUEST = new HttpStatusCode(400);
+
    private final ServiceStateRepository serviceStateRepository;
    private final ResponseRepository responseRepository;
-   private final ApplicationContext applicationContext;
+   private final Event<MockInvocationEvent> mockInvocationEvents;
+   private final Event<CallbackTriggerEvent> callbackTriggerEvents;
+   private final Event<AsyncAPITriggerEvent> asyncTriggerEvents;
    private final ProxyService proxyService;
 
    private final ScriptEngine scriptEngine;
    private final OpenTelemetryResolverService opentelemetryResolverService;
 
-   @Value("${mocks.enable-invocation-stats}")
-   private Boolean enableInvocationStats;
+   @ConfigProperty(name = "mocks.enable-invocation-stats", defaultValue = "true")
+   boolean enableInvocationStats;
 
-   @Value("${mocks.enable-binary-response-decode:false}")
-   private boolean enableBinaryResponseDecode;
+   @ConfigProperty(name = "mocks.enable-binary-response-decode", defaultValue = "false")
+   boolean enableBinaryResponseDecode;
 
-   @Value("${mocks.service-state-store.default-ttl:10}")
-   private int defaultTtl;
+   @ConfigProperty(name = "mocks.service-state-store.default-ttl", defaultValue = "10")
+   int defaultTtl;
 
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
     * @param serviceStateRepository       The repository to access service state
     * @param responseRepository           The repository to access responses definitions
-    * @param applicationContext           The Spring application context
+    * @param mockInvocationEvents         The publisher of mock invocation events
+    * @param callbackTriggerEvents        The publisher of callback trigger events
+    * @param asyncTriggerEvents           The publisher of AsyncAPI trigger events
     * @param proxyService                 The proxy to external URLs or services
     * @param opentelemetryResolverService The opentelemetry resolver
     */
+   @Inject
    public RestInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
-         ApplicationContext applicationContext, ProxyService proxyService,
+         Event<MockInvocationEvent> mockInvocationEvents, Event<CallbackTriggerEvent> callbackTriggerEvents,
+         Event<AsyncAPITriggerEvent> asyncTriggerEvents, ProxyService proxyService,
          OpenTelemetryResolverService opentelemetryResolverService) {
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
-      this.applicationContext = applicationContext;
+      this.mockInvocationEvents = mockInvocationEvents;
+      this.callbackTriggerEvents = callbackTriggerEvents;
+      this.asyncTriggerEvents = asyncTriggerEvents;
       this.proxyService = proxyService;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
       this.opentelemetryResolverService = opentelemetryResolverService;
@@ -165,8 +175,7 @@ public class RestInvocationProcessor {
                   .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules != null ? dispatcherRules : "none").build());
 
       DispatchContext dispatchContext = computeDispatchCriteria(ic.service(), dispatcher, dispatcherRules,
-            getURIPattern(ic.operation().getName()), UriUtils.decode(ic.resourcePath(), StandardCharsets.UTF_8),
-            request, body);
+            getURIPattern(ic.operation().getName()), decodePath(ic.resourcePath()), request, body);
       log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
       List<Response> responses;
@@ -208,14 +217,9 @@ public class RestInvocationProcessor {
          // Delay response here as the returning content will be returned directly.
          MockControllerCommons.waitForDelay(startTime, delay);
 
-         // Translate generic headers into Spring ones.
-         HttpHeaders httpHeaders = new HttpHeaders();
-         httpHeaders.putAll(headers);
-
          // If we've got a proxyUrl, that's the moment!
-         ResponseEntity<byte[]> proxyResponse = proxyService.callExternal(proxyUrl.get(),
-               HttpMethod.valueOf(ic.operation().getMethod()), httpHeaders, body);
-         return new ResponseResult(proxyResponse.getStatusCode(), proxyResponse.getHeaders(), proxyResponse.getBody());
+         return proxyService.callExternal(proxyUrl.get(), HttpMethod.valueOf(ic.operation().getMethod()), headers,
+               body);
       }
 
       if (response == null) {
@@ -231,14 +235,14 @@ public class RestInvocationProcessor {
                         .put(CommonAttributes.DISPATCH_CRITERIA, dispatchContext.dispatchCriteria())
                         .put(CommonAttributes.ERROR_STATUS, 400).build());
             span.setStatus(StatusCode.ERROR, "No matching response found for dispatch criteria");
-            return new ResponseResult(HttpStatus.BAD_REQUEST, null,
+            return new ResponseResult(BAD_REQUEST, null,
                   String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()).getBytes());
          }
       }
 
       if (response != null) {
-         HttpStatus status = (response.getStatus() != null ? HttpStatus.valueOf(Integer.parseInt(response.getStatus()))
-               : HttpStatus.OK);
+         HttpStatusCode status = new HttpStatusCode(
+               response.getStatus() != null ? Integer.parseInt(response.getStatus()) : 200);
 
          span.addEvent(CommonEvents.RESPONSE_SELECTED.getEventName(),
                TraceUtil.explainSpanEventBuilder("Selected response to return")
@@ -264,7 +268,12 @@ public class RestInvocationProcessor {
       span.addEvent(CommonEvents.NO_RESPONSE_AVAILABLE.getEventName(), TraceUtil
             .explainSpanEventBuilder("No response could be found or generated").put("error.status", 400).build());
       span.setStatus(StatusCode.ERROR, "No response could be found or generated");
-      return new ResponseResult(HttpStatus.BAD_REQUEST, null, null);
+      return new ResponseResult(BAD_REQUEST, null, null);
+   }
+
+   /** Percent-decode a path without interpreting '+' as a space. */
+   private static String decodePath(String path) {
+      return URLDecoder.decode(path.replace("+", "%2B"), StandardCharsets.UTF_8);
    }
 
    /** Get the root dispatcher for the invocation context. */
@@ -484,7 +493,7 @@ public class RestInvocationProcessor {
          DispatchContext dispatchContext, Response response) {
       HttpHeaders responseHeaders = new HttpHeaders();
       if (response.getMediaType() != null) {
-         responseHeaders.setContentType(MediaType.valueOf(response.getMediaType() + ";charset=UTF-8"));
+         responseHeaders.setContentType(response.getMediaType() + ";charset=UTF-8");
       }
 
       // Deal with headers from parameter constraints if any?
@@ -549,7 +558,7 @@ public class RestInvocationProcessor {
 
       byte[] responseContent;
 
-      // Decide if we should treat content as UTF-8 (text) either because feature is disabled or media type is utf-8 encodable.
+      // Decide if content is UTF-8 text: feature disabled or media type is utf-8 encodable.
       boolean treatAsUtf8 = !enableBinaryResponseDecode
             || UTF8ContentTypeChecker.isUTF8Encodable(response.getMediaType());
 
@@ -596,8 +605,8 @@ public class RestInvocationProcessor {
       MockControllerCommons.waitForDelay(startTime, delay);
 
       // Publish an invocation event before returning if enabled.
-      if (Boolean.TRUE.equals(enableInvocationStats)) {
-         MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
+      if (enableInvocationStats) {
+         MockControllerCommons.publishMockInvocation(mockInvocationEvents, ic.service(), response, startTime);
       }
    }
 
@@ -607,9 +616,9 @@ public class RestInvocationProcessor {
       if (ic.operation().getCallbackInfos() != null && !ic.operation().getCallbackInfos().isEmpty()) {
          HttpServletRequestSnapshot snapshot = new HttpServletRequestSnapshot(ic.resourcePath(), headers,
                request.getParameterMap(), body);
-         CallbackTriggerEvent event = new CallbackTriggerEvent(this, ic.service().getId(), ic.operation(),
-               response.getName(), snapshot);
-         applicationContext.publishEvent(event);
+         CallbackTriggerEvent event = new CallbackTriggerEvent(ic.service().getId(), ic.operation(), response.getName(),
+               snapshot);
+         callbackTriggerEvents.fireAsync(event);
       }
    }
 
@@ -622,9 +631,9 @@ public class RestInvocationProcessor {
                body);
          ResponseSnapshot responseSnapshot = new ResponseSnapshot(responseHeaders,
                new String(responseContent, StandardCharsets.UTF_8));
-         AsyncAPITriggerEvent event = new AsyncAPITriggerEvent(this, ic.service().getId(), ic.operation(),
-               requestSnapshot, responseSnapshot);
-         applicationContext.publishEvent(event);
+         AsyncAPITriggerEvent event = new AsyncAPITriggerEvent(ic.service().getId(), ic.operation(), requestSnapshot,
+               responseSnapshot);
+         asyncTriggerEvents.fireAsync(event);
       }
    }
 }

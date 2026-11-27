@@ -1,0 +1,47 @@
+<script lang="ts">
+  import { CodeBlock, CopyButton } from '@microcks/deep-ink';
+  import type { RunApiBody } from '#lib/runs-workflow.js';
+
+  interface Props {
+    hint: string;
+    documentApiId: string;
+    documentLabel: string;
+    workflowId: string;
+    mockUrl: string;
+    body: RunApiBody;
+    mixed?: boolean;
+  }
+
+  let { hint, documentApiId, documentLabel, workflowId, mockUrl, body, mixed }: Props = $props();
+
+  // Proposed endpoint: Microcks has no Arazzo API yet.
+  const runsUrl = $derived(`http://microcks.local:8080/api/arazzo/documents/${documentApiId}/workflows/${workflowId}/runs`);
+  const curl = $derived(`curl -X POST \\\n  '${runsUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body, null, 2)}'`);
+  const curlOne = $derived(`curl -X POST '${runsUrl}' -H 'Content-Type: application/json' -d '${JSON.stringify(body)}'`);
+  const mockBody = $derived(JSON.stringify(body.inputs));
+  const mockCurl = $derived(`curl -X POST \\\n  '${mockUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${mockBody}'`);
+  const mockOne = $derived(`curl -X POST '${mockUrl}' -H 'Content-Type: application/json' -d '${mockBody}'`);
+</script>
+
+<section aria-labelledby="run-api-h" class="wfr-card wfr-api">
+  <h2 id="run-api-h" class="wfr-card-title">Run it from the API</h2>
+  <p class="wfr-note">{hint}</p>
+  <CodeBlock class="wfr-pre" variant="plain" copy={false} language="bash" caption="curl command that launches the run" code={curl} />
+  <div class="wfr-api-foot">
+    <p class="wfr-note">
+      Answers 201 with the run; read it at <span class="wfr-mono">GET /api/arazzo/runs/{'{id}'}</span>. {documentApiId.slice(0, 8)}… is the documentId of {documentLabel}.
+    </p>
+    <CopyButton value={curlOne} label="Copy command" variant="outline" class="wfr-copy" />
+  </div>
+  {#if mixed}
+    <p class="wfr-note" data-tone="warning">
+      Proposed · beyond POC: a source left out of <span class="wfr-mono">implementations</span> stays on its mocks.
+    </p>
+  {/if}
+  <div class="wfr-api-mock">
+    <h3 class="wfr-card-subtitle">Or play it on the mocks through its Mock URL</h3>
+    <p class="wfr-note">Microcks plays {workflowId} on its mocks and answers 200 with the workflow outputs. Each call creates a run with origin Mock URL.</p>
+    <CodeBlock class="wfr-pre" variant="plain" copy={false} language="bash" caption="curl command for the Mock URL" code={mockCurl} />
+    <CopyButton value={mockOne} label="Copy command" variant="outline" class="wfr-copy" />
+  </div>
+</section>

@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.graphql;
+package io.microcks.web.mcp;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.listener.ListenerTestsConfiguration;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.service.ArtifactInfo;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.util.ai.McpSchema;
-import io.github.microcks.web.ControllerTestsConfiguration;
-import io.github.microcks.web.GraphQLInvocationProcessor;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
+import io.microcks.util.ai.McpSchema;
+import io.microcks.web.GraphQLInvocationProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -34,10 +33,6 @@ import graphql.parser.ParserOptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.File;
 import java.util.List;
@@ -48,20 +43,17 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test class for GraphQLMcpToolConverter.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ControllerTestsConfiguration.class,
-      ListenerTestsConfiguration.class })
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class GraphQLMcpToolConverterTest {
 
-   @Autowired
+   @Inject
    private ServiceService serviceService;
 
-   @Autowired
+   @Inject
    private ResourceRepository resourceRepository;
 
-   @Autowired
+   @Inject
    private GraphQLInvocationProcessor graphQLInvocationProcessor;
 
    private Service servicev1;
@@ -72,8 +64,8 @@ public class GraphQLMcpToolConverterTest {
    @BeforeAll
    void setUp() throws Exception {
       // Import the petstore service definition from the GraphQL tutorial.
-      File artifactFilev1 = new File("target/test-classes/io/github/microcks/util/graphql/petstore-1.0.graphql");
-      File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/graphql/github.graphql");
+      File artifactFilev1 = new File("target/test-classes/io/microcks/artifact/graphql/petstore-1.0.graphql");
+      File artifactFilev2 = new File("target/test-classes/io/microcks/artifact/graphql/github.graphql");
       // Extract service and resource. + tool converters.
       List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
             new ArtifactInfo("petstore-1.0.graphql", true));

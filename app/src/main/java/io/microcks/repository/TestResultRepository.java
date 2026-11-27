@@ -13,29 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.TestResult;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import io.microcks.domain.TestResult;
+
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.Date;
 import java.util.List;
 
 /**
- * Repository interface for TestResult domain objects.
+ * Repository for {@code TestResult} domain objects.
  * @author laurent
  */
-public interface TestResultRepository extends MongoRepository<TestResult, String> {
+@ApplicationScoped
+public class TestResultRepository implements ObjectIdRepository<TestResult> {
 
-   List<TestResult> findByServiceId(String serviceId);
+   public List<TestResult> findByServiceId(String serviceId) {
+      return list("serviceId", serviceId);
+   }
 
-   List<TestResult> findByServiceId(String serviceId, Pageable page);
+   public List<TestResult> findByServiceId(String serviceId, Page page, Sort sort) {
+      return find("serviceId", sort, serviceId).page(page).list();
+   }
 
-   @Query("{ 'testDate' : { $gt: ?0 } }")
-   List<TestResult> findAllWithTestDateAfter(Date date);
+   public List<TestResult> findAllWithTestDateAfter(Date date) {
+      return list("{'testDate': {'$gt': ?1}}", date);
+   }
 
-   @Query(value = "{ 'serviceId' : ?0}", count = true)
-   long countByServiceId(String serviceId);
+   public long countByServiceId(String serviceId) {
+      return count("serviceId", serviceId);
+   }
 }

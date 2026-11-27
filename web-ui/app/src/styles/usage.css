@@ -1,0 +1,7 @@
+/* Usage · page layout and header controls. Regions have their own files (chart, heatmap, table, conformance, kpis). */
+.us-page { display: flex; flex-direction: column; gap: 22px; }
+.us-scope { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; }
+.us-scope-badge { display: inline-flex; text-decoration: none; }
+.us-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.us-control { display: flex; flex-direction: column; gap: 4px; }
+.us-control .select { min-width: 210px; }

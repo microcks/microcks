@@ -13,29 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.github.microcks.domain.DailyStatistic;
+import io.microcks.domain.DailyStatistic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
  * Test case for DailyStatisticRepository class.
  * @author laurent
  */
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class DailyStatisticRepositoryTest {
 
-   @Autowired
+   @Inject
    DailyStatisticRepository repository;
 
    @BeforeEach
@@ -45,13 +40,13 @@ class DailyStatisticRepositoryTest {
       stat.setDay("20140319");
       stat.setServiceName("TestService1");
       stat.setServiceVersion("1.0");
-      repository.save(stat);
+      repository.persist(stat);
       // with same name and different version ...
       stat = new DailyStatistic();
       stat.setDay("20140319");
       stat.setServiceName("TestService1");
       stat.setServiceVersion("1.2");
-      repository.save(stat);
+      repository.persist(stat);
    }
 
    @Test

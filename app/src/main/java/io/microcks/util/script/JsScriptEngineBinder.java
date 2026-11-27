@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.script;
+package io.microcks.util.script;
 
-import io.github.microcks.util.tracing.CommonAttributes;
-import io.github.microcks.util.tracing.TraceUtil;
-import io.github.microcks.util.DispatchStyles;
+import io.microcks.util.tracing.CommonAttributes;
+import io.microcks.util.tracing.TraceUtil;
+import io.microcks.util.DispatchStyles;
 
-import io.github.microcks.service.StateStore;
-import io.github.microcks.util.http.HttpHeadersUtil;
+import io.microcks.service.StateStore;
+import io.microcks.util.http.HttpHeadersUtil;
+import io.microcks.util.http.StringToStringsMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,30 +43,21 @@ import io.roastedroot.quickjs4j.core.Runner;
 import io.roastedroot.quickjs4j.core.ScriptCache;
 import jakarta.servlet.http.HttpServletRequest;
 import io.opentelemetry.api.trace.Span;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.classic.methods.HttpPut;
-import org.apache.hc.client5.http.classic.methods.HttpDelete;
-import org.apache.hc.client5.http.classic.methods.HttpPatch;
-import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.ParseException;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.Set;
 
-import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
-import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
-import static io.github.microcks.util.tracing.TraceUtil.LogLevel;
+import static io.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
+import static io.microcks.util.tracing.TraceUtil.addSpanLogEvent;
+import static io.microcks.util.tracing.TraceUtil.LogLevel;
 
 /**
  * Utility class that holds methods for creating binding environments and evaluation context for a QuickJs4J
@@ -80,6 +72,11 @@ public class JsScriptEngineBinder {
    private static final String ENGINE_NAME = "javascript";
 
    private static final ScriptCache cache = new LRUScriptCache(100);
+
+   private static final Set<String> SUPPORTED_FETCH_METHODS = Set.of("GET", "POST", "PUT", "DELETE", "PATCH");
+   private static final Set<String> BODY_FETCH_METHODS = Set.of("POST", "PUT", "PATCH");
+   private static final Set<String> RESTRICTED_FETCH_HEADERS = Set.of("host", "content-length", "connection", "upgrade",
+         "expect");
 
    private JsScriptEngineBinder() {
    }
@@ -278,61 +275,52 @@ public class JsScriptEngineBinder {
        */
       @HostFunction
       public Object fetch(String url, String method, String body, JsonNode rawHeaders) {
-         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpUriRequestBase request = createHttpRequest(url, method);
+         String httpMethod = method == null ? "GET" : method.toUpperCase();
+         if (!SUPPORTED_FETCH_METHODS.contains(httpMethod)) {
+            throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+         }
 
-            // Add headers if provided
-            if (rawHeaders != null) {
-               rawHeaders.properties().forEach(entry -> {
-                  String key = entry.getKey();
-                  JsonNode valueNode = entry.getValue();
+         boolean hasBody = body != null && BODY_FETCH_METHODS.contains(httpMethod);
+         HttpRequest.Builder builder;
+         try {
+            builder = HttpRequest.newBuilder(URI.create(url));
+         } catch (IllegalArgumentException e) {
+            throw new UncheckedIOException("Failed to read response from server", new IOException(e));
+         }
+         builder.method(httpMethod,
+               hasBody ? HttpRequest.BodyPublishers.ofString(body) : HttpRequest.BodyPublishers.noBody());
 
-                  List<String> values = new ArrayList<>();
-                  if (valueNode.isArray()) {
-                     valueNode.forEach(v -> values.add(v.asText()));
-                  } else {
-                     values.add(valueNode.asText());
-                  }
-
-                  request.addHeader(key, values);
-               });
+         boolean hasContentType = false;
+         if (rawHeaders != null) {
+            for (Map.Entry<String, JsonNode> entry : rawHeaders.properties()) {
+               String key = entry.getKey();
+               // Host, Content-Length, Connection, Upgrade and Expect are managed by the JDK client.
+               if (RESTRICTED_FETCH_HEADERS.contains(key.toLowerCase())) {
+                  continue;
+               }
+               hasContentType |= "content-type".equalsIgnoreCase(key);
+               JsonNode valueNode = entry.getValue();
+               if (valueNode.isArray()) {
+                  valueNode.forEach(v -> builder.header(key, v.asText()));
+               } else {
+                  builder.header(key, valueNode.asText());
+               }
             }
+         }
+         if (hasBody && !hasContentType) {
+            builder.header("Content-Type", "text/plain; charset=UTF-8");
+         }
 
-            // Add body for methods that support it
-            if ((request instanceof HttpPost || request instanceof HttpPut || request instanceof HttpPatch)
-                  && body != null) {
-               StringEntity entity = new StringEntity(body);
-               request.setEntity(entity);
-            }
-
-            try (CloseableHttpResponse response = httpClient.execute(request)) {
-               int status = response.getCode();
-               String responseBody = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "";
-               return new FetchResponse(status, responseBody);
-            }
+         try (HttpClient httpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1)
+               .followRedirects(HttpClient.Redirect.NORMAL).build()) {
+            HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            return new FetchResponse(response.statusCode(), response.body());
          } catch (IOException e) {
             throw new UncheckedIOException("Failed to read response from server", e);
-         } catch (ParseException e) {
-            throw new RuntimeException("Failed to parse response from server", e);
+         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new UncheckedIOException("Failed to read response from server", new IOException(e));
          }
-      }
-
-      /**
-       * Creates the appropriate HTTP request object based on the method.
-       */
-      private HttpUriRequestBase createHttpRequest(String url, String method) {
-         if (method == null) {
-            return new HttpGet(url);
-         }
-
-         return switch (method.toUpperCase()) {
-            case "GET" -> new HttpGet(url);
-            case "POST" -> new HttpPost(url);
-            case "PUT" -> new HttpPut(url);
-            case "DELETE" -> new HttpDelete(url);
-            case "PATCH" -> new HttpPatch(url);
-            default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
-         };
       }
    }
 

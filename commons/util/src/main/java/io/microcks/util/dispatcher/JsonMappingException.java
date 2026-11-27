@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.dispatcher;
+package io.microcks.util.dispatcher;
 
 /**
  * Custom exception for tracking an Object-to-Json mapping exception.

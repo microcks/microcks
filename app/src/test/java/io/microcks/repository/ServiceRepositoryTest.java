@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
+package io.microcks.repository;
 
-import io.github.microcks.domain.Service;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.Service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 
@@ -32,12 +30,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for ServiceRepository implementation.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class ServiceRepositoryTest {
 
-   @Autowired
+   @Inject
    ServiceRepository repository;
 
    String serviceId;
@@ -48,23 +44,23 @@ class ServiceRepositoryTest {
       Service service = new Service();
       service.setName("HelloWorld");
       service.setVersion("1.2");
-      repository.save(service);
+      repository.persist(service);
       // with same name and different version ...
       service = new Service();
       service.setName("HelloWorld");
       service.setVersion("1.1");
-      repository.save(service);
+      repository.persist(service);
       // with different name ...
       service = new Service();
       service.setName("MyService-hello");
       service.setVersion("1.1");
-      repository.save(service);
+      repository.persist(service);
       serviceId = service.getId();
    }
 
    @Test
    void testFindOne() {
-      Service service = repository.findById(serviceId).orElse(null);
+      Service service = repository.findById(serviceId);
       assertNotNull(service);
       assertEquals("MyService-hello", service.getName());
       assertEquals("1.1", service.getVersion());

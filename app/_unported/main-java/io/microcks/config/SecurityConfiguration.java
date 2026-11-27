@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.config;
+package io.microcks.config;
 
-import io.github.microcks.security.MicrocksJwtConverter;
+import io.microcks.security.MicrocksJwtConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static io.github.microcks.security.AuthorizationChecker.*;
+import static io.microcks.security.AuthorizationChecker.*;
 
 /**
  * A bean responsible for Security filter chain configuration using Spring Security ODIC adapters.

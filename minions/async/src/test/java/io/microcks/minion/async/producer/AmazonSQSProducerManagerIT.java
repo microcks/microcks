@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.minion.async.client.MicrocksAPIConnector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,8 +82,8 @@ class AmazonSQSProducerManagerIT {
    @Test
    void testProduceMockMessages() throws Exception {
       // Arrange.
-      String asyncAPIContent = Files.readString(
-            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0.yaml"));
+      String asyncAPIContent = Files
+            .readString(Paths.get("target/test-classes/io/microcks/minion/async", "user-signedup-asyncapi-3.0.yaml"));
 
       // Prepare some event messages.
       EventMessage aliceEvent = new EventMessage();

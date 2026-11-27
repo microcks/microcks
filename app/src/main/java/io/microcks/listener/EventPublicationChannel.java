@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.event.AsyncAPITriggerCommand;
-import io.github.microcks.event.ServiceViewChangeEvent;
+import io.microcks.event.AsyncAPITriggerCommand;
+import io.microcks.event.ServiceViewChangeEvent;
 
 /**
  * This represents a communication via the one me may publish events that relates services changes.

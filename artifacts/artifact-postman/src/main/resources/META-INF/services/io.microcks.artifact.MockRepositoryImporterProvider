@@ -1,0 +1,2 @@
+io.microcks.artifact.postman.PostmanCollectionImporterProvider
+io.microcks.artifact.postman.PostmanWorkspaceCollectionImporterProvider

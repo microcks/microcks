@@ -1,31 +1,15 @@
+# Microcks 2.0: a single app instance, no authentication, no Kafka. Events for the async minion (async-addon.yml)
+# travel over a WebSocket, so nothing else than MongoDB and the Postman runtime is needed.
 services:
   mongo:
-    image: mongo:4.4.29
+    image: mongo:7.0
     container_name: microcks-db
     volumes:
       - "~/tmp/microcks-data:/data/db"
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
       interval: 30s
-      timeout: 1s
-      retries: 3
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.0.0
-    container_name: microcks-sso
-    ports:
-      - "18080:8080"
-    environment:
-      KEYCLOAK_ADMIN: "admin"
-      KEYCLOAK_ADMIN_PASSWORD: "admin"
-    volumes:
-      - "./keycloak-realm/microcks-realm-sample.json:/opt/keycloak/data/import/microcks-realm.json"
-    command: ["start-dev", "--hostname=http://localhost:18080", "--import-realm", "--health-enabled=true"]
-    healthcheck:
-      test: ["CMD", "sh", "-c", "echo -e 'GET /health/live HTTP/1.1\r\nHost: localhost\r\n\r\n' > /dev/tcp/localhost/9000"]
-      start_period: 10s
-      interval: 10s
-      timeout: 2s
+      timeout: 5s
       retries: 3
 
   postman:
@@ -41,23 +25,18 @@ services:
   app:
     depends_on:
       - mongo
-      - keycloak
       - postman
-    image: quay.io/microcks/microcks:nightly
+    image: quay.io/microcks/microcks-app:nightly
     container_name: microcks
     ports:
       - "8080:8080"
-      - "9090:9090"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_MONGODB_URI=mongodb://mongo:27017
-      - SPRING_MONGODB_DATABASE=microcks
+      - MONGODB_URL=mongodb://mongo:27017
+      - MONGODB_DATABASE=microcks
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      - KEYCLOAK_URL=http://keycloak:8080
-      - KEYCLOAK_PUBLIC_URL=http://localhost:18080
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:18080/realms/microcks
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/microcks/protocol/openid-connect/certs
-      #- LOGGING_LEVEL_IO_GITHUB_MICROCKS=DEBUG
+      #- QUARKUS_LOG_CATEGORY__IO_MICROCKS__LEVEL=DEBUG
       #- MAX_UPLOAD_FILE_SIZE=3MB
+      # Authentication is disabled by default: everyone is an anonymous user with all roles. See README.md.
+      #- MICROCKS_AUTH_ENABLED=true

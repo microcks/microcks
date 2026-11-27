@@ -1,0 +1,2 @@
+io.microcks.test.HttpTestRunnerProvider
+io.microcks.test.SoapHttpTestRunnerProvider

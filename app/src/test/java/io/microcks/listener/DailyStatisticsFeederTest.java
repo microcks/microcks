@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.domain.DailyStatistic;
-import io.github.microcks.event.MockInvocationEvent;
-import io.github.microcks.repository.DailyStatisticRepository;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.DailyStatistic;
+import io.microcks.event.MockInvocationEvent;
+import io.microcks.repository.DailyStatisticRepository;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -36,22 +33,19 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Test case for DailyStatisticsFeeder class.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ListenerTestsConfiguration.class })
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class DailyStatisticsFeederTest {
 
-   @Autowired
+   @Inject
    DailyStatisticsFeeder feeder;
 
-   @Autowired
+   @Inject
    DailyStatisticRepository statisticsRepository;
 
    @Test
    void testOnApplicationEvent() {
       Calendar today = Calendar.getInstance();
-      MockInvocationEvent event = new MockInvocationEvent(this, "TestService1", "1.0", "123456789", today.getTime(),
-            100);
+      MockInvocationEvent event = new MockInvocationEvent("TestService1", "1.0", "123456789", today.getTime(), 100);
 
       // Fire event a first time.
       feeder.onApplicationEvent(event);

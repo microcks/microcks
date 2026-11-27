@@ -13,31 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.event.MockInvocationEvent;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
-import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
-import io.github.microcks.util.tracing.TraceUtil;
+import io.microcks.domain.Header;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Response;
+import io.microcks.domain.Service;
+import io.microcks.event.MockInvocationEvent;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.dispatcher.FallbackSpecification;
+import io.microcks.util.http.HttpHeaders;
+import io.microcks.util.dispatcher.JsonMappingException;
+import io.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.microcks.util.el.EvaluableRequest;
+import io.microcks.util.el.TemplateEngine;
+import io.microcks.util.el.TemplateEngineFactory;
+import io.microcks.util.tracing.TraceUtil;
 import io.opentelemetry.api.trace.Span;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 
+import jakarta.enterprise.event.Event;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -50,9 +48,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Optional;
 
-import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.delay.DelayApplier;
-import io.github.microcks.util.delay.DelayApplierFactory;
+import io.microcks.util.delay.DelaySpec;
+import io.microcks.util.delay.DelayApplier;
+import io.microcks.util.delay.DelayApplierFactory;
 
 /**
  * This class holds commons, utility handlers for different mock controller implements (whether it be Soap, Rest, Async
@@ -134,8 +132,11 @@ public class MockControllerCommons {
          externalUrl = externalUrl.replaceFirst("/$", "") + resourcePath;
          if (!externalUrl.contentEquals(request.getRequestURL())) {
             try {
-               return Optional.of(UriComponentsBuilder.fromUriString(externalUrl).query(request.getQueryString())
-                     .build(true).toUri());
+               String queryString = request.getQueryString();
+               if (queryString != null && !queryString.isEmpty()) {
+                  externalUrl += (externalUrl.contains("?") ? "&" : "?") + queryString;
+               }
+               return Optional.of(URI.create(externalUrl));
             } catch (IllegalArgumentException ex) {
                log.warn("Invalid external URL in the dispatcher - {}", externalUrl);
             }
@@ -364,29 +365,48 @@ public class MockControllerCommons {
    }
 
    /**
-    * Publish a mock invocation event on Spring ApplicationContext internal bus.
-    * @param applicationContext The context to use for publication
-    * @param eventSource        The source of this event
-    * @param service            The mocked Service that was invoked
-    * @param response           The response it has been dispatched to
-    * @param startTime          The start time of the invocation
+    * Publish a mock invocation event on the CDI event bus.
+    * @param events    The event publisher to use
+    * @param service   The mocked Service that was invoked
+    * @param response  The response it has been dispatched to
+    * @param startTime The start time of the invocation
     */
-   public static void publishMockInvocation(ApplicationContext applicationContext, Object eventSource, Service service,
-         Response response, Long startTime) {
+   public static void publishMockInvocation(Event<MockInvocationEvent> events, Service service, Response response,
+         Long startTime) {
       // Publish an invocation event before returning.
-      MockInvocationEvent event = new MockInvocationEvent(eventSource, service.getName(), service.getVersion(),
-            response.getName(), new Date(startTime), startTime - System.currentTimeMillis());
-      applicationContext.publishEvent(event);
+      MockInvocationEvent event = new MockInvocationEvent(service.getName(), service.getVersion(), response.getName(),
+            new Date(startTime), startTime - System.currentTimeMillis());
+      events.fireAsync(event);
       log.debug("Mock invocation event has been published");
    }
 
    public static String composeServiceAndVersion(String serviceName, String version) {
-      return "/" + UriUtils.encodeFragment(serviceName, StandardCharsets.UTF_8) + "/" + version;
+      return "/" + encodeFragment(serviceName) + "/" + version;
+   }
+
+   /** Percent-encode a string as a URI fragment (RFC 3986: pchar, '/' and '?' stay as is). */
+   private static String encodeFragment(String value) {
+      StringBuilder encoded = new StringBuilder();
+      for (byte b : value.getBytes(StandardCharsets.UTF_8)) {
+         char c = (char) (b & 0xFF);
+         if (b >= 0 && (Character.isLetterOrDigit(c) || "-._~!$&'()*+,;=:@/?".indexOf(c) >= 0)) {
+            encoded.append(c);
+         } else {
+            encoded.append('%').append(String.format("%02X", b & 0xFF));
+         }
+      }
+      return encoded.toString();
    }
 
    public static String extractResourcePath(HttpServletRequest request, String serviceAndVersion) {
       String requestURI = request.getRequestURI();
-      String resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
+      int index = requestURI.indexOf(serviceAndVersion);
+      if (index < 0 && serviceAndVersion.contains("+")) {
+         // Clients may legitimately percent-encode '+' as %2B.
+         serviceAndVersion = serviceAndVersion.replace("+", "%2B");
+         index = requestURI.indexOf(serviceAndVersion);
+      }
+      String resourcePath = requestURI.substring(index + serviceAndVersion.length());
       log.debug("Found resourcePath: {}", resourcePath);
 
       // If resourcePath was encoded with '+' instead of '%20', replace them .

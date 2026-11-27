@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
-import org.springframework.data.annotation.Id;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.Date;
 
@@ -23,9 +26,11 @@ import java.util.Date;
  * A domain object representing a Webhook registration.
  * @author laurent
  */
+@MongoEntity(collection = "webhookRegistration")
 public class WebhookRegistration {
 
-   @Id
+   @BsonId
+   @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
    private Date createdOn = new Date();
    private Date expiresAt;

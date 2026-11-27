@@ -1,0 +1,39 @@
+####
+# This Dockerfile is used in order to build a container that runs the Microcks Uber application in native (no JVM) mode
+#
+# Before building the container image run:
+#
+# mvn package -Dnative -Dquarkus.native.container-build=true
+#
+# Then, build the image with:
+#
+# docker build -f src/main/docker/Dockerfile.native -t microcks/microcks-uber-native .
+#
+# Then run the container using (in-memory data, add -v and -e MONGODB_STORAGE_PATH=/data/microcks.mv to persist):
+#
+# docker run -i --rm -p 8080:8080 microcks/microcks-uber-native
+#
+###
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1785906621
+
+LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.authors="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.title="Microcks Application Uber (native)" \
+      org.opencontainers.image.description="Microcks is Open Source cloud-native native tool for API Mocking and Testing" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.documentation="https://github.com/microcks/microcks/tree/master/distro/uber" \
+      io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/distro/uber/README.md"
+
+WORKDIR /work/
+COPY --chown=1001:root target/*-runner /work/application
+
+# set up permissions for user `1001`
+RUN chmod 775 /work /work/application \
+  && chown -R 1001 /work \
+  && chmod -R "g+rwX" /work \
+  && chown -R 1001:root /work
+
+EXPOSE 8080
+USER 1001
+
+CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]

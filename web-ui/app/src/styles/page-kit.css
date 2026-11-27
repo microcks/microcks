@@ -1,0 +1,5 @@
+/* Small layout helpers shared by the Test, Observe and Govern pages. Colors come from the tokens. */
+
+.demo-mono {
+  font-family: var(--font-mono);
+}

@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.event.TraceEvent;
-import io.github.microcks.util.tracing.CommonEvents;
-import io.github.microcks.util.tracing.SpanFilterUtil;
+import io.microcks.event.TraceEvent;
+import io.microcks.util.tracing.CommonEvents;
+import io.microcks.util.tracing.SpanFilterUtil;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +40,7 @@ import java.util.Set;
  * Service for storing and retrieving OpenTelemetry spans organized by trace ID.
  * @author Apoorva Srinivas Appadoo
  */
-@Service
+@ApplicationScoped
 public class SpanStorageService {
 
    /** A commons logger for diagnostic messages. */
@@ -65,13 +66,14 @@ public class SpanStorageService {
    /**
     * Publisher for notifying listeners about new root spans (new traces).
     */
-   private final ApplicationEventPublisher publisher;
+   private final Event<TraceEvent> publisher;
 
    /**
-    * BuIld a SpanStorageService with the given ApplicationEventPublisher.
+    * Build a SpanStorageService with the given event publisher.
     * @param publisher the application event publisher
     */
-   public SpanStorageService(ApplicationEventPublisher publisher) {
+   @Inject
+   public SpanStorageService(Event<TraceEvent> publisher) {
       this.publisher = publisher;
    }
 
@@ -110,13 +112,13 @@ public class SpanStorageService {
       }
 
 
-      // Publish a notification if this span matches an Invocation Received event (that's the demarcation we're looking for)
+      // Publish a notification if this span matches an Invocation Received event (the trace demarcation)
       Optional<EventData> firstInvocationReceivedEvent = spanData.getEvents().stream()
             .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
       if (firstInvocationReceivedEvent.isPresent()) {
          TraceEvent event = SpanFilterUtil.extractTraceEvent(traceId, spans);
          log.trace("Published trace event: {}", event);
-         publisher.publishEvent(event);
+         publisher.fireAsync(event);
       }
    }
 

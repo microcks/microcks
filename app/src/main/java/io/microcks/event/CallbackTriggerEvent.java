@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.event;
+package io.microcks.event;
 
-import io.github.microcks.domain.Operation;
-import org.springframework.context.ApplicationEvent;
+import io.microcks.domain.Operation;
 
 /**
  * Simple bean representing an event raised so that a callback can be triggered.
  * @author laurent
  */
-public class CallbackTriggerEvent extends ApplicationEvent {
+public class CallbackTriggerEvent {
 
    private final String serviceId;
    private final Operation operation;
@@ -33,15 +32,13 @@ public class CallbackTriggerEvent extends ApplicationEvent {
 
    /**
     * Create a new callback trigger event
-    * @param source       Source object for event
     * @param serviceId    Id of invoked service
     * @param operation    Operation invoked
     * @param responseName Name of response returned
     * @param request      Snapshot of incoming request
     */
-   public CallbackTriggerEvent(Object source, String serviceId, Operation operation, String responseName,
+   public CallbackTriggerEvent(String serviceId, Operation operation, String responseName,
          HttpServletRequestSnapshot request) {
-      super(source);
       this.serviceId = serviceId;
       this.operation = operation;
       this.responseName = responseName;
@@ -50,16 +47,14 @@ public class CallbackTriggerEvent extends ApplicationEvent {
 
    /**
     * Create a new callback trigger event with an order
-    * @param source       Source object for event
     * @param serviceId    Id of invoked service
     * @param operation    Operation invoked
     * @param responseName Name of response returned
     * @param request      Snapshot of incoming request
     * @param order        The order of this event in a callback events chain.
     */
-   public CallbackTriggerEvent(Object source, String serviceId, Operation operation, String responseName,
+   public CallbackTriggerEvent(String serviceId, Operation operation, String responseName,
          HttpServletRequestSnapshot request, int order) {
-      super(source);
       this.serviceId = serviceId;
       this.operation = operation;
       this.responseName = responseName;

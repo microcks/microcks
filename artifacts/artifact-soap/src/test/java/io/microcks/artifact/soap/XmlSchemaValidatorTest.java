@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.artifact.soap;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -29,7 +29,7 @@ public class XmlSchemaValidatorTest {
 
    @Test
    public void testValidXmlAgainstValidSchema() throws Exception {
-      InputStream schemaStream = new FileInputStream("target/test-classes/io/github/microcks/util/valid-schema.xsd");
+      InputStream schemaStream = new FileInputStream("target/test-classes/io/microcks/artifact/soap/valid-schema.xsd");
       String validXml = """
             <note>
                 <to>Tove</to>
@@ -45,7 +45,8 @@ public class XmlSchemaValidatorTest {
 
    @Test
    public void testValidXmlAgainstInvalidSchema() throws Exception {
-      InputStream schemaStream = new FileInputStream("target/test-classes/io/github/microcks/util/invalid-schema.xsd");
+      InputStream schemaStream = new FileInputStream(
+            "target/test-classes/io/microcks/artifact/soap/invalid-schema.xsd");
       String validXml = """
             <note>
                 <to>Tove</to>

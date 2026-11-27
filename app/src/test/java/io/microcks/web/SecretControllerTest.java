@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Secret;
-import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.security.AuthorizationChecker;
-import io.github.microcks.security.UserInfo;
+import io.microcks.domain.Secret;
+import io.microcks.repository.SecretRepository;
+import io.microcks.security.AuthorizationChecker;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -44,13 +43,12 @@ class SecretControllerTest {
 
    @Test
    void shouldFilterSensitiveDataWhenSearchingSecretsAsNonAdmin() {
-      // arrange
-      UserInfo userInfo = userInfoWithRoles(AuthorizationChecker.ROLE_USER);
+      // arrange (security is not ported yet: the caller identity is null, see AuthorizationChecker)
       Mockito.when(secretRepository.findByNameLike("secret")).thenReturn(List.of(secret()));
-      Mockito.when(authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)).thenReturn(false);
+      Mockito.when(authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)).thenReturn(false);
 
       // act
-      List<Secret> results = sut.searchSecrets("secret", userInfo);
+      List<Secret> results = sut.searchSecrets("secret");
 
       // assert
       Secret result = results.get(0);
@@ -67,13 +65,12 @@ class SecretControllerTest {
 
    @Test
    void shouldKeepSensitiveDataWhenSearchingSecretsAsAdmin() {
-      // arrange
-      UserInfo userInfo = userInfoWithRoles(AuthorizationChecker.ROLE_ADMIN);
+      // arrange (security is not ported yet: the caller identity is null, see AuthorizationChecker)
       Mockito.when(secretRepository.findByNameLike("secret")).thenReturn(List.of(secret()));
-      Mockito.when(authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)).thenReturn(true);
+      Mockito.when(authorizationChecker.hasRole(null, AuthorizationChecker.ROLE_ADMIN)).thenReturn(true);
 
       // act
-      List<Secret> results = sut.searchSecrets("secret", userInfo);
+      List<Secret> results = sut.searchSecrets("secret");
 
       // assert
       Secret result = results.get(0);
@@ -83,10 +80,6 @@ class SecretControllerTest {
          softly.assertThat(result.getToken()).isEqualTo("token");
          softly.assertThat(result.getCaCertPem()).isEqualTo("caCertPem");
       });
-   }
-
-   private static UserInfo userInfoWithRoles(String... roles) {
-      return new UserInfo("Test User", "test-user", "Test", "User", "test@example.com", roles, new String[0]);
    }
 
    private static Secret secret() {

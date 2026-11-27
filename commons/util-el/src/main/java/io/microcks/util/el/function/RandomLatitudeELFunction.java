@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.el.function;
+package io.microcks.util.el.function;
 
 import net.datafaker.Faker;
-import io.github.microcks.util.el.EvaluationContext;
+import io.microcks.util.el.EvaluationContext;
 
 /**
  * Implementation of ELFunction that generates a random latitude.

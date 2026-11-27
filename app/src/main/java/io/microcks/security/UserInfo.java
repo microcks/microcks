@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.security;
+package io.microcks.security;
 
 import java.util.Arrays;
 
@@ -51,6 +51,15 @@ public class UserInfo {
       this.email = email;
       this.roles = roles;
       this.groups = groups;
+   }
+
+   /**
+    * Copy this user with another set of groups.
+    * @param newGroups The group paths
+    * @return A new UserInfo
+    */
+   public UserInfo withGroups(String[] newGroups) {
+      return new UserInfo(name, username, givenName, familyName, email, roles, newGroups);
    }
 
    public String getName() {

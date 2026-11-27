@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.util.ai.McpSchema;
+import io.quarkus.test.junit.QuarkusTest;
+import io.microcks.util.ai.McpSchema;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import io.microcks.testsupport.http.HttpEntity;
+import io.microcks.testsupport.http.HttpHeaders;
+import io.microcks.testsupport.http.HttpMethod;
+import io.microcks.testsupport.http.MediaType;
+import io.microcks.testsupport.http.ResponseEntity;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for the MCP controller.
  * @author laurent
  */
+@QuarkusTest
 class McpControllerIT extends AbstractBaseIT {
 
    record McpSSEFrame(String key, String value) {
@@ -65,7 +67,7 @@ class McpControllerIT extends AbstractBaseIT {
    @Test
    void testOpenAPIHttpSSEEndpoint() throws Exception {
       // Update Petstore from the tutorial reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-1.0.0-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/petstore-1.0.0-openapi.yaml", true);
 
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
@@ -228,8 +230,8 @@ class McpControllerIT extends AbstractBaseIT {
    @Test
    void testGrpcHttpSSEEndpoint() throws Exception {
       // Update Petstore from the tutorial reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/petstore-v1.proto", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/petstore-v1-examples.yaml", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/grpc/petstore-v1.proto", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/grpc/petstore-v1-examples.yaml", false);
 
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {
@@ -396,8 +398,8 @@ class McpControllerIT extends AbstractBaseIT {
    @Test
    void testGraphQLHttpSSEEndpoint() throws Exception {
       // Update Petstore from the tutorial reference artifact.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/petstore-1.0.graphql", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/petstore-1.0-examples.yaml", false);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/petstore-1.0.graphql", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/graphql/petstore-1.0-examples.yaml", false);
 
       // Define the runnable for the SSE client.
       Runnable sseClientRunnable = () -> {

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.graphql;
+package io.microcks.artifact.graphql;
 
-import io.github.microcks.util.JsonSchemaValidator;
+import io.microcks.artifact.jsonschema.JsonSchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +33,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import java.util.HashMap;
 import java.util.List;
 
-import static io.github.microcks.util.JsonSchemaValidator.*;
+import static io.microcks.artifact.jsonschema.JsonSchemaValidator.*;
 
 /**
  * Helper class for validating Json objects against their GraphQL schema. Supported version of GraphQL schema is

@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Response;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.microcks.domain.Response;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.delay.DelaySpec;
+import io.microcks.util.dispatcher.JsonMappingException;
+import io.microcks.util.dispatcher.ProxyFallbackSpecification;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
+import io.microcks.util.http.HttpHeaders;
 
 import java.net.URI;
 import java.util.Optional;

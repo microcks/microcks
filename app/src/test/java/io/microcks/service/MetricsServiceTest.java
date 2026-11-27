@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,45 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.TestConformanceMetric;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.Trend;
-import io.github.microcks.repository.TestConformanceMetricRepository;
+import io.microcks.domain.TestConformanceMetric;
+import io.microcks.domain.TestResult;
+import io.microcks.domain.Trend;
+import io.microcks.repository.TestConformanceMetricRepository;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.mockito.Mockito;
 
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Test case for MetricsService test conformance trend recording.
+ * @author laurent
+ */
 class MetricsServiceTest {
 
-   @Mock
-   private TestConformanceMetricRepository metricRepository;
+   private final TestConformanceMetricRepository metricRepository = Mockito.mock(TestConformanceMetricRepository.class);
 
-   private MetricsService newService() {
+   private MetricsService newService() throws Exception {
       MetricsService service = new MetricsService();
-      ReflectionTestUtils.setField(service, "metricRepository", metricRepository);
-      ReflectionTestUtils.setField(service, "testConformanceTrendSize", 3);
-      ReflectionTestUtils.setField(service, "testConformanceTrendHistorySize", 10);
+      setField(service, "metricRepository", metricRepository);
+      setField(service, "testConformanceTrendSize", 3);
+      setField(service, "testConformanceTrendHistorySize", 10);
       return service;
    }
 
+   private static void setField(Object target, String name, Object value) throws Exception {
+      Field field = target.getClass().getDeclaredField(name);
+      field.setAccessible(true);
+      field.set(target, value);
+   }
+
    @Test
-   void updateTestConformanceMetricOnTestResultRecordsScoreOnFirstCall() {
+   void updateTestConformanceMetricOnTestResultRecordsScoreOnFirstCall() throws Exception {
       TestConformanceMetric metric = new TestConformanceMetric();
       metric.setServiceId("service-1");
       metric.setMaxPossibleScore(100.0);
-      when(metricRepository.findByServiceId("service-1")).thenReturn(metric);
+      Mockito.when(metricRepository.findByServiceId("service-1")).thenReturn(metric);
 
       TestResult testResult = new TestResult();
       testResult.setServiceId("service-1");
@@ -63,7 +68,7 @@ class MetricsServiceTest {
    }
 
    @Test
-   void updateTestConformanceMetricOnTestResultComputesTrendFromExistingHistory() {
+   void updateTestConformanceMetricOnTestResultComputesTrendFromExistingHistory() throws Exception {
       TestConformanceMetric metric = new TestConformanceMetric();
       metric.setServiceId("service-2");
       metric.setMaxPossibleScore(100.0);
@@ -71,7 +76,7 @@ class MetricsServiceTest {
       history.put("20260101", 100.0);
       history.put("20260102", 100.0);
       metric.setLatestScores(history);
-      when(metricRepository.findByServiceId("service-2")).thenReturn(metric);
+      Mockito.when(metricRepository.findByServiceId("service-2")).thenReturn(metric);
 
       TestResult testResult = new TestResult();
       testResult.setServiceId("service-2");

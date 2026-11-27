@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+package io.microcks.domain;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,11 +31,12 @@ import java.util.List;
  * times is has taken and so on ...
  * @author laurent
  */
+@MongoEntity(collection = "testResult")
 public class TestResult {
 
-   @Id
+   @BsonId
+   @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
-   @Version
    Long version;
    private Long testNumber;
    private Date testDate;

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soapui;
+package io.microcks.artifact.soapui;
 
-import io.github.microcks.util.WritableNamespaceContext;
 
 import javax.xml.xpath.XPathExpressionException;
 import org.slf4j.Logger;

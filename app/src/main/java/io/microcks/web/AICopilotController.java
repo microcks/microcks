@@ -13,36 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.web;
+package io.microcks.web;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.service.AICopilotRunnerService;
-import io.github.microcks.service.ExchangeSelection;
-import io.github.microcks.service.ImportExportService;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.util.MockRepositoryExporterFactory;
-import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.ai.AICopilot;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.security.UserInfo;
+import io.microcks.service.AICopilotRunnerService;
+import io.microcks.service.ExchangeSelection;
+import io.microcks.service.ImportExportService;
+import io.microcks.service.ServiceService;
+import io.microcks.artifact.MockRepositoryExporterFactory;
+import io.microcks.util.SafeLogger;
+import io.microcks.util.ai.AICopilot;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -55,8 +55,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * A controller for interacting with optional AI Copilot in Microcks.
  * @author laurent
  */
-@RestController
-@RequestMapping("/api/copilot")
+@Path("/api/copilot")
+@Produces(MediaType.APPLICATION_JSON)
+
+@RunOnVirtualThread
 public class AICopilotController {
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
@@ -73,7 +75,6 @@ public class AICopilotController {
    // A map to track async task status.
    private final Map<String, TaskStatus> taskStatus = new ConcurrentHashMap<>();
 
-
    /**
     * Build a AICopilotController with required dependencies.
     * @param serviceService      The service to managed Services objects
@@ -82,20 +83,24 @@ public class AICopilotController {
     * @param resourceRepository  The repository for Resources
     * @param copilot             The optional AI Copilot
     */
+   @Inject
    public AICopilotController(ServiceService serviceService, ImportExportService importExportService,
-         ServiceRepository serviceRepository, ResourceRepository resourceRepository, Optional<AICopilot> copilot,
+         ServiceRepository serviceRepository, ResourceRepository resourceRepository, Instance<AICopilot> copilot,
          AICopilotRunnerService copilotRunnerService) {
       this.serviceService = serviceService;
       this.importExportService = importExportService;
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
-      copilot.ifPresent(aiCopilot -> this.copilot = aiCopilot);
+      if (copilot.isResolvable()) {
+         this.copilot = copilot.get();
+      }
       this.copilotRunnerService = copilotRunnerService;
    }
 
-   @GetMapping(value = "/samples/{id:.+}")
-   public ResponseEntity<Object> getSamplesSuggestions(@PathVariable("id") String serviceId,
-         @RequestParam(value = "operation", required = false) String operationName, UserInfo userInfo) {
+   @GET
+   @Path("/samples/{id:.+}")
+   public Response getSamplesSuggestions(@PathParam("id") String serviceId,
+         @QueryParam("operation") String operationName) {
       log.debug("Retrieving service with id {}", serviceId);
 
       Service service = null;
@@ -110,7 +115,7 @@ public class AICopilotController {
          }
          service = serviceRepository.findByNameAndVersion(name, version);
       } else {
-         service = serviceRepository.findById(serviceId).orElse(null);
+         service = serviceRepository.findById(serviceId);
       }
 
       if (service != null) {
@@ -136,97 +141,94 @@ public class AICopilotController {
                try {
                   List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation.get(),
                         resources.getFirst(), 2);
-                  return new ResponseEntity<>(exchanges, HttpStatus.OK);
+                  return Response.status(Response.Status.OK).entity(exchanges).build();
                } catch (Exception e) {
                   log.error("Caught and exception while generating samples", e);
-                  return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                  return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
                }
             }
          } else {
             // Launch an async generation of samples for all operations.
             final String taskId = UUID.randomUUID().toString();
             taskStatus.put(taskId, TaskStatus.PENDING);
-            copilotRunnerService.generateSamplesForService(service, resources.getFirst(), userInfo)
-                  .thenApply(success -> {
-                     if (Boolean.TRUE.equals(success)) {
-                        taskStatus.put(taskId, TaskStatus.SUCCESS);
-                     } else {
-                        taskStatus.put(taskId, TaskStatus.FAILURE);
-                     }
-                     return success;
-                  });
-            return new ResponseEntity<>("{\"taskId\": \"" + taskId + "\"}", HttpStatus.CREATED);
+            copilotRunnerService.generateSamplesForService(service, resources.getFirst(), null).thenApply(success -> {
+               if (Boolean.TRUE.equals(success)) {
+                  taskStatus.put(taskId, TaskStatus.SUCCESS);
+               } else {
+                  taskStatus.put(taskId, TaskStatus.FAILURE);
+               }
+               return success;
+            });
+            return Response.status(Response.Status.CREATED).entity("{\"taskId\": \"" + taskId + "\"}").build();
          }
       }
       log.error("At least one mandatory parameters (serviceId, operationName or contract) is missing");
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return Response.status(Response.Status.BAD_REQUEST).build();
    }
 
-
-   @GetMapping(value = "/samples/task/{id}/status")
-   public ResponseEntity<String> getGenerationTaskStatus(@PathVariable("id") String taskId) {
+   @GET
+   @Path("/samples/task/{id}/status")
+   public Response getGenerationTaskStatus(@PathParam("id") String taskId) {
       log.debug("Retrieving status for task {}", taskId);
       TaskStatus status = taskStatus.get(taskId);
       if (status == null) {
-         return new ResponseEntity<>("{\"status\": \"NOT_FOUND\"}", HttpStatus.NOT_FOUND);
+         return Response.status(Response.Status.NOT_FOUND).entity("{\"status\": \"NOT_FOUND\"}").build();
       }
       switch (status) {
          case PENDING:
-            return new ResponseEntity<>("{\"status\": \"PENDING\"}", HttpStatus.ACCEPTED);
+            return Response.status(Response.Status.ACCEPTED).entity("{\"status\": \"PENDING\"}").build();
          case SUCCESS:
             taskStatus.remove(taskId);
-            return new ResponseEntity<>("{\"status\": \"SUCCESS\"}", HttpStatus.CREATED);
+            return Response.status(Response.Status.CREATED).entity("{\"status\": \"SUCCESS\"}").build();
          case FAILURE:
             taskStatus.remove(taskId);
-            return new ResponseEntity<>("{\"status\": \"FAILURE\"}", HttpStatus.INTERNAL_SERVER_ERROR);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"status\": \"FAILURE\"}").build();
          default:
-            return new ResponseEntity<>("{\"status\": \"NOT_FOUND\"}", HttpStatus.NOT_FOUND);
+            return Response.status(Response.Status.NOT_FOUND).entity("{\"status\": \"NOT_FOUND\"}").build();
       }
    }
 
-   @PostMapping(value = "/samples/{id:.+}")
-   public ResponseEntity<Object> addSamplesSuggestions(@PathVariable("id") String serviceId,
-         @RequestParam(value = "operation") String operationName, @RequestBody List<Exchange> exchanges,
-         UserInfo userInfo) {
+   @POST
+   @Path("/samples/{id:.+}")
+   public Response addSamplesSuggestions(@PathParam("id") String serviceId,
+         @QueryParam("operation") String operationName, List<Exchange> exchanges) {
       log.debug("Adding new AI samples to service {} and operation {}", serviceId, operationName);
       boolean result = serviceService.addAICopilotExchangesToServiceOperation(serviceId, operationName, exchanges,
-            userInfo);
+            null);
       if (result) {
-         return new ResponseEntity<>(HttpStatus.CREATED);
+         return Response.status(Response.Status.CREATED).build();
       }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      return Response.status(Response.Status.FORBIDDEN).build();
    }
 
-   @PostMapping(value = "/samples/{id:.+}/cleanup")
-   public ResponseEntity<Object> removeExchanges(@PathVariable("id") String serviceId,
-         @RequestBody ExchangeSelection exchangeSelection, UserInfo userInfo) {
+   @POST
+   @Path("/samples/{id:.+}/cleanup")
+   public Response removeExchanges(@PathParam("id") String serviceId, ExchangeSelection exchangeSelection) {
       log.debug("Cleaning AI samples from service {} and multiple operations", serviceId);
-      boolean result = serviceService.removeAICopilotExchangesFromService(serviceId, exchangeSelection, userInfo);
+      boolean result = serviceService.removeAICopilotExchangesFromService(serviceId, exchangeSelection, null);
       if (result) {
-         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+         return Response.status(Response.Status.NO_CONTENT).build();
       }
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      return Response.status(Response.Status.FORBIDDEN).build();
    }
 
-   @PostMapping(value = "/samples/{id:.+}/export")
-   public ResponseEntity<Object> exportExchanges(@PathVariable("id") String serviceId,
-         @RequestParam(value = "format", required = false, defaultValue = MockRepositoryExporterFactory.API_EXAMPLES_FORMAT) String exportFormat,
-         @RequestBody ExchangeSelection exchangeSelection, UserInfo userInfo) {
+   @POST
+   @Path("/samples/{id:.+}/export")
+   public Response exportExchanges(@PathParam("id") String serviceId, @QueryParam("format") String exportFormat,
+         ExchangeSelection exchangeSelection) {
       log.debug("Generating AI samples export for service {}", serviceId);
 
       try {
-         byte[] body = importExportService.exportExchangeSelection(serviceId, exchangeSelection, exportFormat, userInfo)
+         byte[] body = importExportService.exportExchangeSelection(serviceId, exchangeSelection, exportFormat, null)
                .getBytes(StandardCharsets.UTF_8);
-         HttpHeaders responseHeaders = new HttpHeaders();
-         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-         responseHeaders.set("Content-Disposition", "attachment; filename=microcks-repository.json");
-         responseHeaders.setContentLength(body.length);
 
-         return new ResponseEntity<>(body, responseHeaders, HttpStatus.OK);
+         return Response.ok(body).type(MediaType.APPLICATION_JSON)
+               .header("Content-Disposition", "attachment; filename=microcks-repository.json")
+               .header("Content-Length", body.length).build();
       } catch (Exception e) {
          log.error("Exception while exporting the Exchanges selection", e);
-         return new ResponseEntity<>("Exception while exporting the Exchanges selection. Check server logs.",
-               HttpStatus.INTERNAL_SERVER_ERROR);
+         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+               .entity("Exception while exporting the Exchanges selection. Check server logs.").build();
       }
    }
 

@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.ServiceState;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
-import io.github.microcks.repository.ServiceStateRepository;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.ServiceState;
+import io.microcks.repository.ServiceStateRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.Calendar;
 
@@ -35,14 +32,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for ServiceStateStore class.
  * @author laurent
  */
-@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 class ServiceStateStoreTest {
 
    private static final String SERVICE_ID = "serviceId";
 
-   @Autowired
+   @Inject
    ServiceStateRepository repository;
 
    ServiceStateStore store;

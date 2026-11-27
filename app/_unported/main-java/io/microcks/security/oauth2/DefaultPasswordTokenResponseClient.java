@@ -20,7 +20,7 @@
  * relied on. This implementation issues the token request directly via {@link RestClient}
  * to avoid pulling in the removed converter abstractions.
  */
-package io.github.microcks.security.oauth2;
+package io.microcks.security.oauth2;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

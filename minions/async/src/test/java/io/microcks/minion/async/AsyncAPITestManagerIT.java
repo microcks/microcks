@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async;
+package io.microcks.minion.async;
 
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.minion.async.client.KeycloakConfig;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceView;
+import io.microcks.domain.TestCaseResult;
+import io.microcks.domain.TestReturn;
+import io.microcks.domain.TestRunnerType;
+import io.microcks.minion.async.client.MicrocksAPIConnector;
+import io.microcks.minion.async.client.dto.TestCaseReturnDTO;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -84,21 +83,16 @@ class AsyncAPITestManagerIT {
    void testKafkaAsyncAPITestSuccess(TestConfig config) throws Exception {
       // Arrange.
       String asyncAPIContent = Files
-            .readString(Paths.get("target/test-classes/io/github/microcks/minion/async", config.specificationFile));
+            .readString(Paths.get("target/test-classes/io/microcks/minion/async", config.specificationFile));
       Map<String, TestCaseReturnDTO> reportedTestCases = new HashMap<>();
       MicrocksAPIConnector microcksAPIConnector = new MicrocksAPIConnector() {
          @Override
-         public KeycloakConfig getKeycloakConfig() {
+         public List<Service> listServices(int page, int size) {
             return null;
          }
 
          @Override
-         public List<Service> listServices(String authorization, int page, int size) {
-            return null;
-         }
-
-         @Override
-         public ServiceView getService(String authorization, String serviceId, boolean messages) {
+         public ServiceView getService(String serviceId, boolean messages) {
             return null;
          }
 

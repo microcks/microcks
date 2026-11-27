@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.microcks.util.soapui.assertions;
+package io.microcks.artifact.soapui.assertions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

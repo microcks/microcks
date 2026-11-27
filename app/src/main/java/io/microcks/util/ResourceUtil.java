@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
-import io.github.microcks.domain.Service;
+import io.microcks.domain.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -61,8 +60,13 @@ public class ResourceUtil {
     * @throws IOException if resource cannot be found or opened
     */
    public static InputStream getClasspathResource(String resourcePath) throws IOException {
-      Resource template = new ClassPathResource(resourcePath);
-      return template.getInputStream();
+      String path = resourcePath.startsWith("/") ? resourcePath.substring(1) : resourcePath;
+      InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
+      if (stream == null) {
+         throw new FileNotFoundException(
+               "class path resource [" + path + "] cannot be opened because it does not exist");
+      }
+      return stream;
    }
 
    /**

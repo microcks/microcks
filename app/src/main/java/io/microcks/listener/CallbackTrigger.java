@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.listener;
+package io.microcks.listener;
 
-import io.github.microcks.domain.CallbackInfo;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Request;
-import io.github.microcks.event.CallbackTriggerEvent;
-import io.github.microcks.event.HttpServletRequestSnapshot;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.util.IdBuilder;
+import io.microcks.domain.CallbackInfo;
+import io.microcks.domain.Header;
+import io.microcks.domain.Request;
+import io.microcks.event.CallbackTriggerEvent;
+import io.microcks.event.HttpServletRequestSnapshot;
+import io.microcks.repository.RequestRepository;
+import io.microcks.util.IdBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.enterprise.event.ObservesAsync;
 
 import java.io.StringReader;
 import java.net.URI;
@@ -51,26 +51,24 @@ import java.util.stream.Collectors;
  * Application event listener that calls back a consumer endpoint on trigger event.
  * @author laurent
  */
-@Component
-public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent> {
+@ApplicationScoped
+public class CallbackTrigger {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(CallbackTrigger.class);
 
    private final RequestRepository requestRepository;
-   private final ApplicationContext applicationContext;
+   private final Event<CallbackTriggerEvent> callbackEvents;
 
-   @Value("${mocks.rest.callbacks.default-delay:3000}")
+   @ConfigProperty(name = "mocks.rest.callbacks.default-delay", defaultValue = "3000")
    long defaultDelay = 3000;
 
-   public CallbackTrigger(RequestRepository requestRepository, ApplicationContext applicationContext) {
+   public CallbackTrigger(RequestRepository requestRepository, Event<CallbackTriggerEvent> callbackEvents) {
       this.requestRepository = requestRepository;
-      this.applicationContext = applicationContext;
+      this.callbackEvents = callbackEvents;
    }
 
-   @Override
-   @Async
-   public void onApplicationEvent(CallbackTriggerEvent event) {
+   public void onApplicationEvent(@ObservesAsync CallbackTriggerEvent event) {
       log.debug("Received a CallbackTriggerEvent on {}", event.getServiceId());
 
       // Find the callbackInfo and callback name.
@@ -118,8 +116,8 @@ public class CallbackTrigger implements ApplicationListener<CallbackTriggerEvent
             // Should we re-emit another CallbackTriggerEvent for next in order?
             if (event.getOperation().getCallbackInfos().size() > event.getStep() + 1) {
                log.debug("Re-emitting CallbackTriggerEvent for next callbackInfo");
-               applicationContext.publishEvent(new CallbackTriggerEvent(this, event.getServiceId(),
-                     event.getOperation(), event.getResponseName(), event.getRequest(), event.getStep() + 1));
+               callbackEvents.fireAsync(new CallbackTriggerEvent(event.getServiceId(), event.getOperation(),
+                     event.getResponseName(), event.getRequest(), event.getStep() + 1));
             }
          } else {
             log.warn("No callback request found for callbackName {} on operation {}", callbackName,

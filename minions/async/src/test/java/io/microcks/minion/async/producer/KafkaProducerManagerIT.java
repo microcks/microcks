@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.minion.async.producer;
+package io.microcks.minion.async.producer;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.github.microcks.util.AvroUtil;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.minion.async.AsyncMockDefinition;
+import io.microcks.minion.async.AsyncMockRepository;
+import io.microcks.minion.async.SchemaRegistry;
+import io.microcks.minion.async.client.MicrocksAPIConnector;
+import io.microcks.artifact.asyncapi.AvroUtil;
 
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
@@ -105,8 +105,8 @@ class KafkaProducerManagerIT {
    @Test
    void testProduceAvroMockMessages() throws Exception {
       // Arrange.
-      String asyncAPIContent = Files.readString(Paths.get("target/test-classes/io/github/microcks/minion/async",
-            "user-signedup-avro-asyncapi-oneof-2.3.yaml"));
+      String asyncAPIContent = Files.readString(
+            Paths.get("target/test-classes/io/microcks/minion/async", "user-signedup-avro-asyncapi-oneof-2.3.yaml"));
 
       // Prepare some event messages.
       EventMessage aliceEvent = new EventMessage();
@@ -189,8 +189,8 @@ class KafkaProducerManagerIT {
                   .waitingFor(Wait.forHttp("/subjects").forStatusCode(200));
       schemaRegistryContainer.start();
 
-      String asyncAPIContent = Files.readString(Paths.get("target/test-classes/io/github/microcks/minion/async",
-            "user-signedup-avro-asyncapi-oneof-2.3.yaml"));
+      String asyncAPIContent = Files.readString(
+            Paths.get("target/test-classes/io/microcks/minion/async", "user-signedup-avro-asyncapi-oneof-2.3.yaml"));
 
       // Prepare some event messages.
       EventMessage aliceEvent = new EventMessage();

@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.web.grpc;
 
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.web.GrpcServerCallHandler;
+import io.microcks.artifact.grpc.GrpcUtil;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.web.GrpcServerCallHandler;
 
 import io.grpc.HandlerRegistry;
 import io.grpc.MethodDescriptor;
@@ -30,15 +31,15 @@ import io.grpc.stub.ServerCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * A GRPC HandlerRegistry that delegates server calls handling to GrpcServerCallHandler.
  * @author laurent
  */
-@Component
+@ApplicationScoped
 public class GrpcMockHandlerRegistry extends HandlerRegistry {
 
    /** A simple logger for diagnostic messages. */
@@ -56,6 +57,7 @@ public class GrpcMockHandlerRegistry extends HandlerRegistry {
     * @param serviceRepository  The repository used to get access to service definitions
     * @param resourceRepository The repository used to get access to resource definitions
     */
+   @Inject
    public GrpcMockHandlerRegistry(GrpcServerCallHandler serverCallHandler, ServiceRepository serviceRepository,
          ResourceRepository resourceRepository) {
       this.serverCallHandler = serverCallHandler;

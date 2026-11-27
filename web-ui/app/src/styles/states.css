@@ -1,0 +1,8 @@
+/* Loading and error states shared by the pages. Colors come from the tokens. */
+
+.demo-loading {
+  display: block;
+  min-height: 6rem;
+}
+
+.wf-loading { display: flex; flex-direction: column; gap: var(--space-4); }

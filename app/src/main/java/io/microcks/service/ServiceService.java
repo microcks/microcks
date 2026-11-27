@@ -13,55 +13,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.microcks.service;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.GenericResource;
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.RequestReplyEvent;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.event.ChangeType;
-import io.github.microcks.event.ServiceChangeEvent;
-import io.github.microcks.repository.EventMessageRepository;
-import io.github.microcks.repository.GenericResourceRepository;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.repository.TestResultRepository;
-import io.github.microcks.security.AuthorizationChecker;
-import io.github.microcks.security.UserInfo;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.EntityAlreadyExistsException;
-import io.github.microcks.util.HTTPDownloader;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.MockRepositoryImporterFactory;
-import io.github.microcks.util.ReferenceResolver;
-import io.github.microcks.util.RelativeReferenceURLBuilder;
-import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
-import io.github.microcks.util.ResourceUtil;
-import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
+import io.microcks.domain.Binding;
+import io.microcks.domain.BindingType;
+import io.microcks.domain.EventMessage;
+import io.microcks.domain.Exchange;
+import io.microcks.domain.GenericResource;
+import io.microcks.domain.Metadata;
+import io.microcks.domain.Operation;
+import io.microcks.domain.ParameterConstraint;
+import io.microcks.domain.RequestReplyEvent;
+import io.microcks.domain.RequestResponsePair;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Secret;
+import io.microcks.domain.Service;
+import io.microcks.domain.ServiceType;
+import io.microcks.domain.UnidirectionalEvent;
+import io.microcks.event.ChangeType;
+import io.microcks.event.ServiceChangeEvent;
+import io.microcks.repository.EventMessageRepository;
+import io.microcks.repository.GenericResourceRepository;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.ServiceRepository;
+import io.microcks.repository.TestResultRepository;
+import io.microcks.security.AuthorizationChecker;
+import io.microcks.security.UserInfo;
+import io.microcks.util.DispatchStyles;
+import io.microcks.util.EntityAlreadyExistsException;
+import io.microcks.util.HTTPDownloader;
+import io.microcks.util.IdBuilder;
+import io.microcks.artifact.MockRepositoryImportException;
+import io.microcks.artifact.MockRepositoryImporter;
+import io.microcks.artifact.MockRepositoryImporterFactory;
+import io.microcks.util.ReferenceResolver;
+import io.microcks.util.RelativeReferenceURLBuilder;
+import io.microcks.util.RelativeReferenceURLBuilderFactory;
+import io.microcks.util.ResourceUtil;
+import io.microcks.artifact.openapi.OpenAPISchemaBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,7 +76,7 @@ import java.util.Set;
  * Bean defining service operations around Service domain objects.
  * @author laurent
  */
-@org.springframework.stereotype.Service
+@ApplicationScoped
 public class ServiceService {
 
    /** A simple logger for diagnostic messages. */
@@ -90,14 +92,14 @@ public class ServiceService {
    private final EventMessageRepository eventMessageRepository;
    private final TestResultRepository testResultRepository;
 
-   private final ApplicationContext applicationContext;
+   private final Event<ServiceChangeEvent> serviceChangeEvent;
    private final AuthorizationChecker authorizationChecker;
 
-   @Value("${async-api.default-binding}")
-   private final String defaultAsyncBinding = null;
+   @ConfigProperty(name = "async-api.default-binding", defaultValue = "KAFKA")
+   String defaultAsyncBinding;
 
-   @Value("${async-api.default-frequency}")
-   private final Long defaultAsyncFrequency = 30L;
+   @ConfigProperty(name = "async-api.default-frequency", defaultValue = "30")
+   Long defaultAsyncFrequency;
 
 
    /**
@@ -109,13 +111,14 @@ public class ServiceService {
     * @param responseRepository        The repository to access response definitions
     * @param eventMessageRepository    The repository to access event message definitions
     * @param testResultRepository      The repository to access test result definitions
-    * @param applicationContext        The Spring application context
+    * @param serviceChangeEvent        The CDI event used to publish service changes
     * @param authorizationChecker      The authorization checker service
     */
+   @Inject
    public ServiceService(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
          GenericResourceRepository genericResourceRepository, RequestRepository requestRepository,
          ResponseRepository responseRepository, EventMessageRepository eventMessageRepository,
-         TestResultRepository testResultRepository, ApplicationContext applicationContext,
+         TestResultRepository testResultRepository, Event<ServiceChangeEvent> serviceChangeEvent,
          AuthorizationChecker authorizationChecker) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
@@ -124,7 +127,7 @@ public class ServiceService {
       this.responseRepository = responseRepository;
       this.eventMessageRepository = eventMessageRepository;
       this.testResultRepository = testResultRepository;
-      this.applicationContext = applicationContext;
+      this.serviceChangeEvent = serviceChangeEvent;
       this.authorizationChecker = authorizationChecker;
    }
 
@@ -145,7 +148,7 @@ public class ServiceService {
          }
          return serviceRepository.findByNameAndVersion(name, version);
       }
-      return serviceRepository.findById(serviceId).orElse(null);
+      return serviceRepository.findById(serviceId);
    }
 
    /**
@@ -246,7 +249,7 @@ public class ServiceService {
 
             service.getMetadata().objectUpdated();
             service.setSourceArtifact(artifactInfo.getArtifactName());
-            service = serviceRepository.save(service);
+            serviceRepository.persistOrUpdate(service);
 
             // We're dealing with main artifact so reference is saved or updated one.
             reference = service;
@@ -312,7 +315,7 @@ public class ServiceService {
 
          // When extracting message information, we may have modified Operation because discovered new resource paths
          // depending on variable URI parts. As a consequence, we got to update Service in repository.
-         serviceRepository.save(reference);
+         serviceRepository.persistOrUpdate(reference);
 
          // Publish a Service update event before returning.
          publishServiceChangeEvent(reference, serviceUpdate ? ChangeType.UPDATED : ChangeType.CREATED);
@@ -380,7 +383,7 @@ public class ServiceService {
       delOp.setDispatcherRules("id");
       service.addOperation(delOp);
 
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
       log.info("Having created Service '{}' for generic resource {}", service.getId(), resource);
 
       // If reference payload is provided, record a first resource.
@@ -392,7 +395,7 @@ public class ServiceService {
          try {
             Document document = Document.parse(referencePayload);
             genericResource.setPayload(document);
-            genericResourceRepository.save(genericResource);
+            genericResourceRepository.persistOrUpdate(genericResource);
          } catch (JsonParseException jpe) {
             log.error("Cannot parse the provided reference payload as JSON: {}", referencePayload);
             log.error("Reference is ignored, please provide JSON the next time");
@@ -447,7 +450,7 @@ public class ServiceService {
       subscribeOp.addBinding(BindingType.WS.name(), wsBinding);
       service.addOperation(subscribeOp);
 
-      serviceRepository.save(service);
+      serviceRepository.persistOrUpdate(service);
       log.info("Having created Service '{}' for generic event {}", service.getId(), event);
 
       // If reference payload is provided, record a first resource.
@@ -458,14 +461,14 @@ public class ServiceService {
          artifact.setServiceId(service.getId());
          artifact.setSourceArtifact(event + "-asyncapi.yaml");
          artifact.setContent(buildAsyncAPISpecContent(service, event, referencePayload));
-         resourceRepository.save(artifact);
+         resourceRepository.persistOrUpdate(artifact);
 
          EventMessage eventMessage = new EventMessage();
          eventMessage.setName("Reference");
          eventMessage.setContent(referencePayload);
          eventMessage.setOperationId(IdBuilder.buildOperationId(service, subscribeOp));
          eventMessage.setMediaType("application/json");
-         eventMessageRepository.save(eventMessage);
+         eventMessageRepository.persistOrUpdate(eventMessage);
          log.info("Having created resource '{}' for Service '{}'", artifact.getId(), service.getId());
       }
 
@@ -531,7 +534,7 @@ public class ServiceService {
          service.getMetadata().setLabels(metadata.getLabels());
          service.getMetadata().setAnnotations(metadata.getAnnotations());
          service.getMetadata().objectUpdated();
-         serviceRepository.save(service);
+         serviceRepository.persistOrUpdate(service);
 
          // Publish a Service update event before returning.
          publishServiceChangeEvent(service, ChangeType.UPDATED);
@@ -566,7 +569,7 @@ public class ServiceService {
                operation.setDefaultDelay(delay);
                operation.setDefaultDelayStrategy(delayStrategy);
                operation.setOverride(true);
-               serviceRepository.save(service);
+               serviceRepository.persistOrUpdate(service);
 
                // Publish a Service update event before returning.
                publishServiceChangeEvent(service, ChangeType.UPDATED);
@@ -604,15 +607,15 @@ public class ServiceService {
                      pair.getResponse().setSourceArtifact(AI_COPILOT_SOURCE);
 
                      // Save response and associate request with response before saving it.
-                     responseRepository.save(pair.getResponse());
+                     responseRepository.persistOrUpdate(pair.getResponse());
                      pair.getRequest().setResponseId(pair.getResponse().getId());
-                     requestRepository.save(pair.getRequest());
+                     requestRepository.persistOrUpdate(pair.getRequest());
 
                   } else if (exchange instanceof UnidirectionalEvent event) {
                      // Associate event message with operation and artifact before saving it.
                      event.getEventMessage().setOperationId(operationId);
                      event.getEventMessage().setSourceArtifact(AI_COPILOT_SOURCE);
-                     eventMessageRepository.save(event.getEventMessage());
+                     eventMessageRepository.persistOrUpdate(event.getEventMessage());
 
                   } else if (exchange instanceof RequestReplyEvent event) {
                      // Associate request and reply event messages with operation and artifact.
@@ -622,9 +625,9 @@ public class ServiceService {
                      event.getReplyMessage().setSourceArtifact(AI_COPILOT_SOURCE);
 
                      // Save reply message and associate request with reply before saving it.
-                     eventMessageRepository.save(event.getReplyMessage());
+                     eventMessageRepository.persistOrUpdate(event.getReplyMessage());
                      event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
-                     eventMessageRepository.save(event.getRequestMessage());
+                     eventMessageRepository.persistOrUpdate(event.getRequestMessage());
                   }
                }
                // Publish a Service update event before returning.
@@ -731,7 +734,7 @@ public class ServiceService {
          resource.setSourceArtifact(artifactInfo.getArtifactName());
          resource.setMainArtifact(artifactInfo.isMainArtifact());
       }
-      resourceRepository.saveAll(resources);
+      resourceRepository.persistOrUpdate(resources);
    }
 
    /** Manage the update of previous artifact messages with new imported ones. */
@@ -762,9 +765,9 @@ public class ServiceService {
                pair.getResponse().setSourceArtifact(artifactInfo.getArtifactName());
 
                // Save response and associate request with response before saving it.
-               responseRepository.save(pair.getResponse());
+               responseRepository.persistOrUpdate(pair.getResponse());
                pair.getRequest().setResponseId(pair.getResponse().getId());
-               requestRepository.save(pair.getRequest());
+               requestRepository.persistOrUpdate(pair.getRequest());
 
                if (pair.getCallbacks() != null && !pair.getCallbacks().isEmpty()) {
                   // Associate callbacks request and response with operation and artifact.
@@ -777,17 +780,18 @@ public class ServiceService {
 
                   // Save callbacks response and associate requests with response before sabing it.
                   responseRepository
-                        .saveAll(pair.getCallbacks().stream().map(RequestResponsePair::getResponse).toList());
+                        .persistOrUpdate(pair.getCallbacks().stream().map(RequestResponsePair::getResponse).toList());
                   pair.getCallbacks()
                         .forEach(cbPair -> cbPair.getRequest().setResponseId(cbPair.getResponse().getId()));
-                  requestRepository.saveAll(pair.getCallbacks().stream().map(RequestResponsePair::getRequest).toList());
+                  requestRepository
+                        .persistOrUpdate(pair.getCallbacks().stream().map(RequestResponsePair::getRequest).toList());
                }
 
             } else if (exchange instanceof UnidirectionalEvent event) {
                // Associate event message with operation and artifact before saving it..
                event.getEventMessage().setOperationId(operationId);
                event.getEventMessage().setSourceArtifact(artifactInfo.getArtifactName());
-               eventMessageRepository.save(event.getEventMessage());
+               eventMessageRepository.persistOrUpdate(event.getEventMessage());
 
             } else if (exchange instanceof RequestReplyEvent event) {
                // Associate request and reply event messages with operation and artifact.
@@ -797,9 +801,9 @@ public class ServiceService {
                event.getReplyMessage().setSourceArtifact(artifactInfo.getArtifactName());
 
                // Save reply message and associate request with reply before saving it.
-               eventMessageRepository.save(event.getReplyMessage());
+               eventMessageRepository.persistOrUpdate(event.getReplyMessage());
                event.getRequestMessage().setReplyId(event.getReplyMessage().getId());
-               eventMessageRepository.save(event.getRequestMessage());
+               eventMessageRepository.persistOrUpdate(event.getRequestMessage());
             }
          }
       }
@@ -822,8 +826,8 @@ public class ServiceService {
 
    /** Publish a ServiceChangeEvent towards minions or some other consumers. */
    private void publishServiceChangeEvent(Service service, ChangeType changeType) {
-      ServiceChangeEvent event = new ServiceChangeEvent(this, service.getId(), changeType);
-      applicationContext.publishEvent(event);
+      ServiceChangeEvent event = new ServiceChangeEvent(service.getId(), changeType);
+      serviceChangeEvent.fireAsync(event);
       log.debug("Service change event has been published");
    }
 }

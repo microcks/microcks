@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util;
+package io.microcks.util;
 
-import io.github.microcks.domain.Secret;
+import io.microcks.domain.Secret;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -249,7 +249,7 @@ public class HTTPDownloader {
          throws Exception {
       // First compute a stripped PEM certificate and decode it from base64.
       String strippedPem = caCertPem.replace(BEGIN_CERTIFICATE, "").replace(END_CERTIFICATE, "");
-      InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
+      InputStream is = new ByteArrayInputStream(java.util.Base64.getMimeDecoder().decode(strippedPem));
 
       // Generate a new x509 certificate from the stripped decoded pem.
       CertificateFactory cf = CertificateFactory.getInstance("X.509");

@@ -13,30 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.openapi;
+package io.microcks.web.mcp;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.listener.ListenerTestsConfiguration;
-import io.github.microcks.repository.RepositoryTestsConfiguration;
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.service.ArtifactInfo;
-import io.github.microcks.service.ServiceService;
-import io.github.microcks.util.ai.McpSchema;
-import io.github.microcks.web.ControllerTestsConfiguration;
-import io.github.microcks.web.RestInvocationProcessor;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import io.microcks.domain.Operation;
+import io.microcks.domain.Resource;
+import io.microcks.domain.ResourceType;
+import io.microcks.domain.Service;
+import io.microcks.repository.ResourceRepository;
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
+import io.microcks.util.ai.McpSchema;
+import io.microcks.web.RestInvocationProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.File;
 import java.util.List;
@@ -48,20 +43,17 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test class for OpenAPIMcpToolConverter.
  * @author laurent
  */
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ControllerTestsConfiguration.class,
-      ListenerTestsConfiguration.class })
-@TestPropertySource(locations = { "classpath:/config/test.properties" })
+@QuarkusTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenAPIMcpToolConverterTest {
 
-   @Autowired
+   @Inject
    private ServiceService serviceService;
 
-   @Autowired
+   @Inject
    private ResourceRepository resourceRepository;
 
-   @Autowired
+   @Inject
    private RestInvocationProcessor restInvocationProcessor;
 
    private Service servicev1;
@@ -72,8 +64,8 @@ class OpenAPIMcpToolConverterTest {
    @BeforeAll
    void setUp() throws Exception {
       // Import the petstore service definition from the REST tutorial.
-      File artifactFilev1 = new File("target/test-classes/io/github/microcks/util/openapi/petstore-1.0.0-openapi.yaml");
-      File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/openapi/petstore-2.0.0-openapi.yaml");
+      File artifactFilev1 = new File("target/test-classes/io/microcks/artifact/openapi/petstore-1.0.0-openapi.yaml");
+      File artifactFilev2 = new File("target/test-classes/io/microcks/artifact/openapi/petstore-2.0.0-openapi.yaml");
       // Extract service and resource. + tool converters.
       List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
             new ArtifactInfo("petstore-1.0.0-openapi.yaml", true));
@@ -197,14 +189,14 @@ class OpenAPIMcpToolConverterTest {
    void testExternalReferenceResolution() {
       // 1. Create a dummy Service
       Service externalRefService = new Service();
-      externalRefService.setId("test-ext-ref");
+      externalRefService.setId("6626365f24874269b65c6a01");
       externalRefService.setName("External Ref API");
       externalRefService.setVersion("1.0.0");
-      externalRefService.setType(io.github.microcks.domain.ServiceType.REST);
+      externalRefService.setType(io.microcks.domain.ServiceType.REST);
 
       // 2. Create the main Resource
       Resource mainResource = new Resource();
-      mainResource.setId("main-res-id");
+      mainResource.setId("6626365f24874269b65c6a02");
       mainResource.setServiceId(externalRefService.getId());
       mainResource.setType(ResourceType.OPEN_API_SPEC);
       mainResource.setName("main.yaml");
@@ -223,11 +215,11 @@ class OpenAPIMcpToolConverterTest {
                         schema:
                           $ref: 'models.yaml#/components/schemas/TestModel'
             """);
-      resourceRepository.save(mainResource);
+      resourceRepository.persist(mainResource);
 
       // 3. Create the external Resource
       Resource extResource = new Resource();
-      extResource.setId("ext-res-id");
+      extResource.setId("6626365f24874269b65c6a03");
       extResource.setServiceId(externalRefService.getId());
       extResource.setType(ResourceType.OPEN_API_SPEC);
       extResource.setName("models.yaml");
@@ -243,7 +235,7 @@ class OpenAPIMcpToolConverterTest {
                   required:
                     - testField
             """);
-      resourceRepository.save(extResource);
+      resourceRepository.persist(extResource);
 
       // 4. Create the Operation
       Operation operation = new Operation();
@@ -268,14 +260,14 @@ class OpenAPIMcpToolConverterTest {
    void testPathLevelAndOperationLevelParameters() {
       // 1. Create a dummy Service
       Service pathParamService = new Service();
-      pathParamService.setId("test-path-params");
+      pathParamService.setId("6626365f24874269b65c6a04");
       pathParamService.setName("Path Params API");
       pathParamService.setVersion("1.0.0");
-      pathParamService.setType(io.github.microcks.domain.ServiceType.REST);
+      pathParamService.setType(io.microcks.domain.ServiceType.REST);
 
       // 2. Create the main Resource with path-level and operation-level parameters
       Resource mainResource = new Resource();
-      mainResource.setId("path-params-res-id");
+      mainResource.setId("6626365f24874269b65c6a05");
       mainResource.setServiceId(pathParamService.getId());
       mainResource.setType(ResourceType.OPEN_API_SPEC);
       mainResource.setName("path-params.yaml");
@@ -306,7 +298,7 @@ class OpenAPIMcpToolConverterTest {
                     '200':
                       description: OK
             """);
-      resourceRepository.save(mainResource);
+      resourceRepository.persist(mainResource);
 
       // 3. Create the Operation
       Operation operation = new Operation();
@@ -344,14 +336,14 @@ class OpenAPIMcpToolConverterTest {
    void testOperationLevelParameterOverridesPathLevel() {
       // 1. Create a dummy Service
       Service overrideService = new Service();
-      overrideService.setId("test-override-params");
+      overrideService.setId("6626365f24874269b65c6a06");
       overrideService.setName("Override Params API");
       overrideService.setVersion("1.0.0");
-      overrideService.setType(io.github.microcks.domain.ServiceType.REST);
+      overrideService.setType(io.microcks.domain.ServiceType.REST);
 
       // 2. Create Resource where operation-level overrides path-level description
       Resource mainResource = new Resource();
-      mainResource.setId("override-params-res-id");
+      mainResource.setId("6626365f24874269b65c6a07");
       mainResource.setServiceId(overrideService.getId());
       mainResource.setType(ResourceType.OPEN_API_SPEC);
       mainResource.setName("override-params.yaml");
@@ -380,7 +372,7 @@ class OpenAPIMcpToolConverterTest {
                     '200':
                       description: OK
             """);
-      resourceRepository.save(mainResource);
+      resourceRepository.persist(mainResource);
 
       Operation operation = new Operation();
       operation.setName("GET /items/{itemId}");

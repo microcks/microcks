@@ -1,0 +1,70 @@
+# Microcks 2.0 with two app replicas forming a cluster. Replicas find each other through the tcp-ip discovery of the
+# Hazelcast event bus and relay to each other the events destined to the async minion: the minion may be connected to
+# any replica and still receives every event. Use instead of docker-compose.yml:
+#   docker compose -f docker-compose-cluster.yml up -d
+#   docker compose -f docker-compose-cluster.yml --profile async up -d      (with the async minion)
+x-app: &app
+  image: quay.io/microcks/microcks-app:nightly
+  depends_on:
+    - mongo
+    - postman
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: microcks-db
+    volumes:
+      - "~/tmp/microcks-data:/data/db"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  postman:
+    image: quay.io/microcks/microcks-postman-runtime:0.8.0
+    container_name: microcks-postman-runtime
+
+  app-1:
+    <<: *app
+    container_name: microcks-1
+    hostname: app-1
+    ports:
+      - "8080:8080"
+    environment:
+      - TEST_CALLBACK_URL=http://app-1:8080
+      - ASYNC_MINION_URL=http://microcks-async-minion:8081
+      - MONGODB_URL=mongodb://mongo:27017
+      - MONGODB_DATABASE=microcks
+      - POSTMAN_RUNNER_URL=http://postman:3000
+      - MICROCKS_CLUSTER_DISCOVERY=tcp-ip
+      - MICROCKS_CLUSTER_MEMBERS=app-1:5701,app-2:5701
+
+  app-2:
+    <<: *app
+    container_name: microcks-2
+    hostname: app-2
+    ports:
+      - "8082:8080"
+    environment:
+      - TEST_CALLBACK_URL=http://app-2:8080
+      - ASYNC_MINION_URL=http://microcks-async-minion:8081
+      - MONGODB_URL=mongodb://mongo:27017
+      - MONGODB_DATABASE=microcks
+      - POSTMAN_RUNNER_URL=http://postman:3000
+      - MICROCKS_CLUSTER_DISCOVERY=tcp-ip
+      - MICROCKS_CLUSTER_MEMBERS=app-1:5701,app-2:5701
+
+  async-minion:
+    profiles: ["async"]
+    depends_on:
+      - app-1
+    ports:
+      - "8081:8081"
+    image: quay.io/microcks/microcks-async-minion:nightly
+    container_name: microcks-async-minion
+    restart: on-failure
+    volumes:
+      - "./config:/deployments/config"
+    environment:
+      - QUARKUS_PROFILE=docker-compose

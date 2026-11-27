@@ -1,0 +1,171 @@
+/* Behavior · Dispatcher section (prototype Behavior.dc.html). Colors come from the design tokens only. */
+.dispatcher .panel-body { gap: 16px; }
+.dispatcher .ex-radio-card[aria-disabled='true'] { opacity: 0.55; cursor: not-allowed; }
+.dispatcher-raw { margin: 0; font: 400 12px/16px var(--font-ui); color: var(--text-muted); }
+
+/* Rules box of the picked dispatcher. */
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+}
+.rules-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.rules-title { margin: 0; font: 600 14px/20px var(--font-ui); }
+.rules-hint { font: 400 13px/18px var(--font-ui); color: var(--text-muted); }
+.rules-block { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.rules-help { font: 400 12px/16px var(--font-ui); color: var(--text-muted); }
+.rules-muted { color: var(--text-muted); }
+
+/* URI_PARTS: the path with toggle chips for its parameters. */
+.rules-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  font: 400 14px/18px var(--font-mono);
+}
+.rules-path-prefix { color: var(--text-secondary); }
+.rules-param {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text-muted);
+  font: 600 14px/18px var(--font-mono);
+  cursor: pointer;
+}
+.rules-param[aria-pressed='true'] { border-color: var(--action); background: var(--selected); color: var(--link); }
+
+/* Inputs of the rules (query names, JSON rule, proxy URL, fallback). */
+.rules-input,
+.rules-select {
+  box-sizing: border-box;
+  height: 38px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--text);
+  font: 400 13px/1 var(--font-mono);
+}
+.rules-select { padding: 0 10px; font: 400 14px/1 var(--font-ui); }
+.rules-url { color: var(--link); }
+.rules-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--text);
+  font: 400 12px/1.6 var(--font-mono);
+  resize: vertical;
+}
+.rules-textarea[aria-invalid='true'] { border-color: var(--danger); }
+.rules-error { display: inline-flex; align-items: center; gap: 6px; font: 400 12px/16px var(--font-ui); color: var(--danger); }
+
+/* SCRIPT: language toggle + scope chips, then an editor with a line-number gutter. */
+.rules-script-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.rules-scope { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 400 12px/16px var(--font-ui); color: var(--text-muted); }
+.rules-scope code {
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--link);
+  font: 400 12px/18px var(--font-mono);
+}
+.rules-editor {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+}
+.rules-editor:focus-within { outline: 2px solid var(--action); outline-offset: 2px; }
+.rules-gutter {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 28px;
+  margin: 0;
+  padding: 10px 8px;
+  border-right: 1px solid var(--border);
+  background: var(--canvas);
+  color: var(--text-muted);
+  font: 400 12px/1.6 var(--font-mono);
+  text-align: right;
+}
+.rules-code {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: 400 12px/1.6 var(--font-mono);
+  white-space: pre;
+  overflow-x: auto;
+  resize: vertical;
+}
+.rules-code:focus { outline: none; }
+
+/* FALLBACK / PROXY_FALLBACK: first try → second step, side by side. */
+.rules-chain { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.rules-step { flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.rules-chain > .rules-step:last-child { flex: 1 1 200px; }
+.rules-chain > .rules-step-wide:last-child { flex: 2 1 260px; }
+.rules-readonly {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  font: 400 13px/1 var(--font-mono);
+}
+.rules-arrow { padding-bottom: 9px; color: var(--text-muted); }
+
+/* Examples and their dispatch criteria. */
+.reach { display: flex; flex-direction: column; gap: 6px; }
+.reach-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.reach-title { margin: 0; font: inherit; letter-spacing: inherit; color: inherit; }
+.reach-count { font-weight: 400; letter-spacing: 0; text-transform: none; }
+.reach-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.reach-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  font: 400 13px/16px var(--font-ui);
+}
+.reach-name { flex: 1 1 140px; min-width: 0; font-weight: 500; }
+.reach-criteria { flex: 2 1 200px; min-width: 0; font: 400 12px/16px var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.reach-row[data-ok] .reach-criteria { color: var(--text-secondary); }
+.reach-state { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--warning); }
+.reach-row[data-ok] .reach-state { color: var(--success); }
+
+.rules-stored { display: flex; flex-direction: column; gap: 6px; }

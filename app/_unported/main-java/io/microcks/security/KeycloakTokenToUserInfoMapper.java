@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.security;
+package io.microcks.security;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import static io.github.microcks.security.KeycloakJwtToken.MICROCKS_GROUPS_TOKEN_CLAIM;
+import static io.microcks.security.KeycloakJwtToken.MICROCKS_GROUPS_TOKEN_CLAIM;
 import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 
 /**

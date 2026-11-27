@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.soap;
+package io.microcks.artifact.soap;
 
 import org.junit.jupiter.api.Test;
 
@@ -137,7 +137,7 @@ class SoapMessageValidatorTest {
       String wsdlContent = null;
       try {
          wsdlContent = new String(
-               Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/soap/HelloService.wsdl")),
+               Files.readAllBytes(Paths.get("target/test-classes/io/microcks/artifact/soap/HelloService.wsdl")),
                StandardCharsets.UTF_8);
       } catch (Exception e) {
          fail("No exception should not occur here");
@@ -180,7 +180,7 @@ class SoapMessageValidatorTest {
       String wsdlContent = null;
       try {
          wsdlContent = new String(
-               Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/soap/HelloService.wsdl")),
+               Files.readAllBytes(Paths.get("target/test-classes/io/microcks/artifact/soap/HelloService.wsdl")),
                StandardCharsets.UTF_8);
       } catch (Exception e) {
          fail("No exception should not occur here");

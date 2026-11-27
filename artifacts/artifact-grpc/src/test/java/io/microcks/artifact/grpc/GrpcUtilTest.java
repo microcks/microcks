@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.grpc;
+package io.microcks.artifact.grpc;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.TypeRegistry;
@@ -40,6 +40,7 @@ class GrpcUtilTest {
       }
 
       assertNotNull(desc);
+      // The embedded descriptor was generated from the 1.x proto package (io.github.microcks).
       assertEquals("io.github.microcks.grpc.hello.v1.HelloService.greeting", desc.getFullName());
    }
 
@@ -56,6 +57,7 @@ class GrpcUtilTest {
       }
 
       assertNotNull(desc);
+      // The embedded descriptor was generated from the 1.x proto package (io.github.microcks).
       assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService.goodbye", desc.getFullName());
    }
 

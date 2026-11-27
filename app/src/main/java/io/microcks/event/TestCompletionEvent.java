@@ -13,28 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.event;
+package io.microcks.event;
 
-import io.github.microcks.domain.TestResult;
+import io.microcks.domain.TestResult;
 
-import org.springframework.context.ApplicationEvent;
 
 /**
  * Event raised when a Service Test is completed.
  * @author laurent
  */
-public class TestCompletionEvent extends ApplicationEvent {
+public class TestCompletionEvent {
 
    /** The completed TestResult at the end of test. */
    private final TestResult result;
 
    /**
     * Creates a new {@code TestCompletionEvent} with test result.
-    * @param source Source object for event
     * @param result The TestResult after completion
     */
-   public TestCompletionEvent(Object source, TestResult result) {
-      super(source);
+   public TestCompletionEvent(TestResult result) {
       this.result = result;
    }
 

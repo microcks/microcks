@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.repository;
-
-import io.github.microcks.domain.WeightedMetricValue;
-
-import java.util.List;
+package io.microcks.util.http;
 
 /**
- * Custom repository interface for TestConformanceMetric domain objects.
+ * HTTP methods supported by the framework-neutral client used by test runners.
  * @author laurent
  */
-public interface CustomTestConformanceMetricRepository {
+public enum HttpMethod {
+   GET,
+   HEAD,
+   POST,
+   PUT,
+   PATCH,
+   DELETE,
+   OPTIONS,
+   TRACE;
 
-   List<WeightedMetricValue> aggregateTestConformanceMetric();
+   /** @return The method name, e.g. "GET" */
+   public String methodName() {
+      return name();
+   }
 }
