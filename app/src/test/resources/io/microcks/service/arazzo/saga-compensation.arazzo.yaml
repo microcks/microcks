@@ -1,0 +1,153 @@
+# example: order-saga - Order saga 1.0.0: placeOrderSaga confirms an order, compensatePaymentRefused undoes it when the payment is refused
+arazzo: 1.0.1
+info:
+  title: Order saga
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.yaml
+    type: openapi
+  - name: stockApi
+    url: ./stock-api.yaml
+    type: openapi
+  - name: paymentApi
+    url: ./payment-api.yaml
+    type: openapi
+  # Not linked to an API yet: no step of the workflows below calls it.
+  - name: notificationApi
+    url: ./notification-api.yaml
+    type: openapi
+workflows:
+  - workflowId: placeOrderSaga
+    summary: Places an order, reserves its items, charges it, then confirms it.
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.createOrder
+        requestBody:
+          contentType: application/json
+          payload:
+            customerId: c-7
+            items:
+              - sku: ABC-1
+                quantity: 2
+            amount: 25.0
+            currency: EUR
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          id: $response.body#/id
+          amount: $response.body#/amount
+      - stepId: reserveStock
+        operationId: $sourceDescriptions.stockApi.reserveStock
+        requestBody:
+          contentType: application/json
+          payload:
+            orderId: ""
+          replacements:
+            - target: /orderId
+              value: $steps.createOrder.outputs.id
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          reservationId: $response.body#/id
+      - stepId: chargePayment
+        operationId: $sourceDescriptions.paymentApi.chargePayment
+        requestBody:
+          contentType: application/json
+          payload:
+            orderId: ""
+            amount: 0
+          replacements:
+            - target: /orderId
+              value: $steps.createOrder.outputs.id
+            - target: /amount
+              value: $steps.createOrder.outputs.amount
+        successCriteria:
+          - condition: $statusCode == 201
+      - stepId: confirmOrder
+        operationId: $sourceDescriptions.orderApi.confirmOrder
+        parameters:
+          - name: orderId
+            in: path
+            value: $steps.createOrder.outputs.id
+        successCriteria:
+          - condition: $statusCode == 200
+  - workflowId: compensatePaymentRefused
+    summary: Places an order and reserves its items; the payment is refused, so the reservation is released and the order cancelled.
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.createOrder
+        requestBody:
+          contentType: application/json
+          payload:
+            customerId: c-7
+            items:
+              - sku: ABC-1
+                quantity: 2
+            amount: 25.0
+            currency: EUR
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          id: $response.body#/id
+          amount: $response.body#/amount
+      - stepId: reserveStock
+        operationId: $sourceDescriptions.stockApi.reserveStock
+        requestBody:
+          contentType: application/json
+          payload:
+            orderId: ""
+          replacements:
+            - target: /orderId
+              value: $steps.createOrder.outputs.id
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          reservationId: $response.body#/id
+      - stepId: chargePayment
+        operationId: $sourceDescriptions.paymentApi.chargePayment
+        requestBody:
+          contentType: application/json
+          payload:
+            orderId: ""
+            amount: 0
+          replacements:
+            - target: /orderId
+              value: $steps.createOrder.outputs.id
+            - target: /amount
+              value: $steps.createOrder.outputs.amount
+        successCriteria:
+          - condition: $statusCode == 402
+      - stepId: releaseStock
+        operationId: $sourceDescriptions.stockApi.releaseStock
+        parameters:
+          - name: reservationId
+            in: path
+            value: $steps.reserveStock.outputs.reservationId
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: cancelOrder
+        operationId: $sourceDescriptions.orderApi.cancelOrder
+        parameters:
+          - name: orderId
+            in: path
+            value: $steps.createOrder.outputs.id
+        successCriteria:
+          - condition: $statusCode == 200
+---
+# example: order-saga-sources - links the sources of Order saga 1.0.0 to Order, Stock and Payment API 1.0.0
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: Order saga
+  version: 1.0.0
+sources:
+  orderApi:
+    name: Order API
+    version: 1.0.0
+  stockApi:
+    name: Stock API
+    version: 1.0.0
+  paymentApi:
+    name: Payment API
+    version: 1.0.0

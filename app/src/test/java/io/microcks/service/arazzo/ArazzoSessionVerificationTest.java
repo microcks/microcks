@@ -328,18 +328,25 @@ class ArazzoSessionVerificationTest {
       assertNull(confirmOrder.testCaseId());
    }
 
-   /** A call to an operation no step calls, or a second call of an operation, is matched to no step. */
+   /**
+    * A call to an operation no step calls, or a second call of an operation, is matched to no step: as it calls an
+    * operation of a linked API, no remaining step expected it and it fails the verification.
+    */
    @Test
-   void aCallNoStepTakesIsMatchedToNone() throws Exception {
+   void aCallNoStepTakesIsMatchedToNoneAndIsUnexpected() throws Exception {
       ArazzoSession session = sessionOnTheSaga();
 
       record(session, createOrder(), createOrder(), reserveStock("o-42"), chargePayment("o-42"),
             call("Payment API", "GET /payments", "/payments", null, 200, "[]"), confirmOrder("o-42"));
 
       WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
-      assertEquals(WorkflowRunStatus.SUCCESS, verification.getStatus());
+      assertEquals(WorkflowRunStatus.FAILURE, verification.getStatus());
       assertEquals(Arrays.asList("createOrder", null, "reserveStock", "chargePayment", null, "confirmOrder"),
             verification.getSession().calls().stream().map(WorkflowSessionCall::stepId).toList());
+      assertEquals(
+            Arrays.asList(null, "unexpected call `createOrder` after `createOrder`", null, null,
+                  "unexpected call `GET /payments` after `chargePayment`", null),
+            verification.getSession().calls().stream().map(WorkflowSessionCall::failure).toList());
    }
 
    /** AC-05: two sessions on the saga at the same time; each verification reports only the calls of its session. */

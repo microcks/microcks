@@ -47,8 +47,8 @@ class ArazzoSessionControllerTest {
    void anOpenedSessionIsCreatedAtItsUrl() throws Exception {
       ArazzoSession session = new ArazzoSession();
       session.setId("s-1");
-      when(arazzoSessionService.openSession("Order saga:1.0.0", "placeOrderSaga", Map.of("customerId", "c-7")))
-            .thenReturn(Optional.of(session));
+      when(arazzoSessionService.openSession("Order saga:1.0.0", "placeOrderSaga", Map.of("customerId", "c-7"),
+            Map.of())).thenReturn(Optional.of(session));
 
       Response opened = controller
             .openSession(new ArazzoSessionRequest("Order saga:1.0.0", "placeOrderSaga", Map.of("customerId", "c-7")));
@@ -59,8 +59,23 @@ class ArazzoSessionControllerTest {
    }
 
    @Test
+   void aSessionIsOpenedWithTheStepsItSetsToFail() throws Exception {
+      ArazzoSession session = new ArazzoSession();
+      session.setId("s-2");
+      Map<String, String> failures = Map.of("chargePayment", "card refused");
+      when(arazzoSessionService.openSession("Order saga:1.0.0", "compensatePaymentRefused", null, failures))
+            .thenReturn(Optional.of(session));
+
+      Response opened = controller
+            .openSession(new ArazzoSessionRequest("Order saga:1.0.0", "compensatePaymentRefused", null, failures));
+
+      assertEquals(201, opened.getStatus());
+      assertSame(session, opened.getEntity());
+   }
+
+   @Test
    void noSessionIsOpenedOnAnUnknownDocument() throws Exception {
-      when(arazzoSessionService.openSession("unknown", "placeOrderSaga", null)).thenReturn(Optional.empty());
+      when(arazzoSessionService.openSession("unknown", "placeOrderSaga", null, Map.of())).thenReturn(Optional.empty());
 
       assertEquals(404,
             controller.openSession(new ArazzoSessionRequest("unknown", "placeOrderSaga", null)).getStatus());
@@ -68,7 +83,7 @@ class ArazzoSessionControllerTest {
 
    @Test
    void aRefusedSessionIsABadRequestTellingWhyInPlainText() throws Exception {
-      when(arazzoSessionService.openSession("Order saga:1.0.0", "cancelSaga", null))
+      when(arazzoSessionService.openSession("Order saga:1.0.0", "cancelSaga", null, Map.of()))
             .thenThrow(new ArazzoRunRefusedException("Unknown workflow: cancelSaga"));
 
       Response refused = controller

@@ -283,6 +283,30 @@ public class RestInvocationProcessor {
       return URLDecoder.decode(path.replace("+", "%2B"), StandardCharsets.UTF_8);
    }
 
+   /**
+    * Answer a REST invocation with an example chosen in advance instead of dispatching it, as when the verification
+    * session the invocation names set its operation to fail. The example is rendered and delayed like a dispatched one.
+    * @param ic        The invocation context containing information about the service and operation being invoked
+    * @param startTime The start time of the invocation
+    * @param delay     The delay to apply before returning the response
+    * @param body      The request body
+    * @param request   The HTTP servlet request
+    * @param example   The example to answer with
+    * @return A ResponseResult containing the status, headers, and body of the example
+    */
+   public ResponseResult processInjectedFailure(MockInvocationContext ic, long startTime, DelaySpec delay, String body,
+         HttpServletRequest request, Response example) {
+      TraceUtil.enableExplainTracing();
+      Span.current().addEvent(CommonEvents.RESPONSE_SELECTED.getEventName(),
+            TraceUtil.explainSpanEventBuilder("Answered with the failure the Arazzo verification session injects")
+                  .put(CommonAttributes.RESPONSE_NAME, example.getName()).build());
+      DispatchContext notDispatched = new DispatchContext(null, null);
+      HttpHeaders responseHeaders = getResponseHeaders(ic, body, request, notDispatched, example);
+      byte[] responseContent = getResponseContent(ic, startTime, delay, body, request, notDispatched, example);
+      return new ResponseResult(new HttpStatusCode(Integer.parseInt(example.getStatus())), responseHeaders,
+            responseContent);
+   }
+
    /** Get the root dispatcher for the invocation context. */
    private String getDispatcher(MockInvocationContext ic, FallbackSpecification fallback,
          ProxyFallbackSpecification proxyFallback) {

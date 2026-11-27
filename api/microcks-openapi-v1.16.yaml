@@ -1436,8 +1436,10 @@ paths:
               example: "Unknown workflow: cancelSaga"
           description: "The session is refused and none is created. The body tells\
             \ why: the workflow is unknown, one of its steps calls no operation of\
-            \ a linked API, or an input given is unknown, of another type than the\
-            \ workflow declares, or an input the workflow needs is missing"
+            \ a linked API, an input given is unknown, of another type than the\
+            \ workflow declares, or an input the workflow needs is missing, or a\
+            \ failure names a step the workflow does not have or an example the\
+            \ operation of its step does not have"
         "404":
           description: No Arazzo document has this identifier, or this title and
             version
@@ -1452,7 +1454,10 @@ paths:
         \ header (or gRPC metadata), or with the microcks-session entry of its W3C\
         \ baggage header; the mocks record these calls in their order of receipt,\
         \ until the session is closed or expires, up to a maximum of calls. Then\
-        \ ask for the verification of the session."
+        \ ask for the verification of the session. To verify how the application\
+        \ compensates a refusal, set steps to fail with failures: in this session\
+        \ only, the mocks answer the operation of each such step with the chosen\
+        \ existing example, its status, headers and body."
   /arazzo/sessions/{sessionId}:
     delete:
       tags:
@@ -2835,6 +2840,15 @@ components:
             coming from the inputs is checked
           type: object
           additionalProperties: {}
+        failures:
+          description: "Steps set to fail in the session, by step identifier, each\
+            \ with the name of an existing example of the operation of the step\
+            \ (for example {\"chargePayment\": \"card refused\"}). In this session\
+            \ only, the mocks answer that operation with the example: its status,\
+            \ headers and body"
+          type: object
+          additionalProperties:
+            type: string
     ArazzoSession:
       description: A verification session on a workflow of an Arazzo document. The
         mocks record the calls naming it, in their order of receipt.
@@ -2887,6 +2901,12 @@ components:
             name; absent when it was opened without
           type: object
           additionalProperties: {}
+        failures:
+          description: Steps set to fail in the session, by step identifier, each
+            with the name of the example the mocks answer them with
+          type: object
+          additionalProperties:
+            type: string
     WorkflowSessionCall:
       description: A call the mocks recorded in a verification session
       required:
@@ -2914,6 +2934,12 @@ components:
         stepId:
           description: The step of the workflow the call was matched to; absent when
             it matches none
+          type: string
+        failure:
+          description: "Why the call fails the verification: it calls an operation\
+            \ of a linked API that no remaining step of the workflow expects (for\
+            \ example unexpected call `confirmOrder` after `chargePayment`); absent\
+            \ when it does not"
           type: string
     WorkflowSessionCheck:
       description: The verification session a WorkflowResult whose origin is SESSION

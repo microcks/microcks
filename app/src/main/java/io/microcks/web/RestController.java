@@ -22,6 +22,7 @@ import io.microcks.domain.ResourceType;
 import io.microcks.domain.Service;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
+import io.microcks.service.arazzo.ArazzoSessionFailures;
 import io.microcks.web.arazzo.ArazzoSessionRecorder;
 import io.microcks.util.OperationPathPattern;
 import io.microcks.util.ParameterConstraintUtil;
@@ -90,6 +91,7 @@ public class RestController {
    private final ResourceRepository resourceRepository;
    private final RestInvocationProcessor invocationProcessor;
    private final ArazzoSessionRecorder arazzoSessionRecorder;
+   private final ArazzoSessionFailures arazzoSessionFailures;
 
    @ConfigProperty(name = "mocks.rest.enable-cors-policy", defaultValue = "true")
    boolean enableCorsPolicy;
@@ -125,14 +127,17 @@ public class RestController {
     * @param resourceRepository    The repository to access resources definitions
     * @param invocationProcessor   The invocation processor to apply REST mocks dispatching logic
     * @param arazzoSessionRecorder The recorder of the invocations naming an Arazzo verification session
+    * @param arazzoSessionFailures The failures the Arazzo verification sessions inject in the mocks
     */
    @Inject
    public RestController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         RestInvocationProcessor invocationProcessor, ArazzoSessionRecorder arazzoSessionRecorder) {
+         RestInvocationProcessor invocationProcessor, ArazzoSessionRecorder arazzoSessionRecorder,
+         ArazzoSessionFailures arazzoSessionFailures) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.invocationProcessor = invocationProcessor;
       this.arazzoSessionRecorder = arazzoSessionRecorder;
+      this.arazzoSessionFailures = arazzoSessionFailures;
    }
 
    @GET
@@ -410,8 +415,13 @@ public class RestController {
          return Response.status(400).entity((violationMsg + ". Check parameter constraints.").getBytes()).build();
       }
 
-      ResponseResult result = invocationProcessor.processInvocation(ic, startTime, delay, body,
-            headers.asMultiValueMap(), request);
+      // In the Arazzo verification session the invocation names, a step set to fail answers with its chosen example.
+      ResponseResult result = arazzoSessionFailures
+            .injectedFailure(MockControllerCommons.getArazzoSessionId(request).orElse(null), ic.service(),
+                  ic.operation())
+            .map(example -> invocationProcessor.processInjectedFailure(ic, startTime, delay, body, request, example))
+            .orElseGet(() -> invocationProcessor.processInvocation(ic, startTime, delay, body,
+                  headers.asMultiValueMap(), request));
       // Record the invocation in the Arazzo verification session it names, if any.
       arazzoSessionRecorder.recordRest(ic, request, body, result);
       return toResponse(result);

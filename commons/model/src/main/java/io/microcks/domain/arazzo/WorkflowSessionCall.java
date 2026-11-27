@@ -23,8 +23,16 @@ package io.microcks.domain.arazzo;
  * @param method     The method of the call
  * @param path       The path the call was sent to, after the name and version of the API
  * @param stepId     The step of the workflow the call was matched to; null when it matches none
+ * @param failure    Why the call fails the verification, such as a call no remaining step of the workflow expects; null
+ *                   when it does not
  * @author SebastienDegodez
  */
 public record WorkflowSessionCall(long index, String apiName, String apiVersion, String method, String path,
-      String stepId) {
+      String stepId, String failure) {
+
+   /** A call that does not fail the verification. */
+   public WorkflowSessionCall(long index, String apiName, String apiVersion, String method, String path,
+         String stepId) {
+      this(index, apiName, apiVersion, method, path, stepId, null);
+   }
 }

@@ -41,6 +41,7 @@ import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.ExpectedStep;
+import io.microcks.service.arazzo.ArazzoSessionVerifier.LinkedApi;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.StepVerdict;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -72,6 +73,7 @@ public class ArazzoSessionService {
    private final ArazzoSessionCallRepository arazzoSessionCallRepository;
    private final WorkflowResultRepository workflowResultRepository;
    private final ArazzoSessionAnswerService arazzoSessionAnswerService;
+   private final ArazzoSessionFailures arazzoSessionFailures;
 
    /** The URL the relative references of the stored contracts resolve against, as for OpenAPI contract tests. */
    @ConfigProperty(name = "validation.resourceUrl", defaultValue = "http://localhost:8080/api/resources/")
@@ -97,17 +99,20 @@ public class ArazzoSessionService {
     * @param arazzoSessionCallRepository The repository of the calls the sessions received
     * @param workflowResultRepository    The repository the verifications are kept in, with the runs
     * @param arazzoSessionAnswerService  The service keeping the state of the sessions the mocks answer with
+    * @param arazzoSessionFailures       The service resolving the steps a session sets to fail
     */
    @Inject
    public ArazzoSessionService(ArazzoDocumentService arazzoDocumentService, ArazzoRunService arazzoRunService,
          ArazzoSessionRepository arazzoSessionRepository, ArazzoSessionCallRepository arazzoSessionCallRepository,
-         WorkflowResultRepository workflowResultRepository, ArazzoSessionAnswerService arazzoSessionAnswerService) {
+         WorkflowResultRepository workflowResultRepository, ArazzoSessionAnswerService arazzoSessionAnswerService,
+         ArazzoSessionFailures arazzoSessionFailures) {
       this.arazzoDocumentService = arazzoDocumentService;
       this.arazzoRunService = arazzoRunService;
       this.arazzoSessionRepository = arazzoSessionRepository;
       this.arazzoSessionCallRepository = arazzoSessionCallRepository;
       this.workflowResultRepository = workflowResultRepository;
       this.arazzoSessionAnswerService = arazzoSessionAnswerService;
+      this.arazzoSessionFailures = arazzoSessionFailures;
    }
 
    /**
@@ -133,6 +138,24 @@ public class ArazzoSessionService {
     */
    public Optional<ArazzoSession> openSession(String documentId, String workflowId, Map<String, Object> inputs)
          throws ArazzoRunRefusedException {
+      return openSession(documentId, workflowId, inputs, Map.of());
+   }
+
+   /**
+    * Open a verification session on a workflow, with the inputs of the workflow whose values the calls must carry, and
+    * the steps that fail on the mocks in this session.
+    * @param documentId The id of the Arazzo document, or its title and version as {@code <title>:<version>}
+    * @param workflowId The id of the workflow in that document
+    * @param inputs     The inputs of the workflow, by name; null to check no value coming from them
+    * @param failures   The steps set to fail in the session, by step id, with the name of the existing example of their
+    *                   operation the mocks answer them with
+    * @return The session, open; empty if the document does not exist
+    * @throws ArazzoRunRefusedException if the workflow is unknown, if one of its steps calls no operation of a linked
+    *                                   API, if an input is unknown, invalid or missing, or if a failure names a step or
+    *                                   an example that does not exist
+    */
+   public Optional<ArazzoSession> openSession(String documentId, String workflowId, Map<String, Object> inputs,
+         Map<String, String> failures) throws ArazzoRunRefusedException {
       Optional<ArazzoDocument> found = arazzoDocumentService.getDocument(documentId);
       if (found.isEmpty()) {
          return Optional.empty();
@@ -141,8 +164,9 @@ public class ArazzoSessionService {
       if (!document.getWorkflowIds().contains(workflowId)) {
          throw new ArazzoRunRefusedException("Unknown workflow: " + workflowId);
       }
+      Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
       ArazzoWorkflowStatus status = ArazzoDocumentService.status(workflowId,
-            document.getWorkflowCalls().get(workflowId), arazzoDocumentService.resolveSources(document));
+            document.getWorkflowCalls().get(workflowId), sources);
       if (!status.runnable()) {
          throw new ArazzoRunRefusedException(
                "Workflow " + workflowId + " cannot be verified: " + String.join(", ", status.reasons()));
@@ -163,6 +187,11 @@ public class ArazzoSessionService {
       session.setInputs(inputs);
       // A session that is never closed expires after its maximum duration, so that its calls are not kept forever.
       session.setExpireAt(new Date(now.getTime() + maxOpenDuration * 1000L));
+      if (!failures.isEmpty()) {
+         session
+               .setInjectedFailures(arazzoSessionFailures.resolve(failures, workflowOf(document, workflowId), sources));
+         session.setFailures(new LinkedHashMap<>(failures));
+      }
       return Optional.of(arazzoSessionRepository.save(session));
    }
 
@@ -221,6 +250,7 @@ public class ArazzoSessionService {
       Map<String, Object> inputs = session.getInputs() == null ? Map.of() : session.getInputs();
       List<StepVerdict> verdicts = ArazzoSessionVerifier.verify(workflowOf(document, session.getWorkflowId()),
             expectedSteps(document, session, sources), calls, inputs, validationResourceUrl);
+      Map<Long, String> unexpected = ArazzoSessionVerifier.unexpectedCalls(verdicts, calls, linkedApis(sources));
 
       WorkflowResult result = new WorkflowResult();
       result.setDocumentId(document.getId());
@@ -251,13 +281,14 @@ public class ArazzoSessionService {
          saved.setMessage("session reached " + session.getCallCount() + " calls, " + dropped
                + (dropped == 1 ? " call was" : " calls were") + " not recorded");
       }
-      saved.setStatus(dropped == 0 && verdicts.stream().allMatch(verdict -> verdict.failures().isEmpty())
-            ? WorkflowRunStatus.SUCCESS
-            : WorkflowRunStatus.FAILURE);
-      saved.setSession(new WorkflowSessionCheck(session.getId(),
-            calls.stream().map(call -> new WorkflowSessionCall(call.getIndex(), call.getServiceName(),
-                  call.getServiceVersion(), call.getMethod(), call.getPath(), stepOfCall.get(call.getIndex())))
-                  .toList()));
+      saved.setStatus(
+            dropped == 0 && verdicts.stream().allMatch(verdict -> verdict.failures().isEmpty()) && unexpected.isEmpty()
+                  ? WorkflowRunStatus.SUCCESS
+                  : WorkflowRunStatus.FAILURE);
+      saved.setSession(new WorkflowSessionCheck(session.getId(), calls.stream()
+            .map(call -> new WorkflowSessionCall(call.getIndex(), call.getServiceName(), call.getServiceVersion(),
+                  call.getMethod(), call.getPath(), stepOfCall.get(call.getIndex()), unexpected.get(call.getIndex())))
+            .toList()));
       return workflowResultRepository.save(saved);
    }
 
@@ -275,6 +306,18 @@ public class ArazzoSessionService {
                contracts.computeIfAbsent(source.link().sourceName(), sourceName -> contractOf(source))));
       }
       return steps;
+   }
+
+   /** The APIs the sources of a document are linked to, each with the operationIds of its operations. */
+   private static List<LinkedApi> linkedApis(Map<String, ResolvedSource> sources) {
+      List<LinkedApi> linkedApis = new ArrayList<>();
+      sources.values().stream().filter(source -> source.api() != null).forEach(source -> {
+         Map<String, String> operationIds = new HashMap<>();
+         source.operations().values().forEach(
+               operation -> operationIds.put(operation.method() + " " + operation.path(), operation.operationId()));
+         linkedApis.add(new LinkedApi(source.link().apiName(), source.link().apiVersion(), operationIds));
+      });
+      return linkedApis;
    }
 
    /** The main OpenAPI contract of the API a source is linked to, read; null when it has none or it cannot be read. */

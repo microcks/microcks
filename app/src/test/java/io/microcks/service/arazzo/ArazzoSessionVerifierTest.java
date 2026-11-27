@@ -22,8 +22,12 @@ import io.microcks.domain.Header;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
 import io.microcks.domain.arazzo.ArazzoStepOperation;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.ExpectedStep;
+import io.microcks.service.arazzo.ArazzoSessionVerifier.LinkedApi;
+import io.microcks.service.arazzo.ArazzoSessionVerifier.StepVerdict;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests of what the outputs of a step see of the response the mocks gave to its call: its status, its headers and its
- * body, read as JSON or kept as text.
+ * body, read as JSON or kept as text; and of the calls of a session no remaining step of the workflow expects.
  * @author SebastienDegodez
  */
 class ArazzoSessionVerifierTest {
@@ -68,5 +72,45 @@ class ArazzoSessionVerifierTest {
 
       assertEquals(Map.of("status", 202, "location", "/receipts/rc-1", "receipt", "Receipt of order o-42"),
             verdicts.get(0).outputs());
+   }
+
+   /**
+    * A call no step took fails the verification when it calls an operation of a linked API, named by its operationId
+    * (by its Microcks name when it has none), after the step received last before it; a call to an API no source is
+    * linked to does not.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = {
+         "Order API | 1.0.0 | POST /orders/{orderId}/confirm | false | unexpected call `confirmOrder` after `createOrder`",
+         "Order API | 1.0.0 | POST /orders/{orderId}/confirm | true  | unexpected call `confirmOrder` before any step",
+         "Order API | 1.0.0 | GET /orders                    | false | unexpected call `GET /orders` after `createOrder`",
+         "Audit API | 1.0.0 | POST /events                   | false | ",
+         "Order API | 2.0.0 | POST /orders/{orderId}/confirm | false | " })
+   void aCallNoRemainingStepExpectsIsUnexpected(String apiName, String apiVersion, String operationName,
+         boolean receivedFirst, String failure) {
+      ExpectedStep createOrder = new ExpectedStep(0,
+            new ArazzoStep("createOrder", null, new ArazzoOperationCall("orderApi", "createOrder"), List.of(), null,
+                  List.of(), Map.of(), List.of(), List.of(), null, null),
+            new ArazzoStepOperation("orderApi", "createOrder", "POST", "/orders", null, null), "Order API", "1.0.0",
+            null);
+      ArazzoSessionCall placed = call(receivedFirst ? 1 : 0, "Order API", "1.0.0", "POST /orders");
+      ArazzoSessionCall other = call(receivedFirst ? 0 : 1, apiName, apiVersion, operationName);
+      List<StepVerdict> verdicts = List.of(new StepVerdict(createOrder, placed, List.of(), Map.of(), List.of()));
+      List<ArazzoSessionCall> calls = receivedFirst ? List.of(other, placed) : List.of(placed, other);
+
+      Map<Long, String> unexpected = ArazzoSessionVerifier.unexpectedCalls(verdicts, calls,
+            List.of(new LinkedApi("Order API", "1.0.0",
+                  Map.of("POST /orders", "createOrder", "POST /orders/{orderId}/confirm", "confirmOrder"))));
+
+      assertEquals(failure == null ? Map.of() : Map.of(other.getIndex(), failure), unexpected);
+   }
+
+   private static ArazzoSessionCall call(long index, String apiName, String apiVersion, String operationName) {
+      ArazzoSessionCall call = new ArazzoSessionCall();
+      call.setIndex(index);
+      call.setServiceName(apiName);
+      call.setServiceVersion(apiVersion);
+      call.setOperationName(operationName);
+      return call;
    }
 }

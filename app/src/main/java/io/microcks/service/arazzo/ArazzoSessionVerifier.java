@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -137,6 +138,50 @@ final class ArazzoSessionVerifier {
          verdicts.add(new StepVerdict(step, call, failures, outputs, parameters));
       }
       return verdicts;
+   }
+
+   /**
+    * An API a source of the document is linked to.
+    * @param name         The name of the API
+    * @param version      The version of the API
+    * @param operationIds The operationId of each operation of its contract, by the name Microcks gives the operation
+    */
+   record LinkedApi(String name, String version, Map<String, String> operationIds) {
+   }
+
+   /**
+    * A call no step took was expected by no remaining step of the workflow: when it calls an operation of a linked API,
+    * it fails the verification. It is named by the operationId of its operation, or by its Microcks name when it has
+    * none, after the step whose call the session received last before it.
+    * @param verdicts   The verdicts of the steps, with the calls they took
+    * @param calls      The calls of the session, in their order of receipt
+    * @param linkedApis The APIs the sources of the document are linked to
+    * @return Why each unexpected call fails the verification, by the order index of the call
+    */
+   static Map<Long, String> unexpectedCalls(List<StepVerdict> verdicts, List<ArazzoSessionCall> calls,
+         List<LinkedApi> linkedApis) {
+      Map<Long, String> stepOfCall = new HashMap<>();
+      verdicts.stream().filter(verdict -> verdict.call() != null)
+            .forEach(verdict -> stepOfCall.put(verdict.call().getIndex(), verdict.expected().step().stepId()));
+      Map<Long, String> unexpected = new LinkedHashMap<>();
+      String lastStep = null;
+      for (ArazzoSessionCall call : calls) {
+         String step = stepOfCall.get(call.getIndex());
+         if (step != null) {
+            lastStep = step;
+            continue;
+         }
+         String after = lastStep == null ? "before any step" : "after `" + lastStep + "`";
+         linkedApis.stream()
+               .filter(
+                     api -> api.name().equals(call.getServiceName()) && api.version().equals(call.getServiceVersion()))
+               .findFirst()
+               .ifPresent(api -> unexpected.put(call.getIndex(),
+                     "unexpected call `"
+                           + api.operationIds().getOrDefault(call.getOperationName(), call.getOperationName()) + "` "
+                           + after));
+      }
+      return unexpected;
    }
 
    /**

@@ -178,6 +178,17 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
       List<String> steps = stepsOfTheCalls(verificationOfA);
       assertEquals(8, steps.size(), steps::toString);
       assertEquals(4, steps.stream().filter("none"::equals).count(), steps::toString);
+      // No remaining step of the workflow expects the second call of each step: each one is unexpected.
+      List<String> unexpected = new ArrayList<>();
+      verificationOfA.get("session").get("calls").forEach(call -> {
+         if (call.hasNonNull("failure")) {
+            unexpected.add(call.get("failure").asText());
+         }
+      });
+      assertEquals(List.of("unexpected call `createOrder` after `createOrder`",
+            "unexpected call `reserveStock` after `reserveStock`",
+            "unexpected call `chargePayment` after `chargePayment`",
+            "unexpected call `confirmOrder` after `confirmOrder`"), unexpected);
       // Both sagas landed in A, B first.
       assertEquals(List.of("c-8", "c-7"), customersSentTo(a));
       assertEquals(STEPS, stateOf(a));

@@ -61,15 +61,24 @@ public class ArazzoSessionController {
     * @param documentId The id of the Arazzo document, or its title and version as {@code <title>:<version>}
     * @param workflowId The id of the workflow in that document
     * @param inputs     The inputs of the workflow whose values the calls must carry, by name; null to check none
+    * @param failures   The steps set to fail in the session, by step id, with the name of the existing example of their
+    *                   operation the mocks answer them with; null for none
     */
-   public record ArazzoSessionRequest(String documentId, String workflowId, Map<String, Object> inputs) {
+   public record ArazzoSessionRequest(String documentId, String workflowId, Map<String, Object> inputs,
+         Map<String, String> failures) {
+
+      /** A session with inputs, in which no step is set to fail. */
+      public ArazzoSessionRequest(String documentId, String workflowId, Map<String, Object> inputs) {
+         this(documentId, workflowId, inputs, null);
+      }
    }
 
    @POST
    @Path("/sessions")
    public Response openSession(ArazzoSessionRequest request) {
       try {
-         return arazzoSessionService.openSession(request.documentId(), request.workflowId(), request.inputs())
+         return arazzoSessionService.openSession(request.documentId(), request.workflowId(), request.inputs(),
+                     request.failures() == null ? Map.of() : request.failures())
                .map(session -> Response.created(URI.create("/api/arazzo/sessions/" + session.getId())).entity(session)
                      .build())
                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
