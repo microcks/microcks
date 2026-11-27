@@ -167,8 +167,8 @@ class RestControllerIT extends AbstractBaseIT {
       // Issue #2366: an unresolved Postman variable like '{{petId}}' is not a path parameter. It used to be
       // injected raw into the fallback regex, breaking its compilation and returning a 500 for any request.
       // Operations are 'GET /pets/{{petId}}/owner' (unresolved Postman variable) and 'GET /toys/:toyId'.
-      uploadArtifactFile(
-            "target/test-classes/io/github/microcks/util/postman/pets-double-brace-postman-collection.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/postman/pets-double-brace-postman-collection.json",
+            true);
 
       // '{{petId}}' is a literal segment, so '/pets/2/owner' matches no operation: 404, not 500.
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/Pets+Double+Brace+API/1.0/pets/2/owner",
@@ -186,7 +186,7 @@ class RestControllerIT extends AbstractBaseIT {
       // Issue #2227: characters of an operation path that are regex metacharacters ('.', ')', ...) must be
       // matched literally by the fallback matching, not interpreted as regex syntax.
       // Operations are 'GET /files/report.pdf' and 'GET /emoticons/smile:-)'.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/regex-metachar-path-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/regex-metachar-path-openapi.yaml", true);
 
       ResponseEntity<String> response = restTemplate
             .getForEntity("/rest/Regex+Metachar+Path+API/1.0.0/files/report.pdf", String.class);
@@ -207,7 +207,7 @@ class RestControllerIT extends AbstractBaseIT {
       // be read as a regex modifier (lazy '+?') so the '?' was simply dropped: a path without it was wrongly
       // served (400 for missing example) instead of matching no operation.
       // Operation is 'GET /pastry/{name}?api-version=2024-06-01'.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-query-path-openapi.json", true);
+      uploadArtifactFile("target/test-classes/io/microcks/artifact/openapi/pastry-query-path-openapi.json", true);
 
       ResponseEntity<String> response = restTemplate
             .getForEntity("/rest/API+Pastry+Query+Path/1.0.0/pastry/Eclairapi-version=2024-06-01", String.class);

@@ -41,10 +41,8 @@ jobs:
           restore-keys: |
             maven-repo-
 
-      - name: Package webapp in prod mode
-        run: |
-          # We should install the webapp to have the JAR with UI, available for the Uber distro
-          mvn -B -q -Pprod -DskipTests install
+      - name: Package all Quarkus applications
+        run: mvn -B -q -DskipTests install
 
       - name: Set IMAGE_TAG environment from input
         env:
@@ -74,25 +72,25 @@ jobs:
           BUILDER=buildx-multi-arch
           docker buildx inspect $BUILDER || docker buildx create --name=$BUILDER --driver=docker-container --driver-opt=network=host
 
-      - name: Build and push container image for webapp
-        id: build-and-push-webapp
+      - name: Build and push container image for app
+        id: build-and-push-app
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: ${{github.workspace}}/webapp
+          context: ${{github.workspace}}/app
           sbom: true
           push: true
           provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
-          file: webapp/src/main/docker/Dockerfile.dhi
+          file: app/src/main/docker/Dockerfile.jvm
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
           tags: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
 
-      - name: Sign the webapp images with GitHub OIDC Token
+      - name: Sign the app images with GitHub OIDC Token
         env:
-          DIGEST: ${{ steps.build-and-push-webapp.outputs.digest }}
+          DIGEST: ${{ steps.build-and-push-app.outputs.digest }}
           TAGS: quay.io/microcks/microcks:${{env.IMAGE_TAG}} docker.io/microcks/microcks:${{env.IMAGE_TAG}}
         run: |
           images=""
@@ -100,11 +98,6 @@ jobs:
             images+="${tag}@${DIGEST} "
           done
           cosign sign --new-bundle-format=false --use-signing-config=false --yes ${images}
-
-      - name: Package async minion in prod mode
-        run: |
-          cd ${{github.workspace}}/minions/async
-          mvn -B -q -DskipTests -Dquarkus.package.type=legacy-jar package
 
       - name: Build and push container for async minion
         id: build-and-push-async
@@ -116,7 +109,7 @@ jobs:
           provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
-          file: minions/async/src/main/docker/Dockerfile.legacy-jar
+          file: minions/async/src/main/docker/Dockerfile.jvm
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
@@ -134,11 +127,6 @@ jobs:
           done
           cosign sign --new-bundle-format=false --use-signing-config=false --yes ${images}
 
-      - name: Package uber distro in prod mode
-        run: |
-          cd ${{github.workspace}}/distro/uber
-          mvn -B -q -Pprod -DskipTests package
-
       - name: Build and push container image for uber distro
         id: build-and-push-uber
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -149,7 +137,7 @@ jobs:
           provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
-          file: distro/uber/src/main/docker/Dockerfile.dhi
+          file: distro/uber/src/main/docker/Dockerfile.jvm
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
@@ -166,11 +154,6 @@ jobs:
             images+="${tag}@${DIGEST} "
           done
           cosign sign --new-bundle-format=false --use-signing-config=false --yes ${images}
-
-      - name: Package async minion in uber distro in prod mode
-        run: |
-          cd ${{github.workspace}}/distro/uber-async-minion
-          mvn -B -q -DskipTests package
 
       - name: Build and push container for async minion in uber distro
         id: build-and-push-uber-async
