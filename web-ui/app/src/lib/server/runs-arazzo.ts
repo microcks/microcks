@@ -15,13 +15,14 @@ import {
   type BackendArazzoRunLaunch
 } from './backend';
 import { coherenceOf, schemaOf } from './runs-arazzo-schema';
+import { attemptsOf, groupByStep } from '#lib/workflows/attempts.js';
 import { exampleCheckOf, toWorkflowExample } from '#lib/workflows/examples.js';
 
 /*
  * Real runs of the workflows of imported Arazzo documents (feature/arazzo S5–S11): launched on the Microcks backend,
  * executed by the Arazzo minion, read back from `/api/arazzo/runs` and mapped to the run model of the Deep Ink mockup.
- * Response schema validation (S9) and missing mock examples (S10) are read from the run. Not covered yet by the backend:
- * recorded examples (S16/S20), retries (S17).
+ * Response schema validation (S9) and missing mock examples (S10) are read from the run. Recorded examples (S16/S20) and the retries
+ * and early ends of the step actions (S17/S21) are read from the run.
  */
 
 const STATUS: Record<BackendWorkflowResult['status'], WorkflowRun['status']> = {
@@ -49,18 +50,41 @@ function targetOf(run: Pick<BackendWorkflowResult, 'target' | 'sources'>): RunTa
   return { kind: 'implementations', baseUrls };
 }
 
-function flowOf(status: StepStatus, stepId: string, isLast: boolean, message: string | undefined): StepResult['flow'] {
+function flowOf(
+  status: StepStatus,
+  step: Workflow['steps'][number],
+  isLast: boolean,
+  endedEarly: boolean,
+  attempts: number,
+  message: string | undefined
+): StepResult['flow'] {
   if (status === 'not-run') return { kind: 'next', title: '', text: '' };
   if (status === 'passed') {
-    // An "end" flow means an onSuccess end action (early end): the last step just lets the run reach its end.
+    const retried = attempts > 1 ? ` after ${attempts} attempts` : '';
+    if (endedEarly) {
+      const end = step.onSuccess.find((a) => a.type === 'end');
+      return {
+        kind: 'end',
+        title: `onSuccess ${end?.name ?? 'end'}: the run ends here`,
+        text: `${step.stepId} passed${retried} and its onSuccess end action ended the run: the later steps are not run.`
+      };
+    }
     return isLast
-      ? { kind: 'next', title: 'Last step', text: 'The step passed and it is the last one: the run ends with SUCCESS.' }
-      : { kind: 'next', title: 'Next step', text: 'The step passed, so the run continues with the next step.' };
+      ? { kind: 'next', title: 'Last step', text: `The step passed${retried} and it is the last one: the run ends with SUCCESS.` }
+      : { kind: 'next', title: 'Next step', text: `The step passed${retried}, so the run continues with the next step.` };
+  }
+  const retry = step.onFailure.find((a) => a.type === 'retry');
+  if (retry && attempts > 1) {
+    return {
+      kind: 'stop',
+      title: `${retry.name} exhausted: the run ends here`,
+      text: `${message ? `${message}. ` : ''}${step.stepId} failed on each of its ${attempts} attempts (retry ×${retry.type === 'retry' ? retry.retryLimit : 0}), so the run ends with FAILURE. The later steps are not run.`
+    };
   }
   return {
     kind: 'stop',
     title: 'No onFailure action: the run ends here',
-    text: `${message ? `${message}. ` : ''}${stepId} declares no onFailure action, so the run ends with FAILURE. The later steps are not run.`
+    text: `${message ? `${message}. ` : ''}${step.stepId} declares no onFailure action, so the run ends with FAILURE. The later steps are not run.`
   };
 }
 
@@ -79,19 +103,21 @@ function bodyLines(content: string | undefined): { text: string }[] {
 
 function stepResultOf(
   step: Workflow['steps'][number],
-  result: BackendWorkflowStepResult | undefined,
+  entries: BackendWorkflowStepResult[],
   isLast: boolean,
+  endedEarly: boolean,
   startedAt: string,
   message: BackendTestMessage | undefined,
   validateSchema: boolean
 ): StepResult {
+  const result = entries[entries.length - 1];
   const status: StepStatus = !result ? 'not-run' : result.status === 'PASSED' ? 'passed' : result.status === 'FAILED' ? 'failed' : 'not-run';
   const params: Record<string, string> = {};
   for (const p of result?.parameters ?? []) params[p.name] = stringOf(p.value);
   return {
     stepId: step.stepId,
     status,
-    attempts: result?.statusCode ? [{ n: 1, httpStatus: result.statusCode, ms: result.elapsedTime, when: startedAt }] : [],
+    attempts: attemptsOf(entries, startedAt, step.onFailure.find((a) => a.type === 'retry')?.retryAfter ?? 0),
     request: result
       ? { method: result.operation?.method ?? step.method, url: result.requestUrl ?? step.path, params, body: message?.request?.content || undefined }
       : undefined,
@@ -109,7 +135,7 @@ function stepResultOf(
     })),
     schema: schemaOf(validateSchema, status, result?.message, step.operationId, result?.statusCode),
     outputs: result?.outputs ?? {},
-    flow: flowOf(status, step.stepId, isLast, result?.message ?? undefined),
+    flow: flowOf(status, step, isLast, endedEarly, entries.length, result?.message ?? undefined),
     baggage: ''
   };
 }
@@ -117,15 +143,21 @@ function stepResultOf(
 /** A full run, as the run page shows it: every step of the workflow, with the exchanges Microcks recorded. */
 export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, token?: string, withExchanges = true): Promise<WorkflowRun> {
   const startedAt = iso(run.startedDate);
-  const byStep = new Map((run.steps ?? []).map((s) => [s.stepId, s]));
+  const byStep = groupByStep(run.steps ?? []);
   const messages = await Promise.all(
     workflow.steps.map(async (st) => {
-      const tc = byStep.get(st.stepId)?.testCaseId;
+      const tc = byStep.get(st.stepId)?.at(-1)?.testCaseId;
       if (!tc || !withExchanges) return undefined;
       return fetchBackendTestMessages(run.id, tc, token).then((m) => m[0]).catch(() => undefined);
     })
   );
-  const steps = workflow.steps.map((st, i) => stepResultOf(st, byStep.get(st.stepId), i === workflow.steps.length - 1, startedAt, messages[i], run.validateSchema === true));
+  const steps = workflow.steps.map((st, i) => {
+    const entries = byStep.get(st.stepId) ?? [];
+    const next = workflow.steps[i + 1];
+    // A passed step followed by steps that never ran, in a run that succeeded, is an onSuccess end.
+    const endedEarly = run.status === 'SUCCESS' && entries.at(-1)?.status === 'PASSED' && next !== undefined && !byStep.has(next.stepId);
+    return stepResultOf(st, entries, i === workflow.steps.length - 1, endedEarly, startedAt, messages[i], run.validateSchema === true);
+  });
   const running = run.status === 'IN_PROGRESS';
   const current = running ? workflow.steps.find((st) => !byStep.has(st.stepId)) : undefined;
   return {

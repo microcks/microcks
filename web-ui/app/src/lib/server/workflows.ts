@@ -11,6 +11,7 @@ import {
   seedSessions
 } from '#lib/placeholders/workflows.js';
 import type { WorkflowsPayload } from '#lib/workflows/list.js';
+import { toActions } from '#lib/workflows/attempts.js';
 import { toWorkflowExample } from '#lib/workflows/examples.js';
 import { documentOrigin, jobOfDocument } from '#lib/workflows/source-job.js';
 import type { ImportAnalysis } from '#lib/workflows/import-analysis.js';
@@ -323,8 +324,8 @@ function toWorkflow(d: BackendArazzoWorkflowDetail, status: BackendArazzoDocumen
       parameters: st.parameters.map((p) => ({ name: p.name, in: IN[p.in] ?? 'query', value: p.value })),
       requestBody: st.requestBody?.payload ?? undefined,
       successCriteria: st.successCriteria.map(toCriterion),
-      onSuccess: [],
-      onFailure: [],
+      onSuccess: toActions(st.onSuccess),
+      onFailure: toActions(st.onFailure),
       outputs: named(st.outputs)
     })),
     outputs: named(d.outputs),
