@@ -13,11 +13,13 @@ import {
   type BackendWorkflowStepResult,
   type BackendArazzoRunLaunch
 } from './backend';
+import { coherenceOf, schemaOf } from './runs-arazzo-schema';
 
 /*
  * Real runs of the workflows of imported Arazzo documents (feature/arazzo S5–S11): launched on the Microcks backend,
  * executed by the Arazzo minion, read back from `/api/arazzo/runs` and mapped to the run model of the Deep Ink mockup.
- * Not covered yet by the backend: response schema validation (S9), recorded examples (S16/S20), retries (S17).
+ * Response schema validation (S9) and missing mock examples (S10) are read from the run. Not covered yet by the backend:
+ * recorded examples (S16/S20), retries (S17).
  */
 
 const STATUS: Record<BackendWorkflowResult['status'], WorkflowRun['status']> = {
@@ -42,12 +44,6 @@ function targetOf(run: Pick<BackendWorkflowResult, 'target' | 'sources'>): RunTa
   if (run.target === 'MIXED') return { kind: 'mixed', perSource, baseUrls };
   return { kind: 'implementations', baseUrls };
 }
-
-const SCHEMA_NOT_VALIDATED: StepResult['schema'] = {
-  state: 'off',
-  ref: '',
-  message: 'Not validated: Microcks judges the step on its success criteria only (schema validation comes with a later story).'
-};
 
 function flowOf(status: StepStatus, stepId: string, isLast: boolean, message: string | undefined): StepResult['flow'] {
   if (status === 'not-run') return { kind: 'next', title: '', text: '' };
@@ -82,7 +78,8 @@ function stepResultOf(
   result: BackendWorkflowStepResult | undefined,
   isLast: boolean,
   startedAt: string,
-  message: BackendTestMessage | undefined
+  message: BackendTestMessage | undefined,
+  validateSchema: boolean
 ): StepResult {
   const status: StepStatus = !result ? 'not-run' : result.status === 'PASSED' ? 'passed' : result.status === 'FAILED' ? 'failed' : 'not-run';
   const params: Record<string, string> = {};
@@ -106,7 +103,7 @@ function stepResultOf(
       evaluation: (c.values ?? []).map((v) => `${v.expression} = ${stringOf(v.value)}`).join(', '),
       held: c.held
     })),
-    schema: SCHEMA_NOT_VALIDATED,
+    schema: schemaOf(validateSchema, status, result?.message, step.operationId, result?.statusCode),
     outputs: result?.outputs ?? {},
     flow: flowOf(status, step.stepId, isLast, result?.message ?? undefined),
     baggage: ''
@@ -124,7 +121,7 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
       return fetchBackendTestMessages(run.id, tc, token).then((m) => m[0]).catch(() => undefined);
     })
   );
-  const steps = workflow.steps.map((st, i) => stepResultOf(st, byStep.get(st.stepId), i === workflow.steps.length - 1, startedAt, messages[i]));
+  const steps = workflow.steps.map((st, i) => stepResultOf(st, byStep.get(st.stepId), i === workflow.steps.length - 1, startedAt, messages[i], run.validateSchema === true));
   const running = run.status === 'IN_PROGRESS';
   const current = running ? workflow.steps.find((st) => !byStep.has(st.stepId)) : undefined;
   return {
@@ -134,12 +131,12 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
     workflowId: run.workflowId,
     origin: { kind: 'api' },
     target: targetOf(run),
-    options: { inputs: run.inputs ?? {}, secret: run.secretRef?.name, timeoutMs: run.timeout ?? 10_000, validateSchemas: false },
+    options: { inputs: run.inputs ?? {}, secret: run.secretRef?.name, timeoutMs: run.timeout ?? 10_000, validateSchemas: run.validateSchema === true },
     status: STATUS[run.status],
     startedAt,
     steps,
     outputs: run.outputs ?? {},
-    coherence: [],
+    coherence: coherenceOf(run.missingExample),
     ...(current ? { current: { stepId: current.stepId, attempt: 1 } } : {})
   };
 }
@@ -156,7 +153,7 @@ export function uiRunOfSummary(summary: BackendWorkflowRunSummary, documentId: s
       status,
       attempts: status === 'not-run' ? [] : [{ n: 1, httpStatus: 0, ms: 0, when: startedAt }],
       criteria: [],
-      schema: SCHEMA_NOT_VALIDATED,
+      schema: schemaOf(false, status, undefined, st.operationId, undefined),
       outputs: {},
       flow: { kind: 'next', title: '', text: '' },
       baggage: ''
@@ -241,6 +238,7 @@ export async function startRealRun(input: StartRunInput, workflow: Workflow, tok
       {
         inputs,
         timeout: timeoutOrDefault(String(input.timeoutMs)),
+        validateSchema: input.validateSchemas === true,
         ...launchTargetOf(input, sources)
       },
       token

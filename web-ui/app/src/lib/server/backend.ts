@@ -611,6 +611,8 @@ export interface BackendWorkflowRunSummary {
   elapsedTime: number;
 }
 
+import type { BackendMissingExample } from './runs-arazzo-schema';
+
 export interface BackendWorkflowStepResult {
   index: number;
   stepId: string;
@@ -642,6 +644,10 @@ export interface BackendWorkflowResult {
   steps?: BackendWorkflowStepResult[];
   message?: string | null;
   number?: number | null;
+  /** S9: each response was validated against the OpenAPI contract. */
+  validateSchema?: boolean;
+  /** S10: the mock example the failed step needed and did not find (run on the mocks). */
+  missingExample?: BackendMissingExample | null;
 }
 
 export interface BackendArazzoRunLaunch {
@@ -649,6 +655,8 @@ export interface BackendArazzoRunLaunch {
   timeout?: number;
   implementations?: Record<string, string>;
   secretName?: string;
+  /** S9: validate each response against the OpenAPI contract (absent = no validation). */
+  validateSchema?: boolean;
   /** S31: where each source goes in a mixed run, as the Deep Ink mockup launches it. */
   target?: { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'> };
 }

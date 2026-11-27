@@ -286,8 +286,14 @@
             <Icon name="info" size={16} />
             <div class="wfr-coherence-body">
               <p>
-                <strong>The mocks do not form a coherent scenario.</strong> GetPastries returns “{listName}”, but <span class="wfr-mono">{coherence.operationId}</span> has no example for
-                <span class="wfr-code-inline">name</span> = {listName}. Add that example to the OpenAPI document, or let the workflow send a value that has one.
+                <strong>The mocks do not form a coherent scenario.</strong>
+                {#if listName}
+                  GetPastries returns “{listName}”, but <span class="wfr-mono">{coherence.operationId}</span> has no example for
+                  <span class="wfr-code-inline">name</span> = {listName}.
+                {:else}
+                  The mocks have no <span class="wfr-mono">{coherence.missing}</span>.
+                {/if}
+                Add that example to the OpenAPI document, or let the workflow send a value that has one.
               </p>
               <div class="wfr-coherence-links">
                 <a href="/services" class="wfr-link" title="GET /pastries/{'{name}'} on API Pastry 2.0">Open {coherence.operationId}</a>
