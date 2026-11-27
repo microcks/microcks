@@ -66,6 +66,10 @@ public class ArazzoRunController {
    public Response launchRun(@PathParam("documentId") String documentId, @PathParam("workflowId") String workflowId,
          ArazzoRunLaunchDTO launch) {
       try {
+         if (launch.target() != null && !launch.mixed()) {
+            throw new ArazzoRunRefusedException("Unknown run target kind '" + launch.target().kind()
+                  + "': a run target is mixed, or left out to run on the mocks or on the implementations");
+         }
          Optional<WorkflowResult> run = arazzoRunService.launchRun(documentId, workflowId, launch.inputs(),
                launch.timeout(), implementationsOf(launch));
          return run.map(launched -> Response.created(URI.create("/api/arazzo/runs/" + launched.getId()))

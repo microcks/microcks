@@ -36,6 +36,8 @@ import io.microcks.repository.WorkflowResultRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.List;
 
@@ -228,6 +230,23 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       assertEquals(400, refused.getStatusCode().value());
       assertEquals("Workflow readThenReprice cannot run: source pastryApi is sent to staging, not to mock or "
             + "implementation", refused.getBody());
+      assertEquals(List.of(), MINION.runRequests());
+   }
+
+   @ParameterizedTest
+   @ValueSource(strings = { "implementations", "Mixed", "" })
+   void aTargetOfAnotherKindThanMixedIsABadRequest(String kind) throws Exception {
+      String documentId = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
+
+      ResponseEntity<String> refused = restTemplate.postForEntity(
+            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            json("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, \"target\": {\"kind\": \"" + kind
+                  + "\", \"perSource\": {\"pastryApi\": \"mock\"}}}"),
+            String.class);
+
+      assertEquals(400, refused.getStatusCode().value());
+      assertEquals("Unknown run target kind '" + kind + "': a run target is mixed, or left out to run on the mocks or "
+            + "on the implementations", refused.getBody());
       assertEquals(List.of(), MINION.runRequests());
    }
 

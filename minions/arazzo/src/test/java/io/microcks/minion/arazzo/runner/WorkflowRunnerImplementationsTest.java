@@ -15,6 +15,10 @@
  */
 package io.microcks.minion.arazzo.runner;
 
+import io.microcks.minion.arazzo.client.dto.OperationDTO;
+import io.microcks.minion.arazzo.client.dto.RunRequestDTO;
+import io.microcks.minion.arazzo.client.dto.SecretDTO;
+import io.microcks.minion.arazzo.client.dto.SourceDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -96,6 +100,26 @@ class WorkflowRunnerImplementationsTest {
             implementations.calls().stream().map(WorkflowRunnerImplementationsTest::authorizationOf).toList());
       assertEquals(List.of("Authorization=Bearer <value-from-secret>", ""),
             reporter.steps().stream().map(step -> authorizationOf(step.request())).toList());
+   }
+
+   @Test
+   void aRunRequestOfMicrocksSendsTheSecretToItsImplementationsButNotToItsMocks() throws IOException {
+      Map<String, SourceDTO> sources = new LinkedHashMap<>();
+      sources.put("customerApi", new SourceDTO(StagingImplementations.CUSTOMERS,
+            Map.of("GetCustomer", new OperationDTO("GET", "/customers/{id}"))));
+      sources.put("orderApi",
+            new SourceDTO("/rest/Order+API/1.0.0", Map.of("CreateOrder", new OperationDTO("POST", "/orders"))));
+      RunRequestDTO request = new RunRequestDTO("run-1", "placeOrder", exampleOf("order-fulfilment"),
+            Map.of("customerId", "c-42"), sources, 10000,
+            new SecretDTO("customers-staging-token", null, null, "s3cr3t-t0k3n", null));
+
+      runner.run(request.toSpecification(StagingImplementations.ORDERS), reporter);
+
+      assertEquals(
+            List.of("GET " + StagingImplementations.CUSTOMERS + "/customers/c-42 Authorization=Bearer s3cr3t-t0k3n",
+                  "POST " + StagingImplementations.ORDERS + "/rest/Order+API/1.0.0/orders "),
+            implementations.calls().stream()
+                  .map(call -> call.method() + " " + call.uri() + " " + authorizationOf(call)).toList());
    }
 
    @ParameterizedTest

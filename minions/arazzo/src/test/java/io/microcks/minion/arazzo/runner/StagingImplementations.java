@@ -46,6 +46,9 @@ final class StagingImplementations implements HttpTransport {
          case "GET " + CUSTOMERS + "/customers/c-42" ->
             new HttpOutcome(200, JSON, "{\"id\":\"c-42\",\"name\":\"Ada\"}");
          case "POST " + ORDERS + "/orders" -> new HttpOutcome(201, JSON, "{\"id\":\"o-7\",\"customerId\":\"c-42\"}");
+         // The Order API mocks, when Microcks answers at the ORDERS host.
+         case "POST " + ORDERS + "/rest/Order+API/1.0.0/orders" ->
+            new HttpOutcome(201, JSON, "{\"id\":\"o-7\",\"customerId\":\"c-42\"}");
          default -> new HttpOutcome(404, Map.of(), "");
       };
    }

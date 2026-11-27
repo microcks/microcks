@@ -236,7 +236,9 @@ Runs (S5–S11):
 `ObjectIdRepository.save(entity)` was added (Spring Data `save` equivalent: `persistOrUpdate` then return the entity).
 S31, mixed runs: the launch takes the mockup's `target: {kind: "mixed", perSource: {<source>: "mock" | "implementation"}}`
 with `implementations` holding the base URL of each source sent to its implementation; a source `perSource` does not
-name goes to its mocks. Runs are recorded with the `MIXED` target (`WorkflowRunTarget`) and the history filters them
+name goes to its mocks. A `target` of another kind is refused (400). A run launched as mixed is recorded with the `MIXED`
+target even when every source ends up on the same side, as the mockup keeps the target as launched; the secret is
+resolved and kept only when some source goes to its implementation. Runs are recorded with the `MIXED` target (`WorkflowRunTarget`) and the history filters them
 (`?target=MIXED`); the UI keeps the mockup's filters (mixed runs under "Any target" only). The minion sends the run
 secret to implementations only: a source whose base URL is relative to Microcks is played on its mocks
 (`SourceTarget.mocks`). The mockup's own HTTP adapter forgets `implementations` for a mixed run and its API snippet

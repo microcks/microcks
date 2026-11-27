@@ -39,6 +39,7 @@ import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -145,7 +146,10 @@ public class ArazzoRunService {
       }
       List<ResolvedSource> linked = sources.values().stream().filter(source -> source.api() != null).toList();
       Map<String, String> baseUrls = baseUrlsOf(document, workflowId, linked, implementations);
-      Secret secret = secretOf(implementations);
+      // The secret is for the implementations: a run sending no source to its implementation neither needs nor keeps it.
+      boolean callsAnImplementation = linked.stream()
+            .anyMatch(source -> !onMocks(source.link().sourceName(), implementations));
+      Secret secret = callsAnImplementation ? secretOf(implementations) : null;
       WorkflowResult run = new WorkflowResult();
       run.setDocumentId(document.getId());
       run.setDocumentTitle(document.getTitle());
@@ -228,16 +232,23 @@ public class ArazzoRunService {
          ArazzoRunImplementations implementations) throws ArazzoRunRefusedException {
       String refusal = "Workflow " + workflowId + " cannot run: ";
       List<String> linkedNames = linked.stream().map(source -> source.link().sourceName()).toList();
-      for (Map.Entry<String, String> target : implementations.perSource().entrySet()) {
-         String sourceName = target.getKey();
+      // The names first, those of perSource then those given a base URL, so that the refusal does not depend on order.
+      for (String sourceName : concat(implementations.perSource().keySet(), implementations.baseUrls().keySet())) {
          if (!linkedNames.contains(sourceName)) {
             throw new ArazzoRunRefusedException(refusal + sourceName + " is not a linked source of "
                   + document.getTitle() + " " + document.getVersion());
          }
+      }
+      for (Map.Entry<String, String> target : implementations.perSource().entrySet()) {
+         if (target.getValue() == null) {
+            throw new ArazzoRunRefusedException(refusal + "source " + target.getKey() + " is sent nowhere, say "
+                  + ArazzoRunImplementations.MOCK + " or " + ArazzoRunImplementations.IMPLEMENTATION);
+         }
          if (!ArazzoRunImplementations.MOCK.equals(target.getValue())
                && !ArazzoRunImplementations.IMPLEMENTATION.equals(target.getValue())) {
-            throw new ArazzoRunRefusedException(refusal + "source " + sourceName + " is sent to " + target.getValue()
-                  + ", not to " + ArazzoRunImplementations.MOCK + " or " + ArazzoRunImplementations.IMPLEMENTATION);
+            throw new ArazzoRunRefusedException(refusal + "source " + target.getKey() + " is sent to "
+                  + target.getValue() + ", not to " + ArazzoRunImplementations.MOCK + " or "
+                  + ArazzoRunImplementations.IMPLEMENTATION);
          }
       }
       for (String sourceName : linkedNames) {
@@ -246,6 +257,13 @@ public class ArazzoRunService {
                   + " is sent to its mocks and given the base URL of an implementation");
          }
       }
+   }
+
+   /** The names of the first collection, then those of the second it does not hold. */
+   private static List<String> concat(Collection<String> first, Collection<String> second) {
+      List<String> names = new ArrayList<>(first);
+      second.stream().filter(name -> !names.contains(name)).forEach(names::add);
+      return names;
    }
 
    /** How the steps of a run reach their APIs. */

@@ -140,7 +140,8 @@
       ? { implementations: target === 'implementations' ? baseUrls : Object.fromEntries(Object.entries(baseUrls).filter(([k]) => effectivePer(k) === 'implementation')) }
       : {}),
     ...(target === 'mixed' ? { target: { kind: 'mixed' as const, perSource: Object.fromEntries(sources.map((name) => [name, effectivePer(name)])) } } : {}),
-    ...(request.secret ? { secretName: request.secret } : {}),
+    // As the BFF sends it: the secret is for the implementations, so a mixed run with none of them leaves it out.
+    ...(request.secret && (target !== 'mixed' || usesImplementation) ? { secretName: request.secret } : {}),
     validateSchema: validate,
     ...(example ? { example } : {})
   });

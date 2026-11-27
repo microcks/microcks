@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -133,6 +134,9 @@ class ArazzoMixedRunTest {
          sent to its implementation without base URL | customerApi=implementation,orderApi=implementation | customerApi=https://customers.staging.example | Workflow placeOrder cannot run against implementations: no base URL for source orderApi
          not a linked source of the document | billingApi=implementation,customerApi=mock | billingApi=https://billing.staging.example | Workflow placeOrder cannot run: billingApi is not a linked source of Order fulfilment 1.0.0
          sent to an unknown target | customerApi=staging | | Workflow placeOrder cannot run: source customerApi is sent to staging, not to mock or implementation
+         not named and given a base URL | customerApi=implementation | customerApi=https://customers.staging.example,orderApi=https://orders.staging.example | Workflow placeOrder cannot run: source orderApi is sent to its mocks and given the base URL of an implementation
+         a base URL for a source that is not linked | customerApi=implementation | customerApi=https://customers.staging.example,billingApi=https://billing.staging.example | Workflow placeOrder cannot run: billingApi is not a linked source of Order fulfilment 1.0.0
+         names checked before targets | customerApi=staging,billingApi=mock | | Workflow placeOrder cannot run: billingApi is not a linked source of Order fulfilment 1.0.0
          """)
    void aMixedRunThatDoesNotSayClearlyWhereEachSourceGoesIsRefused(String refused, String perSource, String baseUrls,
          String reason) throws Exception {
@@ -144,6 +148,53 @@ class ArazzoMixedRunTest {
       assertEquals(reason, refusal.getMessage());
       assertEquals(List.of(), workflowResultRepository.listAll());
       assertEquals(List.of(), minion.requests());
+   }
+
+   @Test
+   void aSourceSentNowhereIsRefused() throws Exception {
+      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      Map<String, String> perSource = new LinkedHashMap<>();
+      perSource.put("customerApi", null);
+
+      ArazzoRunRefusedException refusal = assertThrows(ArazzoRunRefusedException.class,
+            () -> launch(document, Map.of(), perSource));
+
+      assertEquals("Workflow placeOrder cannot run: source customerApi is sent nowhere, say mock or implementation",
+            refusal.getMessage());
+   }
+
+   @Test
+   void aMixedRunWithEverySourceOnItsMocksIsRecordedAsLaunched() throws Exception {
+      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+
+      WorkflowResult run = launch(document, Map.of(), Map.of());
+
+      assertEquals(WorkflowRunTarget.MIXED, run.getTarget());
+      assertEquals(List.of("/rest/Customer+API/1.0.0", ORDER_MOCKS),
+            run.getSources().stream().map(source -> source.baseUrl()).toList());
+   }
+
+   @Test
+   void theSecretIsNeitherNeededNorRecordedWhenNoSourceGoesToItsImplementation() throws Exception {
+      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+
+      WorkflowResult run = launch(document,
+            new ArazzoRunImplementations(Map.of(), "unknown-secret", perSource("customerApi", "mock")));
+
+      assertNull(minion.requests().get(0).secret());
+      assertNull(workflowResultRepository.findByIdOptional(run.getId()).orElseThrow().getSecretRef());
+   }
+
+   @Test
+   void anUnknownSecretIsRefusedWhenASourceGoesToItsImplementation() throws Exception {
+      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+
+      ArazzoRunRefusedException refusal = assertThrows(ArazzoRunRefusedException.class,
+            () -> launch(document, new ArazzoRunImplementations(Map.of("customerApi", CUSTOMERS), "unknown-secret",
+                  perSource("customerApi", "implementation"))));
+
+      assertEquals("Secret 'unknown-secret' not found. Please ensure the secret exists before running the workflow.",
+            refusal.getMessage());
    }
 
    @Test

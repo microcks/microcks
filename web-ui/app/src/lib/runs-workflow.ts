@@ -336,7 +336,8 @@ export function targetLine(run: WorkflowRun): string {
   if (run.target.kind === 'mocks') return 'Microcks mocks';
   if (run.target.kind === 'implementations') return `Implementations · ${implementationsText(run.target.baseUrls)}`;
   if (run.target.proposed) return 'Mixed · proposed, beyond POC';
-  return `Mixed · ${mixedText(run.target.perSource, run.target.baseUrls ?? {})}`;
+  const where = mixedText(run.target.perSource, run.target.baseUrls ?? {});
+  return where ? `Mixed · ${where}` : 'Mixed';
 }
 
 /** Where each source of a mixed run goes: `customerApi → https://…, orderApi → its mocks`. */
