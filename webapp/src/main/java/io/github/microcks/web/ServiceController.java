@@ -34,6 +34,7 @@ import io.github.microcks.web.dto.GenericResourceServiceDTO;
 import io.github.microcks.web.dto.OperationOverrideDTO;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,27 +91,30 @@ public class ServiceController {
 
    @GetMapping(value = "/services/search")
    public List<Service> searchServices(@RequestParam Map<String, String> queryMap) {
-      // Parse params from queryMap.
-      String name = null;
-      Map<String, String> labels = new HashMap<>();
-      for (Map.Entry<String, String> entry : queryMap.entrySet()) {
-         if ("name".equals(entry.getKey())) {
-            name = entry.getValue();
-         } else if (entry.getKey().startsWith("labels.")) {
-            labels.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
-         }
+      SearchCriteria criteria = parseSearchCriteria(queryMap);
+      Sort sort = parseSort(criteria.sort());
+
+      if (criteria.page() != null || criteria.size() != null) {
+         int page = criteria.page() != null ? criteria.page() : 0;
+         int size = criteria.size() != null ? criteria.size() : 20;
+         log.debug("Searching services with page {} and size {}", page, size);
+         Pageable pageable = PageRequest.of(page, size, sort);
+         return serviceRepository.search(criteria.name(), criteria.labels(), criteria.version(), criteria.type(),
+               pageable);
       }
 
-      if (labels.isEmpty()) {
-         log.debug("Searching services corresponding to name {}", name);
-         return serviceRepository.findByNameLike(name);
-      }
-      if (name == null || name.trim().isEmpty()) {
-         log.debug("Searching services corresponding to labels {}", labels);
-         return serviceRepository.findByLabels(labels);
-      }
-      log.debug("Searching services corresponding to name {} and labels {}", name, labels);
-      return serviceRepository.findByLabelsAndNameLike(labels, name);
+      log.debug("Searching services without pagination");
+      return serviceRepository.search(criteria.name(), criteria.labels(), criteria.version(), criteria.type(), sort);
+   }
+
+   @GetMapping(value = "/services/search/count")
+   public Map<String, Long> countSearchServices(@RequestParam Map<String, String> queryMap) {
+      log.debug("Counting services matching search criteria...");
+      SearchCriteria criteria = parseSearchCriteria(queryMap);
+      Map<String, Long> counter = new HashMap<>();
+      counter.put("counter",
+            serviceRepository.countSearch(criteria.name(), criteria.labels(), criteria.version(), criteria.type()));
+      return counter;
    }
 
    @GetMapping(value = "/services/count")
@@ -237,5 +242,89 @@ public class ServiceController {
          return new ResponseEntity<>(HttpStatus.OK);
       }
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+   }
+
+   private SearchCriteria parseSearchCriteria(Map<String, String> queryMap) {
+      String name = null;
+      String version = null;
+      ServiceType serviceType = null;
+      Integer page = null;
+      Integer size = null;
+      String sort = null;
+      Map<String, String> labels = new HashMap<>();
+
+      for (Map.Entry<String, String> entry : queryMap.entrySet()) {
+         String key = entry.getKey();
+         String value = entry.getValue();
+         if ("name".equals(key)) {
+            if (value != null && !value.trim().isEmpty()) {
+               name = value.trim();
+            }
+         } else if ("version".equals(key)) {
+            if (value != null && !value.trim().isEmpty()) {
+               version = value.trim();
+            }
+         } else if ("type".equals(key)) {
+            if (value != null && !value.trim().isEmpty()) {
+               try {
+                  serviceType = ServiceType.valueOf(value.trim().toUpperCase());
+               } catch (IllegalArgumentException e) {
+                  log.warn("Invalid ServiceType: {}", value);
+               }
+            }
+         } else if ("page".equals(key)) {
+            try {
+               page = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+               log.warn("Invalid page number: {}", value);
+            }
+         } else if ("size".equals(key)) {
+            try {
+               size = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+               log.warn("Invalid page size: {}", value);
+            }
+         } else if ("sort".equals(key)) {
+            sort = value;
+         } else if (key.startsWith("labels.")) {
+            String labelKey = key.substring(key.indexOf('.') + 1);
+            if (!labelKey.trim().isEmpty() && value != null && !value.trim().isEmpty()) {
+               labels.put(labelKey.trim(), value.trim());
+            }
+         }
+      }
+      return new SearchCriteria(name, labels, version, serviceType, page, size, sort);
+   }
+
+   private Sort parseSort(String sort) {
+      if (sort == null || sort.trim().isEmpty()) {
+         return Sort.by(Sort.Direction.ASC, "name", "version");
+      }
+      List<Sort.Order> orders = new ArrayList<>();
+      String[] clauses = sort.split(";");
+      for (String clause : clauses) {
+         String[] parts = clause.split(",");
+         String property = parts[0].trim();
+         if (isValidSortProperty(property)) {
+            Sort.Direction direction = Sort.Direction.ASC;
+            if (parts.length > 1 && "desc".equalsIgnoreCase(parts[1].trim())) {
+               direction = Sort.Direction.DESC;
+            }
+            orders.add(new Sort.Order(direction, property));
+         }
+      }
+      if (orders.isEmpty()) {
+         return Sort.by(Sort.Direction.ASC, "name", "version");
+      }
+      return Sort.by(orders);
+   }
+
+   private boolean isValidSortProperty(String property) {
+      return "name".equals(property) || "version".equals(property) || "metadata.lastUpdate".equals(property)
+            || "type".equals(property);
+   }
+
+   private record SearchCriteria(String name, Map<String, String> labels, String version, ServiceType type,
+         Integer page, Integer size, String sort) {
    }
 }

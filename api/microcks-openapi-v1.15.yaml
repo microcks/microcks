@@ -606,13 +606,45 @@ paths:
       - name: queryMap
         description: Map of criterion. Key can be simply 'name' with value as the
           searched string. You can also search by label using keys like 'labels.x'
-          where 'x' is the label and value the label value
+          where 'x' is the label and value the label value. Also supports 'page', 'size',
+          'sort', 'version', and 'type'
         schema:
           type: object
           additionalProperties:
             type: string
         in: query
-        required: true
+        required: false
+      - name: page
+        description: Page of Services to retrieve (starts at and defaults to 0)
+        schema:
+          type: integer
+        in: query
+      - name: size
+        description: Size of a page. Maximum number of Services to include in a response
+          (defaults to 20)
+        schema:
+          type: integer
+        in: query
+      - name: sort
+        description: Sorting criteria (e.g. 'metadata.lastUpdate,desc' or 'name,asc')
+        schema:
+          type: string
+        in: query
+      - name: name
+        description: Name pattern (case-insensitive) to search for
+        schema:
+          type: string
+        in: query
+      - name: version
+        description: Exact version to filter by
+        schema:
+          type: string
+        in: query
+      - name: type
+        description: Service type to filter by
+        schema:
+          type: string
+        in: query
       responses:
         "200":
           content:
@@ -627,6 +659,38 @@ paths:
         - user
       operationId: SearchServices
       summary: Search for Services and APIs
+  /services/search/count:
+    get:
+      tags:
+      - mock
+      parameters:
+      - name: name
+        description: Name pattern (case-insensitive) to search for
+        schema:
+          type: string
+        in: query
+      - name: version
+        description: Exact version to filter by
+        schema:
+          type: string
+        in: query
+      - name: type
+        description: Service type to filter by
+        schema:
+          type: string
+        in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Counter'
+          description: Number of Services matching search criteria
+      security:
+      - jwt-bearer:
+        - user
+      operationId: CountSearchServices
+      summary: Get the count of Services matching search criteria
   /tests/{id}/events/{testCaseId}:
     get:
       tags:
