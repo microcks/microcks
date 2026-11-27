@@ -217,6 +217,13 @@ Sessions S15) are disabled, not hidden, through `lib/workflows/availability.ts` 
 flip `PORTED[feature]` when the story lands). The demo data keeps them. Schema validation is off by default for real
 runs, and a failed step whose criteria were not evaluated says so.
 
+Web UI of S14, S19, S21 and the recorded examples: the import page analyses an Arazzo document before importing it
+(`/api/workflows/analysis`, then `POST /api/workflows/documents`) and says up front what Microcks will refuse; the relink
+dialog shows the effect of the chosen API (`/api/workflows/documents/{id}/analysis`, `PUT .../sources`); an importer
+that brings an Arazzo document links to it both ways; examples feed the Examples tab, a run can play one example or
+all of them (`/api/runs/workflow-examples/{doc}/{wf}`) and shows Microcks's verdict; retries appear as attempts of the
+same step; the API snippet names the document `title:version`. The Source tab's Validate replays the analysis.
+
 In 2.0 the Arazzo code of the app sits in its own subpackages, tests included: `io.microcks.domain.arazzo`,
 `io.microcks.repository.arazzo`, `io.microcks.service.arazzo`, `io.microcks.web.arazzo` and `io.microcks.web.arazzo.dto`
 (1.x keeps them flat in `domain`, `repository`, `service`, `web`). The move is a pure-rename commit, so
@@ -298,7 +305,7 @@ and early ends (S17/S21).
 | S5 run on the mocks, S8 refuse missing inputs, S6 why a step failed, S11 runs history, S7 run on implementations | ported |
 | S31 mixed run (new in 2.0, "Proposed · beyond POC" in the mockup): some sources on their mocks, the others on their implementation | done |
 | S10 missing mock examples (coherence), S9 schema validation of step responses | ported |
-| S14 import dialog and relink, S19 importers, S21 retries and early ends, S14 run through the API, recorded examples judged (S16/S20 part) | backend ported, UI to wire |
+| S14 import dialog and relink, S19 importers, S21 retries and early ends, S14 run through the API, recorded examples judged (S16/S20 part) | ported |
 | S20 recorded examples in the API description, S28 AsyncAPI steps (shown, not runnable yet), S29 Live Traces of a run's mock calls, S27 Mock URL, S30 step `dependsOn` | backend ported, UI to wire |
 | Session verification, sessions S15/S16/S17, race fix | to do |
 
