@@ -193,7 +193,8 @@ export function uiRunOfSummary(summary: BackendWorkflowRunSummary, documentId: s
     return {
       stepId: st.stepId,
       status,
-      attempts: status === 'not-run' ? [] : [{ n: 1, httpStatus: 0, ms: 0, when: startedAt }],
+      // The summary of a run holds no exchange: no attempt is known, the screens show the verdict only.
+      attempts: [],
       criteria: [],
       schema: schemaOf(false, status, undefined, st.operationId, undefined),
       outputs: {},

@@ -3,6 +3,7 @@ import { actionLabel, criteriaText } from './describe.js';
 import { resolveExpression } from './expression.js';
 import type { ArazzoDocument, Step, StepResult, Workflow, WorkflowRun, SourceProtocol as Protocol } from './types.js';
 import { formatDuration } from './time.js';
+import { statusLabel } from './http-status.js';
 
 /**
  * Props of the `WorkflowLoom` element wrapper. The types are written here, identical to the wrapper's
@@ -211,9 +212,9 @@ export function stepResultLine(result: StepResult | undefined): string | undefin
   if (result.status === 'not-run') return 'Not run';
   const last = result.attempts[result.attempts.length - 1];
   if (!last) return undefined;
-  if (last.when.startsWith('call #')) return `${last.when} · ${last.httpStatus}`;
+  if (last.when.startsWith('call #')) return `${last.when} · ${statusLabel(last.httpStatus)}`;
   const ms = result.attempts.reduce((sum, a) => sum + a.ms, 0);
-  return result.attempts.length > 1 ? `${last.httpStatus} · ${result.attempts.length} attempts · ${formatDuration(ms)}` : `${last.httpStatus} · ${formatDuration(ms)}`;
+  return result.attempts.length > 1 ? `${statusLabel(last.httpStatus)} · ${result.attempts.length} attempts · ${formatDuration(ms)}` : `${statusLabel(last.httpStatus)} · ${formatDuration(ms)}`;
 }
 
 /** Everything the Loom needs for a workflow and, optionally, the results of one run. */

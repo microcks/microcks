@@ -2,6 +2,7 @@ import { criteriaState } from './criteria-state.js';
 import { stoppedStep } from './describe.js';
 import type { Session, Step, StepResult, Workflow, WorkflowRun } from './types.js';
 import { formatDuration } from './time.js';
+import { statusLabel } from './http-status.js';
 import { valueIn, wrongValue } from './loom-model.js';
 
 /** Where a run's results come from, in words: "Implementations", "Session", "Microcks mocks", "Mock URL". */
@@ -81,9 +82,9 @@ export function httpLine(step: Step, result: StepResult | undefined, run: Workfl
   const url = calledUrl(step, result, run, override) ?? step.path;
   const last = result.attempts[result.attempts.length - 1];
   if (!last) return `${step.method} ${url}`;
-  if (last.when.startsWith('call #')) return `${last.when} · ${step.method} ${url} → ${last.httpStatus}`;
-  if (result.attempts.length > 1) return `${step.method} ${url} → ${last.httpStatus}, on each of the ${result.attempts.length} attempts`;
-  return `${step.method} ${url} → ${last.httpStatus} · ${formatDuration(last.ms)}`;
+  if (last.when.startsWith('call #')) return `${last.when} · ${step.method} ${url} → ${statusLabel(last.httpStatus)}`;
+  if (result.attempts.length > 1) return `${step.method} ${url} → ${statusLabel(last.httpStatus)}, on each of the ${result.attempts.length} attempts`;
+  return `${step.method} ${url} → ${statusLabel(last.httpStatus)} · ${formatDuration(last.ms)}`;
 }
 
 export type Tone = 'pass' | 'fail' | 'off';

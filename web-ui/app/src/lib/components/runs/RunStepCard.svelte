@@ -1,5 +1,6 @@
 <script module lang="ts">
   import type { Phase } from '#lib/runs-workflow.js';
+  import { isHttpOk, statusLabel } from '#lib/workflows/http-status.js';
   import type { StepResult } from '#lib/workflows/types.js';
 
   export type Look = 'pass' | 'fail' | 'run' | 'pend' | 'notrun';
@@ -68,7 +69,7 @@
     finished && lastAttempt
       ? step.attempts.length > 1
         ? `${step.attempts.length} attempts · ${ms(lastAttempt.ms)}`
-        : `${lastAttempt.httpStatus} · ${ms(lastAttempt.ms)}`
+        : `${statusLabel(lastAttempt.httpStatus)} · ${ms(lastAttempt.ms)}`
       : running
         ? '…'
         : '—'
@@ -198,7 +199,7 @@
               {@const failedAttempt = !(isLast && step.status === 'passed')}
               <li>
                 <span class="wfr-attempt-no">Attempt {a.n}</span>
-                <span class="wfr-code-chip">{a.httpStatus}</span>
+                <span class="wfr-code-chip">{statusLabel(a.httpStatus)}</span>
                 <span class="wfr-attempt-ms">{ms(a.ms)}</span>
                 <span class="wfr-attempt-note">
                   <Icon name={failedAttempt ? 'cross' : 'check'} size={12} stroke-width={2.4} />
@@ -214,7 +215,7 @@
         <div class="wfr-response-head">
           <h4 class="wfr-h4">Response</h4>
           {#if !running && lastAttempt}
-            <span class="wfr-code-chip" data-tone={lastAttempt.httpStatus < 300 ? 'success' : 'danger'}>{lastAttempt.httpStatus}</span>
+            <span class="wfr-code-chip" data-tone={isHttpOk(lastAttempt.httpStatus) ? 'success' : 'danger'}>{statusLabel(lastAttempt.httpStatus)}</span>
             <span class="wfr-mono wfr-secondary">
               {step.response?.meta} · {ms(lastAttempt.ms)}{step.attempts.length > 1 ? ` · attempt ${step.attempts.length}` : ''}
             </span>

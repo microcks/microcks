@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Button, Icon, MethodTag } from '@microcks/deep-ink';
+  import { statusLabel } from '#lib/workflows/http-status.js';
   import { bodyPointer, expressionsOf, formatValue, stepResultLine, threadsOf, valueIn, wrongValue } from '#lib/workflows/loom-model.js';
   import { actionRows, failureBox, notRunText, prettyJson } from '#lib/workflows/inspector.js';
   import { httpLine, originWord, runNoun, stepChecksOf, stepStatusOf, type Tone } from '#lib/workflows/run-facts.js';
@@ -127,7 +128,7 @@
               <li>
                 <span class="wf-ins-attempt-n">attempt {a.n} of {attempts.length}</span>
                 <span class="wf-ins-attempt-when">{a.when}</span>
-                <span class="wf-ins-attempt-http">{a.httpStatus} · {formatDuration(a.ms)}</span>
+                <span class="wf-ins-attempt-http">{statusLabel(a.httpStatus)} · {formatDuration(a.ms)}</span>
                 {#if result?.status === 'failed' && result.schema.state === 'fail'}
                   <span class="wf-ins-attempt-verdict">{@render verdict('fail', 'criteria held · schema failed', 12)}</span>
                 {/if}
