@@ -28,6 +28,7 @@ import io.microcks.domain.ServiceView;
 import io.microcks.domain.UnidirectionalEvent;
 import io.microcks.event.AsyncAPITriggerCommand;
 import io.microcks.event.ServiceViewChangeEvent;
+import io.microcks.service.ImportExportService;
 import io.microcks.util.ai.McpSchema;
 import io.microcks.util.dispatcher.DispatchCases;
 import io.microcks.util.dispatcher.FallbackSpecification;
@@ -45,7 +46,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection(targets = { Service.class, ServiceView.class, Message.class, Header.class, Request.class,
       Response.class, Parameter.class, EventMessage.class, Exchange.class, RequestResponsePair.class,
       UnidirectionalEvent.class, ServiceViewChangeEvent.class, AsyncAPITriggerCommand.class, DispatchCases.class,
-      FallbackSpecification.class, JsonEvaluationSpecification.class, ProxyFallbackSpecification.class })
+      FallbackSpecification.class, JsonEvaluationSpecification.class, ProxyFallbackSpecification.class,
+      ImportExportService.ImportExportModel.class })
 public class NativeConfiguration {
 
    /** Registers the McpSchema nested types (requests, results, notifications...) exchanged as JSON. */
