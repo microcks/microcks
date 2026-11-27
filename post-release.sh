@@ -52,7 +52,7 @@ if [[ $# -eq 2 ]]; then
   git add ./static/helm/microcks-$1.tgz ./static/compose/docker-compose-$1.tgz ./static/compose/podman-compose-$1.tgz
   git commit -m 'microcks/microcks#'"$2"' chore: Release Helm chart for '"$1"'' ./static/helm/index.yaml ./static/helm/microcks-$1.tgz
   git commit -m 'microcks/microcks#'"$2"' chore: Release Compose files for '"$1"'' ./static/compose/docker-compose-$1.tgz ./static/compose/podman-compose-$1.tgz
-  git push origin master
+  git push origin main
 
   rm -rf ./static/helm/tmp
   rm ./static/helm/index.yaml.backup
