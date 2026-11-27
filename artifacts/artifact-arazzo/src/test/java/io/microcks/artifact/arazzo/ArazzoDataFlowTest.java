@@ -40,7 +40,7 @@ class ArazzoDataFlowTest {
          "criteria; read.outputs.price -> reprice criterion, read.outputs.name -> reprice criterion",
          "embedded; login.outputs.scheme -> read header Authorization, login.outputs.token -> read header "
                + "Authorization, login.outputs.token -> read criterion",
-         "constants; ''" })
+         "constants; ''", "action-criteria; read.outputs.status -> poll criterion" })
    void aStepOutputUsedByALaterStepIsPassedToWhereItIsUsed(String example, String passings) throws IOException {
       assertEquals(passings, String.join(", ", ArazzoDataFlow.stepOutputPassings(workflow(example)).stream().map(
             passing -> passing.fromStepId() + ".outputs." + passing.outputName() + " -> " + describe(passing.use()))
@@ -50,7 +50,8 @@ class ArazzoDataFlowTest {
    @ParameterizedTest
    @CsvSource(delimiter = ';', value = { "parameters; pastry: read header X-Pastry | size: list query size",
          "body; pastry: reprice body /name", "criteria; newPrice: reprice criterion",
-         "embedded; user-name: read header Authorization, read criterion", "constants; 'unused: '" })
+         "embedded; user-name: read header Authorization, read criterion", "constants; 'unused: '",
+         "action-criteria; label: poll criterion" })
    void anInputIsListedWithWhereStepsUseItDeclaredInputsFirst(String example, String inputs) throws IOException {
       assertEquals(inputs,
             String.join(" | ",
@@ -63,7 +64,8 @@ class ArazzoDataFlowTest {
    /** S8: a run is refused when one of the inputs its workflow needs is missing. */
    @ParameterizedTest
    @CsvSource(delimiter = ';', value = { "parameters; size, pastry, customer", "body; pastry, newPrice",
-         "criteria; newPrice, label", "outputs; size, label", "schema; pastry, note, size, token", "none; ''" })
+         "criteria; newPrice, label", "outputs; size, label", "schema; pastry, note, size, token", "none; ''",
+         "action-criteria; expected, label" })
    void theInputsAWorkflowNeedsAreThoseItsExpressionsUseAndThoseItsSchemaRequires(String example, String inputs)
          throws IOException {
       assertEquals(inputs, String.join(", ", ArazzoDataFlow.neededInputs(workflow(NEEDED_INPUTS, example))));

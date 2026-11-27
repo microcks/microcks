@@ -1,0 +1,185 @@
+# example: order-tracking - the workflows of the story, as in Order tracking 1.0.0, against the stateful Order status mock
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: waitUntilReady
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body#/status == 'ready'
+        onFailure:
+          - name: notReadyYet
+            type: retry
+            retryAfter: 1
+            retryLimit: 5
+        outputs:
+          status: $response.body#/status
+      - stepId: readOrder
+        operationId: getOrder
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          item: $response.body#/item
+    outputs:
+      status: $steps.pollStatus.outputs.status
+      item: $steps.readOrder.outputs.item
+  - workflowId: giveUpQuickly
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body#/status == 'ready'
+        onFailure:
+          - name: onceMore
+            type: retry
+            retryAfter: 1
+            retryLimit: 1
+        outputs:
+          status: $response.body#/status
+    outputs:
+      status: $steps.pollStatus.outputs.status
+  - workflowId: readUnlessPreparing
+    steps:
+      - stepId: checkStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+        onSuccess:
+          - name: stillPreparing
+            type: end
+            criteria:
+              - condition: $response.body#/status == 'preparing'
+        onFailure:
+          - name: unknownOrder
+            type: end
+        outputs:
+          status: $response.body#/status
+      - stepId: readOrder
+        operationId: getOrder
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          item: $response.body#/item
+    outputs:
+      status: $steps.checkStatus.outputs.status
+      item: $steps.readOrder.outputs.item
+---
+# example: action-criteria - the first failure action whose criteria hold applies, an action whose criteria cannot be evaluated does not
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: retryWhilePreparing
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200 && $response.body#/status == 'ready'
+        onFailure:
+          - name: unknownOrder
+            type: end
+            criteria:
+              - condition: $statusCode == 404
+          - name: notReadyYet
+            type: retry
+            retryLimit: 2
+            criteria:
+              - context: $response.body#/status
+                condition: ^prep
+                type: regex
+      - stepId: readOrder
+        operationId: getOrder
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+      - stepId: checkAgain
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+  - workflowId: retryUnlessGone
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $response.body#/status == 'ready'
+        onFailure:
+          - name: gone
+            type: end
+            criteria:
+              - condition: $response.body#/reason == 'gone'
+          - name: onceMore
+            type: retry
+---
+# example: retry-delays - a retry waits as long as it says, but not longer than a step waits for its response, nor less than nothing
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: pollEvery
+    inputs:
+      type: object
+      properties:
+        orderId:
+          type: string
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $response.body#/status == 'ready'
+        onFailure:
+          - name: later
+            type: retry
+            retryAfter: $retryAfter
+            retryLimit: 1

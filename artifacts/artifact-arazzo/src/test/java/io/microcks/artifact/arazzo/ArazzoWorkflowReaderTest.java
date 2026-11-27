@@ -28,12 +28,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests of reading the steps of an Arazzo workflow: the operation each step calls, its parameters, request body,
- * success criteria and outputs. One multi-document fixture, {@code workflow-steps.arazzo.yaml}, holds the examples.
+ * success criteria, outputs and actions. Two multi-document fixtures hold the examples:
+ * {@code workflow-steps.arazzo.yaml} and, for the actions of the steps, {@code step-actions.arazzo.yaml}.
  * @author SebastienDegodez
  */
 class ArazzoWorkflowReaderTest {
 
    private static final String FIXTURE = "workflow-steps.arazzo.yaml";
+   private static final String ACTIONS_FIXTURE = "step-actions.arazzo.yaml";
 
    @Test
    void theStepsOfAWorkflowAreReadWithWhatTheyCallSendCheckAndGive() throws IOException {
@@ -95,6 +97,48 @@ class ArazzoWorkflowReaderTest {
    void aStepIsReadWithWhatItDeclaresOnly(String example, String workflowId, String step) throws IOException {
       assertEquals(List.of(step), workflow(example, workflowId).orElseThrow().steps().stream()
             .map(ArazzoWorkflowReaderTest::describe).toList());
+   }
+
+   /**
+    * S17: a step tells what it does when it fails or succeeds, in the order of the document: retry after a delay up to
+    * a limit, as Arazzo defaults them, or end the workflow; each action applies when its criteria hold.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = ';', quoteCharacter = '"', value = {
+         "retry-until-ready; waitUntilReady; pollStatus | onFailure retry notReadyYet after 1.0 s up to 5 times",
+         "retry-defaults; retryOnce; pollStatus | onFailure retry again after 0.0 s up to 1 times",
+         "end-with-criteria; stopWhilePreparing; checkStatus | onSuccess end stillPreparing when simple "
+               + "$response.body#/status == 'preparing', regex ^application/json on $response.header.Content-Type | "
+               + "onFailure end giveUp, readOrder",
+         "several-actions; retryUnlessUnknown; pollStatus | onFailure end unknownOrder when simple $statusCode == 404 "
+               + "| onFailure retry notReadyYet after 0.5 s up to 3 times" })
+   void eachStepIsReadWithTheActionsItTakesOnSuccessAndOnFailure(String example, String workflowId, String steps)
+         throws IOException {
+      ArazzoWorkflow workflow = ArazzoWorkflowReader
+            .workflow(ArazzoFixtures.exampleOf(ACTIONS_FIXTURE, example), workflowId).orElseThrow();
+
+      assertEquals(steps, String.join(", ", workflow.steps().stream().map(ArazzoWorkflowReaderTest::actions).toList()));
+   }
+
+   private static String actions(ArazzoStep step) {
+      List<String> parts = new ArrayList<>();
+      parts.add(step.stepId());
+      step.onSuccess().forEach(action -> parts.add("onSuccess " + describe(action)));
+      step.onFailure().forEach(action -> parts.add("onFailure " + describe(action)));
+      return String.join(" | ", parts);
+   }
+
+   private static String describe(ArazzoAction action) {
+      String retry = action.retryAfter() == null && action.retryLimit() == null ? ""
+            : " after " + action.retryAfter() + " s up to " + action.retryLimit() + " times";
+      List<String> criteria = action.criteria().stream().map(ArazzoWorkflowReaderTest::describe).toList();
+      return action.type() + " " + action.name() + retry
+            + (criteria.isEmpty() ? "" : " when " + String.join(", ", criteria));
+   }
+
+   private static String describe(ArazzoCriterion criterion) {
+      return criterion.type() + " " + criterion.condition()
+            + (criterion.context() == null ? "" : " on " + criterion.context());
    }
 
    private static Optional<ArazzoWorkflow> workflow(String example, String workflowId) throws IOException {

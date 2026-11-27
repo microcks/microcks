@@ -75,3 +75,37 @@ workflows:
     steps:
       - stepId: readPastry
         operationId: GetPastryByName
+---
+# example: success-retry - a step retrying on success, while Arazzo only retries a failing step
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: pollForever
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        onSuccess:
+          - name: again
+            type: retry
+---
+# example: unknown-action-type - an action whose type Arazzo does not define
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: pollOnce
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        onFailure:
+          - name: stop
+            type: abort

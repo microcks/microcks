@@ -15,6 +15,8 @@
  */
 package io.microcks.minion.arazzo.runner;
 
+import io.microcks.artifact.arazzo.ArazzoAction;
+import io.microcks.artifact.arazzo.ArazzoCriterion;
 import io.microcks.artifact.arazzo.ArazzoParameter;
 import io.microcks.artifact.arazzo.ArazzoRequestBody;
 import io.microcks.artifact.arazzo.ArazzoStep;
@@ -34,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +46,10 @@ import java.util.StringJoiner;
 
 /**
  * Runs a workflow of an Arazzo document: its steps run in order, each one calling its operation, checking its success
- * criteria and giving its outputs to the next steps. The first failing step ends the run; the steps after it keep their
- * place in the run, as not run.
+ * criteria and giving its outputs to the next steps. When a step ends, the first of its success or failure actions
+ * whose criteria hold applies: a retry calls the failing step again after its delay, up to its limit; an end ends the
+ * workflow there. A failing step that is not retried ends the run. Each call of a step is reported in its own slot, in
+ * execution order; the steps the run did not reach keep their slot after them, as not run.
  * @author SebastienDegodez
  */
 public class WorkflowRunner {
@@ -53,6 +59,7 @@ public class WorkflowRunner {
 
    private final HttpTransport transport;
    private final Clock clock;
+   private final Pause pause;
    private final ExpressionEvaluator expressions = new ExpressionEvaluator();
    private final ConditionEvaluator conditions = new ConditionEvaluator();
 
@@ -61,8 +68,18 @@ public class WorkflowRunner {
     * @param clock     Times the steps and the run
     */
    public WorkflowRunner(HttpTransport transport, Clock clock) {
+      this(transport, clock, Pause.SLEEP);
+   }
+
+   /**
+    * @param transport Sends the requests of the steps
+    * @param clock     Times the steps and the run
+    * @param pause     Waits before a step is retried
+    */
+   public WorkflowRunner(HttpTransport transport, Clock clock, Pause pause) {
       this.transport = transport;
       this.clock = clock;
+      this.pause = pause;
    }
 
    /**
@@ -82,21 +99,76 @@ public class WorkflowRunner {
       Map<String, Map<String, Object>> stepOutputs = new LinkedHashMap<>();
       ResponseSchemaValidator schemas = new ResponseSchemaValidator();
       List<ArazzoStep> steps = workflow.get().steps();
-      for (int index = 0; index < steps.size(); index++) {
-         ArazzoStep step = steps.get(index);
-         StepResult result = execute(index, step, specification, stepOutputs, schemas);
-         reporter.stepEnded(result);
-         if (result.status() == StepStatus.FAILED) {
-            for (int next = index + 1; next < steps.size(); next++) {
-               reporter.stepEnded(notRun(next, steps.get(next), specification));
+      int slot = 0;
+      for (int position = 0; position < steps.size(); position++) {
+         ArazzoStep step = steps.get(position);
+         Attempt attempt = attempt(slot++, step, specification, stepOutputs, schemas);
+         reporter.stepEnded(attempt.result());
+         Optional<ArazzoAction> action = applyingAction(step, attempt);
+         for (int retries = 0; isRetry(action) && retries < action.get().retryLimit(); retries++) {
+            pause.pause(delayOf(action.get(), specification));
+            attempt = attempt(slot++, step, specification, stepOutputs, schemas);
+            reporter.stepEnded(attempt.result());
+            action = applyingAction(step, attempt);
+         }
+         boolean passed = attempt.passed();
+         if (passed) {
+            stepOutputs.put(step.stepId(), attempt.result().outputs());
+         }
+         if (!passed || action.isPresent()) {
+            // The run ends at this step: it failed, or an end action applies.
+            for (int next = position + 1; next < steps.size(); next++) {
+               reporter.stepEnded(notRun(slot++, steps.get(next), specification));
             }
-            reporter.runEnded(new RunOutcome(RunStatus.FAILURE, Map.of(), elapsedSince(start), null));
+            reporter.runEnded(passed
+                  ? endedEarly(workflow.get(), new EvaluationContext(specification.inputs(), stepOutputs, null), start)
+                  : new RunOutcome(RunStatus.FAILURE, Map.of(), elapsedSince(start), null));
             return;
          }
-         stepOutputs.put(step.stepId(), result.outputs());
       }
       reporter
             .runEnded(outcome(workflow.get(), new EvaluationContext(specification.inputs(), stepOutputs, null), start));
+   }
+
+   /** The first success or failure action of the step, as the attempt ended, whose criteria hold; empty if none. */
+   private Optional<ArazzoAction> applyingAction(ArazzoStep step, Attempt attempt) {
+      List<ArazzoAction> actions = attempt.passed() ? step.onSuccess() : step.onFailure();
+      return actions.stream().filter(action -> holds(action.criteria(), attempt.context())).findFirst();
+   }
+
+   /** Criteria that cannot be evaluated, such as those about a response the step did not get, do not hold. */
+   private boolean holds(List<ArazzoCriterion> criteria, EvaluationContext context) {
+      try {
+         return criteria.stream().allMatch(criterion -> conditions.evaluate(criterion, context).held());
+      } catch (ArazzoRunException are) {
+         return false;
+      }
+   }
+
+   private static boolean isRetry(Optional<ArazzoAction> action) {
+      return action.isPresent() && action.get().type().equals(ArazzoAction.RETRY);
+   }
+
+   /** A retry waits its delay, but never longer than a step waits for its response. */
+   private static Duration delayOf(ArazzoAction retry, RunSpecification specification) {
+      Duration delay = Duration.ofMillis(Math.max(0, Math.round(retry.retryAfter() * 1000)));
+      return Collections.min(List.of(delay, specification.timeout()));
+   }
+
+   /**
+    * A workflow an end action ended passes with the outputs it has at that step: those of the steps that did not run
+    * have no value, and are left out.
+    */
+   private RunOutcome endedEarly(ArazzoWorkflow workflow, EvaluationContext context, Instant start) {
+      Map<String, Object> outputs = new LinkedHashMap<>();
+      workflow.outputs().forEach((name, expression) -> {
+         try {
+            outputs.put(name, expressions.resolve(expression, context));
+         } catch (ArazzoRunException notRun) {
+            // The output comes from a step the run did not reach.
+         }
+      });
+      return new RunOutcome(RunStatus.SUCCESS, outputs, elapsedSince(start), null);
    }
 
    private RunOutcome outcome(ArazzoWorkflow workflow, EvaluationContext context, Instant start) {
@@ -105,6 +177,20 @@ public class WorkflowRunner {
       } catch (ArazzoRunException are) {
          return new RunOutcome(RunStatus.FAILURE, Map.of(), elapsedSince(start), are.getMessage());
       }
+   }
+
+   /** A call of a step: how it ended, and what the criteria of its actions can see. */
+   private record Attempt(StepResult result, EvaluationContext context) {
+
+      boolean passed() {
+         return result.status() == StepStatus.PASSED;
+      }
+   }
+
+   private Attempt attempt(int index, ArazzoStep step, RunSpecification specification,
+         Map<String, Map<String, Object>> stepOutputs, ResponseSchemaValidator schemas) {
+      StepResult result = execute(index, step, specification, stepOutputs, schemas);
+      return new Attempt(result, new EvaluationContext(specification.inputs(), stepOutputs, result.response()));
    }
 
    private StepResult execute(int index, ArazzoStep step, RunSpecification specification,
@@ -125,8 +211,9 @@ public class WorkflowRunner {
          call = secret.trace(built);
          response = transport.send(secret.authorize(built), specification.timeout());
          EvaluationContext answered = context.with(response);
+         List<String> unevaluable = new ArrayList<>();
          List<CriterionResult> criteria = step.successCriteria().stream()
-               .map(criterion -> conditions.evaluate(criterion, answered)).toList();
+               .map(criterion -> evaluate(criterion, answered, unevaluable)).toList();
          // A response that does not conform to its schema fails the step, even when its criteria hold.
          Optional<String> nonConformance = specification.validateSchema()
                ? schemas.nonConformance(operation, specification.sources().get(operation.sourceName()), response)
@@ -134,12 +221,26 @@ public class WorkflowRunner {
          boolean passed = criteria.stream().allMatch(CriterionResult::held) && nonConformance.isEmpty();
          return new StepResult(index, step.stepId(), operation, passed ? StepStatus.PASSED : StepStatus.FAILED,
                response.status(), elapsedSince(start), criteria,
-               passed ? evaluateAll(step.outputs(), answered) : Map.of(), call, response, nonConformance.orElse(null),
-               parameters, passed ? step.outputs() : Map.of());
+               passed ? evaluateAll(step.outputs(), answered) : Map.of(), call, response,
+               unevaluable.stream().findFirst().orElse(nonConformance.orElse(null)), parameters,
+               passed ? step.outputs() : Map.of());
       } catch (IOException ioe) {
          return failed(index, step, operation, start, new Exchange(parameters, call, null), "No response: " + ioe);
       } catch (ArazzoRunException are) {
          return failed(index, step, operation, start, new Exchange(parameters, call, response), are.getMessage());
+      }
+   }
+
+   /**
+    * A criterion whose expressions have no value in the response, such as a member a server error does not have, does
+    * not hold; why is kept, so that every criterion of the step is reported with the reason of the first such one.
+    */
+   private CriterionResult evaluate(ArazzoCriterion criterion, EvaluationContext context, List<String> unevaluable) {
+      try {
+         return conditions.evaluate(criterion, context);
+      } catch (ArazzoRunException are) {
+         unevaluable.add(are.getMessage());
+         return new CriterionResult(criterion.condition(), List.of(), false);
       }
    }
 

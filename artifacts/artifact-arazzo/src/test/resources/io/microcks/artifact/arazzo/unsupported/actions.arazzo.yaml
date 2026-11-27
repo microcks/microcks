@@ -1,0 +1,81 @@
+# Success and failure actions the workflow runner does not execute yet. One YAML document per example.
+# example: goto-on-success - the step createOrder goes to another step on success
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        onSuccess:
+          - name: pay
+            type: goto
+            stepId: payOrder
+      - stepId: payOrder
+        operationId: PayOrder
+---
+# example: goto-on-failure - the step createOrder goes to another workflow on failure
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        onFailure:
+          - name: cleanUp
+            type: goto
+            workflowId: cancelOrder
+---
+# example: reusable-action - the step createOrder reuses a failure action of the components
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        onFailure:
+          - reference: $components.failureActions.retryLater
+components:
+  failureActions:
+    retryLater:
+      name: retryLater
+      type: retry
+      retryAfter: 5
+---
+# example: jsonpath-criterion - the retry of the step createOrder applies when a JSONPath expression holds
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        onFailure:
+          - name: retryWhileBusy
+            type: retry
+            criteria:
+              - context: $response.body
+                condition: $[?(@.status == 'busy')]
+                type: jsonpath

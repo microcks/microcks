@@ -77,6 +77,18 @@ public final class ArazzoDocumentReader {
 
    /**
     * @param document The Arazzo document, parsed from YAML or JSON
+    * @return The url each source description declares for its contract, by name, in the order of the document
+    */
+   public static Map<String, String> sourceDescriptionUrls(JsonNode document) {
+      Map<String, String> urls = new LinkedHashMap<>();
+      for (JsonNode sourceDescription : document.path("sourceDescriptions")) {
+         urls.put(sourceDescription.path("name").asText(), sourceDescription.path("url").asText());
+      }
+      return urls;
+   }
+
+   /**
+    * @param document The Arazzo document, parsed from YAML or JSON
     * @return For each workflow id, its summary, or else its description; null when it has neither
     */
    public static Map<String, String> workflowDescriptions(JsonNode document) {

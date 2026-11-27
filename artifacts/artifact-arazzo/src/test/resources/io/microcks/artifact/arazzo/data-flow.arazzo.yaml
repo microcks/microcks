@@ -141,3 +141,33 @@ workflows:
             value: S
         successCriteria:
           - condition: $statusCode == 200
+---
+# example: action-criteria - a step output and an input checked by the criteria of the actions of a later step
+arazzo: 1.0.1
+info:
+  title: Action criteria
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+        outputs:
+          status: $response.body#/status
+      - stepId: poll
+        operationId: GetPastryByName
+        onSuccess:
+          - name: done
+            type: end
+            criteria:
+              - context: $inputs.label
+                condition: ^[A-Z].*
+                type: regex
+        onFailure:
+          - name: again
+            type: retry
+            criteria:
+              - condition: $response.body#/status != $steps.read.outputs.status

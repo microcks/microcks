@@ -44,6 +44,7 @@ final class PastryMocks implements HttpTransport {
    private final List<HttpCall> calls = new ArrayList<>();
    private final List<Duration> timeouts = new ArrayList<>();
    private IOException failure;
+   private boolean repriceFails;
 
    PastryMocks(ManualClock clock) {
       this.clock = clock;
@@ -52,6 +53,11 @@ final class PastryMocks implements HttpTransport {
    /** Every call ends with this exception rather than a response. */
    void failWith(IOException failure) {
       this.failure = failure;
+   }
+
+   /** The reprice of Eclair Cafe answers a server error, whose body is not a pastry. */
+   void failReprice() {
+      this.repriceFails = true;
    }
 
    List<HttpCall> calls() {
@@ -74,7 +80,9 @@ final class PastryMocks implements HttpTransport {
       return switch (call.method() + " " + path) {
          case "GET /pastry" -> new HttpOutcome(200, JSON, PASTRIES);
          case "GET /pastry/Eclair%20Cafe" -> new HttpOutcome(200, JSON, ECLAIR_CAFE.formatted("2.5"));
-         case "PATCH /pastry/Eclair%20Cafe" -> new HttpOutcome(200, JSON, ECLAIR_CAFE.formatted("2.6"));
+         case "PATCH /pastry/Eclair%20Cafe" ->
+            repriceFails ? new HttpOutcome(500, JSON, "{\"message\":\"The pastry database is down\"}")
+                  : new HttpOutcome(200, JSON, ECLAIR_CAFE.formatted("2.6"));
          default -> new HttpOutcome(400, TEXT, "The response " + path + " does not exist!");
       };
    }

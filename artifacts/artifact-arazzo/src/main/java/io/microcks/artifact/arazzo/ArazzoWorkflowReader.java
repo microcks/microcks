@@ -78,14 +78,32 @@ public final class ArazzoWorkflowReader {
          parameters.add(new ArazzoParameter(parameter.path("name").asText(), parameter.path("in").asText(),
                text(parameter.path("value"))));
       }
-      List<ArazzoCriterion> criteria = new ArrayList<>();
-      for (JsonNode criterion : step.path("successCriteria")) {
-         criteria.add(new ArazzoCriterion(criterion.path("condition").asText(), optionalText(criterion, "context"),
-               criterion.path("type").asText(DEFAULT_CRITERION_TYPE)));
-      }
       return new ArazzoStep(step.path("stepId").asText(), optionalText(step, "description"),
             ArazzoDocumentReader.call(step.path("operationId").asText(), sourceNames), parameters,
-            requestBody(step.path("requestBody")), criteria, expressions(step.path("outputs")));
+            requestBody(step.path("requestBody")), criteria(step.path("successCriteria")),
+            expressions(step.path("outputs")), actions(step.path("onSuccess")), actions(step.path("onFailure")));
+   }
+
+   private static List<ArazzoCriterion> criteria(JsonNode criteria) {
+      List<ArazzoCriterion> read = new ArrayList<>();
+      for (JsonNode criterion : criteria) {
+         read.add(new ArazzoCriterion(criterion.path("condition").asText(), optionalText(criterion, "context"),
+               criterion.path("type").asText(DEFAULT_CRITERION_TYPE)));
+      }
+      return read;
+   }
+
+   /** A retry waits 0 second and is attempted once when the document does not tell, as Arazzo says. */
+   private static List<ArazzoAction> actions(JsonNode actions) {
+      List<ArazzoAction> read = new ArrayList<>();
+      for (JsonNode action : actions) {
+         String type = action.path("type").asText();
+         boolean retry = type.equals(ArazzoAction.RETRY);
+         read.add(new ArazzoAction(action.path("name").asText(), type,
+               retry ? action.path("retryAfter").asDouble(0) : null, retry ? action.path("retryLimit").asInt(1) : null,
+               criteria(action.path("criteria"))));
+      }
+      return read;
    }
 
    private static ArazzoRequestBody requestBody(JsonNode requestBody) {

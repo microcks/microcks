@@ -33,10 +33,10 @@ final class ArazzoSubset {
 
    private static final List<String> UNSUPPORTED_WORKFLOW_FIELDS = List.of("dependsOn", "successActions",
          "failureActions");
-   private static final List<String> UNSUPPORTED_STEP_FIELDS = List.of("workflowId", "operationPath", "onSuccess",
-         "onFailure");
+   private static final List<String> UNSUPPORTED_STEP_FIELDS = List.of("workflowId", "operationPath");
    private static final Set<String> PARAMETER_LOCATIONS = Set.of("path", "query", "header");
    private static final Set<String> CRITERION_TYPES = Set.of("simple", "regex");
+   private static final Set<String> ACTION_TYPES = Set.of(ArazzoAction.RETRY, ArazzoAction.END);
 
    private ArazzoSubset() {
    }
@@ -100,7 +100,34 @@ final class ArazzoSubset {
       for (JsonNode criterion : step.path("successCriteria")) {
          checkCriterion(criterion);
       }
+      for (JsonNode action : step.path("onSuccess")) {
+         checkAction(action);
+         if (action.path("type").asText().equals(ArazzoAction.RETRY)) {
+            throw new UnsupportedArazzoDocumentException("Invalid Arazzo document: a success action cannot retry");
+         }
+      }
+      for (JsonNode action : step.path("onFailure")) {
+         checkAction(action);
+      }
       checkOperationId(step.path("operationId").asText(), sourceNames);
+   }
+
+   /**
+    * The runner retries a step and ends a workflow; it does not go to another step or workflow, nor read reusable
+    * actions of the components.
+    */
+   private static void checkAction(JsonNode action) throws UnsupportedArazzoDocumentException {
+      if (action.has("reference")) {
+         throw new UnsupportedArazzoDocumentException(
+               "Unsupported reusable action: " + action.path("reference").asText());
+      }
+      String type = action.path("type").asText();
+      if (!ACTION_TYPES.contains(type)) {
+         throw new UnsupportedArazzoDocumentException("Unsupported action type: " + type);
+      }
+      for (JsonNode criterion : action.path("criteria")) {
+         checkCriterion(criterion);
+      }
    }
 
    /**

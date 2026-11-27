@@ -99,7 +99,8 @@ public final class ArazzoDataFlow {
 
    /**
     * All the values of a workflow that may hold runtime expressions, in the order of the document: for each step, its
-    * parameters, request body payload and replacements, success criteria and outputs; then the outputs of the workflow.
+    * parameters, request body payload and replacements, criteria (its success criteria and those of its actions) and
+    * outputs; then the outputs of the workflow.
     */
    private static List<String> expressions(ArazzoWorkflow workflow) {
       List<String> expressions = new ArrayList<>();
@@ -109,10 +110,10 @@ public final class ArazzoDataFlow {
             expressions.add(step.requestBody().payload());
             expressions.addAll(step.requestBody().replacements().values());
          }
-         for (ArazzoCriterion successCriterion : step.successCriteria()) {
-            expressions.add(successCriterion.condition());
-            if (successCriterion.context() != null) {
-               expressions.add(successCriterion.context());
+         for (ArazzoCriterion criterion : criteriaOf(step)) {
+            expressions.add(criterion.condition());
+            if (criterion.context() != null) {
+               expressions.add(criterion.context());
             }
          }
          expressions.addAll(step.outputs().values());
@@ -133,15 +134,23 @@ public final class ArazzoDataFlow {
             step.requestBody().replacements().forEach((target, value) -> places
                   .add(new ExpressionPlace(value, new ArazzoUse(step.stepId(), ArazzoUse.BODY, target))));
          }
-         ArazzoUse criterion = new ArazzoUse(step.stepId(), ArazzoUse.CRITERION, null);
-         for (ArazzoCriterion successCriterion : step.successCriteria()) {
-            places.add(new ExpressionPlace(successCriterion.condition(), criterion));
-            if (successCriterion.context() != null) {
-               places.add(new ExpressionPlace(successCriterion.context(), criterion));
+         ArazzoUse use = new ArazzoUse(step.stepId(), ArazzoUse.CRITERION, null);
+         for (ArazzoCriterion criterion : criteriaOf(step)) {
+            places.add(new ExpressionPlace(criterion.condition(), use));
+            if (criterion.context() != null) {
+               places.add(new ExpressionPlace(criterion.context(), use));
             }
          }
       }
       return places;
+   }
+
+   /** The success criteria of a step, then the criteria of its success actions and of its failure actions. */
+   private static List<ArazzoCriterion> criteriaOf(ArazzoStep step) {
+      List<ArazzoCriterion> criteria = new ArrayList<>(step.successCriteria());
+      step.onSuccess().forEach(action -> criteria.addAll(action.criteria()));
+      step.onFailure().forEach(action -> criteria.addAll(action.criteria()));
+      return criteria;
    }
 
    /** A runtime expression, or a value embedding some, with where a step uses it. */

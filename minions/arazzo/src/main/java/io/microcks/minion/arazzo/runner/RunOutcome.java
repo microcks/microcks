@@ -20,7 +20,8 @@ import java.util.Map;
 /**
  * How a run ended.
  * @param status      Whether the run passed
- * @param outputs     The outputs of the workflow, by name; empty when the run failed
+ * @param outputs     The outputs of the workflow, by name; empty when the run failed, and without those of the steps an
+ *                    end action left not run
  * @param elapsedTime How long the run took, in milliseconds
  * @param message     Why the run failed when no step tells it; null otherwise
  * @author SebastienDegodez

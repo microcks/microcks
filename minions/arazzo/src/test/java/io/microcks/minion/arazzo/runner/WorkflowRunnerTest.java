@@ -64,6 +64,29 @@ class WorkflowRunnerTest {
       assertEquals(new RunOutcome(RunStatus.FAILURE, Map.of(), 2 * PastryMocks.DELAY, null), reporter.outcome());
    }
 
+   /**
+    * A server error fails its step on the status criterion it does not meet, though a later criterion of the step reads
+    * a body member the error does not have: that criterion does not hold, and the step tells why.
+    */
+   @Test
+   void aServerErrorFailsTheStepOnItsUnmetStatusCriterionAndEveryCriterionIsReported() throws IOException {
+      mocks.failReprice();
+
+      runner.run(
+            RunFixtures.runOf("pastry-scenarios", "readThenReprice", Map.of("pastry", "Eclair Cafe", "newPrice", 2.6)),
+            reporter);
+
+      assertEquals(List.of("0 readPastry PASSED 200 {name=Eclair Cafe, price=2.5}", "1 reprice FAILED 500 {}"),
+            reporter.steps().stream().map(WorkflowRunnerTest::describe).toList());
+      assertEquals(
+            List.of(new CriterionResult("$statusCode == 200", List.of(new ExpressionValue("$statusCode", 500)), false),
+                  new CriterionResult("$response.body#/price == $inputs.newPrice", List.of(), false)),
+            reporter.step("reprice").criteria());
+      assertEquals("No value at JSON pointer /price in $response.body", reporter.step("reprice").message());
+      assertEquals(500, reporter.step("reprice").response().status());
+      assertEquals(RunStatus.FAILURE, reporter.outcome().status());
+   }
+
    @Test
    void eachStepCallsTheOperationOfItsSourceWithItsParametersAndBody() throws IOException {
       runner.run(

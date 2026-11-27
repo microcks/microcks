@@ -63,6 +63,12 @@ class ArazzoDocumentReaderTest {
       assertEquals(List.of("pastryApi"), ArazzoDocumentReader.sourceDescriptionNames(document("pastry.arazzo.yaml")));
    }
 
+   @Test
+   void theUrlEachSourceDescriptionDeclaresIsReadInTheOrderOfTheDocument() throws IOException {
+      assertEquals("{customerApi=./customer-api.openapi.yaml, orderApi=./order-api.openapi.yaml}", ArazzoDocumentReader
+            .sourceDescriptionUrls(exampleOf("called-sources.arazzo.yaml", "named-source")).toString());
+   }
+
    @ParameterizedTest
    @CsvSource({ "summary, Reads a pastry.", "description, Reads a pastry by its name.",
          "summary-and-description, Reads a pastry.", "none," })
@@ -93,19 +99,19 @@ class ArazzoDocumentReaderTest {
    }
 
    /**
-    * Temporary refusal: success and failure actions, nested workflows and operationPath are listed under "Later" in the
-    * Arazzo epic. The runner only calls one operation per step, by operationId, and moves on to the next step.
+    * Temporary refusal: nested workflows and operationPath are listed under "Later" in the Arazzo epic. The runner only
+    * calls one operation per step, by operationId. Success and failure actions are no longer refused here since S17:
+    * see {@link #aStepActionOutsideTheSupportedSubsetIsRefusedWithItsReason(String, String)}.
     */
    @ParameterizedTest
-   @CsvSource({ "on-failure, onFailure", "on-success, onSuccess", "operation-path, operationPath",
-         "nested-workflow, workflowId" })
+   @CsvSource({ "operation-path, operationPath", "nested-workflow, workflowId" })
    void aStepFieldOutsideTheSupportedSubsetIsRefusedWithItsReason(String example, String field) throws IOException {
       assertRefused(example("step-fields", example), "Unsupported step field: " + field);
    }
 
    /**
     * Temporary refusal: dependsOn and the default success and failure actions of a workflow are listed under "Later" in
-    * the Arazzo epic. The runner plays one workflow at a time, step after step.
+    * the Arazzo epic. The runner plays one workflow at a time, and only applies the actions each step declares (S17).
     */
    @ParameterizedTest
    @CsvSource({ "depends-on, dependsOn", "success-actions, successActions", "failure-actions, failureActions" })
@@ -114,17 +120,44 @@ class ArazzoDocumentReaderTest {
    }
 
    /**
+    * A step may retry when it fails and end the workflow when it succeeds or fails (S17): a document doing so is read.
+    */
+   @ParameterizedTest
+   @CsvSource({ "retry-until-ready, waitUntilReady", "retry-defaults, retryOnce",
+         "end-with-criteria, stopWhilePreparing", "several-actions, retryUnlessUnknown" })
+   void aStepThatRetriesOrEndsTheWorkflowIsRead(String example, String workflowId) throws Exception {
+      assertEquals(List.of(workflowId),
+            ArazzoDocumentReader.read(exampleOf("step-actions.arazzo.yaml", example)).workflowIds());
+   }
+
+   /**
+    * Temporary refusal: goto actions, to another step or another workflow, are listed under "Later" in the Arazzo epic,
+    * as are reusable actions of the components. The runner plays the steps in order, retrying a step or ending the
+    * workflow (S17). A JSONPath criterion of an action is refused as the one of a step is.
+    */
+   @ParameterizedTest
+   @CsvSource({ "goto-on-success, Unsupported action type: goto", "goto-on-failure, Unsupported action type: goto",
+         "reusable-action, Unsupported reusable action: $components.failureActions.retryLater",
+         "jsonpath-criterion, Unsupported criterion type: jsonpath" })
+   void aStepActionOutsideTheSupportedSubsetIsRefusedWithItsReason(String example, String reason) throws IOException {
+      assertRefused(example("actions", example), reason);
+   }
+
+   /**
     * Permanent refusal, unlike the others: these documents are invalid Arazzo, not features the runner does not handle
     * yet. Arazzo requires an operationId to name its source description when there are several, and a named source
     * description to be declared by the document; otherwise the step cannot be linked to an API. Arazzo also requires an
-    * info with a title and a version, which identify the document in Microcks.
+    * info with a title and a version, which identify the document in Microcks. Arazzo only retries a failing step, and
+    * only defines the end, goto and retry action types.
     */
    @ParameterizedTest
    @CsvSource({ "lone-operation-id, Ambiguous operationId CreateOrder: the document has several source descriptions",
          "unknown-source, Unknown source description: unknown",
          "no-info, Invalid Arazzo document: info.title is required",
          "no-info-title, Invalid Arazzo document: info.title is required",
-         "no-info-version, Invalid Arazzo document: info.version is required" })
+         "no-info-version, Invalid Arazzo document: info.version is required",
+         "success-retry, Invalid Arazzo document: a success action cannot retry",
+         "unknown-action-type, Unsupported action type: abort" })
    void aDocumentArazzoForbidsIsRefusedWithItsReason(String example, String reason) throws IOException {
       assertRefused(example("invalid", example), reason);
    }

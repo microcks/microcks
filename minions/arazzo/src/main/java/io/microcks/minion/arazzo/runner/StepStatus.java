@@ -22,8 +22,11 @@ package io.microcks.minion.arazzo.runner;
 public enum StepStatus {
    /** The step got a response meeting all its success criteria. */
    PASSED,
-   /** The step got no response, or one that does not meet a success criterion. */
+   /**
+    * The step got no response, or one that does not meet a success criterion. An attempt of a retried step may fail
+    * before a later attempt passes.
+    */
    FAILED,
-   /** The step was not executed, because an earlier step failed. */
+   /** The step was not executed, because an earlier step failed or an end action ended the workflow before it. */
    NOT_RUN
 }

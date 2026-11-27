@@ -19,7 +19,8 @@ package io.microcks.artifact.arazzo;
  * Where a step of an Arazzo workflow uses a runtime expression.
  * @param stepId The id of the step
  * @param place  Where the step uses it: the location of a parameter (path, query or header), {@link #BODY} for a
- *               request body replacement, or {@link #CRITERION} for a success criterion
+ *               request body replacement, or {@link #CRITERION} for a success criterion or the criterion of a success
+ *               or failure action
  * @param target The name of the parameter, or the pointer replaced in the body; null for a criterion
  * @author SebastienDegodez
  */
@@ -28,6 +29,6 @@ public record ArazzoUse(String stepId, String place, String target) {
    /** The place of a request body replacement. */
    public static final String BODY = "body";
 
-   /** The place of a success criterion. */
+   /** The place of a success criterion, or of a criterion of a success or failure action. */
    public static final String CRITERION = "criterion";
 }

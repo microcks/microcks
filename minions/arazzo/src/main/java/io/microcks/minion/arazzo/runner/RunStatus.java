@@ -20,7 +20,7 @@ package io.microcks.minion.arazzo.runner;
  * @author SebastienDegodez
  */
 public enum RunStatus {
-   /** Every step passed. */
+   /** Every step passed, at its last attempt, or an end action ended the workflow at a step that passed. */
    SUCCESS,
    /** A step failed, or the workflow could not run. */
    FAILURE
