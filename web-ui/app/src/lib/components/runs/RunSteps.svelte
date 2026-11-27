@@ -1,16 +1,18 @@
 <script lang="ts">
   import { Icon } from '@microcks/deep-ink';
   import { handoversOf, runContext, stepOffsets } from '#lib/workflows/describe.js';
-  import type { Workflow, WorkflowRun } from '#lib/workflows/types.js';
+  import type { ArazzoDocument, Workflow, WorkflowRun } from '#lib/workflows/types.js';
+  import { operationHref } from '#lib/workflows/operation-link.js';
   import { J, phaseOf, stopText } from '#lib/runs-workflow.js';
   import RunStepCard, { lookOf } from './RunStepCard.svelte';
 
   interface Props {
     run: WorkflowRun;
     workflow?: Workflow;
+    document?: ArazzoDocument;
   }
 
-  let { run, workflow }: Props = $props();
+  let { run, workflow, document }: Props = $props();
 
   const offsets = $derived(stepOffsets(run));
   const ctx = $derived(runContext(run));
@@ -74,7 +76,7 @@
           <span class="wfr-rail-line" data-on={lineOn ? '' : undefined} data-hidden={last ? '' : undefined}></span>
         </span>
         <div class="wfr-tl-body" data-kind="step">
-          <RunStepCard index={i} {step} {def} {look} {run} offset={offsets[i] ?? 0} {stop} />
+          <RunStepCard index={i} {step} {def} {look} {run} {document} offset={offsets[i] ?? 0} {stop} />
         </div>
       </li>
     {/each}

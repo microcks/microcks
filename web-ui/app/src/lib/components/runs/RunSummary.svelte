@@ -5,16 +5,18 @@
   import { endLabel, stepsTally, stoppedStep, verdictExplanation } from '#lib/workflows/describe.js';
   import { formatDuration } from '#lib/workflows/time.js';
   import { workflowPath } from '#lib/workflows/paths.js';
-  import type { Workflow, WorkflowRun } from '#lib/workflows/types.js';
+  import type { ArazzoDocument, Workflow, WorkflowRun } from '#lib/workflows/types.js';
+  import { operationHref } from '#lib/workflows/operation-link.js';
   import { J } from '#lib/runs-workflow.js';
 
   interface Props {
     run: WorkflowRun;
     totals: { calls: number; ms: number };
     workflow?: Workflow;
+    document?: ArazzoDocument;
   }
 
-  let { run, totals, workflow }: Props = $props();
+  let { run, totals, workflow, document }: Props = $props();
 
   const passed = $derived(run.status === 'SUCCESS');
   const stopped = $derived(stoppedStep(run));
@@ -134,7 +136,7 @@
       {/if}
     {/if}
     {#if opDef}
-      <a href="/services" class="wfr-action">Open operation<span class="wfr-action-op">{opDef.method} {opDef.path}</span></a>
+      <a href={operationHref(document, opDef)} class="wfr-action">Open operation<span class="wfr-action-op">{opDef.method} {opDef.path}</span></a>
     {/if}
     <a href={workflowPath(run.documentId, run.workflowId, 'loom', { run: String(run.number), step: stopped?.stepId })} class="wfr-action">Back to workflow</a>
   </div>

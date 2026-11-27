@@ -210,10 +210,10 @@
         note={progressNote}
       />
     {:else}
-      <RunSummary {run} {totals} {workflow} />
+      <RunSummary {run} {totals} {workflow} {document} />
     {/if}
     {#if example}<RunExampleJudging {run} {example} pending={running} />{/if}
-    <RunSteps {run} {workflow} />
+    <RunSteps {run} {workflow} {document} />
   </div>
 
   <aside aria-label="Run side panels" class="wfr-aside">

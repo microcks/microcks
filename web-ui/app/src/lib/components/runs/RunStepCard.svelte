@@ -18,7 +18,8 @@
   import { J, badFieldText } from '#lib/runs-workflow.js';
   import { criteriaState } from '#lib/workflows/criteria-state.js';
   import { formatDuration } from '#lib/workflows/time.js';
-  import type { Step, WorkflowRun } from '#lib/workflows/types.js';
+  import type { ArazzoDocument, Step, WorkflowRun } from '#lib/workflows/types.js';
+  import { operationHref } from '#lib/workflows/operation-link.js';
 
   interface Props {
     index: number;
@@ -28,9 +29,10 @@
     run: WorkflowRun;
     offset: number;
     stop: string;
+    document?: ArazzoDocument;
   }
 
-  let { index, step, def, look, run, offset, stop }: Props = $props();
+  let { index, step, def, look, run, offset, stop, document }: Props = $props();
 
   const bodyId = $props.id();
   const WORD: Record<Look, string> = { pass: 'Passed', fail: 'Failed', run: 'Running', pend: 'Queued', notrun: 'Not run' };
@@ -301,7 +303,7 @@
                 Add that example to the OpenAPI document, or let the workflow send a value that has one.
               </p>
               <div class="wfr-coherence-links">
-                <a href="/services" class="wfr-link" title={def ? `${def.method} ${def.path}` : undefined}>Open {coherence.operationId}</a>
+                <a href={def ? operationHref(document, def) : '/services'} class="wfr-link" title={def ? `${def.method} ${def.path}` : undefined}>Open {coherence.operationId}</a>
                 {#if isAvailable('ai-copilot', run.documentId)}
                   <a href={`/services?hint=${encodeURIComponent(coherence.copilotHint)}`} class="wfr-link">Generate the example with the AI Copilot</a>
                 {:else}
