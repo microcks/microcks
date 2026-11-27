@@ -299,7 +299,23 @@ and early ends (S17/S21).
 | S31 mixed run (new in 2.0, "Proposed · beyond POC" in the mockup): some sources on their mocks, the others on their implementation | done |
 | S10 missing mock examples (coherence), S9 schema validation of step responses | ported |
 | S14 import dialog and relink, S19 importers, S21 retries and early ends, S14 run through the API, recorded examples judged (S16/S20 part) | backend ported, UI to wire |
-| S20, S28, S29, S27, S30, sessions S15/S16/S17 | to do |
+| S20 recorded examples in the API description, S28 AsyncAPI steps (shown, not runnable yet), S29 Live Traces of a run's mock calls, S27 Mock URL, S30 step `dependsOn` | backend ported, UI to wire |
+| Session verification, sessions S15/S16/S17, race fix | to do |
+
+BE3 notes (S20, S28, S29, S27, S30):
+- S28: `ArazzoStepCall` is `(sourceName, operationId, channel)`; `ArazzoStepDetail` gains `messaging`
+  (`ArazzoStepMessaging`), `dependsOn` and `prerequisites`. A workflow with async steps is not runnable (status reason
+  "Async steps cannot be run yet", 400 on launch) until the minion plays them.
+- S29: the minion sends a W3C `baggage` header (`microcks-arazzo-run`, `-workflow`, `-step`, `-attempt`) on calls to
+  mocks; `MockControllerCommons.getArazzoAttributes` and `util.tracing.ArazzoTraceAttributes` put the `arazzo.*`
+  attributes on the spans and `invocation_received` events of `RestController`. `RestControllerLiveTracesTest` is a
+  `@QuarkusTest` (RestAssured + `SpanStorageService`) instead of the 1.x Mockito test.
+- S27: JAX-RS `ArazzoMockUrlController` at `POST /arazzo/{title}/{version}/{workflowId}` (title with `+`), outside
+  `/api` and without authentication as in 1.x (outside the `AuthenticationFilter` rules; CORS is global in Quarkus, so
+  1.x `SecurityConfiguration`/`WebConfiguration` changes and `WebConfigurationTest` are not ported).
+  `ArazzoMockUrlService` waits at most `arazzo.mock-url.timeout` (30000 ms); runs carry `origin` `MOCK_URL`
+  (`WorkflowRunOrigin`); header `X-Microcks-Arazzo-Run-Id`.
+- S30: `ArazzoStepOrder` in artifact-arazzo; the minion still plays the steps in list order.
 
 ## Known divergences and TODO
 
