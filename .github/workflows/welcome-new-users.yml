@@ -1,0 +1,85 @@
+# Welcome new users by commenting on the first-time issue/PR.
+# Adding a friendly message in the comment to tip non-stargazers to star our repo.
+#
+# Props to https://github.com/wow-actions/welcome 
+
+name: Welcome New Users with Thanks and Tip non-stargazers ;-)
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened, closed]
+
+# Explicitly disable all default GITHUB_TOKEN permissions at the workflow level.
+# Each job then declares only the minimal required permissions (principle of least privilege),
+# e.g., `issues: write` for posting comments. This improves security.
+permissions: {}
+
+jobs:
+  welcome-issue:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-26.04
+    permissions:
+      issues: write
+    steps:
+      - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
+        with:
+          FIRST_ISSUE_REACTIONS: "+1, hooray, rocket, heart"
+          FIRST_ISSUE: |
+            👋 @{{ author }}
+            
+            Welcome to the Microcks community! 💖
+            
+            Thanks and congrats 🎉 for opening your first issue here! Be sure to follow the issue template or please update it accordingly.
+            
+            📢 If you're using Microcks in your organization, please [add your company name to this list](https://github.com/microcks/.github/blob/main/ADOPTERS.md). 🙏 It really helps the project to gain momentum and credibility. It's a small contribution back to the project with a big impact.
+            
+            If you need to know why and how to add yourself to the list, please read the blog post ["Join the Microcks Adopters list and Empower the vibrant open source Community 🙌"](https://microcks.io/blog/join-adopters-list/)
+            
+            Hope you have a great time there! 
+          STAR_MESSAGE: |
+            🌟 ~~~~~~~~~ 🌟
+
+            📢 If you like Microcks, please ⭐ star ⭐ our repo to support it!
+            
+            🙏 It really helps the project to gain momentum and credibility. It's a small contribution back to the project with a big impact.
+
+  welcome-pr-opened:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
+    runs-on: ubuntu-26.04
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
+        with:
+          FIRST_PR_REACTIONS: "+1, hooray, rocket, heart"
+          FIRST_PR: |
+            👋 @{{ author }}
+            
+            Welcome to the Microcks community! 💖
+            
+            Thanks and congrats 🎉 for opening your first pull request here! Be sure to follow the pull request template or please update it accordingly.
+            
+            Hope you have a great time there!
+
+  welcome-pr-merged:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-26.04
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
+        with:
+          FIRST_PR_MERGED: |
+            🎉 @{{ author }}
+            
+            You are now a Microcks community contributor! 💖
+            
+            Thanks and congrats 🚀 on merging your first pull request! We are delighted and very proud of you! 👏 
+            
+            📢 If you're using Microcks in your organization, please [add your company name to this list](https://github.com/microcks/.github/blob/main/ADOPTERS.md). 🙏 It really helps the project to gain momentum and credibility. It's a small contribution back to the project with a big impact.
+            
+            If you need to know why and how to add yourself to the list, please read the blog post ["Join the Microcks Adopters list and Empower the vibrant open source Community 🙌"](https://microcks.io/blog/join-adopters-list/)
+            
+            Kudos and please keep going, we need you 🙌

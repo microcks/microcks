@@ -1,0 +1,126 @@
+{{- if and (not .Values.ingresses) .Values.gatewayRoutes -}}
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: "{{ .Values.appName }}"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    {{- with .Values.microcks.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  parentRefs:
+  - name: {{ .Values.microcks.gatewayRefName | default .Values.gatewayRefName }}
+    {{- if or .Values.microcks.gatewayRefNamespace .Values.gatewayRefNamespace }}
+    namespace: {{ .Values.microcks.gatewayRefNamespace | default .Values.gatewayRefNamespace }}
+    {{- end }}
+    sectionName: {{ .Values.microcks.gatewayRefSectionName | default .Values.gatewayRefSectionName }}
+  hostnames:
+  - "{{ .Values.microcks.url }}"
+  rules:
+  - matches:
+    - path:
+        value: /
+        type: PathPrefix
+    backendRefs:
+    - name: "{{ .Values.appName }}"
+      port: 8080
+---
+kind: GRPCRoute
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: "{{ .Values.appName }}-grpc"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    {{- with .Values.microcks.grpcIngressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  parentRefs:
+  - name: {{ .Values.microcks.grpcGatewayRefName | default .Values.gatewayRefName }}
+    {{- if or .Values.microcks.grpcGatewayRefNamespace .Values.gatewayRefNamespace }}
+    namespace: {{ .Values.microcks.grpcGatewayRefNamespace | default .Values.gatewayRefNamespace }}
+    {{- end }}
+    sectionName: {{ .Values.microcks.grpcGatewayRefSectionName | default .Values.grpcGatewayRefSectionName }}
+  hostnames:
+    - {{ ( include "microcks-grpc.url" . ) }}
+  rules:
+  - backendRefs:
+    - name: "{{ .Values.appName }}-grpc"
+      port: 9090
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: "{{ .Values.appName }}-keycloak"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    {{- with .Values.keycloak.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  parentRefs:
+    - name: {{ .Values.keycloak.gatewayRefName | default .Values.gatewayRefName }}
+      {{- if or .Values.keycloak.gatewayRefNamespace .Values.gatewayRefNamespace }}
+      namespace: {{ .Values.keycloak.gatewayRefNamespace | default .Values.gatewayRefNamespace }}
+      {{- end }}
+      sectionName: {{ .Values.keycloak.gatewayRefSectionName | default .Values.gatewayRefSectionName }}
+  hostnames:
+    - "{{ .Values.keycloak.url }}"
+  rules:
+  - matches:
+    - path:
+        value: /
+        type: PathPrefix
+    backendRefs:
+    - name: "{{ .Values.appName }}-keycloak"
+      port: 8080
+{{- end }}
+{{- if and .Values.features.async.enabled }}
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: "{{ .Values.appName }}-ws"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    {{- with .Values.features.async.ws.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  parentRefs:
+    - name: {{ .Values.features.async.ws.gatewayRefName | default .Values.gatewayRefName }}
+      {{- if or .Values.features.async.ws.gatewayRefNamespace .Values.gatewayRefNamespace }}
+      namespace: {{ .Values.features.async.ws.gatewayRefNamespace | default .Values.gatewayRefNamespace }}
+      {{- end }}
+      sectionName: {{ .Values.features.async.ws.gatewayRefSectionName | default .Values.gatewayRefSectionName }}
+  hostnames:
+    - "{{ ( include "microcks-ws.url" . ) }}"
+  rules:
+  - matches:
+    - path:
+        value: /api/ws
+        type: PathPrefix
+    backendRefs:
+    - name: "{{ .Values.appName }}-async-minion"
+      port: 8080
+{{- end }}
+{{- end -}}

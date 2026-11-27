@@ -1,0 +1,124 @@
+{
+  "roles": {
+    "client": {
+      "microcks-app": [
+        {
+          "name": "user",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "admin",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "manager",
+          "composite": false,
+          "clientRole": true
+        }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "microcks",
+      "path": "/microcks",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {},
+      "subGroups": [
+        {
+          "name": "manager",
+          "path": "/microcks/manager",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": []
+        }
+      ]
+    }
+  ],
+  "clientScopeMappings": {
+    "microcks-app": [
+      {
+        "client": "microcks-app-js",
+        "roles": [
+          "manager",
+          "admin",
+          "user"
+        ]
+      }
+    ],
+    "realm-management": [
+      {
+        "client": "microcks-app-js",
+        "roles": [
+          "manage-users",
+          "manage-clients"
+        ]
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "microcks-app",
+      "enabled": true,
+      "bearerOnly": true,
+      "defaultRoles": [
+        "user"
+      ]
+    },
+    {
+      "clientId": "microcks-app-js",
+      "enabled": true,
+      "publicClient": true,
+      "webOrigins": [
+        "+"
+      ],
+      "redirectUris": [
+        "https://localhost:8080/*",
+        "http://localhost:58085/*"
+      ],
+      "fullScopeAllowed": false,
+      "protocolMappers": [
+        {
+          "name": "microcks-group-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "microcks-groups",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "microcks-serviceaccount",
+      "secret": "ab54d329-e435-41ae-a900-ec6b3fe15c54",
+      "enabled": true,
+      "bearerOnly": false,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret"
+    }
+  ],
+  "requiredActions": [
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 90,
+      "config": {}
+    }
+  ],
+  "keycloakVersion": "10.0.1"
+}

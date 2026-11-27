@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://microcks.io/schemas/APIExamples-v1alpha1-schema.json",
+  "title": "The APIExamples JSON schema",
+  "description": "APIExamples is a specification for defining examples of API.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "operations"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of APIExamples",
+      "description": "The version of APIExamples description.",
+      "const": "mocks.microcks.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The APIExamples kind schema",
+      "description": "Kind marker for APIExamples",
+      "const": "APIExamples"
+    },
+    "metadata": {
+      "$id": "#/properties/metadata",
+      "type": "object",
+      "title": "The metadata of APIExamples",
+      "description": "Holds reference information about this Service/API examples relate.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/metadata/properties/name",
+          "type": "string",
+          "title": "The name of API these examples relate to.",
+          "description": "Human readable name of the target API for examples."
+        },
+        "version": {
+          "$id": "#/properties/metadata/properties/version",
+          "type": "string",
+          "title": "The version of API these examples relate to.",
+          "description": "Human readable version of the target API for examples."
+        }
+      }
+    },
+    "operations": {
+      "$id": "#/properties/operations",
+      "type": "object",
+      "title": "The API operations",
+      "description": "The examples are organized using API operations.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/operationItem"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "operationItem": {
+      "$id": "#/definitions/operationItem",
+      "type": "object",
+      "title": "One API operation examples",
+      "description": "Examples of an API operation.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/exampleItem"
+        }
+      }
+    },
+    "exampleItem": {
+      "$id": "#/definitions/operationItem",
+      "title": "One API example item",
+      "description": "One example item of an API operation.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/requestResponsePair"
+        },
+        {
+          "$ref": "#/definitions/unidirectionalMessage"
+        }
+      ]
+    },
+    "requestResponsePair": {
+      "$id": "#/definitions/requestResponsePair",
+      "type": "object",
+      "title": "Request/Response example",
+      "description": "A request/response pair example for an API operation.",
+      "required": [
+        "request",
+        "response"
+      ],
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/request"
+        },
+        "response": {
+          "$ref": "#/definitions/response"
+        }
+      },
+      "additionalProperties": false
+    },
+    "unidirectionalMessage": {
+      "$id": "#/definitions/unidirectionalMessage",
+      "type": "object",
+      "title": "Unidirectional message example",
+      "description": "A unidirectional message example for an API operation.",
+      "required": [
+        "eventMessage"
+      ],
+      "properties": {
+        "eventMessage": {
+          "$ref": "#/definitions/eventMessage"
+        }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "$id": "#/definitions/request",
+      "type": "object",
+      "title": "The request of a request/response pair",
+      "description": "The request part of a request/response pair.",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "title": "The request parameters",
+          "description": "The parameters (query or path located) of the request.",
+          "additionalProperties": true
+        },
+        "headers": {
+          "type": "object",
+          "title": "The request headers",
+          "description": "The headers of the request.",
+          "additionalProperties": true
+        },
+        "body": {
+          "title": "The request body",
+          "description": "The body of the request.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            },
+            {
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "$id": "#/definitions/response",
+      "type": "object",
+      "title": "The response of a request/response pair",
+      "description": "The response part of a request/response pair.",
+      "properties": {
+        "headers": {
+          "type": "object",
+          "title": "The response headers",
+          "additionalProperties": true
+        },
+        "mediaType": {
+          "type": "string",
+          "title": "The response media type",
+          "description": "The media type of the response body (like application/json)."
+        },
+        "status": {
+          "type": "string",
+          "title": "The response status",
+          "description": "The status of the response (typically the Http code)."
+        },
+        "body": {
+          "title": "The response body",
+          "description": "The body of the response.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            },
+            {
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "eventMessage": {
+      "$id": "#/definitions/eventMessage",
+      "type": "object",
+      "title": "The event message",
+      "description": "The event message of a unidirectional message example.",
+      "properties": {
+        "headers": {
+          "type": "object",
+          "title": "The event message headers",
+          "description": "The headers of the event message.",
+          "additionalProperties": true
+        },
+        "payload": {
+          "title": "The event message payload",
+            "description": "The payload of the event message.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            },
+            {
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

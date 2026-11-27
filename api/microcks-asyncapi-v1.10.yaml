@@ -1,0 +1,417 @@
+asyncapi: 3.0.0
+info:
+  title: Microcks Events API v1.10
+  version: 1.10.1
+  description: "Events API offered by Microcks, the Kubernetes native tool for API and microservices\
+    \ mocking and testing (microcks.io)"
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/microcks
+    email: laurent@microcks.io
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  x-logo:
+    backgroundColor: '#ffffff'
+    url: https://microcks.io/images/microcks-logo-blue.png
+defaultContentType: application/json
+channels:
+  service-changes:
+    description: A channel where Services changes are published
+    messages:
+      serviceChangeEvent:
+        $ref: '#/components/messages/serviceChangeEvent'
+        bindings:
+          kafka:
+            key:
+              type: string
+    bindings:
+      ws:
+        method: POST
+      kafka:
+        topic: 'microcks-services-updates'
+operations:
+  receivedServiceChanges:
+    action: receive
+    channel:
+      $ref: '#/channels/service-changes'
+    summary: Receive information about Service changes
+    messages:
+      - $ref: '#/channels/service-changes/messages/serviceChangeEvent'
+components:
+  messages:
+    serviceChangeEvent:
+      description: An event describing that Service has been modified (created, updated or deleted)
+      payload:
+        $ref: '#/components/schemas/ServiceChangeEvent'
+  schemas:
+    ServiceChangeEvent:
+      type: object
+      required:
+        - serviceId
+        - serviceView
+        - changeType
+        - timestamp
+      properties:
+        serviceId:
+          type: string
+        serviceView:
+          type: object
+          schema:
+            $ref: '#/components/schemas/ServiceView'
+        changeType:
+          type: string
+          enum:
+            - CREATED
+            - UPDATED
+            - DELETED
+        timestamp:
+          type: number
+          format: int32
+      additionalProperties: true
+    ServiceView:
+      description: Aggregate bean for grouping a Service an its messages pairs
+      type: object
+      required:
+        - service
+        - messagesMap
+      properties:
+        service:
+          $ref: '#/components/schemas/Service'
+          description: Wrapped service description
+        messagesMap:
+          type: object
+          description: "Map of messages for this Service. Keys are operation name,\
+            \ values are array of messages for this operation"
+          additionalProperties:
+            $ref: '#/components/schemas/MessageArray'
+      additionalProperties: true
+    Service:
+      description: Represents a Service or API definition as registred into Microcks
+        repository
+      required:
+        - name
+        - version
+        - type
+        - sourceArtifact
+      properties:
+        id:
+          description: Unique identifier for this Service or API
+          type: string
+        name:
+          description: Distinct name for this Service or API (maybe shared among many
+            versions)
+          type: string
+        version:
+          description: Distinct version for a named Service or API
+          type: string
+        type:
+          description: Service or API Type
+          type: string
+          enum:
+            - REST
+            - SOAP_HTTP
+            - GENERIC_REST
+            - GENERIC_EVENT
+            - EVENT
+            - GRPC
+            - GRAPHQL
+        operations:
+          description: Set of Operations for Service or API
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        xmlNS:
+          description: Associated Xml Namespace in case of Xml based Service
+          type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+          description: Metadata of Service
+        sourceArtifact:
+          description: Short name of the main/primary artifact this service was created
+            from
+          type: string
+    Metadata:
+      description: Commodity object for holding metadata on any entity. This object
+        is inspired by Kubernetes metadata.
+      type: object
+      required:
+        - createdOn
+        - lastUpdate
+      properties:
+        createdOn:
+          description: Creation date of attached object
+          type: number
+          readOnly: true
+        lastUpdate:
+          description: Last update of attached object
+          type: number
+          readOnly: true
+        annotations:
+          description: Annotations of attached object
+          type: object
+          additionalProperties:
+            type: string
+        labels:
+          description: Labels put on attached object
+          type: object
+          additionalProperties:
+            type: string
+    Operation:
+      description: An Operation of a Service or API
+      type: object
+      required:
+        - name
+        - method
+      properties:
+        name:
+          description: Unique name of this Operation within Service scope
+          type: string
+        method:
+          description: Represents transport method
+          type: string
+        inputName:
+          description: Name of input parameters in case of Xml based Service
+          type: string
+        outputName:
+          description: Name of output parameters in case of Xml based Service
+          type: string
+        dispatcher:
+          description: Dispatcher strategy used for mocks
+          type: string
+        dispatcherRules:
+          description: DispatcherRules used for mocks
+          type: string
+        defaultDelay:
+          description: Default response time delay for mocks
+          type: number
+        resourcePaths:
+          description: Paths the mocks endpoints are mapped on
+          type: array
+          items:
+            type: string
+        parameterContraints:
+          description: Contraints that may apply to mock invocatino on this operation
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterConstraint'
+        bindings:
+          description: Map of protocol binding details for this operation
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Binding'
+    ParameterConstraint:
+      description: Companion object for Operation that may be used to express constraints
+        on request parameters
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          description: Parameter name
+          type: string
+        required:
+          description: Whether it's a required constraint
+          type: boolean
+        recopy:
+          description: Whether it's a recopy constraint
+          type: boolean
+        mustMatchRegexp:
+          description: Whether it's a regular expression matching constraint
+          type: string
+        in:
+          description: Parameter location
+          type: string
+          enum:
+            - path
+            - query
+            - header
+    Binding:
+      description: Protocol binding details for asynchronous operations
+      type: object
+      required:
+        - type
+        - destinationName
+      properties:
+        type:
+          description: Protocol binding identifier
+          type: string
+          enum:
+            - KAFKA
+            - MQTT
+            - WS
+            - AMQP
+            - NATS
+            - GOOGLEPUBSUB
+            - SQS
+            - SNS
+        keyType:
+          description: Type of key for Kafka messages
+          type: string
+        destinationType:
+          description: Type of destination for asynchronous messages of this operation
+          type: string
+        destinationName:
+          description: Name of destination for asynchronous messages of this operation
+          type: string
+        qoS:
+          description: Quality of Service attribute for MQTT binding
+          type: string
+        persistent:
+          description: Persistent attribute for MQTT binding
+          type: boolean
+        method:
+          description: HTTP method for WebSocket binding
+          type: string
+    MessageArray:
+      description: Array of Message for Service operations
+      type: array
+      items:
+        $ref: '#/components/schemas/Exchange'
+    Exchange:
+      description: "Abstract representation of a Service or API exchange type (request/response,\
+        \ event based, ...)"
+      oneOf:
+        - $ref: '#/components/schemas/RequestResponsePair'
+        - $ref: '#/components/schemas/UnidirectionalEvent'
+      discriminator: type
+    AbstractExchange:
+      description: Abstract bean representing a Service or API Exchange.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          description: Discriminant type for identifying kind of exchange
+          type: string
+          enum:
+            - reqRespPair
+            - unidirEvent
+    RequestResponsePair:
+      description: Request associated with corresponding Response
+      type: object
+      allOf:
+        - type: object
+          properties:
+            request:
+              $ref: '#/components/schemas/Request'
+              description: The request part of the pair
+            response:
+              $ref: '#/components/schemas/Response'
+              description: The Response part of the pair
+          required:
+            - request
+            - response
+        - $ref: '#/components/schemas/AbstractExchange'
+    UnidirectionalEvent:
+      description: Representation of an unidirectional exchange as an event message
+      type: object
+      allOf:
+        - type: object
+          required:
+            - eventMessage
+          properties:
+            eventMessage:
+              $ref: '#/components/schemas/EventMessage'
+              description: Asynchronous message for this unidirectional event
+        - $ref: '#/components/schemas/AbstractExchange'
+    Request:
+      description: A mock invocation or test request
+      required:
+        - name
+        - operationId
+      properties:
+        id:
+          description: Unique identifier of Request
+          type: string
+        name:
+          description: Unique distinct name of this Request
+          type: string
+        content:
+          description: Body content for this request
+          type: string
+        operationId:
+          description: Identifier of Operation this Request is associated to
+          type: string
+        testCaseId:
+          description: Unique identifier of TestCase this Request is attached (in
+            case of a test)
+          type: string
+        headers:
+          description: Headers for this Request
+          type: array
+          items:
+            $ref: '#/components/schemas/Header'
+    Response:
+      description: A mock invocation or test response
+      required:
+        - operationId
+        - name
+      properties:
+        operationId:
+          description: Identifier of Operation this Response is associated to
+          type: string
+        content:
+          description: Body content of this Response
+          type: string
+        id:
+          description: Unique identifier of Response
+          type: string
+        name:
+          description: Unique distinct name of this Response
+          type: string
+        testCaseId:
+          description: Unique identifier of TestCase this Response is attached (in
+            case of a test)
+          type: string
+        headers:
+          description: Headers for this Response
+          type: array
+          items:
+            $ref: '#/components/schemas/Header'
+    Header:
+      description: Transport headers for both Requests and Responses
+      required:
+        - name
+        - values
+      type: object
+      properties:
+        name:
+          description: Unique distinct name of this Header
+          type: string
+        values:
+          description: Values for this Header
+          type: array
+          items:
+            type: string
+    EventMessage:
+      description: A mock event message
+      required:
+        - id
+        - mediaType
+      type: object
+      properties:
+        id:
+          description: Unique identifier of this message
+          type: string
+        mediaType:
+          description: Content type of message
+          type: string
+        name:
+          description: Unique distinct name of this message
+          type: string
+        content:
+          description: Body content for this message
+          type: string
+        operationId:
+          description: Identifier of Operation this message is associated to
+          type: string
+        testCaseId:
+          description: Unique identifier of TestCase this message is attached (in
+            case of a test)
+          type: string
+        headers:
+          description: Headers for this message
+          type: array
+          items:
+            $ref: '#/components/schemas/Header'

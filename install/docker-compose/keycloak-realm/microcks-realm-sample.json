@@ -1,0 +1,174 @@
+{
+  "id": "microcks",
+  "realm": "microcks",
+  "displayName": "Microcks",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "users" : [
+    {
+      "username" : "admin",
+      "enabled": true,
+      "credentials" : [
+        { "type" : "password",
+          "value" : "microcks123" }
+      ],
+      "realmRoles": [],
+      "applicationRoles": {
+        "realm-management": [ "manage-users", "manage-clients" ],
+        "account": [ "manage-account" ],
+        "microcks-app": [ "user", "manager", "admin"]
+      }
+    },
+    {
+      "username": "service-account-microcks-serviceaccount-test",
+      "enabled": true,
+      "serviceAccountClientId": "microcks-serviceaccount-test",
+      "clientRoles": {
+        "microcks-app": ["manager"]
+      }
+    }
+  ],
+  "roles": {
+    "realm": [],
+    "client": {
+      "microcks-app": [
+        {
+          "name": "user",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "microcks"
+        },
+        {
+          "name": "admin",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "microcks"
+        },
+        {
+          "name": "manager",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "microcks"
+        }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "microcks",
+      "path": "/microcks",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {},
+      "subGroups": [
+        {
+          "name": "manager",
+          "path": "/microcks/manager",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": []
+        }
+      ]
+    }
+  ],
+  "defaultRoles": [],
+  "requiredCredentials": [ "password" ],
+  "scopeMappings": [],
+  "clientScopeMappings": {
+    "microcks-app": [
+      {
+        "client": "microcks-app-js",
+        "roles": [
+          "manager",
+          "admin",
+          "user"
+        ]
+      }
+    ],
+    "realm-management": [
+      {
+        "client": "microcks-app-js",
+        "roles": [
+          "manage-users",
+          "manage-clients"
+        ]
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "microcks-app-js",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:58085/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "fullScopeAllowed": false,
+      "protocolMappers": [
+        {
+          "name": "microcks-group-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "microcks-groups",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "applications": [
+    {
+      "name": "microcks-app",
+      "enabled": true,
+      "bearerOnly": true,
+      "defaultRoles": [
+        "user"
+      ]
+    },
+    {
+      "name": "microcks-serviceaccount",
+      "secret": "ab54d329-e435-41ae-a900-ec6b3fe15c54",
+      "enabled": true,
+      "bearerOnly": false,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret"
+    },
+    {
+      "name": "microcks-serviceaccount-test",
+      "secret": "1b4db7eb-4057-5ddf-91e0-36dec72071f5",
+      "enabled": true,
+      "bearerOnly": false,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret"
+    }
+  ],
+  "requiredActions": [
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 90,
+      "config": {}
+    }
+  ],
+  "keycloakVersion": "10.0.1"
+}

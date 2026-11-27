@@ -1,0 +1,66 @@
+project:
+  name: Microcks
+  description: Microcks core project
+  longDescription: 'Microcks: easy mocks for your microservices'
+  copyright: The Microcks Authors
+  java:
+    version: 21
+
+signing:
+  active: ALWAYS
+  armored: true
+
+assemble:
+  archive:
+    microcks:
+      active: ALWAYS
+      stereotype: NONE
+      options:
+        longFileMode: POSIX
+      formats:
+        - ZIP
+        - TGZ
+      fileSets:
+        - input: target/staging-deploy
+          includes:
+            - '**/*.*'
+
+files:
+  active: ALWAYS
+  artifacts:
+    - path: 'target/site/microcks-{{projectVersion}}.spdx-sbom.json'
+    - path: 'commons/model/target/site/microcks-model-{{projectVersion}}.spdx-sbom.json'
+    - path: 'commons/util/target/site/microcks-util-{{projectVersion}}.spdx-sbom.json'
+    - path: 'commons/util-el/target/site/microcks-el-{{projectVersion}}.spdx-sbom.json'
+    - path: 'webapp/target/site/microcks-app-{{projectVersion}}.spdx-sbom.json'
+    - path: 'minions/async/target/site/microcks-async-minion-{{projectVersion}}.spdx-sbom.json'
+    - path: 'distro/uber/target/site/microcks-uber-app-{{projectVersion}}.spdx-sbom.json'
+    - path: 'distro/uber-async-minion/target/site/microcks-uber-async-minion-{{projectVersion}}.spdx-sbom.json'
+
+deploy:
+  maven:
+    mavenCentral:
+      sonatype:
+        active: ALWAYS
+        snapshotSupported: false
+        url: https://central.sonatype.com/api/v1/publisher
+        username: wPlqdV4c
+        namespace: io.github.microcks
+        applyMavenCentralRules: true
+        stagingRepositories:
+          - target/staging-deploy
+    pomchecker:
+      failOnWarning: false
+      failOnError: false
+      strict: false
+
+release:
+  github:
+    overwrite: true
+    releaseName: '{{tagName}}'
+    tagName: '{{projectVersion}}'
+    changelog:
+      formatted: ALWAYS
+      preset: conventional-commits
+      contributors:
+        format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'

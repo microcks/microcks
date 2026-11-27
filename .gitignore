@@ -1,0 +1,26 @@
+# Development File #
+node
+node_modules
+dist
+.idea
+.tmp
+.sass-cache
+.angular
+.cifuzz-corpus
+bower_components
+target
+.classpath
+.project
+.settings
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+.DS_Store
+*.log
+/.vscode/
+*.iml

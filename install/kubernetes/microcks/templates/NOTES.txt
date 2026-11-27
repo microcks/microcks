@@ -1,0 +1,32 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get {{ .Release.Name }}
+
+Microcks is available at https://{{ .Values.microcks.url }}.
+
+GRPC mock service is available at {{ ( include "microcks-grpc.url" . ) }}.
+{{- if (.Values.microcks.grpcEnableTLS) }}
+It has been exposed using TLS passthrough on the Ingress controller, you should extract the certificate for your client using:
+
+  $ kubectl get secret {{ .Values.appName }}-microcks-grpc-secret -n {{ .Release.Namespace }} -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
+{{ end }}
+
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
+Keycloak has been deployed on https://{{ .Values.keycloak.url }} to protect user access.
+You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
+username and password found into '{{ .Values.appName }}-keycloak-admin' secret.
+{{- end }}
+
+{{- if and .Values.features.async.enabled .Values.features.async.kafka.install }}
+
+Kafka broker has been deployed on {{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}.
+It has been exposed using TLS passthrough on the Ingress controller, you should extract the certificate for your client using:
+
+  $ kubectl get secret {{ .Values.appName }}-kafka-cluster-ca-cert -n {{ .Release.Namespace }} -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
+
+{{- end }}

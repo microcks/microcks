@@ -1,0 +1,25 @@
+{{- if and .Values.features.async.enabled .Values.features.async.kafka.install }}
+{{- if .Capabilities.APIVersions.Has "kafka.strimzi.io/v1beta1/KafkaTopic" }}
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: "{{ .Values.appName }}-kafka"
+  name: "{{ .Values.appName }}-kafka-services-updates"
+spec:
+  partitions: 1
+  replicas: 1
+  topicName: microcks-services-updates
+{{- else if .Capabilities.APIVersions.Has "kafka.strimzi.io/v1beta2/KafkaTopic" }}
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: "{{ .Values.appName }}-kafka"
+  name: "{{ .Values.appName }}-kafka-services-updates"
+spec:
+  partitions: 1
+  replicas: 1
+  topicName: microcks-services-updates
+{{- end }}
+{{- end }}
