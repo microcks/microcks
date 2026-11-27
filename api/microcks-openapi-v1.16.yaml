@@ -1293,7 +1293,8 @@ paths:
               example: "Unknown workflow: deleteAll"
           description: "The run is refused and no WorkflowResult is created. The\
             \ body tells why: the workflow is unknown, cannot run, misses an input,\
-            \ misses the base URL of a source, or the secret is unknown"
+            \ misses the base URL of a source, the secret is unknown, or the workflow\
+            \ has no such recorded example"
         "404":
           description: No Arazzo document has this identifier, or this title and
             version
@@ -1306,6 +1307,62 @@ paths:
         descriptions are linked to, or against their implementations when a base
         URL is given for each linked source. The run is executed asynchronously;
         read it with GetWorkflowRun until its status is no longer IN_PROGRESS.
+    parameters:
+    - name: documentId
+      description: "Unique identifier of the Arazzo document, or its title and version\
+        \ as {title}:{version} (for example API Pastry scenarios:1.0.0)"
+      schema:
+        type: string
+      in: path
+      required: true
+    - name: workflowId
+      description: Identifier of the workflow in the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/documents/{documentId}/workflows/{workflowId}/examples/runs:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowRunRequest'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowExampleLaunch'
+          description: How the run of each recorded example of the workflow was
+            launched, in the order of the examples; empty when the workflow has
+            none
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Unknown workflow: deleteAll"
+          description: The workflow is unknown and no WorkflowResult is created
+        "404":
+          description: No Arazzo document has this identifier, or this title and
+            version
+      security:
+      - jwt-bearer:
+        - user
+      operationId: LaunchWorkflowExampleRuns
+      summary: Run every recorded example of a workflow of an Arazzo document
+      description: Play every example recorded for the workflow in the ArazzoSources
+        overlay of its document, one run per example, with the inputs of the example.
+        The inputs and example of the request are not used. An example that cannot
+        run is refused with its reason while the others run. Each run is executed
+        asynchronously; read it with GetWorkflowRun until its status is no longer
+        IN_PROGRESS, then read whether it matches its example.
     parameters:
     - name: documentId
       description: "Unique identifier of the Arazzo document, or its title and version\
@@ -2626,6 +2683,11 @@ components:
           description: Whether each response is validated against the OpenAPI schema
             of its operation (defaults to false)
           type: boolean
+        example:
+          description: The name of the recorded example of the workflow the run
+            plays. Its inputs replace the given ones, and the run is judged on what
+            it expects
+          type: string
       example: |-
         {
             "inputs": {
@@ -2909,6 +2971,86 @@ components:
           $ref: '#/components/schemas/WorkflowMissingExample'
           description: The example the Microcks mocks lack for the failing step
             of a run against them
+        example:
+          $ref: '#/components/schemas/WorkflowExampleCheck'
+          description: The recorded example the run plays, with its verdict once
+            the run is finished
+    WorkflowExampleVerdict:
+      description: Whether a run matches the recorded example it plays, apart from
+        the status of the run, as an example may expect the workflow to fail
+      enum:
+      - MATCHES
+      - DOES_NOT_MATCH
+      type: string
+    WorkflowStepExpectation:
+      description: What a recorded example expects of a step of its workflow
+      required:
+      - stepId
+      properties:
+        stepId:
+          description: Identifier of the step
+          type: string
+        status:
+          description: The exact HTTP status code the step is expected to get
+          type: integer
+        outputs:
+          description: The outputs the step is expected to produce, by name; only
+            those listed are checked
+          type: object
+          additionalProperties: {}
+    WorkflowExampleCheck:
+      description: The recorded example a run plays, what it expects, and whether
+        the run matches it
+      required:
+      - name
+      properties:
+        name:
+          description: Name of the example
+          type: string
+        outputs:
+          description: The outputs the workflow is expected to produce, by name;
+            only those listed are checked
+          type: object
+          additionalProperties: {}
+        steps:
+          description: What each listed step is expected to show
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowStepExpectation'
+        stopsAt:
+          description: The step the workflow is expected to stop at; absent when
+            it is expected to run to its end
+          type: string
+        verdict:
+          $ref: '#/components/schemas/WorkflowExampleVerdict'
+          description: Whether the run matches the example; absent while the run
+            is in progress
+        unmetExpectations:
+          description: Each expectation the run does not meet
+          type: array
+          items:
+            type: string
+    WorkflowExampleLaunch:
+      description: How the run of a recorded example was launched when running all
+        the examples of a workflow
+      required:
+      - example
+      properties:
+        example:
+          description: Name of the example
+          type: string
+        runId:
+          description: Unique identifier of the WorkflowResult playing the example;
+            absent when it was refused
+          type: string
+        number:
+          format: int64
+          description: Number of that run in its Arazzo document; absent when it
+            was refused
+          type: integer
+        refusal:
+          description: Why the example could not run; absent when it runs
+          type: string
   responses:
     ServiceResponse:
       content:

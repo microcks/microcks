@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
+import io.microcks.testsupport.http.HttpMethod;
 import io.microcks.testsupport.http.MediaType;
 import io.microcks.testsupport.http.ResponseEntity;
 
@@ -42,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * End-to-end replay of the recorded examples of a workflow: the overlay uploaded with its examples, every example
  * played in one call as a CI does, through the Arazzo minion against mocks answering 404 for an unknown pastry, then
- * each run judged on its example.
+ * each run judged on its example. The requests and responses are checked against the published Microcks API.
  * @author SebastienDegodez
  */
 @QuarkusTest
@@ -51,6 +52,10 @@ class ArazzoExamplesIT extends AbstractBaseIT {
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
    private static final ArazzoMinionProcess MINION = new ArazzoMinionProcess();
    private static final ObjectMapper JSON = new ObjectMapper();
+   private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("1.16");
+   private static final String LAUNCH = "/arazzo/documents/{documentId}/workflows/{workflowId}/runs";
+   private static final String LAUNCH_EXAMPLES = "/arazzo/documents/{documentId}/workflows/{workflowId}/examples/runs";
+   private static final String RUN = "/arazzo/runs/{runId}";
 
    /** The runs are handed to the minion at its URL, as configured with arazzo-minion.url. */
    @BeforeEach
@@ -74,9 +79,7 @@ class ArazzoExamplesIT extends AbstractBaseIT {
    void everyExampleOfAWorkflowIsReplayedInOneCallAndJudgedOnWhatItExpects() throws Exception {
       String documentId = pastryExamplesAreImported();
 
-      ResponseEntity<String> launched = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/listThenReadFirst/examples/runs",
-            json("{\"timeout\": 10000}"), String.class);
+      ResponseEntity<String> launched = post(LAUNCH_EXAMPLES, documentId, "listThenReadFirst", "{\"timeout\": 10000}");
 
       assertEquals(200, launched.getStatusCode().value(), launched.getBody());
       List<String> verdicts = new ArrayList<>();
@@ -107,9 +110,8 @@ class ArazzoExamplesIT extends AbstractBaseIT {
                   Map.of("pastryApi", Map.of("name", "Pastry Examples API", "version", "1.0.0"))),
             String.class);
       assertEquals(201, relinked.getStatusCode().value(), relinked.getBody());
-      ResponseEntity<String> launched = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/listThenReadFirst/runs",
-            json("{\"example\": \"unknown-first-pastry\", \"timeout\": 10000}"), String.class);
+      ResponseEntity<String> launched = post(LAUNCH, documentId, "listThenReadFirst",
+            "{\"example\": \"unknown-first-pastry\", \"timeout\": 10000}");
 
       assertEquals(201, launched.getStatusCode().value(), launched.getBody());
       JsonNode run = awaitFinalRun(JSON.readTree(launched.getBody()).get("id").asText());
@@ -124,6 +126,17 @@ class ArazzoExamplesIT extends AbstractBaseIT {
       return JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody()).get(0).get("id").asText();
    }
 
+   /** Launch runs as a CI pipeline does, checking the request and the response against the published API. */
+   private ResponseEntity<String> post(String path, String documentId, String workflowId, String body)
+         throws Exception {
+      MICROCKS_API.assertRequestConforms("POST", path, body);
+      ResponseEntity<String> response = restTemplate.exchange(
+            "/api" + path.replace("{documentId}", documentId).replace("{workflowId}", workflowId), HttpMethod.POST,
+            json(body), String.class);
+      MICROCKS_API.assertResponseConforms("POST", path, response);
+      return response;
+   }
+
    private static HttpEntity<String> json(String body) {
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
@@ -133,7 +146,10 @@ class ArazzoExamplesIT extends AbstractBaseIT {
    private JsonNode awaitFinalRun(String runId) throws Exception {
       JsonNode run = null;
       for (int attempt = 0; attempt < 100; attempt++) {
-         run = JSON.readTree(restTemplate.getForEntity("/api/arazzo/runs/" + runId, String.class).getBody());
+         ResponseEntity<String> response = restTemplate.getForEntity("/api" + RUN.replace("{runId}", runId),
+               String.class);
+         MICROCKS_API.assertResponseConforms("GET", RUN, response);
+         run = JSON.readTree(response.getBody());
          if (!"IN_PROGRESS".equals(run.get("status").asText())) {
             return run;
          }
