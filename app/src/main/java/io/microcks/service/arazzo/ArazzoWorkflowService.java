@@ -42,6 +42,7 @@ import io.microcks.artifact.arazzo.ArazzoDataFlow;
 import io.microcks.artifact.arazzo.ArazzoMessaging;
 import io.microcks.artifact.arazzo.ArazzoRequestBody;
 import io.microcks.artifact.arazzo.ArazzoStep;
+import io.microcks.artifact.arazzo.ArazzoStepOrder;
 import io.microcks.artifact.arazzo.ArazzoUse;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
@@ -145,7 +146,7 @@ public class ArazzoWorkflowService {
             document.getArazzoVersion(), document.getFileName(), document.getImportDate(), document.getWorkflowIds(),
             sources.values().stream().map(source -> sourceDescription(source, document)).toList(),
             workflow.workflowId(), workflow.summary(), workflow.description(), inputs(workflow),
-            workflow.steps().stream().map(step -> step(step, sources)).toList(), workflow.outputs(),
+            workflow.steps().stream().map(step -> step(step, workflow, sources)).toList(), workflow.outputs(),
             ArazzoDataFlow.stepOutputPassings(workflow).stream()
                   .map(passing -> new ArazzoDataPassing(passing.fromStepId(), passing.outputName(),
                         expressionUse(passing.use())))
@@ -187,14 +188,20 @@ public class ArazzoWorkflowService {
             ArazzoDocumentService.unlinkedReason(source.link()), source.operations().size(), usedOperationIds.size());
    }
 
-   private static ArazzoStepDetail step(ArazzoStep step, Map<String, ResolvedSource> sources) {
+   /**
+    * A step tells the steps it declares it depends on, and the steps it must come after, under the rule of
+    * {@link ArazzoStepOrder}.
+    */
+   private static ArazzoStepDetail step(ArazzoStep step, ArazzoWorkflow workflow, Map<String, ResolvedSource> sources) {
       return new ArazzoStepDetail(step.stepId(), step.description(), ArazzoDocumentService.operationOf(
             new ArazzoStepCall(step.call().sourceName(), step.call().operationId(), step.call().channel()), sources),
             step.parameters().stream()
                   .map(parameter -> new ArazzoStepParameter(parameter.name(), parameter.in(), parameter.value()))
                   .toList(),
             requestBody(step.requestBody()), criteria(step.successCriteria()), step.outputs(),
-            actions(step.onSuccess()), actions(step.onFailure()), messaging(step.messaging()));
+            actions(step.onSuccess()), actions(step.onFailure()), messaging(step.messaging()),
+            step.dependsOn() == null ? List.of() : step.dependsOn(),
+            List.copyOf(ArazzoStepOrder.prerequisitesOf(workflow, step.stepId())));
    }
 
    private static ArazzoStepMessaging messaging(ArazzoMessaging messaging) {

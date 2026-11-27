@@ -189,8 +189,7 @@ class ArazzoAsyncStepsTest {
          "correlation-id-on-send; Invalid Arazzo document: only a receive step has a correlationId: requestShipping",
          "negative-timeout; Invalid Arazzo document: a step timeout is a number of milliseconds, not -1: "
                + "confirmOrder",
-         "unknown-action; Invalid Arazzo document: a step action is send or receive, not subscribe: confirmOrder",
-         "depends-on; Unsupported step field: dependsOn" })
+         "unknown-action; Invalid Arazzo document: a step action is send or receive, not subscribe: confirmOrder" })
    void aDocumentWithAsyncStepFieldsOutOfPlaceOrMalformedIsRefusedWholeWithItsReason(String example, String reason)
          throws Exception {
       String content = document(example);

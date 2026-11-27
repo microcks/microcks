@@ -1,0 +1,87 @@
+arazzo: 1.1.0
+info:
+  title: Pastry tasting
+  version: 1.0.0
+  summary: Reads the menu, tastes three pastries in any order, then reprices the Eclair.
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: tasteThenReprice
+    summary: Reads the menu, then three pastries that only need the menu, then reprices the Eclair once all are read.
+    inputs:
+      type: object
+      properties:
+        newPrice:
+          type: number
+      required:
+        - newPrice
+    steps:
+      - stepId: readMenu
+        operationId: GetPastries
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: tasteEclair
+        operationId: GetPastryByName
+        dependsOn:
+          - readMenu
+        parameters:
+          - name: name
+            in: path
+            value: Eclair Cafe
+          - name: Accept
+            in: header
+            value: application/json
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          name: $response.body#/name
+      - stepId: tasteMillefeuille
+        operationId: GetPastryByName
+        dependsOn:
+          - readMenu
+        parameters:
+          - name: name
+            in: path
+            value: Millefeuille
+          - name: Accept
+            in: header
+            value: application/json
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: tasteEclairXml
+        operationId: GetPastryByName
+        dependsOn:
+          - readMenu
+        parameters:
+          - name: name
+            in: path
+            value: Eclair Cafe
+          - name: Accept
+            in: header
+            value: text/xml
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: reprice
+        operationId: PatchPastry
+        parameters:
+          - name: name
+            in: path
+            value: $steps.tasteEclair.outputs.name
+          - name: Accept
+            in: header
+            value: application/json
+        requestBody:
+          contentType: application/json
+          payload:
+            price: 0
+          replacements:
+            - target: /price
+              value: $inputs.newPrice
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          price: $response.body#/price
+    outputs:
+      price: $steps.reprice.outputs.price

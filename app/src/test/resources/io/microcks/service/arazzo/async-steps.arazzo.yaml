@@ -152,24 +152,3 @@ workflows:
       - stepId: confirmOrder
         operationId: receiveOrderConfirmed
         action: subscribe
----
-# example: depends-on - the step confirmOrder waits for the step requestShipping, refused until the runner applies it
-arazzo: 1.1.0
-info:
-  title: Order events scenarios
-  version: 1.0.0
-sourceDescriptions:
-  - name: orderEvents
-    url: CONTRACTS/specs/order-events.asyncapi.yaml?example=order-events
-    type: asyncapi
-workflows:
-  - workflowId: ship
-    steps:
-      - stepId: requestShipping
-        operationId: sendShippingRequest
-        action: send
-      - stepId: confirmOrder
-        operationId: receiveOrderConfirmed
-        action: receive
-        dependsOn:
-          - requestShipping
