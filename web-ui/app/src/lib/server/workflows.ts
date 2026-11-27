@@ -11,6 +11,7 @@ import {
   seedSessions
 } from '#lib/placeholders/workflows.js';
 import type { WorkflowsPayload } from '#lib/workflows/list.js';
+import { toWorkflowExample } from '#lib/workflows/examples.js';
 import { documentOrigin, jobOfDocument } from '#lib/workflows/source-job.js';
 import type { ImportAnalysis } from '#lib/workflows/import-analysis.js';
 import { parse as parseYaml } from 'yaml';
@@ -102,7 +103,7 @@ export function getDetail(docId: string, workflowId: string): WorkflowDetailPayl
   const realWorkflow = real.workflows.get(key(docId, workflowId));
   if (realWorkflow) {
     const runs = state.runs.filter((r) => r.documentId === docId && r.workflowId === workflowId).sort((a, b) => b.number - a.number);
-    return { document: real.documents.get(docId)!, workflow: realWorkflow, runs, sessions: [], examples: [] };
+    return { document: real.documents.get(docId)!, workflow: realWorkflow, runs, sessions: [], examples: real.examples.get(key(docId, workflowId)) ?? [] };
   }
   ensureResolved();
   const document = state.documents.find((d) => d.id === docId);
@@ -193,7 +194,7 @@ export const nextRunNumber = (docId: string, workflowId: string): number =>
  * ------------------------------------------------------------------------------------------------------------- */
 
 /** Real documents and workflows, cached for the synchronous accessors used by the (simulated) run pages. */
-const real = { documents: new Map<string, ArazzoDocument>(), workflows: new Map<string, Workflow>() };
+const real = { documents: new Map<string, ArazzoDocument>(), workflows: new Map<string, Workflow>(), examples: new Map<string, WorkflowExample[]>() };
 const key = (docId: string, workflowId: string) => `${docId}/${workflowId}`;
 
 type Obj = Record<string, any>;
@@ -345,6 +346,7 @@ async function fetchReal(token?: string): Promise<{ documents: ArazzoDocument[];
   }
   const documents: ArazzoDocument[] = [];
   const workflows: Workflow[] = [];
+  const examplesByWorkflow: [string, WorkflowExample[]][] = [];
   const jobs = await fetchBackendJobs(token).catch(() => [] as BackendJob[]);
   await Promise.all(
     summaries.map(async (summary) => {
@@ -354,6 +356,7 @@ async function fetchReal(token?: string): Promise<{ documents: ArazzoDocument[];
       ]);
       const found = details.filter((d): d is BackendArazzoWorkflowDetail => d !== undefined);
       documents.push(toDocument(summary, found, content as string | undefined, jobOfDocument(jobs, summary.id)));
+      for (const d of found) examplesByWorkflow.push([key(summary.id, d.workflowId), (d.examples ?? []).map(toWorkflowExample)]);
       for (const d of found) workflows.push(toWorkflow(d, summary.workflows.find((w) => w.status.workflowId === d.workflowId)));
     })
   );
@@ -362,6 +365,7 @@ async function fetchReal(token?: string): Promise<{ documents: ArazzoDocument[];
   workflows.sort((a, b) => order.get(a.documentId)! - order.get(b.documentId)!);
   real.documents = new Map(documents.map((d) => [d.id, d]));
   real.workflows = new Map(workflows.map((w) => [key(w.documentId, w.workflowId), w]));
+  real.examples = new Map(examplesByWorkflow);
   return { documents, workflows };
 }
 
@@ -390,7 +394,7 @@ export async function getWorkflowDetail(
       const workflow = real.workflows.get(key(docId, workflowId));
       if (!document || !workflow) return undefined;
       const runs = (await realRunsOf([docId], [workflow], token)).filter((r) => r.workflowId === workflowId);
-      return { document, workflow, runs, sessions: [], examples: [], demo: false };
+      return { document, workflow, runs, sessions: [], examples: real.examples.get(key(docId, workflowId)) ?? [], demo: false };
     }
   }
   const detail = getDetail(docId, workflowId);

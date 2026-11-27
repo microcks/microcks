@@ -6,6 +6,7 @@ import {
   fetchArazzoRun,
   fetchArazzoRuns,
   fetchBackendTestMessages,
+  launchArazzoExampleRuns,
   launchArazzoRun,
   type BackendTestMessage,
   type BackendWorkflowResult,
@@ -14,6 +15,7 @@ import {
   type BackendArazzoRunLaunch
 } from './backend';
 import { coherenceOf, schemaOf } from './runs-arazzo-schema';
+import { exampleCheckOf, toWorkflowExample } from '#lib/workflows/examples.js';
 
 /*
  * Real runs of the workflows of imported Arazzo documents (feature/arazzo S5–S11): launched on the Microcks backend,
@@ -27,6 +29,8 @@ const STATUS: Record<BackendWorkflowResult['status'], WorkflowRun['status']> = {
   SUCCESS: 'SUCCESS',
   FAILURE: 'FAILURE'
 };
+
+const exampleCheckField = (check: ReturnType<typeof exampleCheckOf>) => (check ? { exampleCheck: check } : {});
 
 const iso = (v: number | string | undefined) => new Date(v ?? Date.now()).toISOString();
 
@@ -131,12 +135,13 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
     workflowId: run.workflowId,
     origin: { kind: 'api' },
     target: targetOf(run),
-    options: { inputs: run.inputs ?? {}, secret: run.secretRef?.name, timeoutMs: run.timeout ?? 10_000, validateSchemas: run.validateSchema === true },
+    options: { example: run.example?.name, inputs: run.inputs ?? {}, secret: run.secretRef?.name, timeoutMs: run.timeout ?? 10_000, validateSchemas: run.validateSchema === true },
     status: STATUS[run.status],
     startedAt,
     steps,
     outputs: run.outputs ?? {},
     coherence: coherenceOf(run.missingExample),
+    ...exampleCheckField(exampleCheckOf(run.example)),
     ...(current ? { current: { stepId: current.stepId, attempt: 1 } } : {})
   };
 }
@@ -171,12 +176,13 @@ export function uiRunOfSummary(summary: BackendWorkflowRunSummary, documentId: s
         : summary.target === 'MIXED'
           ? { kind: 'mixed', perSource: {} }
           : { kind: 'implementations', baseUrls: {} },
-    options: { inputs: {}, timeoutMs: 10_000, validateSchemas: false },
+    options: { example: summary.example ?? undefined, inputs: {}, timeoutMs: 10_000, validateSchemas: false },
     status: STATUS[summary.status],
     startedAt,
     steps,
     outputs: {},
-    coherence: []
+    coherence: [],
+    ...exampleCheckField(exampleCheckOf(summary.example ? { name: summary.example, verdict: summary.exampleVerdict } : undefined))
   };
 }
 
@@ -239,6 +245,7 @@ export async function startRealRun(input: StartRunInput, workflow: Workflow, tok
         inputs,
         timeout: timeoutOrDefault(String(input.timeoutMs)),
         validateSchema: input.validateSchemas === true,
+        ...(input.example ? { example: input.example } : {}),
         ...launchTargetOf(input, sources)
       },
       token
@@ -266,5 +273,27 @@ export async function getRealRunPayload(
   if (!run) return undefined;
   const detail = await detailOf(run.documentId, run.workflowId);
   if (!detail) return undefined;
-  return { demo: false, run: await uiRunOf(run, detail.workflow, token), document: detail.document, workflow: detail.workflow, examples: [] };
+  const played = run.example ? [toWorkflowExample({ ...run.example, workflowId: run.workflowId })] : [];
+  return { demo: false, run: await uiRunOf(run, detail.workflow, token), document: detail.document, workflow: detail.workflow, examples: played };
+}
+
+export type StartExamplesResult =
+  | { launches: { example: string; runId?: string; number?: number; refusal?: string }[] }
+  | { status: 404 | 422; error: string };
+
+/** Plays every recorded example of a real workflow on the mocks, one run each, and says what each launch became. */
+export async function startRealExampleRuns(
+  docId: string,
+  workflowId: string,
+  options: { validateSchemas?: boolean; timeoutMs?: number },
+  token?: string
+): Promise<StartExamplesResult> {
+  try {
+    const launches = await launchArazzoExampleRuns(docId, workflowId, { timeout: options.timeoutMs, validateSchema: options.validateSchemas === true }, token);
+    if (!launches) return { status: 404, error: `Workflow "${workflowId}" does not exist in document "${docId}".` };
+    return { launches: launches.map((l) => ({ example: l.example, runId: l.runId ?? undefined, number: l.number ?? undefined, refusal: l.refusal ?? undefined })) };
+  } catch (e) {
+    if (e instanceof BackendError && (e.status === 400 || e.status === 404)) return { status: e.status === 404 ? 404 : 422, error: e.message };
+    throw e;
+  }
 }

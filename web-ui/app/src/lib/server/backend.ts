@@ -554,6 +554,16 @@ export interface BackendArazzoStep {
   requestBody?: { contentType?: string | null; payload?: string | null; replacements?: Record<string, string> | null } | null;
   successCriteria: { condition: string; context?: string | null; type?: string | null }[];
   outputs: Record<string, string>;
+  onSuccess?: BackendArazzoAction[] | null;
+  onFailure?: BackendArazzoAction[] | null;
+}
+
+export interface BackendArazzoAction {
+  name: string;
+  type: string;
+  retryAfter?: number | null;
+  retryLimit?: number | null;
+  criteria?: { condition: string; context?: string | null; type?: string | null }[] | null;
 }
 
 export interface BackendArazzoWorkflowDetail {
@@ -572,6 +582,8 @@ export interface BackendArazzoWorkflowDetail {
   steps: BackendArazzoStep[];
   outputs: Record<string, string>;
   dataPassings: { fromStepId: string; outputName: string; to: { stepId: string; place: string; target: string } }[];
+  /** The examples recorded for this workflow by the ArazzoSources overlay. */
+  examples?: BackendExample[] | null;
 }
 
 export async function fetchArazzoDocuments(token?: string): Promise<BackendArazzoDocumentSummary[]> {
@@ -603,6 +615,7 @@ export async function fetchArazzoSource(docId: string, token?: string): Promise<
 /* ---- Arazzo import dialog and relink (`/api/arazzo/documents/analysis`, stories S14 and S19) ---- */
 
 import type { ApiRef, ImportAnalysis } from '#lib/workflows/import-analysis.js';
+import type { BackendExample } from '#lib/workflows/examples.js';
 
 /** The links chosen per source description; absent or null = not linked, undefined `links` = the proposed ones. */
 export type BackendLinks = Record<string, ApiRef | null>;
@@ -658,6 +671,9 @@ export interface BackendWorkflowRunSummary {
   failedStepId?: string | null;
   startedDate?: number | string;
   elapsedTime: number;
+  /** Name of the recorded example the run played, and the verdict once it ended. */
+  example?: string | null;
+  exampleVerdict?: 'MATCHES' | 'DOES_NOT_MATCH' | null;
 }
 
 import type { BackendMissingExample } from './runs-arazzo-schema';
@@ -697,6 +713,8 @@ export interface BackendWorkflowResult {
   validateSchema?: boolean;
   /** S10: the mock example the failed step needed and did not find (run on the mocks). */
   missingExample?: BackendMissingExample | null;
+  /** The recorded example the run played, judged when the run is over. */
+  example?: (BackendExample & { verdict?: 'MATCHES' | 'DOES_NOT_MATCH' | null; unmetExpectations?: string[] | null }) | null;
 }
 
 export interface BackendArazzoRunLaunch {
@@ -708,6 +726,8 @@ export interface BackendArazzoRunLaunch {
   validateSchema?: boolean;
   /** S31: where each source goes in a mixed run, as the Deep Ink mockup launches it. */
   target?: { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'> };
+  /** Name of a recorded example to play: its inputs are used and the run is judged on it. */
+  example?: string;
 }
 
 export async function launchArazzoRun(docId: string, workflowId: string, launch: BackendArazzoRunLaunch, token?: string): Promise<BackendWorkflowResult> {
@@ -729,4 +749,28 @@ export async function fetchArazzoRun(runId: string, token?: string): Promise<Bac
 export async function fetchArazzoRuns(docId: string, size: number, token?: string): Promise<BackendWorkflowRunSummary[]> {
   const res = await call(`/api/arazzo/documents/${encodeURIComponent(docId)}/runs?page=0&size=${size}`, token, { headers: { accept: 'application/json' } });
   return (await res.json()) as BackendWorkflowRunSummary[];
+}
+
+/** One run launched for an example of `POST …/examples/runs`: its run, or why it was refused. */
+export interface BackendExampleLaunch {
+  example: string;
+  runId?: string | null;
+  number?: number | null;
+  refusal?: string | null;
+}
+
+/** Plays every recorded example of a workflow, one run each (what a CI does in one call). Undefined when unknown. */
+export async function launchArazzoExampleRuns(
+  docId: string,
+  workflowId: string,
+  launch: Pick<BackendArazzoRunLaunch, 'timeout' | 'validateSchema' | 'implementations' | 'secretName' | 'target'>,
+  token?: string
+): Promise<BackendExampleLaunch[] | undefined> {
+  try {
+    const path = `/api/arazzo/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/examples/runs`;
+    return (await (await call(path, token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(launch) })).json()) as BackendExampleLaunch[];
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
 }

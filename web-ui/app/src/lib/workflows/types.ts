@@ -136,6 +136,13 @@ export interface WorkflowExample {
   lastJudged?: { runNumber: number; at: string; matched: boolean };
 }
 
+/** What Microcks decided about a run of a recorded example (absent for runs of the demo data and while running). */
+export interface RunExampleCheck {
+  matches: boolean;
+  /** The expectations the run did not meet, in words. */
+  unmet: string[];
+}
+
 export type RunTarget =
   | { kind: 'mocks' }
   | { kind: 'implementations'; baseUrls: Record<string, string> }
@@ -215,6 +222,8 @@ export interface WorkflowRun {
   steps: StepResult[];
   outputs: Record<string, unknown>;
   coherence: MockCoherenceIssue[];
+  /** The backend verdict on the example the run played, once the run is over. */
+  exampleCheck?: RunExampleCheck;
   relatedTestRunId?: string;
   /** Only on the intermediate frames of a RUNNING run: the step being called and its attempt number. */
   current?: { stepId: string; attempt: number };
