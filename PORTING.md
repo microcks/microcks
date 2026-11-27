@@ -266,7 +266,11 @@ imports an ArazzoSources overlay holding the current links plus the new one. Edi
 refused (Microcks keeps the document as imported).
 Runs of imported workflows go through `/api/arazzo` (launch, run, history) and are executed by the Arazzo minion; the run
 page reads the step exchanges from `/api/tests/{runId}/messages/{testCaseId}` and polls while the run is in progress.
-Runs of the placeholder documents stay simulated. Not covered yet by the backend: recorded examples (S16/S20), retries
+Runs of the placeholder documents stay simulated. Runs launched from the UI send `validateSchema`; the run page shows
+"Schema validation" on/off and each step's schema state from the step `message` (pass; fail on "does not match the …
+schema" or "is not described in the OpenAPI contract"; n/a when the source has no OpenAPI contract or the step failed
+first). `missingExample` becomes the "mocks do not form a coherent scenario" note
+(`an example of <operationId> for <name>=<value>`) with the Copilot link. Not covered yet by the backend: recorded examples (S16/S20), retries
 and early ends (S17/S21).
 
 | Story | Status |

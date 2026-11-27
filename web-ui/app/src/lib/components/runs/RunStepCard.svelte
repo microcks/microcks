@@ -291,7 +291,7 @@
                   GetPastries returns “{listName}”, but <span class="wfr-mono">{coherence.operationId}</span> has no example for
                   <span class="wfr-code-inline">name</span> = {listName}.
                 {:else}
-                  The mocks have no <span class="wfr-mono">{coherence.missing}</span>.
+                  The mocks lack <span class="wfr-mono">{coherence.missing}</span>.
                 {/if}
                 Add that example to the OpenAPI document, or let the workflow send a value that has one.
               </p>
