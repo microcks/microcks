@@ -1,11 +1,14 @@
 <script lang="ts">
   import { Button, CodeBlock, CopyButton } from '@microcks/deep-ink';
   import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
+  import { runsUrl } from '#lib/workflows/api-snippet.js';
   import type { RunApiBody } from '#lib/runs-workflow.js';
 
   interface Props {
     hint: string;
     documentApiId: string;
+    documentTitle: string;
+    documentVersion: string;
     documentLabel: string;
     workflowId: string;
     mockUrl: string;
@@ -15,14 +18,14 @@
     proposed?: boolean;
   }
 
-  let { hint, documentApiId, documentLabel, workflowId, mockUrl, body, mixed, proposed = true }: Props = $props();
+  let { hint, documentApiId, documentTitle, documentVersion, documentLabel, workflowId, mockUrl, body, mixed, proposed = true }: Props = $props();
 
   // The placeholder documents show a proposed endpoint on a made-up host; a real document shows the Microcks of its Mock URL.
   const mockOn = $derived(isAvailable('mock-url', proposed));
   const host = $derived(proposed ? 'http://microcks.local:8080' : (URL.canParse(mockUrl) ? new URL(mockUrl).origin : 'http://localhost:8080'));
-  const runsUrl = $derived(`${host}/api/arazzo/documents/${documentApiId}/workflows/${workflowId}/runs`);
-  const curl = $derived(`curl -X POST \\\n  '${runsUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body, null, 2)}'`);
-  const curlOne = $derived(`curl -X POST '${runsUrl}' -H 'Content-Type: application/json' -d '${JSON.stringify(body)}'`);
+  const launchUrl = $derived(runsUrl(host, { apiId: documentApiId, title: documentTitle, version: documentVersion }, workflowId, proposed));
+  const curl = $derived(`curl -X POST \\\n  '${launchUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body, null, 2)}'`);
+  const curlOne = $derived(`curl -X POST '${launchUrl}' -H 'Content-Type: application/json' -d '${JSON.stringify(body)}'`);
   const mockBody = $derived(JSON.stringify(body.inputs));
   const mockCurl = $derived(`curl -X POST \\\n  '${mockUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${mockBody}'`);
   const mockOne = $derived(`curl -X POST '${mockUrl}' -H 'Content-Type: application/json' -d '${mockBody}'`);
@@ -34,7 +37,8 @@
   <CodeBlock class="wfr-pre" variant="plain" copy={false} language="bash" caption="curl command that launches the run" code={curl} />
   <div class="wfr-api-foot">
     <p class="wfr-note">
-      Answers 201 with the run; read it at <span class="wfr-mono">GET /api/arazzo/runs/{'{id}'}</span>. {documentApiId.slice(0, 8)}… is the documentId of {documentLabel}.
+      Answers 201 with the run; read it at <span class="wfr-mono">GET /api/arazzo/runs/{'{id}'}</span>.
+      {#if proposed}{documentApiId.slice(0, 8)}… is the documentId of {documentLabel}.{:else}The document is named by its title and version; its id {documentApiId.slice(0, 8)}… works too.{/if}
     </p>
     <CopyButton value={curlOne} label="Copy command" variant="outline" class="wfr-copy" />
   </div>

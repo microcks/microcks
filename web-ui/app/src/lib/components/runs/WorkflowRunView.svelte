@@ -222,6 +222,8 @@
       <RunApiPanel
         hint={`Launches the same run as run #${run.number}.`}
         documentApiId={document.apiId}
+        documentTitle={document.title}
+        documentVersion={document.version}
         documentLabel={documentLabel ?? ''}
         workflowId={run.workflowId}
         mockUrl={workflow.mockUrl}

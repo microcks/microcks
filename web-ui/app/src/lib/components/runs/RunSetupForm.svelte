@@ -422,6 +422,8 @@
     <RunApiPanel
       hint="Launches the same run as the form above."
       documentApiId={document.apiId}
+        documentTitle={document.title}
+        documentVersion={document.version}
       {documentLabel}
       workflowId={workflow.workflowId}
       mockUrl={workflow.mockUrl}

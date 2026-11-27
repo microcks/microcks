@@ -17,7 +17,7 @@ import { documentOrigin, jobOfDocument } from '#lib/workflows/source-job.js';
 import type { ImportAnalysis } from '#lib/workflows/import-analysis.js';
 import { parse as parseYaml } from 'yaml';
 import { formatRelative } from '#lib/format.js';
-import { MICROCKS_BASE } from '#lib/importing.js';
+import { MICROCKS_API_URL } from './auth.js';
 import {
   BackendError,
   fetchArazzoDocuments,
@@ -329,7 +329,7 @@ function toWorkflow(d: BackendArazzoWorkflowDetail, status: BackendArazzoDocumen
       outputs: named(st.outputs)
     })),
     outputs: named(d.outputs),
-    mockUrl: `${MICROCKS_BASE}/arazzo/${encodeURIComponent(d.title)}/${encodeURIComponent(d.version)}/${d.workflowId}`,
+    mockUrl: `${MICROCKS_API_URL}/arazzo/${encodeURIComponent(d.title)}/${encodeURIComponent(d.version)}/${d.workflowId}`,
     runnability: status === undefined || status.status.runnable
       ? { runnable: true }
       : { runnable: false, reason: 'source-not-linked', message: reasons.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join('. ') }
