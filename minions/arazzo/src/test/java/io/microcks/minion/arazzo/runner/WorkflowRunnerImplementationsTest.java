@@ -83,6 +83,21 @@ class WorkflowRunnerImplementationsTest {
       assertEquals("application/json", implementations.calls().get(1).headers().get("Content-Type"));
    }
 
+   @Test
+   void theSecretAuthenticatesOnlyTheCallsToImplementationsOfAMixedRun() throws IOException {
+      Map<String, SourceTarget> sources = new LinkedHashMap<>();
+      sources.put("customerApi", new SourceTarget(URI.create(StagingImplementations.CUSTOMERS), CUSTOMER_OPERATIONS));
+      sources.put("orderApi", SourceTarget.onMocks(URI.create(StagingImplementations.ORDERS), ORDER_OPERATIONS));
+
+      runner.run(run("order-fulfilment", "placeOrder", Map.of("customerId", "c-42"), sources,
+            new RunSecret(null, null, "s3cr3t-t0k3n", null)), reporter);
+
+      assertEquals(List.of("Authorization=Bearer s3cr3t-t0k3n", ""),
+            implementations.calls().stream().map(WorkflowRunnerImplementationsTest::authorizationOf).toList());
+      assertEquals(List.of("Authorization=Bearer <value-from-secret>", ""),
+            reporter.steps().stream().map(step -> authorizationOf(step.request())).toList());
+   }
+
    @ParameterizedTest
    @CsvSource(delimiter = '|', nullValues = "null", value = {
          "null  | null      | s3cr3t-t0k3n | X-Pastry-Token | X-Pastry-Token=<value-from-secret>",

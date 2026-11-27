@@ -118,9 +118,11 @@ public class WorkflowRunner {
          requireCallable(operation);
          parameters = resolve(step.parameters(), context);
          HttpCall built = call(step, operation, parameters, specification, context);
-         // The values of the secret are sent, never reported.
-         call = specification.secret().trace(built);
-         response = transport.send(specification.secret().authorize(built), specification.timeout());
+         // The values of the secret are sent, never reported; the calls to the Microcks mocks never carry it.
+         RunSecret secret = specification.sources().get(operation.sourceName()).mocks() ? RunSecret.NONE
+               : specification.secret();
+         call = secret.trace(built);
+         response = transport.send(secret.authorize(built), specification.timeout());
          EvaluationContext answered = context.with(response);
          List<CriterionResult> criteria = step.successCriteria().stream()
                .map(criterion -> conditions.evaluate(criterion, answered)).toList();

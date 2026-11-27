@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Minion side of the contract with Microcks, held in {@code arazzo-minion-contract.json}: the run request it reads and
@@ -78,7 +79,7 @@ class ArazzoMinionContractTest {
             new RunSpecification("6719f0c2a1b2c3d4e5f60718", "readThenReprice", "arazzo: 1.0.1",
                   Map.of("pastry", "Eclair Cafe", "newPrice", 2.6),
                   Map.of("pastryApi",
-                        new SourceTarget(URI.create(MOCKS),
+                        SourceTarget.onMocks(URI.create(MOCKS),
                               Map.of("GetPastries", new OperationTarget("GET", "/pastry"), "GetPastryByName",
                                     new OperationTarget("GET", "/pastry/{name}"), "PatchPastry",
                                     new OperationTarget("PATCH", "/pastry/{name}")))),
@@ -95,6 +96,7 @@ class ArazzoMinionContractTest {
             .toSpecification("http://microcks:8080");
 
       assertEquals(URI.create("http://pastry.example:8080"), specification.sources().get("pastryApi").baseUrl());
+      assertFalse(specification.sources().get("pastryApi").mocks());
    }
 
    @Test
