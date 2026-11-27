@@ -76,7 +76,7 @@ class OpenCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Petstore API", service.getName());
-      assertEquals("1.0", service.getVersion());
+      assertEquals("1.1", service.getVersion());
       assertEquals(ServiceType.REST, service.getType());
 
       // Check that operations have been found in folders, in document order and with the path kept verbatim.
@@ -91,7 +91,7 @@ class OpenCollectionImporterTest {
       // Check that the collection is exposed, untouched, as the only resource.
       List<Resource> resources = assertDoesNotThrow(() -> importer.getResourceDefinitions(service));
       assertEquals(1, resources.size());
-      assertEquals("Petstore API-1.0.yaml", resources.get(0).getName());
+      assertEquals("Petstore API-1.1.yaml", resources.get(0).getName());
       assertEquals(ResourceType.OPEN_COLLECTION, resources.get(0).getType());
       byte[] uploaded = assertDoesNotThrow(() -> Files.readAllBytes(collection.toPath()));
       assertArrayEquals(uploaded, resources.get(0).getContent().getBytes(UTF_8));
@@ -126,7 +126,7 @@ class OpenCollectionImporterTest {
 
       // Check that operations with examples get their path, verbatim, as resource path.
       assertEquals(Set.of("/pet/findByStatus"), findByStatus.getResourcePaths());
-      assertEquals(Set.of("/pet/:petId"), getById.getResourcePaths());
+      assertEquals(Set.of("/pet/1", "/pet/2"), getById.getResourcePaths());
       assertEquals(Set.of("/pet"), addPet.getResourcePaths());
    }
 
@@ -435,6 +435,41 @@ class OpenCollectionImporterTest {
          appender.list.stream().filter(event -> event.getLevel() == Level.WARN)
                .forEach(event -> warnings.add(event.getFormattedMessage()));
       }
+   }
+
+   @Test
+   void testExamplesGetDispatchCriteriaFromOperationDispatcher(@TempDir Path directory) throws Exception {
+      Path file = directory.resolve("dispatch.yml");
+      Files.writeString(file, """
+            opencollection: 1.0.0
+            info: {name: Dispatch API, version: "1.0"}
+            items:
+              - info: {name: By id, type: http}
+                http: {method: GET, url: "{{baseUrl}}/pet/:petId"}
+                examples:
+                  - name: pet-2
+                    request:
+                      params: [{name: petId, value: "2", type: path}]
+                    response: {status: 200}
+              - info: {name: By status, type: http}
+                http: {method: GET, url: "{{baseUrl}}/pet/findByStatus?status=available"}
+                examples:
+                  - name: available
+                    request:
+                      params: [{name: status, value: available, type: query}]
+                    response: {status: 200}
+            """, UTF_8);
+      OpenCollectionImporter importer = new OpenCollectionImporter(file.toString());
+      Service service = importer.getServiceDefinitions().get(0);
+
+      Operation byId = service.getOperations().get(0);
+      Exchange byIdExchange = importer.getMessageDefinitions(service, byId).get(0);
+      assertEquals("/petId=2", ((RequestResponsePair) byIdExchange).getResponse().getDispatchCriteria());
+      assertTrue(byId.getResourcePaths().contains("/pet/2"));
+
+      Operation byStatus = service.getOperations().get(1);
+      Exchange byStatusExchange = importer.getMessageDefinitions(service, byStatus).get(0);
+      assertEquals("?status=available", ((RequestResponsePair) byStatusExchange).getResponse().getDispatchCriteria());
    }
 
    private static OpenCollectionImporter importerForGetRequests(Path directory, String... addresses)

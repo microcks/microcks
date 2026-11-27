@@ -515,7 +515,7 @@ public class DispatchCriteriaHelper {
    public static String extractFromParamMap(String paramsRule, Map<String, String> paramMap) {
       // TreeSet keeps keys sorted like buildFromParamsMap()'s TreeMultimap, so both agree on multi-key rules.
       Set<String> sortedKeys = new TreeSet<>(paramMap.keySet());
-
+      System.err.println("Sorted keys: " + sortedKeys);
       StringBuilder result = new StringBuilder();
       for (String param : sortedKeys) {
          // Word-boundary check, same as buildFromParamsMap(): contains() would match "accept" inside "accept-language".

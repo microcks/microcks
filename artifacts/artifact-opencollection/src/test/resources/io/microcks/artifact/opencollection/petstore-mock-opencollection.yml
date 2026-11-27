@@ -15,6 +15,11 @@ items:
           url: "{{baseUrl}}/pet/findByStatus?status=available"
         examples:
           - name: available response
+            request:
+              params:
+                - name: status
+                  value: available
+                  type: query
             response:
               status: 200
               headers:
@@ -32,6 +37,14 @@ items:
           url: "{{baseUrl}}/pet/:petId"
         examples:
           - name: get-2
+            request:
+              headers:
+                - name: Accept
+                  value: application/json
+              params:
+                - name: petId
+                  value: "2"
+                  type: path
             response:
               status: 200
               body:
