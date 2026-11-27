@@ -16,6 +16,7 @@ import {
 } from './backend';
 import { coherenceOf, schemaOf } from './runs-arazzo-schema';
 import { attemptsOf, groupByStep } from '#lib/workflows/attempts.js';
+import { baggage, callsMocks } from '#lib/workflows/baggage.js';
 import { originOf } from '#lib/workflows/mock-url.js';
 import { exampleCheckOf, toWorkflowExample } from '#lib/workflows/examples.js';
 
@@ -109,7 +110,8 @@ function stepResultOf(
   endedEarly: boolean,
   startedAt: string,
   message: BackendTestMessage | undefined,
-  validateSchema: boolean
+  validateSchema: boolean,
+  call: { runId: string; workflowId: string; target: RunTarget }
 ): StepResult {
   const result = entries[entries.length - 1];
   const status: StepStatus = !result ? 'not-run' : result.status === 'PASSED' ? 'passed' : result.status === 'FAILED' ? 'failed' : 'not-run';
@@ -137,13 +139,15 @@ function stepResultOf(
     schema: schemaOf(validateSchema, status, result?.message, step.operationId, result?.statusCode),
     outputs: result?.outputs ?? {},
     flow: flowOf(status, step, isLast, endedEarly, entries.length, result?.message ?? undefined),
-    baggage: ''
+    // The Arazzo minion sends this baggage with the calls to mocks (S29), not with those to implementations.
+    baggage: result && callsMocks(call.target, step.sourceName) ? baggage(call.runId, call.workflowId, step.stepId, entries.length) : ''
   };
 }
 
 /** A full run, as the run page shows it: every step of the workflow, with the exchanges Microcks recorded. */
 export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, token?: string, withExchanges = true): Promise<WorkflowRun> {
   const startedAt = iso(run.startedDate);
+  const target = targetOf(run);
   const byStep = groupByStep(run.steps ?? []);
   const messages = await Promise.all(
     workflow.steps.map(async (st) => {
@@ -157,7 +161,7 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
     const next = workflow.steps[i + 1];
     // A passed step followed by steps that never ran, in a run that succeeded, is an onSuccess end.
     const endedEarly = run.status === 'SUCCESS' && entries.at(-1)?.status === 'PASSED' && next !== undefined && !byStep.has(next.stepId);
-    return stepResultOf(st, entries, i === workflow.steps.length - 1, endedEarly, startedAt, messages[i], run.validateSchema === true);
+    return stepResultOf(st, entries, i === workflow.steps.length - 1, endedEarly, startedAt, messages[i], run.validateSchema === true, { runId: run.id, workflowId: run.workflowId, target });
   });
   const running = run.status === 'IN_PROGRESS';
   const current = running ? workflow.steps.find((st) => !byStep.has(st.stepId)) : undefined;
@@ -167,7 +171,7 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
     documentId: run.documentId,
     workflowId: run.workflowId,
     origin: originOf(run.origin),
-    target: targetOf(run),
+    target,
     options: { example: run.example?.name, inputs: run.inputs ?? {}, secret: run.secretRef?.name, timeoutMs: run.timeout ?? 10_000, validateSchemas: run.validateSchema === true },
     status: STATUS[run.status],
     startedAt,

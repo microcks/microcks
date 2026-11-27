@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Chip, FactRow, Facts } from '@microcks/deep-ink';
+  import { isDemo } from '#lib/workflows/availability.js';
   import { judgeExample } from '#lib/workflows/describe.js';
   import { workflowPath } from '#lib/workflows/paths.js';
   import type { WorkflowExample, WorkflowRun } from '#lib/workflows/types.js';
@@ -54,8 +55,12 @@
         {#snippet children()}
           <span class="wfr-baggage-block">
             <code class="wfr-baggage">{firstBaggage}</code>
-            <span class="wfr-note">Carried by each call to the mocks: Live traces show which run, step and attempt a mock call comes from.</span>
-            <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+            {#if isDemo(run.documentId)}
+              <span class="wfr-note">Carried by each call to the mocks: Live traces show which run, step and attempt a mock call comes from.</span>
+              <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+            {:else}
+              <span class="wfr-note">Carried by each call to the mocks: their spans carry <code class="wfr-baggage">arazzo.run.id={run.id}</code>, with the workflow, step and attempt.</span>
+            {/if}
           </span>
         {/snippet}
       </FactRow>

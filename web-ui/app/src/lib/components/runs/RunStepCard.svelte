@@ -12,7 +12,8 @@
 </script>
 
 <script lang="ts">
-  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
+  import { traceAttributes } from '#lib/workflows/baggage.js';
+  import { isAvailable, isDemo, unavailableReason } from '#lib/workflows/availability.js';
   import { Chip, CodeBlock, Icon, MethodTag, StatusBadge } from '@microcks/deep-ink';
   import RunVerdict from './RunVerdict.svelte';
   import { J, badFieldText } from '#lib/runs-workflow.js';
@@ -79,6 +80,7 @@
   );
 
   const onMocks = $derived(run.target.kind === 'mocks');
+  const demo = $derived(isDemo(run.documentId));
   const criteriaOk = $derived(step.criteria.every((c) => c.held));
   const criteriaNotEvaluated = $derived(criteriaState(step) === 'not-evaluated');
   const schema = $derived(step.schema);
@@ -165,11 +167,17 @@
               <div><dt>sent</dt><dd class="wfr-strong">{step.request.body}</dd></div>
             </dl>
           {/if}
-          {#if onMocks && step.baggage}
+          {#if step.baggage && (onMocks || !demo)}
             <p class="wfr-baggage-line">
               <span class="wfr-faint">Baggage</span>
               <code class="wfr-baggage" title="Marks this call in the Live Traces of the API">{step.baggage}</code>
-              <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+              {#if demo}
+                <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+              {:else}
+                <span class="wfr-note" title="Live traces do not read the traces of Microcks yet: filter them with these attributes where you collect them">
+                  Span attributes {#each traceAttributes(run.id, run.workflowId, step.stepId, step.attempts.length || 1) as a, i (a.name)}{i ? ' · ' : ''}<code class="wfr-baggage">{a.name}={a.value}</code>{/each}
+                </span>
+              {/if}
             </p>
           {/if}
         </div>
