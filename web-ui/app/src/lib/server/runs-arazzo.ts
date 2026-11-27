@@ -16,6 +16,7 @@ import {
 } from './backend';
 import { coherenceOf, schemaOf } from './runs-arazzo-schema';
 import { attemptsOf, groupByStep } from '#lib/workflows/attempts.js';
+import { originOf } from '#lib/workflows/mock-url.js';
 import { exampleCheckOf, toWorkflowExample } from '#lib/workflows/examples.js';
 
 /*
@@ -165,7 +166,7 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
     number: run.number ?? 0,
     documentId: run.documentId,
     workflowId: run.workflowId,
-    origin: { kind: 'api' },
+    origin: originOf(run.origin),
     target: targetOf(run),
     options: { example: run.example?.name, inputs: run.inputs ?? {}, secret: run.secretRef?.name, timeoutMs: run.timeout ?? 10_000, validateSchemas: run.validateSchema === true },
     status: STATUS[run.status],
@@ -201,7 +202,7 @@ export function uiRunOfSummary(summary: BackendWorkflowRunSummary, documentId: s
     number: summary.number,
     documentId,
     workflowId: summary.workflowId,
-    origin: { kind: 'api' },
+    origin: originOf(summary.origin),
     target:
       summary.target === 'MOCKS'
         ? { kind: 'mocks' }

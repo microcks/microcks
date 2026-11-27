@@ -11,6 +11,7 @@ import {
   seedSessions
 } from '#lib/placeholders/workflows.js';
 import type { WorkflowsPayload } from '#lib/workflows/list.js';
+import { mockUrlOf } from '#lib/workflows/mock-url.js';
 import { toActions } from '#lib/workflows/attempts.js';
 import { toWorkflowExample } from '#lib/workflows/examples.js';
 import { documentOrigin, jobOfDocument } from '#lib/workflows/source-job.js';
@@ -329,7 +330,7 @@ function toWorkflow(d: BackendArazzoWorkflowDetail, status: BackendArazzoDocumen
       outputs: named(st.outputs)
     })),
     outputs: named(d.outputs),
-    mockUrl: `${MICROCKS_API_URL}/arazzo/${encodeURIComponent(d.title)}/${encodeURIComponent(d.version)}/${d.workflowId}`,
+    mockUrl: mockUrlOf(MICROCKS_API_URL, d.title, d.version, d.workflowId),
     runnability: status === undefined || status.status.runnable
       ? { runnable: true }
       : { runnable: false, reason: 'source-not-linked', message: reasons.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join('. ') }

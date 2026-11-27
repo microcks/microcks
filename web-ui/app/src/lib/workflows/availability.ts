@@ -20,7 +20,7 @@ export type ArazzoFeature =
 export const PORTED: Readonly<Record<ArazzoFeature, boolean>> = {
   'ai-copilot': false,
   'document-edit': false,
-  'mock-url': false,
+  'mock-url': true,
   sessions: false
 };
 

@@ -31,8 +31,8 @@ test('AI generation, document edit, Mock URL and sessions are not available yet 
   for (const feature of ['ai-copilot', 'document-edit', 'mock-url', 'sessions'] as const) assert.equal(isAvailable(feature, REAL), PORTED[feature]);
 });
 
-test('the Mock URL and Session filters are off on a real document, the others stay on', () => {
-  assert.equal(isFilterAvailable('mock-url', REAL), false);
+test('the Mock URL filter is on for a real document, the Session filter stays off until sessions are served', () => {
+  assert.equal(isFilterAvailable('mock-url', REAL), true);
   assert.equal(isFilterAvailable('session', REAL), false);
   for (const filter of ['any', 'all', 'mocks', 'implementations']) assert.equal(isFilterAvailable(filter, REAL), true);
   assert.equal(isFilterAvailable('mock-url', 'pastry'), true);

@@ -2,6 +2,7 @@
   import { Button, Callout, Icon, MethodTag } from '@microcks/deep-ink';
   import { formatRelative } from '#lib/format.js';
   import { callTotals, stoppedStep } from '#lib/workflows/describe.js';
+  import { sampleInputs } from '#lib/workflows/mock-url.js';
   import { workflowPath } from '#lib/workflows/paths.js';
   import { formatDuration } from '#lib/workflows/time.js';
   import type { ArazzoDocument, Workflow, WorkflowExample, WorkflowRun } from '#lib/workflows/types.js';
@@ -25,23 +26,22 @@
 
   let { workflow, document, runs, examples, onshowruns }: Props = $props();
 
-  const RUN_ID = '6543f0c2a9e1b7d4c3f20a11';
+  const SAMPLE_RUN_ID = '6543f0c2a9e1b7d4c3f20a11';
   let pick = $state('200');
   let copied = $state<string>();
 
   const mockRuns = $derived(runs.filter((r) => r.origin.kind === 'mock-url').sort((a, b) => b.number - a.number));
   const last = $derived(mockRuns[0]);
   const lastMockRun = last;
+  /** The run of the last call on a real workflow, else the sample id of the mockup. */
+  const RUN_ID = $derived(last?.id ?? SAMPLE_RUN_ID);
   const sample = $derived(
     (lastMockRun?.status === 'SUCCESS' ? lastMockRun : runs.find((r) => r.status === 'SUCCESS' && Object.keys(r.outputs).length > 0))?.outputs ?? {}
   );
   const failedStep = $derived(
     runs.map(stoppedStep).find((s) => s?.status === 'failed')?.stepId ?? workflow.steps[workflow.steps.length - 1]?.stepId ?? 'step'
   );
-  const body = $derived(
-    examples[0]?.inputs ??
-      Object.fromEntries(workflow.inputs.filter((i) => i.example !== undefined).map((i) => [i.name, i.type === 'number' || i.type === 'integer' ? Number(i.example) : i.example]))
-  );
+  const body = $derived(examples[0]?.inputs ?? sampleInputs(workflow.inputs));
   const curl = $derived(`curl -X POST '${workflow.mockUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body)}'`);
   const answers = $derived<Answer[]>([
     { code: '200', tone: 'success', title: 'The workflow outputs', when: 'The workflow passed on the mocks: the body is exactly its outputs.', head: `200 OK · X-Microcks-Arazzo-Run-Id: ${RUN_ID}`, body: sample },

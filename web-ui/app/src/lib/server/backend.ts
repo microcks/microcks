@@ -674,6 +674,8 @@ export interface BackendWorkflowRunSummary {
   /** Name of the recorded example the run played, and the verdict once it ended. */
   example?: string | null;
   exampleVerdict?: 'MATCHES' | 'DOES_NOT_MATCH' | null;
+  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27). */
+  origin?: 'MOCK_URL' | null;
 }
 
 import type { BackendMissingExample } from './runs-arazzo-schema';
@@ -709,6 +711,8 @@ export interface BackendWorkflowResult {
   steps?: BackendWorkflowStepResult[];
   message?: string | null;
   number?: number | null;
+  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27). */
+  origin?: 'MOCK_URL' | null;
   /** S9: each response was validated against the OpenAPI contract. */
   validateSchema?: boolean;
   /** S10: the mock example the failed step needed and did not find (run on the mocks). */
