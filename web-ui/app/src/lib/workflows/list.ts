@@ -1,4 +1,5 @@
 import type { ArazzoDocument, RunKindFilter, Workflow, WorkflowRun } from './types.js';
+import { callsOneOf } from './source-key.js';
 import { matchesRunKind } from './paths.js';
 
 export type ResultFilter = 'all' | 'passed' | 'failed' | 'never';
@@ -7,6 +8,7 @@ export interface WorkflowFilter {
   query?: string;
   result?: ResultFilter;
   runKind?: RunKindFilter;
+  /** `sourceKey`s of the source descriptions the workflows must call. */
   sources?: string[];
 }
 
@@ -37,7 +39,7 @@ export function listWorkflows(
       .join(' ')
       .toLowerCase();
     if (q && !hay.includes(q)) continue;
-    if (filter.sources?.length && !workflow.steps.some((s) => filter.sources?.includes(s.sourceName))) continue;
+    if (filter.sources?.length && !callsOneOf(workflow, document, filter.sources)) continue;
     const mine = runs.filter((r) => r.documentId === workflow.documentId && r.workflowId === workflow.workflowId);
     const lastRun = newest(mine.filter((r) => matchesRunKind(r, kind)));
     const outcome = lastRun ? (lastRun.status === 'SUCCESS' ? 'passed' : 'failed') : 'never';
