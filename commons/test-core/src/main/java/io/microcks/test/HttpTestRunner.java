@@ -163,6 +163,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
       if (method != null) {
          if ("GET".equals(method.toUpperCase().trim())) {
             return HttpMethod.GET;
+         } else if ("HEAD".equals(method.toUpperCase().trim())) {
+            return HttpMethod.HEAD;
          } else if ("PUT".equals(method.toUpperCase().trim())) {
             return HttpMethod.PUT;
          } else if ("DELETE".equals(method.toUpperCase().trim())) {
