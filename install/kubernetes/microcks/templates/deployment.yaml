@@ -117,6 +117,10 @@ spec:
             {{- end }}
           {{- end }}
           {{- toYaml .Values.microcks.env | nindent 10 }}
+        {{- with .Values.microcks.envFrom }}
+        envFrom:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         resources:
           {{- toYaml .Values.microcks.resources | nindent 10 }}
         livenessProbe:
@@ -783,6 +787,10 @@ spec:
           {{- if .Values.features.async.env }}
           {{- toYaml .Values.features.async.env | nindent 10 }}
           {{- end }}
+        {{- with .Values.features.async.envFrom }}
+        envFrom:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         ports:
         - name: http
           containerPort: 8080

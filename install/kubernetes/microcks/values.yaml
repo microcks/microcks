@@ -95,6 +95,14 @@ microcks:
     #  value: "900000"
     #- name: MOCKS_SERVICE_STATE_STORE_DEFAULT_TTL
     #  value: "30"
+
+  # Secrets or config maps whose keys are all added as environment variables on Microcks container.
+  #envFrom:
+    #- secretRef:
+    #    name: microcks-extra-env
+    #- configMapRef:
+    #    name: microcks-extra-config
+
   #logLevel: TRACE | DEBUG | INFO | WARN
   logLevel: INFO
 
@@ -278,6 +286,11 @@ features:
       #  value: <kafka-oauth-client-secret>
       #- name: OAUTH_TOKEN_ENDPOINT_URI
       #  value: <kafka-oauth-endpoint-uri>
+
+    # Secrets or config maps whose keys are all added as environment variables on async-minion container.
+    #envFrom:
+      #- secretRef:
+      #    name: async-minion-extra-env
 
     kafka:
       install: true
