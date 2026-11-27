@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { isAvailable } from '#lib/workflows/availability.js';
   import { Button, Icon } from '@microcks/deep-ink';
   import { formatRelative } from '#lib/format.js';
   import { runPath, runSetupPath } from '#lib/workflows/paths.js';
@@ -134,7 +135,7 @@
       <p class="wf-ex-foot">
         The overlay also links the source descriptions:
         {#each document.sources as s, i (s.name)}{i > 0 ? ', ' : ''}<span class="wf-ex-mono">{s.name}</span>{s.link.status === 'linked' ? ` → ${serviceLabel(s.link.serviceId) ?? s.link.serviceId}` : ' (not linked)'}{/each}.
-        The Mock URL curl uses the inputs of the first example.
+        {#if isAvailable('mock-url', document)}The Mock URL curl uses the inputs of the first example.{/if}
       </p>
     {/if}
   </section>

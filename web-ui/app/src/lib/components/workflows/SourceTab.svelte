@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ApiBadge, Button, Choice, Icon } from '@microcks/deep-ink';
   import { outlineOf, yamlSpans, type OutlineBlock } from '#lib/workflows/source-outline.js';
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { syncedText } from '#lib/workflows/header.js';
   import type { ArazzoDocument, ImportIssue, Workflow } from '#lib/workflows/types.js';
 
@@ -45,7 +46,7 @@
     })
   );
   const issues = $derived(validated?.issues ?? document.importIssues);
-  const when = $derived(validated ? validated.at : `at sync, ${syncedText(document)?.replace(/^Synced /, '') ?? 'at import'}`);
+  const when = $derived(validated ? validated.at : syncedText(document) ? `at sync, ${syncedText(document)?.replace(/^Synced /, '')}` : 'at import');
   const wfBlock = $derived(blocks.find((b) => b.id === 'workflow'));
   const last = $derived(blocks[blocks.length - 1]);
 
@@ -118,7 +119,11 @@
         <div class="wf-src-actions">
           <Button size="sm" icon="check" loading={validating} onclick={validate}>{validating ? 'Validating…' : 'Validate'}</Button>
           <Button size="sm" icon="copy" onclick={copy}>{copied ? 'Copied' : 'Copy YAML'}</Button>
-          <Button size="sm" href="/sources">Edit in source</Button>
+          {#if isAvailable('document-edit', document)}
+            <Button size="sm" href="/sources">Edit in source</Button>
+          {:else}
+            <Button size="sm" disabled title={unavailableReason('document-edit', document)}>Edit in source</Button>
+          {/if}
         </div>
       </div>
 

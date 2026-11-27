@@ -17,6 +17,7 @@
   import DemoFlag from '#lib/components/workflows/DemoFlag.svelte';
   import DocumentGroup from '#lib/components/workflows/DocumentGroup.svelte';
   import LinkSourceDialog from '#lib/components/workflows/LinkSourceDialog.svelte';
+  import { isAvailable } from '#lib/workflows/availability.js';
   import { listWorkflows, type ResultFilter } from '#lib/workflows/list.js';
   import type { ArazzoDocument, RunKindFilter, SourceDescription } from '#lib/workflows/types.js';
 
@@ -75,6 +76,7 @@ workflows:
   let linking = $state<{ document: ArazzoDocument; source: SourceDescription } | null>(null);
   let linked = $state<string | null>(null);
 
+  const mockUrlOn = $derived(isAvailable('mock-url', data.demo));
   const documents = $derived<ArazzoDocument[]>(data.documents);
   const run = (f: Parameters<typeof listWorkflows>[3]) => listWorkflows(data.documents, data.workflows, data.runs, f);
 
@@ -126,7 +128,7 @@ workflows:
   <PageHeader
     title="Workflows"
     size="lg"
-    description="Multi-step API journeys described with Arazzo. Each step calls an operation of an API already in Microcks; play them against the mocks or against your implementations, or call them through their Mock URL."
+    description={`Multi-step API journeys described with Arazzo. Each step calls an operation of an API already in Microcks; play them against the mocks or against your implementations${mockUrlOn ? ', or call them through their Mock URL' : ''}.`}
   >
     {#snippet meta()}{countLine}{#if data.demo} <DemoFlag />{/if}{/snippet}
     {#snippet actions()}
@@ -283,9 +285,11 @@ workflows:
     />
   {/if}
 
+  {#if data.demo}
   <section aria-label="Prototype states" class="wf-demo">
     <span>Prototype states</span>
     <button type="button" class="wf-demo-btn" aria-pressed={demo === 'loading'} onclick={() => (demo = demo === 'loading' ? null : 'loading')}>Show loading</button>
     <button type="button" class="wf-demo-btn" aria-pressed={demo === 'empty'} onclick={() => (demo = demo === 'empty' ? null : 'empty')}>Show empty state</button>
   </section>
+  {/if}
 </div>

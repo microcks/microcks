@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { DataTable, FactRow, Facts, Icon } from '@microcks/deep-ink';
+  import { criteriaState } from '#lib/workflows/criteria-state.js';
   import { endLabel, stepsTally, stoppedStep, verdictExplanation } from '#lib/workflows/describe.js';
   import { formatDuration } from '#lib/workflows/time.js';
   import { workflowPath } from '#lib/workflows/paths.js';
@@ -33,12 +35,12 @@
   const band = $derived(
     run.steps.map((s) => {
       const notRun = s.status === 'not-run';
-      const criteriaOk = s.criteria.every((c) => c.held);
+      const criteria = criteriaState(s);
       const schema = s.schema.state;
       const word = notRun
         ? 'not run'
-        : `${criteriaOk ? 'criteria held' : 'criteria failed'} · ${schema === 'pass' ? 'schema passed' : schema === 'fail' ? 'schema failed' : schema === 'na' ? 'schema n/a' : 'schema off'}`;
-      return { id: s.stepId, status: s.status, word, criteria: notRun ? 'none' : criteriaOk ? 'pass' : 'fail', schema: notRun ? 'none' : schema };
+        : `${criteria === 'held' ? 'criteria held' : criteria === 'failed' ? 'criteria failed' : 'criteria not evaluated'} · ${schema === 'pass' ? 'schema passed' : schema === 'fail' ? 'schema failed' : schema === 'na' ? 'schema n/a' : 'schema off'}`;
+      return { id: s.stepId, status: s.status, word, criteria: criteria === 'held' ? 'pass' : criteria === 'failed' ? 'fail' : 'none', schema: notRun ? 'none' : schema };
     })
   );
   type Out = [string, unknown];
@@ -119,10 +121,17 @@
       </a>
     {/if}
     {#if run.coherence[0]}
-      <a href={`/services?hint=${encodeURIComponent(run.coherence[0].copilotHint)}`} class="wfr-action" data-tone="action">
-        <Icon name="sparkles" size={14} />
-        Generate the example with the AI Copilot
-      </a>
+      {#if isAvailable('ai-copilot', run.documentId)}
+        <a href={`/services?hint=${encodeURIComponent(run.coherence[0].copilotHint)}`} class="wfr-action" data-tone="action">
+          <Icon name="sparkles" size={14} />
+          Generate the example with the AI Copilot
+        </a>
+      {:else}
+        <button type="button" class="wfr-action" data-tone="action" disabled title={unavailableReason('ai-copilot', run.documentId)}>
+          <Icon name="sparkles" size={14} />
+          Generate the example with the AI Copilot
+        </button>
+      {/if}
     {/if}
     {#if opDef}
       <a href="/services" class="wfr-action">Open operation<span class="wfr-action-op">{opDef.method} {opDef.path}</span></a>

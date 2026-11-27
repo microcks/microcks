@@ -2,6 +2,7 @@
   import { ApiBadge, Button } from '@microcks/deep-ink';
   import CatalogPageHeader from '#lib/components/catalog/CatalogPageHeader.svelte';
   import Menu, { type MenuItem } from '#lib/components/catalog/Menu.svelte';
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { download, runHow, syncedText, WEEK_MS } from '#lib/workflows/header.js';
   import { runPath, runSetupPath } from '#lib/workflows/paths.js';
   import type { ArazzoDocument, Workflow, WorkflowRun } from '#lib/workflows/types.js';
@@ -45,8 +46,8 @@
           }
         ]
       : []),
-    { id: 'job', label: `Open source job ${document.title}`, href: '/sources' },
-    { id: 'reimport', label: 'Re-import the Arazzo document', href: '/import' },
+    ...(synced ? [{ id: 'job', label: `Open source job ${document.title}`, href: '/sources' }] : []),
+    { id: 'reimport', label: 'Re-import the Arazzo document', href: '/sources/new' },
     { id: 'delete', label: 'Delete workflow', disabled: true, description: 'Workflows are removed with their Arazzo document.' }
   ]);
 </script>
@@ -65,7 +66,11 @@
     {:else}
       <Button variant="primary" icon="play" disabled aria-describedby="wf-run-why">Run workflow</Button>
     {/if}
-    <Button icon="pencil" href="/sources">Edit in source</Button>
+    {#if isAvailable('document-edit', document)}
+      <Button icon="pencil" href="/sources">Edit in source</Button>
+    {:else}
+      <Button icon="pencil" disabled title={unavailableReason('document-edit', document)}>Edit in source</Button>
+    {/if}
     <Menu label="More workflow actions" icon="more-vertical" align="end" {items} />
   {/snippet}
   {#snippet children()}
@@ -108,14 +113,21 @@
         </a>
       {/if}
       {#if week.length}<ApiBadge label="runs · 7 d" value="{passed}/{week.length} passed" />{/if}
-      <button type="button" class="wf-badge-button" onclick={onmockurl} aria-label="Mock URL ready: open the Mock URL tab">
-        <ApiBadge label="mock url" value="ready" status="success" />
-      </button>
+      {#if isAvailable('mock-url', document)}
+        <button type="button" class="wf-badge-button" onclick={onmockurl} aria-label="Mock URL ready: open the Mock URL tab">
+          <ApiBadge label="mock url" value="ready" status="success" />
+        </button>
+      {:else}
+        <span class="wf-badge-off" title={unavailableReason('mock-url', document)}>
+          <ApiBadge label="mock url" value="not available yet" status="neutral" />
+        </span>
+      {/if}
     </div>
   {/snippet}
 </CatalogPageHeader>
 
 <style>
+  .wf-badge-off { opacity: 0.6; cursor: not-allowed; }
   /* Arazzo summaries can be a sentence: the title badge wraps instead of running under the actions. */
   :global(.demo-page-header-text:has(.wf-title-badge)) { min-width: 0; }
   :global(.wf-title-badge) { max-width: 100%; }

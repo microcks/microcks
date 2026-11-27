@@ -199,7 +199,7 @@
               }}
             >
               {#each setup.workflows as w (`${w.documentId}/${w.workflowId}`)}
-                <option value={w.workflowId}>{w.workflowId} · {w.steps.length} steps{w.runnability.runnable ? '' : ' · not runnable'}</option>
+                <option value={w.workflowId}>{w.workflowId} · {w.steps.length} step{w.steps.length === 1 ? "" : "s"}{w.runnability.runnable ? '' : ' · not runnable'}</option>
               {/each}
             </Select>
           {/snippet}
@@ -298,7 +298,9 @@
         <Field
           label="Example"
           class="wfr-field wfr-w-420"
-          help={`Recorded in ${document.file.replace(/\.arazzo\.yaml$/, '.arazzo-sources.yaml')}. Picking one fills the inputs; the run is then judged on it.`}
+          help={setup.examples.length === 0 && setup.demo === false
+            ? 'No example is recorded for this workflow: enter the inputs.'
+            : `Recorded in ${document.overlay ?? document.file.replace(/\.arazzo\.yaml$/, '.arazzo-sources.yaml')}. Picking one fills the inputs; the run is then judged on it.`}
         >
           {#snippet children(c)}
             <Select {...c} value={example} onchange={(e) => pickExample(e.currentTarget.value)}>

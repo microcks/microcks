@@ -13,6 +13,7 @@
   import SourceTab from '#lib/components/workflows/SourceTab.svelte';
   import StepsTab from '#lib/components/workflows/StepsTab.svelte';
   import WorkflowHeader from '#lib/components/workflows/WorkflowHeader.svelte';
+  import { isAvailable, unavailableReason, type ArazzoFeature } from '#lib/workflows/availability.js';
   import { stoppedStep } from '#lib/workflows/describe.js';
   import { isWorkflowTab, workflowPath, type WorkflowTab } from '#lib/workflows/paths.js';
 
@@ -23,7 +24,16 @@
   const workflow = $derived(detail?.workflow);
   const runs = $derived(detail?.runs ?? []);
   const rawTab = $derived(page.params.tab);
-  const tab = $derived<WorkflowTab>(isWorkflowTab(rawTab) ? rawTab : 'loom');
+  const TAB_FEATURE: Partial<Record<WorkflowTab, ArazzoFeature>> = { 'mock-url': 'mock-url', sessions: 'sessions' };
+  const tabOff = (id: WorkflowTab) => {
+    const feature = TAB_FEATURE[id];
+    return feature !== undefined && !isAvailable(feature, doc ?? data.detail?.demo);
+  };
+  const tabItem = (id: WorkflowTab, label: string, count?: number) => {
+    const feature = TAB_FEATURE[id];
+    return { id, label, count, disabled: tabOff(id) || undefined, title: feature ? unavailableReason(feature, doc ?? data.detail?.demo) : undefined };
+  };
+  const tab = $derived<WorkflowTab>(isWorkflowTab(rawTab) && !tabOff(rawTab) ? rawTab : 'loom');
   const runParam = $derived(Number(page.url.searchParams.get('run')));
   const run = $derived(Number.isFinite(runParam) && runParam > 0 ? runs.find((r) => r.number === runParam) ?? runs[0] : runs[0]);
   const step = $derived(page.url.searchParams.get('step') ?? undefined);
@@ -35,7 +45,7 @@
   };
 
   $effect(() => {
-    if (workflow && rawTab !== undefined && !isWorkflowTab(rawTab)) {
+    if (workflow && rawTab !== undefined && (!isWorkflowTab(rawTab) || tabOff(rawTab))) {
       goto(workflowPath(workflow.documentId, workflow.workflowId, 'loom'), { replace: true });
     }
   });
@@ -75,13 +85,13 @@
       value={tab}
       onchange={goTab}
       items={[
-        { id: 'loom', label: 'Loom' },
-        { id: 'steps', label: 'Steps', count: workflow.steps.length },
-        { id: 'source', label: 'Source' },
-        { id: 'mock-url', label: 'Mock URL' },
-        { id: 'sessions', label: 'Sessions', count: detail.sessions.length || undefined },
-        { id: 'examples', label: 'Examples', count: detail.examples.length || undefined },
-        { id: 'runs', label: 'Runs', count: lastRun?.number }
+        tabItem('loom', 'Loom'),
+        tabItem('steps', 'Steps', workflow.steps.length),
+        tabItem('source', 'Source'),
+        tabItem('mock-url', 'Mock URL'),
+        tabItem('sessions', 'Sessions', detail.sessions.length || undefined),
+        tabItem('examples', 'Examples', detail.examples.length || undefined),
+        tabItem('runs', 'Runs', lastRun?.number)
       ]}
     >
       {#snippet children()}

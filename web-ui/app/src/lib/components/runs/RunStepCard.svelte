@@ -12,9 +12,11 @@
 </script>
 
 <script lang="ts">
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { Chip, CodeBlock, Icon, MethodTag, StatusBadge } from '@microcks/deep-ink';
   import RunVerdict from './RunVerdict.svelte';
   import { J, badFieldText } from '#lib/runs-workflow.js';
+  import { criteriaState } from '#lib/workflows/criteria-state.js';
   import { formatDuration } from '#lib/workflows/time.js';
   import type { Step, WorkflowRun } from '#lib/workflows/types.js';
 
@@ -76,6 +78,7 @@
 
   const onMocks = $derived(run.target.kind === 'mocks');
   const criteriaOk = $derived(step.criteria.every((c) => c.held));
+  const criteriaNotEvaluated = $derived(criteriaState(step) === 'not-evaluated');
   const schema = $derived(step.schema);
   const coherence = $derived(run.coherence.find((c) => c.stepId === step.stepId));
   const listName = $derived(coherence ? String(run.steps[0]?.outputs['firstName'] ?? '') : '');
@@ -176,7 +179,7 @@
           <ol class="wfr-attempts">
             {#each step.attempts as a, k (a.n)}
               {@const isLast = k === step.attempts.length - 1}
-              {@const outcome = `${criteriaOk ? 'Success criteria held' : 'Success criteria did not hold'}${schema.state === 'fail' ? ` · schema validation failed: ${badFieldText(step)}` : ''}`}
+              {@const outcome = `${criteriaNotEvaluated ? 'Success criteria not evaluated' : criteriaOk ? 'Success criteria held' : 'Success criteria did not hold'}${schema.state === 'fail' ? ` · schema validation failed: ${badFieldText(step)}` : ''}`}
               {@const next = isLast
                 ? step.status === 'passed'
                   ? 'the step passes'
@@ -239,7 +242,9 @@
           <div class="wfr-block">
             <div class="wfr-check-head">
               <h4 class="wfr-h4" data-size="13">Success criteria</h4>
-              {#if criteriaOk}
+              {#if criteriaNotEvaluated}
+                <RunVerdict tone="muted" icon="dash">Not evaluated</RunVerdict>
+              {:else if criteriaOk}
                 <RunVerdict tone="success" icon="check">Held {step.criteria.length}/{step.criteria.length}</RunVerdict>
               {:else}
                 <RunVerdict tone="danger" icon="cross">Did not hold</RunVerdict>
@@ -296,8 +301,12 @@
                 Add that example to the OpenAPI document, or let the workflow send a value that has one.
               </p>
               <div class="wfr-coherence-links">
-                <a href="/services" class="wfr-link" title="GET /pastries/{'{name}'} on API Pastry 2.0">Open {coherence.operationId}</a>
-                <a href={`/services?hint=${encodeURIComponent(coherence.copilotHint)}`} class="wfr-link">Generate the example with the AI Copilot</a>
+                <a href="/services" class="wfr-link" title={def ? `${def.method} ${def.path}` : undefined}>Open {coherence.operationId}</a>
+                {#if isAvailable('ai-copilot', run.documentId)}
+                  <a href={`/services?hint=${encodeURIComponent(coherence.copilotHint)}`} class="wfr-link">Generate the example with the AI Copilot</a>
+                {:else}
+                  <button type="button" class="wfr-link" disabled title={unavailableReason('ai-copilot', run.documentId)}>Generate the example with the AI Copilot</button>
+                {/if}
               </div>
             </div>
           </div>

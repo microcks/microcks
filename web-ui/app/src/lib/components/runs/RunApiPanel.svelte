@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { CodeBlock, CopyButton } from '@microcks/deep-ink';
+  import { Button, CodeBlock, CopyButton } from '@microcks/deep-ink';
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import type { RunApiBody } from '#lib/runs-workflow.js';
 
   interface Props {
@@ -16,8 +17,10 @@
 
   let { hint, documentApiId, documentLabel, workflowId, mockUrl, body, mixed, proposed = true }: Props = $props();
 
-  // Proposed endpoint: Microcks has no Arazzo API yet.
-  const runsUrl = $derived(`http://microcks.local:8080/api/arazzo/documents/${documentApiId}/workflows/${workflowId}/runs`);
+  // The placeholder documents show a proposed endpoint on a made-up host; a real document shows the Microcks of its Mock URL.
+  const mockOn = $derived(isAvailable('mock-url', proposed));
+  const host = $derived(proposed ? 'http://microcks.local:8080' : (URL.canParse(mockUrl) ? new URL(mockUrl).origin : 'http://localhost:8080'));
+  const runsUrl = $derived(`${host}/api/arazzo/documents/${documentApiId}/workflows/${workflowId}/runs`);
   const curl = $derived(`curl -X POST \\\n  '${runsUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body, null, 2)}'`);
   const curlOne = $derived(`curl -X POST '${runsUrl}' -H 'Content-Type: application/json' -d '${JSON.stringify(body)}'`);
   const mockBody = $derived(JSON.stringify(body.inputs));
@@ -48,6 +51,10 @@
     <h3 class="wfr-card-subtitle">Or play it on the mocks through its Mock URL</h3>
     <p class="wfr-note">Microcks plays {workflowId} on its mocks and answers 200 with the workflow outputs. Each call creates a run with origin Mock URL.</p>
     <CodeBlock class="wfr-pre" variant="plain" copy={false} language="bash" caption="curl command for the Mock URL" code={mockCurl} />
-    <CopyButton value={mockOne} label="Copy command" variant="outline" class="wfr-copy" />
+    {#if mockOn}
+      <CopyButton value={mockOne} label="Copy command" variant="outline" class="wfr-copy" />
+    {:else}
+      <Button size="sm" disabled title={unavailableReason('mock-url', proposed)} class="wfr-copy">Copy command</Button>
+    {/if}
   </div>
 </section>

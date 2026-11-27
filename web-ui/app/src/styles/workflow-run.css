@@ -95,6 +95,9 @@
   font: 500 14px/1 var(--font-ui); text-decoration: none;
 }
 .wfr-action:hover { filter: brightness(1.08); }
+.wfr-action:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
+.wfr-link:disabled { background: none; border: 0; padding: 0; font: inherit; opacity: 0.55; cursor: not-allowed; text-decoration: none; }
+.wfr-link:disabled:hover { text-decoration: none; }
 .wfr-action[data-tone="danger"] { border-color: var(--danger); }
 .wfr-action[data-tone="danger"] .icon { color: var(--danger); }
 .wfr-action[data-tone="action"] { border-color: var(--action); }

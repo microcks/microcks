@@ -45,7 +45,7 @@ export async function getRunSetup(docId: string, workflowId: string, scenario: s
     workflows: real ? (await listWorkflowsPayload(token)).workflows : listAll().workflows,
     examples,
     secrets,
-    defaults: defaultsFor(workflow, isRunScenario(scenario) ? scenario : undefined),
+    defaults: defaultsFor(workflow, isRunScenario(scenario) ? scenario : undefined, real),
     services,
     demo: !real
   };

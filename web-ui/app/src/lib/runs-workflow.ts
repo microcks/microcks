@@ -189,19 +189,23 @@ const SAMPLE_INPUTS: Record<string, string> = { name: 'Eclair Cafe', quantity: '
 
 const baseUrlOf = (source: string) => (source === 'apiPastry' ? EXAMPLE_BASE_URL : source === 'apiPastryV1' ? EXAMPLE_BASE_URL.replace(/\/v2$/, '/v1') : '');
 
-/** Initial values of the form: restock-pastry follows its scenario; any other workflow starts on the mocks. */
-export function defaultsFor(workflow: Pick<Workflow, 'workflowId' | 'steps' | 'inputs'>, scenario?: RunScenario): RunFormDefaults {
-  if (workflow.workflowId === 'restock-pastry') return RUN_SCENARIOS[scenario ?? 'impl14'].defaults;
+/**
+ * Initial values of the form: restock-pastry follows its scenario; any other workflow starts on the mocks. A real
+ * document has no demo scenario nor demo sample values, and schema validation is off, as the form says ("Off by
+ * default"; the backend does not validate a response unless `validateSchema` is true).
+ */
+export function defaultsFor(workflow: Pick<Workflow, 'workflowId' | 'steps' | 'inputs'>, scenario?: RunScenario, real = false): RunFormDefaults {
+  if (!real && workflow.workflowId === 'restock-pastry') return RUN_SCENARIOS[scenario ?? 'impl14'].defaults;
   const sources = [...new Set(workflow.steps.map((s) => s.sourceName))];
   return {
     target: 'mocks',
-    baseUrls: Object.fromEntries(sources.map((s) => [s, baseUrlOf(s)])),
+    baseUrls: Object.fromEntries(sources.map((s) => [s, real ? '' : baseUrlOf(s)])),
     perSource: Object.fromEntries(sources.map((s) => [s, 'mock' as const])),
     secret: '',
     example: '',
     detached: true,
-    inputs: Object.fromEntries(workflow.inputs.map((i) => [i.name, i.example ?? SAMPLE_INPUTS[i.name] ?? ''])),
-    validateSchemas: true,
+    inputs: Object.fromEntries(workflow.inputs.map((i) => [i.name, i.example ?? (real ? undefined : SAMPLE_INPUTS[i.name]) ?? ''])),
+    validateSchemas: !real,
     timeoutMs: String(DEFAULT_RUN_TIMEOUT_MS)
   };
 }

@@ -2,6 +2,7 @@
   import { ApiBadge, Button, Icon } from '@microcks/deep-ink';
   import type { Service } from '#lib/types.js';
   import { formatRelative } from '#lib/format.js';
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { runHeadline, runOutcome, stoppedStep } from '#lib/workflows/describe.js';
   import type { WorkflowListItem } from '#lib/workflows/list.js';
   import { runPath, runSetupPath, workflowPath } from '#lib/workflows/paths.js';
@@ -20,6 +21,7 @@
     onlink: (source: SourceDescription) => void;
   }
   let { document: doc, rows, docWorkflows, total, services, runKind, onlink }: Props = $props();
+  const mockUrlOn = $derived(isAvailable('mock-url', doc));
 
   const TARGET_LABEL: Record<Exclude<RunKindFilter, 'any'>, string> = {
     mocks: 'Microcks mocks',
@@ -197,7 +199,7 @@
 
           <div role="cell" class="wf-cell wf-cell-steps">
             <LoomThumb {workflow} document={doc} run={lastRun} />
-            <span class="wf-steps-text">{workflow.steps.length} steps{workflow.steps.some((s) => s.dependsOn?.length) ? ' · dependsOn' : ''}</span>
+            <span class="wf-steps-text">{workflow.steps.length} step{workflow.steps.length === 1 ? "" : "s"}{workflow.steps.some((s) => s.dependsOn?.length) ? ' · dependsOn' : ''}</span>
           </div>
 
           <div role="cell" class="wf-cell wf-cell-sources">
@@ -239,16 +241,18 @@
           </div>
 
           <div role="cell" class="wf-cell wf-cell-mock">
-            <span class="wf-mock-state" data-ready={runnable ? '' : undefined}>
-              <Icon name={runnable ? 'link' : 'never-tested'} size={15} />
-              {runnable ? 'Ready' : 'Not available'}
+            <span class="wf-mock-state" data-ready={runnable && mockUrlOn ? '' : undefined} title={mockUrlOn ? undefined : unavailableReason('mock-url', doc)}>
+              <Icon name={runnable && mockUrlOn ? 'link' : 'never-tested'} size={15} />
+              {runnable && mockUrlOn ? 'Ready' : 'Not available'}
             </span>
-            {#if runnable}
+            {#if runnable && mockUrlOn}
               <a href={workflowPath(doc.id, workflow.workflowId, 'mock-url')} title="POST {workflow.mockUrl}" class="wf-mono-link wf-mock-path">POST …/{doc.version}/{workflow.workflowId}</a>
             {/if}
             <span class="wf-note">
               {#if !runnable}
                 {reason === 'asyncapi-steps' ? 'AsyncAPI steps cannot be played yet' : `Link ${unlinkedNames.join(', ') || 'its sources'} first`}
+              {:else if !mockUrlOn}
+                Not available yet
               {:else if row.lastMockUrlRun}
                 Last call {formatRelative(row.lastMockUrlRun.startedAt)} (run #{row.lastMockUrlRun.number})
               {:else}
