@@ -21,6 +21,7 @@ import org.bson.codecs.pojo.annotations.BsonId;
 import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * A verification session: a test opens it on a workflow of an Arazzo document, the application it tests calls the
@@ -41,6 +42,8 @@ public class ArazzoSession {
    private String workflowId;
    private Date openedDate;
    private Date closedDate;
+   private long droppedCallCount;
+   private Map<String, Object> inputs;
    private long callCount;
    private Date expireAt;
 
@@ -116,5 +119,23 @@ public class ArazzoSession {
 
    public void setExpireAt(Date expireAt) {
       this.expireAt = expireAt;
+   }
+
+   /** How many calls the session did not record, as it had recorded its maximum of calls. */
+   public long getDroppedCallCount() {
+      return droppedCallCount;
+   }
+
+   public void setDroppedCallCount(long droppedCallCount) {
+      this.droppedCallCount = droppedCallCount;
+   }
+
+   /** The inputs of the workflow the session was opened with, by name; null when it was opened without. */
+   public Map<String, Object> getInputs() {
+      return inputs;
+   }
+
+   public void setInputs(Map<String, Object> inputs) {
+      this.inputs = inputs;
    }
 }

@@ -47,6 +47,7 @@ public class ArazzoSessionCall {
    private String method;
    private String path;
    private String requestUrl;
+   private String queryString;
    private Set<Header> requestHeaders = new HashSet<>();
    private String requestBody;
    private int responseStatus;
@@ -144,6 +145,15 @@ public class ArazzoSessionCall {
 
    public void setRequestUrl(String requestUrl) {
       this.requestUrl = requestUrl;
+   }
+
+   /** The query string of the call, without its ?; null when it has none. */
+   public String getQueryString() {
+      return queryString;
+   }
+
+   public void setQueryString(String queryString) {
+      this.queryString = queryString;
    }
 
    public Set<Header> getRequestHeaders() {

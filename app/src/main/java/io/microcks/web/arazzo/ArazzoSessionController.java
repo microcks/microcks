@@ -32,6 +32,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
+import java.util.Map;
 
 /**
  * Endpoints of the verification sessions of Arazzo workflows: a test opens a session on a workflow, the application it
@@ -59,15 +60,16 @@ public class ArazzoSessionController {
     * The workflow a session is opened on.
     * @param documentId The id of the Arazzo document, or its title and version as {@code <title>:<version>}
     * @param workflowId The id of the workflow in that document
+    * @param inputs     The inputs of the workflow whose values the calls must carry, by name; null to check none
     */
-   public record ArazzoSessionRequest(String documentId, String workflowId) {
+   public record ArazzoSessionRequest(String documentId, String workflowId, Map<String, Object> inputs) {
    }
 
    @POST
    @Path("/sessions")
    public Response openSession(ArazzoSessionRequest request) {
       try {
-         return arazzoSessionService.openSession(request.documentId(), request.workflowId())
+         return arazzoSessionService.openSession(request.documentId(), request.workflowId(), request.inputs())
                .map(session -> Response.created(URI.create("/api/arazzo/sessions/" + session.getId())).entity(session)
                      .build())
                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());

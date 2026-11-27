@@ -15,10 +15,12 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.Header;
+import io.microcks.domain.Request;
+import io.microcks.domain.Response;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoSession;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.Header;
 import io.microcks.domain.arazzo.WorkflowParameterValue;
 import io.microcks.domain.arazzo.WorkflowResult;
 import io.microcks.domain.arazzo.WorkflowRunOrigin;
@@ -26,13 +28,20 @@ import io.microcks.domain.arazzo.WorkflowRunStatus;
 import io.microcks.domain.arazzo.WorkflowRunSummary;
 import io.microcks.domain.arazzo.WorkflowSessionCall;
 import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.repository.RequestRepository;
+import io.microcks.repository.ResponseRepository;
+import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.repository.arazzo.WorkflowRunFilter;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +49,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,6 +86,15 @@ class ArazzoSessionVerificationTest {
    @Inject
    private ServiceService serviceService;
 
+   @Inject
+   private RequestRepository requestRepository;
+
+   @Inject
+   private ArazzoSessionRepository arazzoSessionRepository;
+
+   @Inject
+   private ResponseRepository responseRepository;
+
    /** Walking skeleton: a call the saga service makes in its session is matched to its step, in the history. */
    @Test
    void aCallMadeInTheSessionIsMatchedToItsStepAndTheVerificationJoinsTheHistory() throws Exception {
@@ -84,9 +103,15 @@ class ArazzoSessionVerificationTest {
 
       arazzoSessionService.recordCall(session.getId(), createOrder());
 
+      Date before = new Date();
       WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
       assertEquals(WorkflowRunOrigin.SESSION, verification.getOrigin());
       assertEquals(session.getId(), verification.getSession().sessionId());
+      assertEquals(List.of(saga.getId(), "Order saga", "1.0.0", SAGA, "MOCKS", "{}", "1"),
+            List.of(verification.getDocumentId(), verification.getDocumentTitle(), verification.getDocumentVersion(),
+                  verification.getWorkflowId(), String.valueOf(verification.getTarget()),
+                  String.valueOf(verification.getInputs()), String.valueOf(verification.getNumber())));
+      assertTrue(!verification.getStartedDate().before(before), "started before the verification");
       WorkflowStepResult createOrder = verification.getSteps().get(0);
       assertEquals("0 createOrder PASSED 201", createOrder.index() + " " + createOrder.stepId() + " "
             + createOrder.status() + " " + createOrder.statusCode());
@@ -188,6 +213,103 @@ class ArazzoSessionVerificationTest {
             "2 chargePayment FAILED `chargePayment` request does not conform to Payment API 1.0.0: "
                   + "the request body does not follow its schema at /amount: string found, number expected",
             described(verification).get(2));
+   }
+
+   /** A matched step keeps the exchange of its call, as the step of a run keeps its own, for the run page. */
+   @Test
+   void aMatchedStepKeepsTheExchangeOfItsCall() throws Exception {
+      ArazzoSession session = sessionOnTheSaga();
+      record(session, createOrder());
+
+      WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
+
+      String testCaseId = verification.getSteps().get(0).testCaseId();
+      assertEquals(verification.getId() + "-0", testCaseId);
+      Request request = requestRepository.findByTestCaseId(testCaseId).get(0);
+      Response response = responseRepository.findByIdOptional(request.getResponseId()).orElseThrow();
+      assertEquals(List.of("createOrder", createOrder().getRequestBody(), "[Content-Type]"), List.of(request.getName(),
+            request.getContent(), request.getHeaders().stream().map(Header::getName).toList().toString()));
+      assertEquals(List.of("createOrder", "201", createOrder().getResponseBody(), "[Content-Type]"),
+            List.of(response.getName(), response.getStatus(), response.getContent(),
+                  response.getHeaders().stream().map(Header::getName).toList().toString()));
+   }
+
+   /** A number sent from an output is compared by value, whatever its type: 25 is 25.0, 30.0 is not. */
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = { "25 | 2 chargePayment PASSED",
+         "30.0 | 2 chargePayment FAILED `chargePayment` body `/amount` should come from "
+               + "`$steps.createOrder.outputs.amount` (25.0), got 30.0" })
+   void aNumberSentFromAnOutputIsComparedByValue(String amount, String verdict) throws Exception {
+      ArazzoSession session = sessionOnTheSaga();
+      ArazzoSessionCall charge = chargePayment("o-42");
+      charge.setRequestBody("{\"orderId\": \"o-42\", \"amount\": " + amount + "}");
+
+      record(session, createOrder(), reserveStock("o-42"), charge, confirmOrder("o-42"));
+
+      assertEquals(verdict, described(arazzoSessionService.verify(session.getId()).orElseThrow()).get(2));
+   }
+
+   /**
+    * A session opened with the inputs of the workflow checks the values coming from them like the others; without
+    * inputs, nothing coming from them is checked.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', nullValues = "null", value = { "c-7 | c-7 | 0 createOrder PASSED",
+         "c-7 | c-9 | 0 createOrder FAILED `createOrder` body `/customerId` should come from `$inputs.customerId` "
+               + "(c-7), got c-9",
+         "null | c-9 | 0 createOrder PASSED" })
+   void theValuesComingFromTheInputsAreCheckedWhenTheSessionHasThem(String given, String sent, String verdict)
+         throws Exception {
+      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+      Map<String, Object> inputs = given == null ? null : Map.of("customerId", given);
+      ArazzoSession session = arazzoSessionService.openSession(saga.getId(), SAGA, inputs).orElseThrow();
+      ArazzoSessionCall placeOrder = createOrder();
+      placeOrder.setRequestBody(placeOrder.getRequestBody().replace("c-7", sent));
+
+      record(session, placeOrder, reserveStock("o-42"), chargePayment("o-42"), confirmOrder("o-42"));
+
+      WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
+      assertEquals(verdict, described(verification).get(0));
+      assertEquals(inputs == null ? Map.of() : inputs, verification.getInputs());
+   }
+
+   /** Inputs given to a session are checked against the workflow: an unknown, invalid or missing one is refused. */
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = { "'{\"customerId\": \"c-7\", \"coupon\": \"WELCOME\"}' | Unknown input: coupon",
+         "'{\"customerId\": 7}' | Invalid input customerId: a string is expected, got 7",
+         "'{}' | Missing input: customerId" })
+   void aSessionWithUnknownInvalidOrMissingInputsIsRefused(String inputs, String reason) throws Exception {
+      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+      Map<String, Object> given = new ObjectMapper().readValue(inputs, new TypeReference<Map<String, Object>>() {
+      });
+
+      assertEquals(reason, assertThrows(ArazzoRunRefusedException.class,
+            () -> arazzoSessionService.openSession(saga.getId(), SAGA, given)).getMessage());
+      assertEquals(0, arazzoSessionRepository.count());
+   }
+
+   /**
+    * dependsOn relaxes the order (Arazzo 1.1): in Order saga 1.1.0, reserveStock and chargePayment both depend on
+    * createOrder only, so they may come in any order; confirmOrder declares no dependsOn, so it comes after every step
+    * listed before it.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = { "createOrder,chargePayment,reserveStock,confirmOrder | SUCCESS | ",
+         "createOrder,chargePayment,confirmOrder,reserveStock | FAILURE | "
+               + "3 confirmOrder FAILED step `reserveStock` expected before `confirmOrder`" })
+   void dependsOnRelaxesTheOrderOfTheSteps(String received, WorkflowRunStatus status, String failedStep)
+         throws Exception {
+      ArazzoDocument saga = orderSagaIsImportedAndLinked("order-saga-parallel");
+      ArazzoSession session = arazzoSessionService.openSession(saga.getId(), SAGA).orElseThrow();
+      Map<String, ArazzoSessionCall> calls = Map.of("createOrder", createOrder(), "reserveStock", reserveStock("o-42"),
+            "chargePayment", chargePayment("o-42"), "confirmOrder", confirmOrder("o-42"));
+
+      record(session, Arrays.stream(received.split(",")).map(calls::get).toArray(ArazzoSessionCall[]::new));
+
+      WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
+      assertEquals(status, verification.getStatus());
+      assertEquals(failedStep == null ? List.of() : List.of(failedStep),
+            described(verification).stream().filter(step -> step.contains("FAILED")).toList());
    }
 
    /** AC-04: a step the service never calls fails the verification as missing. */
@@ -359,13 +481,18 @@ class ArazzoSessionVerificationTest {
    }
 
    private ArazzoDocument orderSagaIsImportedAndLinked() throws Exception {
+      return orderSagaIsImportedAndLinked("order-saga");
+   }
+
+   /** Imports the Order, Stock and Payment APIs, then a saga of the fixture and its overlay, linking them. */
+   private ArazzoDocument orderSagaIsImportedAndLinked(String saga) throws Exception {
       for (String api : List.of("order-api", "stock-api", "payment-api")) {
          Path contract = Files.createTempFile(api, ".yaml");
          Files.writeString(contract, example("order-saga.contracts.yaml", api));
          serviceService.importServiceDefinition(contract.toFile(), null, new ArtifactInfo(api + ".yaml", true));
       }
-      arazzoDocumentService.importArazzoSources(example("order-saga.arazzo.yaml", "order-saga-sources"));
-      return arazzoDocumentService.importArazzoDocument(example("order-saga.arazzo.yaml", "order-saga"));
+      arazzoDocumentService.importArazzoSources(example("order-saga.arazzo.yaml", saga + "-sources"));
+      return arazzoDocumentService.importArazzoDocument(example("order-saga.arazzo.yaml", saga));
    }
 
    /** One YAML document per example of a fixture, each announced by a {@code # example: <name> - <what>} comment. */

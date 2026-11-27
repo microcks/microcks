@@ -15,16 +15,18 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.arazzo.ArazzoStepOperation;
-import io.microcks.domain.Header;
-import io.microcks.domain.arazzo.WorkflowParameterValue;
 import io.microcks.artifact.arazzo.ArazzoExpressionContext;
 import io.microcks.artifact.arazzo.ArazzoExpressionEvaluator;
 import io.microcks.artifact.arazzo.ArazzoExpressionException;
 import io.microcks.artifact.arazzo.ArazzoParameter;
 import io.microcks.artifact.arazzo.ArazzoReceivedRequest;
 import io.microcks.artifact.arazzo.ArazzoStep;
+import io.microcks.artifact.arazzo.ArazzoStepOrder;
+import io.microcks.artifact.arazzo.ArazzoWorkflow;
+import io.microcks.domain.Header;
+import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.arazzo.ArazzoStepOperation;
+import io.microcks.domain.arazzo.WorkflowParameterValue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,9 +45,10 @@ import java.util.Set;
  * Verifies the calls an application made to the mocks in a session against the steps of a workflow: a step is matched
  * to the first call, in the order of receipt, that no earlier step took and that calls its operation, its method and
  * path template, on the mocks of the API its source is linked to, whatever its place. A step without call is missing.
- * Then each call is checked: it must be received after the calls of the prerequisites of its step; the values it sends
- * from runtime expressions must be those the outputs of the steps before it give, read from the responses of the mocks;
- * and its request must conform to the contract of the API it called.
+ * Then each call is checked: it must be received after the calls of the prerequisites of its step, as "dependsOn
+ * relaxes" the order of the workflow; the values it sends from runtime expressions must be those the outputs of the
+ * steps before it give, read from the responses of the mocks; and its request must conform to the contract of the API
+ * it called.
  * @author SebastienDegodez
  */
 final class ArazzoSessionVerifier {
@@ -83,14 +86,16 @@ final class ArazzoSessionVerifier {
    }
 
    /**
+    * @param workflow    The workflow, which tells the prerequisites of each step: "dependsOn relaxes" the order
     * @param steps       The steps of the workflow, in its order
     * @param calls       The calls of the session, in their order of receipt
+    * @param inputs      The inputs of the workflow the session was opened with, by name; empty for none
     * @param resourceUrl The URL the relative references of the contracts resolve against; null for none
     * @return The verdict of each step, in the order of the workflow
     */
-   static List<StepVerdict> verify(List<ExpectedStep> steps, List<ArazzoSessionCall> calls, String resourceUrl) {
+   static List<StepVerdict> verify(ArazzoWorkflow workflow, List<ExpectedStep> steps, List<ArazzoSessionCall> calls,
+         Map<String, Object> inputs, String resourceUrl) {
       Map<ExpectedStep, ArazzoSessionCall> matched = match(steps, calls);
-      Map<String, List<String>> prerequisites = prerequisites(steps.stream().map(ExpectedStep::step).toList());
       Map<String, ArazzoSessionCall> callOfStep = new LinkedHashMap<>();
       matched.forEach((step, call) -> callOfStep.put(step.step().stepId(), call));
       Map<String, Map<String, Object>> stepOutputs = new LinkedHashMap<>();
@@ -103,9 +108,10 @@ final class ArazzoSessionVerifier {
             continue;
          }
          List<String> failures = new ArrayList<>();
-         outOfOrder(step, call, prerequisites.get(step.step().stepId()), callOfStep).ifPresent(failures::add);
+         outOfOrder(step, call, ArazzoStepOrder.prerequisitesOf(workflow, step.step().stepId()), callOfStep, calls)
+               .ifPresent(failures::add);
          // The values the call carries are checked against the outputs of the steps before it in the workflow.
-         ReceivedCall before = new ReceivedCall(Map.of(), Map.copyOf(stepOutputs), null);
+         ReceivedCall before = new ReceivedCall(inputs, Map.copyOf(stepOutputs), null);
          ArazzoReceivedRequest request = requestOf(step, call);
          List<WorkflowParameterValue> parameters = new ArrayList<>();
          for (ArazzoParameter parameter : step.step().parameters()) {
@@ -126,7 +132,7 @@ final class ArazzoSessionVerifier {
                .forEach(violation -> failures.add("`" + step.step().stepId() + "` request does not conform to "
                      + step.apiName() + " " + step.apiVersion() + ": " + violation));
          Map<String, Object> outputs = evaluated(step.step().outputs(),
-               new ReceivedCall(Map.of(), Map.copyOf(stepOutputs), call));
+               new ReceivedCall(inputs, Map.copyOf(stepOutputs), call));
          stepOutputs.put(step.step().stepId(), outputs);
          verdicts.add(new StepVerdict(step, call, failures, outputs, parameters));
       }
@@ -135,14 +141,16 @@ final class ArazzoSessionVerifier {
 
    /**
     * @param expressions The outputs of the workflow, by name, with their runtime expressions
+    * @param inputs      The inputs of the workflow the session was opened with, by name; empty for none
     * @param verdicts    The verdicts of its steps
     * @return The outputs of the workflow that have a value, by name
     */
-   static Map<String, Object> workflowOutputs(Map<String, String> expressions, List<StepVerdict> verdicts) {
+   static Map<String, Object> workflowOutputs(Map<String, String> expressions, Map<String, Object> inputs,
+         List<StepVerdict> verdicts) {
       Map<String, Map<String, Object>> stepOutputs = new LinkedHashMap<>();
-      verdicts.stream().filter(verdict -> verdict.call() != null)
-            .forEach(verdict -> stepOutputs.put(verdict.expected().step().stepId(), verdict.outputs()));
-      return evaluated(expressions, new ReceivedCall(Map.of(), stepOutputs, null));
+      // A missing step has no outputs: the outputs of the workflow coming from it have no value.
+      verdicts.forEach(verdict -> stepOutputs.put(verdict.expected().step().stepId(), verdict.outputs()));
+      return evaluated(expressions, new ReceivedCall(inputs, stepOutputs, null));
    }
 
    /** A value of the workflow is a runtime expression when it starts with $; null for a constant. */
@@ -152,8 +160,8 @@ final class ArazzoSessionVerifier {
 
    /**
     * A value a step sends must be the value of the runtime expression it comes from, as the outputs of the steps before
-    * it give it. A constant is not checked, nor an expression without value, such as an input of the workflow or the
-    * output of a missing step.
+    * it give it, or the inputs the session was opened with. A constant is not checked, nor an expression without value,
+    * such as an input the session was not given or the output of a missing step.
     */
    private static Optional<String> checkData(ExpectedStep step, String place, String expression, Object received,
          ReceivedCall context) {
@@ -195,9 +203,7 @@ final class ArazzoSessionVerifier {
    }
 
    private static ArazzoReceivedRequest requestOf(ExpectedStep step, ArazzoSessionCall call) {
-      String url = call.getRequestUrl();
-      String query = url == null || !url.contains("?") ? null : url.substring(url.indexOf('?') + 1);
-      return new ArazzoReceivedRequest(step.operation().path(), call.getPath(), query,
+      return new ArazzoReceivedRequest(step.operation().path(), call.getPath(), call.getQueryString(),
             headersOf(call.getRequestHeaders()), call.getRequestBody());
    }
 
@@ -208,8 +214,8 @@ final class ArazzoSessionVerifier {
    }
 
    /**
-    * What the runtime expressions of a step see in a session: no input, the outputs of the steps before it and, once
-    * the mocks answered, the response to its call.
+    * What the runtime expressions of a step see in a session: the inputs it was opened with, the outputs of the steps
+    * before it and, once the mocks answered, the response to its call.
     */
    private record ReceivedCall(Map<String, Object> inputs, Map<String, Map<String, Object>> steps,
          ArazzoSessionCall call) implements ArazzoExpressionContext {
@@ -243,31 +249,17 @@ final class ArazzoSessionVerifier {
    }
 
    /**
-    * The steps each step of a workflow must be received after: every step listed before it, which is the strict order
-    * of the workflow. This is the one place the order rule lives: once Arazzo 1.1 step dependsOn is read, a step that
-    * declares it only needs the steps it names and those whose outputs it uses.
-    * @param steps The steps of the workflow, in its order
-    * @return The ids of the prerequisites of each step, in the order of the workflow, by step id
+    * A call is in order when the calls of the prerequisites of its step were all received before it; else it names the
+    * first prerequisite, in the order of the workflow, whose call was not. The prerequisites follow the rule of the
+    * shared kernel: the steps a step names in its dependsOn and those whose outputs it uses, or every step listed
+    * before a step without dependsOn. A prerequisite without call is missing on its own and does not count here.
     */
-   static Map<String, List<String>> prerequisites(List<ArazzoStep> steps) {
-      Map<String, List<String>> prerequisites = new LinkedHashMap<>();
-      List<String> before = new ArrayList<>();
-      for (ArazzoStep step : steps) {
-         prerequisites.put(step.stepId(), List.copyOf(before));
-         before.add(step.stepId());
-      }
-      return prerequisites;
-   }
-
-   /**
-    * A call received before the call of one of the prerequisites of its step is out of order: it names the first such
-    * prerequisite. A prerequisite without call is missing on its own and does not count here.
-    */
-   private static Optional<String> outOfOrder(ExpectedStep step, ArazzoSessionCall call, List<String> prerequisites,
-         Map<String, ArazzoSessionCall> callOfStep) {
+   private static Optional<String> outOfOrder(ExpectedStep step, ArazzoSessionCall call, Set<String> prerequisites,
+         Map<String, ArazzoSessionCall> callOfStep, List<ArazzoSessionCall> calls) {
+      List<ArazzoSessionCall> receivedBefore = calls.subList(0, calls.indexOf(call));
       return prerequisites.stream()
             .filter(prerequisite -> callOfStep.containsKey(prerequisite)
-                  && callOfStep.get(prerequisite).getIndex() > call.getIndex())
+                  && !receivedBefore.contains(callOfStep.get(prerequisite)))
             .map(prerequisite -> "step `" + prerequisite + "` expected before `" + step.step().stepId() + "`")
             .findFirst();
    }

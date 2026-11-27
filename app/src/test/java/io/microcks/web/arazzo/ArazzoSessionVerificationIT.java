@@ -234,6 +234,55 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
       return fields;
    }
 
+   /** dependsOn relaxes the order: in Order saga 1.1.0, charging before reserving the items is in order. */
+   @Test
+   void dependsOnRelaxesTheOrderOfTheSteps() throws Exception {
+      uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga-parallel"), true);
+      uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga-parallel-sources"), false);
+      String sessionId = openSession("{\"documentId\": \"Order saga:1.1.0\", \"workflowId\": \"placeOrderSaga\"}");
+
+      placeOrder(sessionId);
+      chargePayment(sessionId);
+      reserveStock(sessionId);
+      confirmOrder(sessionId);
+
+      JsonNode verification = verify(sessionId);
+      assertEquals("SUCCESS", verification.get("status").asText(), verification.toPrettyString());
+   }
+
+   /** A session opened with inputs checks the values coming from them: customer c-9 is not the c-7 given. */
+   @Test
+   void theValuesComingFromTheInputsOfTheSessionAreChecked() throws Exception {
+      String sessionId = openSession("{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\", "
+            + "\"inputs\": {\"customerId\": \"c-7\"}}");
+
+      assertEquals(201,
+            callMocks(sessionId, "Order+API", "/orders",
+                  "{\"customerId\": \"c-9\", \"items\": [{\"sku\": \"ABC-1\", \"quantity\": 2}], \"amount\": 25.0}")
+                        .getStatusCode().value());
+
+      JsonNode verification = verify(sessionId);
+      assertEquals("{\"customerId\":\"c-7\"}", verification.get("inputs").toString());
+      assertEquals("`createOrder` body `/customerId` should come from `$inputs.customerId` (c-7), got c-9",
+            verification.get("steps").get(0).get("message").asText());
+   }
+
+   /** A session with an input of another type than the workflow declares is refused, telling why in plain text. */
+   @Test
+   void aSessionWithAnInvalidInputIsRefused() throws Exception {
+      String body = "{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\", "
+            + "\"inputs\": {\"customerId\": 7}}";
+      MICROCKS_API.assertRequestConforms("POST", SESSIONS, body);
+
+      ResponseEntity<String> refused = restTemplate.exchange("/api" + SESSIONS, HttpMethod.POST,
+            new HttpEntity<>(body, jsonHeaders()), String.class);
+
+      MICROCKS_API.assertResponseConforms("POST", SESSIONS, refused);
+      assertEquals(400, refused.getStatusCode().value());
+      assertEquals("Invalid input customerId: a string is expected, got 7", refused.getBody());
+      assertEquals(0, arazzoSessionRepository.count());
+   }
+
    /** A session on an unknown workflow is refused, telling why in plain text. */
    @Test
    void aSessionOnAnUnknownWorkflowIsRefused() throws Exception {
@@ -278,7 +327,11 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
 
    /** Open a session on placeOrderSaga as a test does, checking the exchange against the published API. */
    private String openSession() throws Exception {
-      String body = "{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\"}";
+      return openSession("{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\"}");
+   }
+
+   /** Open a session as a test does, with the given request body. */
+   private String openSession(String body) throws Exception {
       MICROCKS_API.assertRequestConforms("POST", SESSIONS, body);
       ResponseEntity<String> opened = restTemplate.exchange("/api" + SESSIONS, HttpMethod.POST,
             new HttpEntity<>(body, jsonHeaders()), String.class);

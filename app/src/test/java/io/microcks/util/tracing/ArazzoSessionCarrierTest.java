@@ -41,8 +41,8 @@ class ArazzoSessionCarrierTest {
          "null | microcks-session=session%201 | session 1", "'  ' | microcks-session=s-2 | s-2",
          "null | tenant=bakery#microcks-session=s-3 | s-3",
          // Nothing names a session: no header, an unrelated, empty or malformed baggage.
-         "null | null | null", "'' | tenant=bakery | null", "null | microcks-session= | null", "null | '=,;;=' | null",
-         "null | microcks-session | null" })
+         "null | null | null", "'' | tenant=bakery | null", "null | microcks-session= | null",
+         "null | microcks-session=%20 | null", "null | '=,;;=' | null", "null | microcks-session | null" })
    void theSessionIsReadFromTheHeaderElseFromTheBaggage(String header, String baggage, String sessionId) {
       List<String> baggageHeaders = baggage == null ? List.of() : Arrays.asList(baggage.split("#"));
 

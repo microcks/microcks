@@ -18,16 +18,20 @@ package io.microcks.service.arazzo;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoSession;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
 
-import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Date;
 import java.util.List;
@@ -36,6 +40,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests of how long the sessions and their calls are kept, and how many calls a session records: an open session
@@ -79,6 +84,16 @@ class ArazzoSessionStorageTest {
       saga.setWorkflowIds(List.of("placeOrderSaga"));
       saga.setSourceNames(List.of());
       saga.setWorkflowCalls(Map.of("placeOrderSaga", List.of()));
+      saga.setContent("""
+            arazzo: 1.0.1
+            info:
+              title: Order saga
+              version: 1.0.0
+            sourceDescriptions: []
+            workflows:
+              - workflowId: placeOrderSaga
+                steps: []
+            """);
       saga = arazzoDocumentRepository.save(saga);
    }
 
@@ -86,8 +101,13 @@ class ArazzoSessionStorageTest {
    void anOpenSessionAndItsCallsExpireAfterTheMaximumDuration() throws Exception {
       ArazzoSession session = arazzoSessionService.openSession(saga.getId(), "placeOrderSaga").orElseThrow();
 
+      Date before = new Date();
       arazzoSessionService.recordCall(session.getId(), new ArazzoSessionCall());
+      Date after = new Date();
 
+      Date received = arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(session.getId()).get(0)
+            .getReceivedDate();
+      assertTrue(!received.before(before) && !received.after(after), () -> received + " is not when it was received");
       ArazzoSession stored = arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow();
       assertNull(stored.getClosedDate());
       assertEquals(120_000L, stored.getExpireAt().getTime() - stored.getOpenedDate().getTime());
@@ -114,7 +134,7 @@ class ArazzoSessionStorageTest {
       arazzoSessionService.closeSession(session.getId());
       Date closedDate = arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow().getClosedDate();
 
-      arazzoSessionService.closeSession(session.getId());
+      assertTrue(arazzoSessionService.closeSession(session.getId()));
 
       assertEquals(closedDate, arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow().getClosedDate());
    }
@@ -129,6 +149,25 @@ class ArazzoSessionStorageTest {
 
       assertEquals(List.of(0L, 1L), arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(session.getId()).stream()
             .map(ArazzoSessionCall::getIndex).toList());
+   }
+
+   /** A session that reached its maximum of calls fails its verification, telling how many calls it did not record. */
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', nullValues = "null", value = { "2 | 0 | SUCCESS | null",
+         "3 | 1 | FAILURE | session reached 2 calls, 1 call was not recorded",
+         "5 | 3 | FAILURE | session reached 2 calls, 3 calls were not recorded" })
+   void aSessionThatReachedItsMaximumFailsItsVerification(int calls, long dropped, WorkflowRunStatus status,
+         String message) throws Exception {
+      ArazzoSession session = arazzoSessionService.openSession(saga.getId(), "placeOrderSaga").orElseThrow();
+
+      for (int call = 0; call < calls; call++) {
+         arazzoSessionService.recordCall(session.getId(), new ArazzoSessionCall());
+      }
+
+      assertEquals(dropped,
+            arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow().getDroppedCallCount());
+      WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
+      assertEquals(status + " " + message, verification.getStatus() + " " + verification.getMessage());
    }
 
    private List<Date> expiriesOfTheCallsOf(ArazzoSession session) {

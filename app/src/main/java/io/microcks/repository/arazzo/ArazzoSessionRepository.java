@@ -65,6 +65,17 @@ public class ArazzoSessionRepository implements ObjectIdRepository<ArazzoSession
    }
 
    /**
+    * Count a call an open session does not record, as it recorded its maximum of calls; atomically.
+    * @param sessionId The id of a session
+    * @param maxCalls  How many calls a session records at most
+    * @param now       When the call is received
+    */
+   public void countDroppedCall(String sessionId, long maxCalls, Date now) {
+      mongoCollection().updateOne(Filters.and(idFilter(sessionId), Filters.eq(CLOSED_DATE, null),
+            Filters.gt(EXPIRE_AT, now), Filters.gte("callCount", maxCalls)), Updates.inc("droppedCallCount", 1L));
+   }
+
+   /**
     * Close an open session: it records no more calls, and it expires at the given date. A session already closed is
     * left as it is.
     * @param sessionId  The id of a session

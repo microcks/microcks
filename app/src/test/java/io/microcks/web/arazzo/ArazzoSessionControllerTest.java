@@ -26,6 +26,7 @@ import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,10 +47,11 @@ class ArazzoSessionControllerTest {
    void anOpenedSessionIsCreatedAtItsUrl() throws Exception {
       ArazzoSession session = new ArazzoSession();
       session.setId("s-1");
-      when(arazzoSessionService.openSession("Order saga:1.0.0", "placeOrderSaga")).thenReturn(Optional.of(session));
+      when(arazzoSessionService.openSession("Order saga:1.0.0", "placeOrderSaga", Map.of("customerId", "c-7")))
+            .thenReturn(Optional.of(session));
 
       Response opened = controller
-            .openSession(new ArazzoSessionRequest("Order saga:1.0.0", "placeOrderSaga"));
+            .openSession(new ArazzoSessionRequest("Order saga:1.0.0", "placeOrderSaga", Map.of("customerId", "c-7")));
 
       assertEquals(201, opened.getStatus());
       assertEquals(URI.create("/api/arazzo/sessions/s-1"), opened.getLocation());
@@ -58,19 +60,19 @@ class ArazzoSessionControllerTest {
 
    @Test
    void noSessionIsOpenedOnAnUnknownDocument() throws Exception {
-      when(arazzoSessionService.openSession("unknown", "placeOrderSaga")).thenReturn(Optional.empty());
+      when(arazzoSessionService.openSession("unknown", "placeOrderSaga", null)).thenReturn(Optional.empty());
 
       assertEquals(404,
-            controller.openSession(new ArazzoSessionRequest("unknown", "placeOrderSaga")).getStatus());
+            controller.openSession(new ArazzoSessionRequest("unknown", "placeOrderSaga", null)).getStatus());
    }
 
    @Test
    void aRefusedSessionIsABadRequestTellingWhyInPlainText() throws Exception {
-      when(arazzoSessionService.openSession("Order saga:1.0.0", "cancelSaga"))
+      when(arazzoSessionService.openSession("Order saga:1.0.0", "cancelSaga", null))
             .thenThrow(new ArazzoRunRefusedException("Unknown workflow: cancelSaga"));
 
       Response refused = controller
-            .openSession(new ArazzoSessionRequest("Order saga:1.0.0", "cancelSaga"));
+            .openSession(new ArazzoSessionRequest("Order saga:1.0.0", "cancelSaga", null));
 
       assertEquals(400, refused.getStatus());
       assertEquals(MediaType.TEXT_PLAIN_TYPE, refused.getMediaType());

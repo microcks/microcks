@@ -84,6 +84,7 @@ public class ArazzoSessionRecorder {
          call.setPath(ic.resourcePath());
          call.setRequestUrl(
                request.getRequestURL() + (request.getQueryString() == null ? "" : "?" + request.getQueryString()));
+         call.setQueryString(request.getQueryString());
          call.setRequestHeaders(headersOf(request));
          call.setRequestBody(body);
          call.setResponseStatus(response.status().value());

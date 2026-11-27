@@ -1435,8 +1435,9 @@ paths:
                 type: string
               example: "Unknown workflow: cancelSaga"
           description: "The session is refused and none is created. The body tells\
-            \ why: the workflow is unknown, or one of its steps calls no operation\
-            \ of a linked API"
+            \ why: the workflow is unknown, one of its steps calls no operation of\
+            \ a linked API, or an input given is unknown, of another type than the\
+            \ workflow declares, or an input the workflow needs is missing"
         "404":
           description: No Arazzo document has this identifier, or this title and
             version
@@ -1488,7 +1489,9 @@ paths:
                 $ref: '#/components/schemas/WorkflowResult'
           description: "The verification, a WorkflowResult whose origin is SESSION:\
             \ the result of the steps of the workflow, each with the call it was\
-            \ matched to. It is kept in the runs history of the Arazzo document."
+            \ matched to. It is kept in the runs history of the Arazzo document.\
+            \ A session that reached its maximum of calls fails, its message telling\
+            \ how many calls it did not record."
         "404":
           description: No ArazzoSession has this identifier
       security:
@@ -2825,6 +2828,13 @@ components:
         workflowId:
           description: Identifier of the workflow in the Arazzo document
           type: string
+        inputs:
+          description: The inputs of the workflow, by name. When given, they are
+            checked against the inputs of the workflow, and the values the calls
+            send from $inputs expressions must be theirs; when absent, no value
+            coming from the inputs is checked
+          type: object
+          additionalProperties: {}
     ArazzoSession:
       description: A verification session on a workflow of an Arazzo document. The
         mocks record the calls naming it, in their order of receipt.
@@ -2867,6 +2877,16 @@ components:
           format: int64
           description: How many calls the session recorded
           type: integer
+        droppedCallCount:
+          format: int64
+          description: How many calls the session did not record, as it had recorded
+            its maximum of calls
+          type: integer
+        inputs:
+          description: The inputs of the workflow the session was opened with, by
+            name; absent when it was opened without
+          type: object
+          additionalProperties: {}
     WorkflowSessionCall:
       description: A call the mocks recorded in a verification session
       required:
