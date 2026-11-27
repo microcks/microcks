@@ -50,7 +50,12 @@ public final class ArazzoWorkflowReader {
       return Optional.empty();
    }
 
-   private static ArazzoWorkflow workflow(JsonNode workflow, Map<String, String> sourceTypes) {
+   /**
+    * @param workflow    A workflow of an Arazzo document, parsed from YAML or JSON
+    * @param sourceTypes The type of each source description of the document, by name
+    * @return The workflow, also read by {@link ArazzoSubset} to check the order of its steps
+    */
+   static ArazzoWorkflow workflow(JsonNode workflow, Map<String, String> sourceTypes) {
       List<ArazzoStep> steps = new ArrayList<>();
       for (JsonNode step : workflow.path("steps")) {
          steps.add(step(step, sourceTypes));
@@ -82,7 +87,8 @@ public final class ArazzoWorkflowReader {
       return new ArazzoStep(step.path("stepId").asText(), optionalText(step, "description"), call, parameters,
             requestBody(step.path("requestBody")), criteria(step.path("successCriteria")),
             expressions(step.path("outputs")), actions(step.path("onSuccess")), actions(step.path("onFailure")),
-            messaging(step, sourceTypes.get(call.sourceName())));
+            messaging(step, sourceTypes.get(call.sourceName())),
+            step.has("dependsOn") ? texts(step.path("dependsOn")) : null);
    }
 
    /** A step of an AsyncAPI source tells what it sends or receives; a step calling an HTTP operation does not. */

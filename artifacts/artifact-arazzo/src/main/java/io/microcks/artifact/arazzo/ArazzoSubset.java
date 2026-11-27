@@ -41,7 +41,9 @@ final class ArazzoSubset {
 
    private static final String OPENAPI = "openapi";
    private static final Set<String> SOURCE_TYPES = Set.of(OPENAPI, ASYNCAPI);
-   private static final List<String> UNSUPPORTED_STEP_FIELDS = List.of("workflowId", "operationPath", "dependsOn");
+   private static final List<String> UNSUPPORTED_STEP_FIELDS = List.of("workflowId", "operationPath");
+   /** The field of a step naming the steps it depends on, since Arazzo 1.1. */
+   private static final String DEPENDS_ON = "dependsOn";
    /** The fields of a step that only apply to a step of an AsyncAPI source. */
    private static final List<String> ASYNC_STEP_FIELDS = List.of("channelPath", "action", "correlationId");
    private static final Set<String> MESSAGING_ACTIONS = Set.of(ArazzoMessaging.SEND, ArazzoMessaging.RECEIVE);
@@ -74,7 +76,7 @@ final class ArazzoSubset {
       }
       Map<String, String> sourceTypes = sourceTypes(document);
       for (JsonNode workflow : document.path("workflows")) {
-         checkWorkflow(workflow, sourceTypes);
+         checkWorkflow(workflow, sourceTypes, arazzoVersion);
       }
    }
 
@@ -112,20 +114,31 @@ final class ArazzoSubset {
       }
    }
 
-   private static void checkWorkflow(JsonNode workflow, Map<String, String> sourceTypes)
+   /**
+    * The order of the steps is only checked when a step declares dependsOn: a workflow without is read as before.
+    */
+   private static void checkWorkflow(JsonNode workflow, Map<String, String> sourceTypes, String arazzoVersion)
          throws UnsupportedArazzoDocumentException {
       rejectFields(workflow, UNSUPPORTED_WORKFLOW_FIELDS, "workflow");
       for (JsonNode parameter : workflow.path("parameters")) {
          checkParameter(parameter);
       }
+      boolean dependencies = false;
       for (JsonNode step : workflow.path("steps")) {
-         checkStep(step, sourceTypes);
+         checkStep(step, sourceTypes, arazzoVersion);
+         dependencies |= step.has(DEPENDS_ON);
+      }
+      if (dependencies) {
+         ArazzoStepOrder.check(ArazzoWorkflowReader.workflow(workflow, sourceTypes));
       }
    }
 
-   private static void checkStep(JsonNode step, Map<String, String> sourceTypes)
+   private static void checkStep(JsonNode step, Map<String, String> sourceTypes, String arazzoVersion)
          throws UnsupportedArazzoDocumentException {
       rejectFields(step, UNSUPPORTED_STEP_FIELDS, "step");
+      if (step.has(DEPENDS_ON)) {
+         checkDependsOn(step.path(DEPENDS_ON), step.path("stepId").asText(), arazzoVersion);
+      }
       for (JsonNode parameter : step.path("parameters")) {
          checkParameter(parameter);
       }
@@ -159,6 +172,25 @@ final class ArazzoSubset {
          checkAsyncStep(step, stepId);
       } else {
          checkHttpStep(step, stepId);
+      }
+   }
+
+   /**
+    * Arazzo 1.1 lets a step name, in a list, the ids of the steps it depends on; Arazzo 1.0 does not define it. What
+    * the steps it names must be is checked with the whole workflow, by {@link ArazzoStepOrder}.
+    */
+   private static void checkDependsOn(JsonNode dependsOn, String stepId, String arazzoVersion)
+         throws UnsupportedArazzoDocumentException {
+      if (arazzoVersion.startsWith("1.0.")) {
+         throw new UnsupportedArazzoDocumentException(
+               INVALID + "a step dependsOn needs Arazzo 1.1, not " + arazzoVersion + ": " + stepId);
+      }
+      boolean stepIds = dependsOn.isArray();
+      for (JsonNode dependency : dependsOn) {
+         stepIds &= dependency.isTextual();
+      }
+      if (!stepIds) {
+         throw new UnsupportedArazzoDocumentException(INVALID + "a step dependsOn is a list of step ids: " + stepId);
       }
    }
 

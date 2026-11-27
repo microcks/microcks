@@ -128,6 +128,21 @@ class WorkflowRunnerTest {
             reporter.step("reprice").operation());
    }
 
+   /**
+    * S30, AC-04: steps declaring the steps they depend on (dependsOn, Arazzo 1.1) are played in the order of the list,
+    * which satisfies their dependsOn, and the run passes.
+    */
+   @Test
+   void stepsDeclaringDependsOnArePlayedInTheOrderOfTheListAndPass() throws IOException {
+      runner.run(RunFixtures.runOf("depends-on", "tasteThenReprice", Map.of()), reporter);
+
+      assertEquals(
+            List.of("0 readMenu PASSED 200 {}", "1 tasteEclair PASSED 200 {name=Eclair Cafe}",
+                  "2 tasteAgain PASSED 200 {}", "3 readMenuAgain PASSED 200 {}", "4 reprice PASSED 200 {price=2.6}"),
+            reporter.steps().stream().map(WorkflowRunnerTest::describe).toList());
+      assertEquals(RunStatus.SUCCESS, reporter.outcome().status());
+   }
+
    @Test
    void aStepAfterTheFailingOneKeepsItsSlotAsNotRun() throws IOException {
       runner.run(RunFixtures.runOf("not-run-after-failure", "listReadFirstThenReprice", Map.of()), reporter);

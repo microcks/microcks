@@ -168,14 +168,13 @@ class ArazzoDocumentReaderTest {
     * calls one operation per step, by operationId. Success and failure actions are no longer refused here since S17:
     * see {@link #aStepActionOutsideTheSupportedSubsetIsRefusedWithItsReason(String, String)}.
     * <p>
-    * Temporary refusal since S28: the dependsOn of a step, that Arazzo 1.1 adds to wait for an earlier step, mostly an
-    * asynchronous one; and the timeout of an HTTP step, as the runner gives every HTTP step the timeout of the run. The
-    * timeout of an AsyncAPI step is read: see
-    * {@link #aDocumentWithAsyncApiSourcesIsReadWithWhatItsStepsCall(String, String)}.
+    * Temporary refusal since S28: the timeout of an HTTP step, as the runner gives every HTTP step the timeout of the
+    * run. The timeout of an AsyncAPI step is read: see
+    * {@link #aDocumentWithAsyncApiSourcesIsReadWithWhatItsStepsCall(String, String)}. The dependsOn of a step is read
+    * since S30: see {@link ArazzoStepOrderTest}.
     */
    @ParameterizedTest
-   @CsvSource({ "operation-path, operationPath", "nested-workflow, workflowId", "depends-on, dependsOn",
-         "http-timeout, timeout" })
+   @CsvSource({ "operation-path, operationPath", "nested-workflow, workflowId", "http-timeout, timeout" })
    void aStepFieldOutsideTheSupportedSubsetIsRefusedWithItsReason(String example, String field) throws IOException {
       assertRefused(example("step-fields", example), "Unsupported step field: " + field);
    }
@@ -183,6 +182,7 @@ class ArazzoDocumentReaderTest {
    /**
     * Temporary refusal: dependsOn and the default success and failure actions of a workflow are listed under "Later" in
     * the Arazzo epic. The runner plays one workflow at a time, and only applies the actions each step declares (S17).
+    * The dependsOn of a step only names steps of its own workflow (S30).
     */
    @ParameterizedTest
    @CsvSource({ "depends-on, dependsOn", "success-actions, successActions", "failure-actions, failureActions" })

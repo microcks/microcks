@@ -31,10 +31,15 @@ import java.util.Map;
  * @param onFailure       What the step does when it fails, in the order of the document; empty to end the workflow
  * @param messaging       What the step tells of the messages it sends or receives, for a step of an AsyncAPI source;
  *                        null for a step calling an HTTP operation
+ * @param dependsOn       The steps the step declares it depends on, in the order of the document; empty when it
+ *                        declares none
+ * @param prerequisites   The steps the step must come after, in the order of the workflow: those it depends on and
+ *                        those whose outputs it uses, or all the steps listed before it when it declares no dependsOn
  * @author SebastienDegodez
  */
 public record ArazzoStepDetail(String stepId, String description, ArazzoStepOperation operation,
       List<ArazzoStepParameter> parameters, ArazzoStepRequestBody requestBody,
       List<ArazzoStepCriterion> successCriteria, Map<String, String> outputs, List<ArazzoStepAction> onSuccess,
-      List<ArazzoStepAction> onFailure, ArazzoStepMessaging messaging) {
+      List<ArazzoStepAction> onFailure, ArazzoStepMessaging messaging, List<String> dependsOn,
+      List<String> prerequisites) {
 }

@@ -1,0 +1,414 @@
+# The order of the steps of a workflow: the steps a step must come after. One YAML document per example.
+# example: parallel - three steps only need checkAccount, as the story tells, and synthesis needs all the others
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+        outputs:
+          siren: $response.body#/siren
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - checkAccount
+      - stepId: bodacc
+        operationId: getBodacc
+        dependsOn:
+          - checkAccount
+      - stepId: financials
+        operationId: getFinancials
+        dependsOn:
+          - checkAccount
+      - stepId: synthesis
+        operationId: postSynthesis
+---
+# example: implicit - financials names sirene, and uses the outputs of checkAccount without naming it
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+        outputs:
+          siren: $response.body#/siren
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - checkAccount
+        outputs:
+          name: $response.body#/name
+      - stepId: bodacc
+        operationId: getBodacc
+        dependsOn:
+          - checkAccount
+      - stepId: financials
+        operationId: getFinancials
+        dependsOn:
+          - sirene
+        parameters:
+          - name: siren
+            in: path
+            value: $steps.checkAccount.outputs.siren
+        outputs:
+          own: $steps.financials.outputs.ratio
+          ratio: $response.body#/ratio
+---
+# example: every-place - each step uses the outputs of another one in a different place of a step
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+        outputs:
+          siren: $response.body#/siren
+      - stepId: inPayload
+        operationId: postSynthesis
+        dependsOn: []
+        requestBody:
+          payload: '{"siren": "{$steps.checkAccount.outputs.siren}"}'
+      - stepId: inReplacement
+        operationId: postSynthesis
+        dependsOn: []
+        requestBody:
+          payload:
+            siren: ''
+          replacements:
+            - target: /siren
+              value: $steps.checkAccount.outputs.siren
+      - stepId: inCriterion
+        operationId: getSirene
+        dependsOn: []
+        successCriteria:
+          - condition: $response.body#/siren == $steps.checkAccount.outputs.siren
+      - stepId: inContext
+        operationId: getSirene
+        dependsOn: []
+        successCriteria:
+          - context: $steps.checkAccount.outputs.siren
+            condition: ^[0-9]+$
+            type: regex
+      - stepId: inActionCriterion
+        operationId: getSirene
+        dependsOn: []
+        onFailure:
+          - name: giveUp
+            type: end
+            criteria:
+              - condition: $steps.checkAccount.outputs.siren == ''
+      - stepId: inOutput
+        operationId: getSirene
+        dependsOn: []
+        outputs:
+          siren: $steps.checkAccount.outputs.siren
+      - stepId: alone
+        operationId: getSirene
+        dependsOn: []
+        parameters:
+          - name: siren
+            in: path
+            value: '123456789'
+---
+# example: in-correlation-id - a receive step uses the outputs of an earlier step as its correlationId
+arazzo: 1.1.0
+info:
+  title: Company events
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+  - name: companyEvents
+    url: ./company-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: checkAccount
+        operationId: $sourceDescriptions.companyApi.getAccount
+        outputs:
+          siren: $response.body#/siren
+      - stepId: register
+        operationId: $sourceDescriptions.companyApi.postSynthesis
+      - stepId: registered
+        operationId: $sourceDescriptions.companyEvents.receiveRegistered
+        action: receive
+        correlationId: $steps.checkAccount.outputs.siren
+        dependsOn: []
+---
+# example: sequential - an Arazzo 1.0.1 workflow without dependsOn: each step comes after all the previous ones
+arazzo: 1.0.1
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+      - stepId: sirene
+        operationId: getSirene
+      - stepId: synthesis
+        operationId: postSynthesis
+---
+# example: forward-use-without-depends-on - without dependsOn, a step using the outputs of a later one is read as before
+arazzo: 1.0.1
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+        parameters:
+          - name: siren
+            in: path
+            value: $steps.sirene.outputs.siren
+      - stepId: sirene
+        operationId: getSirene
+        outputs:
+          siren: $response.body#/siren
+---
+# example: unknown-step - sirene depends on a step its workflow does not have
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - checkAcount
+---
+# example: itself - sirene depends on itself
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - checkAccount
+          - sirene
+---
+# example: cycle - checkAccount and bodacc depend on each other through sirene; first and synthesis are out of the cycle
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: first
+        operationId: getAccount
+      - stepId: checkAccount
+        operationId: getAccount
+        dependsOn:
+          - first
+          - bodacc
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - checkAccount
+      - stepId: bodacc
+        operationId: getBodacc
+        dependsOn:
+          - sirene
+      - stepId: synthesis
+        operationId: postSynthesis
+---
+# example: cycle-through-a-step-without-depends-on - checkAccount depends on sirene, which comes after all the steps listed before it
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+        dependsOn:
+          - sirene
+      - stepId: sirene
+        operationId: getSirene
+---
+# example: later - checkAccount depends on sirene, listed after it, that needs nothing
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: bodacc
+        operationId: getBodacc
+      - stepId: checkAccount
+        operationId: getAccount
+        dependsOn:
+          - bodacc
+          - sirene
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn: []
+---
+# example: implicit-later - checkAccount names no step, but uses the outputs of sirene, listed after it
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+        dependsOn: []
+        parameters:
+          - name: siren
+            in: path
+            value: $steps.sirene.outputs.siren
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn: []
+        outputs:
+          siren: $response.body#/siren
+---
+# example: arazzo-1-0 - an Arazzo 1.0.1 step declares dependsOn, that only Arazzo 1.1 defines
+arazzo: 1.0.1
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - checkAccount
+---
+# example: other-workflow - sirene depends on a step of another workflow of the document
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: openAccount
+    steps:
+      - stepId: createAccount
+        operationId: getAccount
+  - workflowId: checkCompany
+    steps:
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - $workflows.openAccount.steps.createAccount
+---
+# example: other-document - sirene depends on a step of a workflow of another Arazzo document
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - $sourceDescriptions.accounts.openAccount.steps.createAccount
+---
+# example: not-a-list - sirene names the step it depends on without a list
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn: checkAccount
+---
+# example: not-a-step-id - sirene names the step it depends on with a number
+arazzo: 1.1.0
+info:
+  title: Company check
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+workflows:
+  - workflowId: checkCompany
+    steps:
+      - stepId: checkAccount
+        operationId: getAccount
+      - stepId: sirene
+        operationId: getSirene
+        dependsOn:
+          - 1

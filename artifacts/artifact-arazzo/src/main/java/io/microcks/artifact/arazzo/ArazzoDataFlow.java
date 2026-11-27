@@ -104,24 +104,47 @@ public final class ArazzoDataFlow {
     */
    private static List<String> expressions(ArazzoWorkflow workflow) {
       List<String> expressions = new ArrayList<>();
-      for (ArazzoStep step : workflow.steps()) {
-         step.parameters().forEach(parameter -> expressions.add(parameter.value()));
-         if (step.requestBody() != null) {
-            expressions.add(step.requestBody().payload());
-            expressions.addAll(step.requestBody().replacements().values());
-         }
-         for (ArazzoCriterion criterion : criteriaOf(step)) {
-            expressions.add(criterion.condition());
-            if (criterion.context() != null) {
-               expressions.add(criterion.context());
-            }
-         }
-         expressions.addAll(step.outputs().values());
-         if (step.messaging() != null && step.messaging().correlationId() != null) {
-            expressions.add(step.messaging().correlationId());
+      workflow.steps().forEach(step -> expressions.addAll(expressionsOf(step)));
+      expressions.addAll(workflow.outputs().values());
+      return expressions;
+   }
+
+   /**
+    * @param step A step of an Arazzo workflow
+    * @return The ids of the steps whose outputs the step uses, anywhere it may use runtime expressions; each once
+    */
+   static Set<String> usedStepOutputs(ArazzoStep step) {
+      Set<String> stepIds = new LinkedHashSet<>();
+      for (String expression : expressionsOf(step)) {
+         Matcher matcher = STEP_OUTPUT.matcher(expression);
+         while (matcher.find()) {
+            stepIds.add(matcher.group(1));
          }
       }
-      expressions.addAll(workflow.outputs().values());
+      return stepIds;
+   }
+
+   /**
+    * The values of a step that may hold runtime expressions, in the order of the document: its parameters, request body
+    * payload and replacements, criteria (its success criteria and those of its actions), outputs and correlation id.
+    */
+   private static List<String> expressionsOf(ArazzoStep step) {
+      List<String> expressions = new ArrayList<>();
+      step.parameters().forEach(parameter -> expressions.add(parameter.value()));
+      if (step.requestBody() != null) {
+         expressions.add(step.requestBody().payload());
+         expressions.addAll(step.requestBody().replacements().values());
+      }
+      for (ArazzoCriterion criterion : criteriaOf(step)) {
+         expressions.add(criterion.condition());
+         if (criterion.context() != null) {
+            expressions.add(criterion.context());
+         }
+      }
+      expressions.addAll(step.outputs().values());
+      if (step.messaging() != null && step.messaging().correlationId() != null) {
+         expressions.add(step.messaging().correlationId());
+      }
       return expressions;
    }
 
