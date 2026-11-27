@@ -212,6 +212,11 @@ Port of the Arazzo POC of `feature/arazzo` (1.x, Spring Boot + Angular), story b
 untouched as the 1.x reference. The Angular screens are not ported: the SvelteKit Workflows screens (Deep Ink) are
 wired to the API instead.
 
+Web UI: the features not ported yet on imported documents (AI Copilot generation, document edit, Mock URL S27,
+Sessions S15) are disabled, not hidden, through `lib/workflows/availability.ts` (`isAvailable(feature, document)`;
+flip `PORTED[feature]` when the story lands). The demo data keeps them. Schema validation is off by default for real
+runs, and a failed step whose criteria were not evaluated says so.
+
 In 2.0 the Arazzo code of the app sits in its own subpackages, tests included: `io.microcks.domain.arazzo`,
 `io.microcks.repository.arazzo`, `io.microcks.service.arazzo`, `io.microcks.web.arazzo` and `io.microcks.web.arazzo.dto`
 (1.x keeps them flat in `domain`, `repository`, `service`, `web`). The move is a pure-rename commit, so
