@@ -76,23 +76,35 @@ public class ArazzoSessionRecorder {
     */
    public void recordRest(MockInvocationContext ic, HttpServletRequest request, String body, ResponseResult response) {
       MockControllerCommons.getArazzoSessionId(request).ifPresent(sessionId -> {
-         ArazzoSessionCall call = new ArazzoSessionCall();
-         call.setServiceName(ic.service().getName());
-         call.setServiceVersion(ic.service().getVersion());
-         call.setOperationName(ic.operation().getName());
-         call.setMethod(request.getMethod());
-         call.setPath(ic.resourcePath());
-         call.setRequestUrl(
-               request.getRequestURL() + (request.getQueryString() == null ? "" : "?" + request.getQueryString()));
-         call.setQueryString(request.getQueryString());
-         call.setRequestHeaders(headersOf(request));
-         call.setRequestBody(body);
+         ArazzoSessionCall call = receivedCall(ic, request, body);
          call.setResponseStatus(response.status().value());
          call.setResponseHeaders(headersOf(response.headers()));
          call.setResponseBody(
                response.content() == null ? null : new String(response.content(), StandardCharsets.UTF_8));
          arazzoSessionService.recordCall(sessionId, call);
       });
+   }
+
+   /**
+    * A REST mock invocation, as the mocks received it, before they answer it.
+    * @param ic      The service, operation and resource path the invocation was dispatched to
+    * @param request The request of the invocation
+    * @param body    The body of the request; null when it has none
+    * @return The call, without response
+    */
+   static ArazzoSessionCall receivedCall(MockInvocationContext ic, HttpServletRequest request, String body) {
+      ArazzoSessionCall call = new ArazzoSessionCall();
+      call.setServiceName(ic.service().getName());
+      call.setServiceVersion(ic.service().getVersion());
+      call.setOperationName(ic.operation().getName());
+      call.setMethod(request.getMethod());
+      call.setPath(ic.resourcePath());
+      call.setRequestUrl(
+            request.getRequestURL() + (request.getQueryString() == null ? "" : "?" + request.getQueryString()));
+      call.setQueryString(request.getQueryString());
+      call.setRequestHeaders(headersOf(request));
+      call.setRequestBody(body);
+      return call;
    }
 
    /**

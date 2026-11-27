@@ -202,7 +202,7 @@ final class ArazzoSessionVerifier {
       return values;
    }
 
-   private static ArazzoReceivedRequest requestOf(ExpectedStep step, ArazzoSessionCall call) {
+   static ArazzoReceivedRequest requestOf(ExpectedStep step, ArazzoSessionCall call) {
       return new ArazzoReceivedRequest(step.operation().path(), call.getPath(), call.getQueryString(),
             headersOf(call.getRequestHeaders()), call.getRequestBody());
    }
@@ -217,8 +217,8 @@ final class ArazzoSessionVerifier {
     * What the runtime expressions of a step see in a session: the inputs it was opened with, the outputs of the steps
     * before it and, once the mocks answered, the response to its call.
     */
-   private record ReceivedCall(Map<String, Object> inputs, Map<String, Map<String, Object>> steps,
-         ArazzoSessionCall call) implements ArazzoExpressionContext {
+   record ReceivedCall(Map<String, Object> inputs, Map<String, Map<String, Object>> steps, ArazzoSessionCall call)
+         implements ArazzoExpressionContext {
 
       @Override
       public int statusCode(String expression) {
@@ -280,7 +280,7 @@ final class ArazzoSessionVerifier {
    }
 
    /** Microcks names an operation of an OpenAPI contract by its method and path template. */
-   private static boolean calls(ArazzoSessionCall call, ExpectedStep step) {
+   static boolean calls(ArazzoSessionCall call, ExpectedStep step) {
       return step.apiName().equals(call.getServiceName()) && step.apiVersion().equals(call.getServiceVersion())
             && (step.operation().method() + " " + step.operation().path()).equals(call.getOperationName());
    }

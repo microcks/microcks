@@ -22,7 +22,6 @@ import io.microcks.domain.arazzo.ArazzoSessionCall;
 import io.microcks.service.arazzo.ArazzoSessionService;
 import io.microcks.util.http.HttpHeaders;
 import io.microcks.util.http.HttpStatusCode;
-import io.microcks.web.BasicHttpServletRequest;
 import io.microcks.web.GrpcResponseResult;
 import io.microcks.web.MockInvocationContext;
 import io.microcks.web.ResponseResult;
@@ -35,11 +34,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -57,14 +53,16 @@ import static org.mockito.Mockito.verify;
  */
 class ArazzoSessionRecorderTest {
 
+   private static final String ORDERS = "/rest/Order+API/1.0.0/orders";
+
    private final ArazzoSessionService arazzoSessionService = mock(ArazzoSessionService.class);
    private final ArazzoSessionRecorder recorder = new ArazzoSessionRecorder(arazzoSessionService);
 
    @Test
    void aRestInvocationNamingASessionIsRecordedAsReceivedAndAnswered() {
-      OrderRequest request = new OrderRequest("dryRun=false");
-      request.addHeader("x-microcks-session", "s-1");
-      request.addHeader("Accept", "application/json");
+      PostedRequest request = new PostedRequest(ORDERS, "dryRun=false");
+      request.withHeader("x-microcks-session", "s-1");
+      request.withHeader("Accept", "application/json");
       HttpHeaders responseHeaders = new HttpHeaders();
       responseHeaders.add("Content-Type", "application/json");
 
@@ -87,8 +85,8 @@ class ArazzoSessionRecorderTest {
 
    @Test
    void aRestInvocationWithoutQueryNorResponseContentIsRecordedWithoutThem() {
-      OrderRequest request = new OrderRequest(null);
-      request.addHeader("x-microcks-session", "s-1");
+      PostedRequest request = new PostedRequest(ORDERS, null);
+      request.withHeader("x-microcks-session", "s-1");
 
       recorder.recordRest(placeOrder(), request, null, new ResponseResult(new HttpStatusCode(204), null, null));
 
@@ -101,9 +99,9 @@ class ArazzoSessionRecorderTest {
 
    @Test
    void aRestInvocationNamingASessionInItsBaggageIsRecorded() {
-      OrderRequest request = new OrderRequest(null);
-      request.addHeader("baggage", "tenant=bakery");
-      request.addHeader("baggage", "microcks-session=s-2");
+      PostedRequest request = new PostedRequest(ORDERS, null);
+      request.withHeader("baggage", "tenant=bakery");
+      request.withHeader("baggage", "microcks-session=s-2");
 
       recorder.recordRest(placeOrder(), request, null, new ResponseResult(new HttpStatusCode(201), null, null));
 
@@ -148,33 +146,6 @@ class ArazzoSessionRecorderTest {
       verify(arazzoSessionService, never()).recordCall(anyString(), any());
    }
 
-   /** A POST of an order, as a servlet container sees it: its URL holds no query string. */
-   private static final class OrderRequest extends BasicHttpServletRequest {
-
-      private static final String URL = "http://localhost";
-      private static final String PATH = "/rest/Order+API/1.0.0/orders";
-
-      private final Map<String, List<String>> requestHeaders;
-
-      OrderRequest(String queryString) {
-         this(queryString, new TreeMap<>(String.CASE_INSENSITIVE_ORDER));
-      }
-
-      private OrderRequest(String queryString, Map<String, List<String>> headers) {
-         super(URL, "POST", PATH, queryString, Map.of(), headers);
-         this.requestHeaders = headers;
-      }
-
-      void addHeader(String name, String value) {
-         requestHeaders.computeIfAbsent(name, key -> new ArrayList<>()).add(value);
-      }
-
-      @Override
-      public StringBuffer getRequestURL() {
-         return new StringBuffer(URL + PATH);
-      }
-   }
-
    private static MockInvocationContext reserveStockOverGrpc() {
       Service service = new Service();
       service.setName("Stock Service");
@@ -187,9 +158,9 @@ class ArazzoSessionRecorderTest {
    @ParameterizedTest
    @CsvSource(nullValues = "null", value = { "null", "''", "'  '" })
    void aRestInvocationNamingNoSessionIsNotRecorded(String sessionId) {
-      OrderRequest request = new OrderRequest(null);
+      PostedRequest request = new PostedRequest(ORDERS, null);
       if (sessionId != null) {
-         request.addHeader("x-microcks-session", sessionId);
+         request.withHeader("x-microcks-session", sessionId);
       }
 
       recorder.recordRest(placeOrder(), request, null, new ResponseResult(new HttpStatusCode(201), null, null));

@@ -22,7 +22,9 @@ import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceStateRepository;
 import io.microcks.service.OpenTelemetryResolverService;
 import io.microcks.service.ProxyService;
+import io.microcks.service.arazzo.ArazzoSessionAnswerService;
 import io.microcks.util.DispatchStyles;
+import io.microcks.web.arazzo.ArazzoSessionResponder;
 
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.servlet.http.HttpServletRequest;
@@ -70,8 +72,10 @@ class RestInvocationProcessorTest {
       OpenTelemetryResolverService otelResolver = mock(OpenTelemetryResolverService.class);
       OpenTelemetry openTelemetry = OpenTelemetry.noop();
       when(otelResolver.getOpenTelemetry()).thenReturn(openTelemetry);
+      // Outside an Arazzo verification session, the mocks keep the response they dispatched.
+      ArazzoSessionResponder sessionResponder = new ArazzoSessionResponder(mock(ArazzoSessionAnswerService.class));
       processor = new RestInvocationProcessor(stateRepo, responseRepo, mock(Event.class), mock(Event.class),
-            mock(Event.class), proxyService, otelResolver);
+            mock(Event.class), proxyService, otelResolver, sessionResponder);
       processor.enableBinaryResponseDecode = true;
    }
 
