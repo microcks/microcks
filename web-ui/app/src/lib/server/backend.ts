@@ -566,7 +566,7 @@ export interface BackendArazzoWorkflowDetail {
   workflowId: string;
   summary?: string | null;
   description?: string | null;
-  inputs: { name: string; usedBy: { stepId: string; place: string; target: string }[] }[];
+  inputs: { name: string; usedBy: { stepId: string; place: string; target: string }[]; type?: string | null; required?: boolean }[];
   steps: BackendArazzoStep[];
   outputs: Record<string, string>;
   dataPassings: { fromStepId: string; outputName: string; to: { stepId: string; place: string; target: string } }[];
@@ -596,4 +596,78 @@ export async function fetchArazzoSource(docId: string, token?: string): Promise<
     if (e instanceof BackendError && e.status === 404) return undefined;
     throw e;
   }
+}
+
+/* ---- Arazzo runs (`/api/arazzo`, ported from feature/arazzo S5–S11) ---- */
+
+export interface BackendWorkflowRunSummary {
+  id: string;
+  number: number;
+  workflowId: string;
+  target: 'MOCKS' | 'IMPLEMENTATIONS';
+  status: 'IN_PROGRESS' | 'SUCCESS' | 'FAILURE';
+  failedStepId?: string | null;
+  startedDate?: number | string;
+  elapsedTime: number;
+}
+
+export interface BackendWorkflowStepResult {
+  index: number;
+  stepId: string;
+  operation?: { sourceName: string; operationId: string; method?: string | null; path?: string | null } | null;
+  status: string;
+  statusCode?: number | null;
+  elapsedTime: number;
+  criteria?: { condition: string; values?: { expression: string; value: unknown }[]; held: boolean }[] | null;
+  outputs?: Record<string, unknown> | null;
+  testCaseId?: string | null;
+  message?: string | null;
+  requestUrl?: string | null;
+  parameters?: { name: string; in: string; value: unknown; expression?: string | null }[] | null;
+}
+
+export interface BackendWorkflowResult {
+  id: string;
+  documentId: string;
+  workflowId: string;
+  target: 'MOCKS' | 'IMPLEMENTATIONS';
+  sources?: { sourceName: string; serviceId?: string | null; baseUrl?: string | null }[];
+  inputs?: Record<string, unknown> | null;
+  outputs?: Record<string, unknown> | null;
+  status: 'IN_PROGRESS' | 'SUCCESS' | 'FAILURE';
+  startedDate?: number | string;
+  elapsedTime: number;
+  timeout?: number | null;
+  secretRef?: { secretId?: string; name?: string } | null;
+  steps?: BackendWorkflowStepResult[];
+  message?: string | null;
+  number?: number | null;
+}
+
+export interface BackendArazzoRunLaunch {
+  inputs: Record<string, unknown>;
+  timeout?: number;
+  implementations?: Record<string, string>;
+  secretName?: string;
+}
+
+export async function launchArazzoRun(docId: string, workflowId: string, launch: BackendArazzoRunLaunch, token?: string): Promise<BackendWorkflowResult> {
+  const path = `/api/arazzo/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/runs`;
+  const res = await call(path, token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(launch) });
+  return (await res.json()) as BackendWorkflowResult;
+}
+
+export async function fetchArazzoRun(runId: string, token?: string): Promise<BackendWorkflowResult | undefined> {
+  try {
+    const res = await call(`/api/arazzo/runs/${encodeURIComponent(runId)}`, token, { headers: { accept: 'application/json' } });
+    return (await res.json()) as BackendWorkflowResult;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+export async function fetchArazzoRuns(docId: string, size: number, token?: string): Promise<BackendWorkflowRunSummary[]> {
+  const res = await call(`/api/arazzo/documents/${encodeURIComponent(docId)}/runs?page=0&size=${size}`, token, { headers: { accept: 'application/json' } });
+  return (await res.json()) as BackendWorkflowRunSummary[];
 }

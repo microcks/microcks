@@ -160,7 +160,7 @@
     <RunBadges workflowId={workflow.workflowId} {documentLabel} href={workflowTo}>
       {#snippet chip()}<ApiBadge label="status" value="not started" icon="circle" />{/snippet}
     </RunBadges>
-    <DemoFlag />
+    {#if setup.demo !== false}<DemoFlag />{/if}
   {/snippet}
   <RunMeta
     class="wfr-run-meta"
@@ -169,7 +169,7 @@
       { term: 'Run against', value: targetLabel },
       { term: 'Started', value: 'not yet' },
       { term: 'Elapsed', value: '—' },
-      { term: 'Launched by', value: 'MA' }
+      ...(setup.demo === false ? [] : [{ term: 'Launched by', value: 'MA' }])
     ]}
   />
 </PageHeader>

@@ -244,6 +244,10 @@ the placeholder is used only when the backend is unreachable (then flagged "demo
 Arazzo documents and ArazzoSources overlays and imports them once (upload or URL). Linking a source in the dialog
 imports an ArazzoSources overlay holding the current links plus the new one. Editing a real workflow from the Loom is
 refused (Microcks keeps the document as imported).
+Runs of imported workflows go through `/api/arazzo` (launch, run, history) and are executed by the Arazzo minion; the run
+page reads the step exchanges from `/api/tests/{runId}/messages/{testCaseId}` and polls while the run is in progress.
+Runs of the placeholder documents stay simulated. Not covered yet by the backend: schema validation (S9), recorded
+examples (S16/S20), retries and early ends (S17/S21), mixed targets (proposal).
 
 | Story | Status |
 |---|---|

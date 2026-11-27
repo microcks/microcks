@@ -225,10 +225,14 @@ export interface RunSetupPayload {
   defaults: RunFormDefaults;
   /** Real services of the store, by source description name. */
   services: Record<string, LinkedService>;
+  /** False for a workflow of an imported document (Microcks API); placeholder data otherwise. */
+  demo?: boolean;
 }
 
 /** GET /api/runs/workflow-runs/:id */
 export interface WorkflowRunPayload {
+  /** False for a run executed by Microcks (Arazzo minion); simulated run of placeholder data otherwise. */
+  demo?: boolean;
   run: WorkflowRun;
   document?: ArazzoDocument;
   workflow?: Workflow;

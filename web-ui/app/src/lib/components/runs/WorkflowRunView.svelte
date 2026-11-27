@@ -153,7 +153,7 @@
         {/if}
       {/snippet}
     </RunBadges>
-    <DemoFlag />
+    {#if payload.demo !== false}<DemoFlag />{/if}
   {/snippet}
   {#snippet actions()}
     {#if running}
@@ -171,7 +171,7 @@
       { term: 'Run against', value: targetLine(run) },
       { term: 'Started', value: formatRelative(run.startedAt), detail: formatClock(run.startedAt) },
       { term: running ? 'Elapsed' : 'Duration', kind: 'mono' as const, value: formatDuration(totals.ms) },
-      { term: 'Launched by', value: launchedBy(run) }
+      ...(payload.demo === false ? [] : [{ term: 'Launched by', value: launchedBy(run) }])
     ]}
   />
 </PageHeader>

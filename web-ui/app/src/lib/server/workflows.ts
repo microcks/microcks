@@ -25,7 +25,8 @@ import {
   type BackendArazzoStep,
   type BackendArazzoWorkflowDetail
 } from './backend';
-import type { Criterion, StepParameter } from '#lib/workflows/types.js';
+import type { Criterion, StepParameter, WorkflowInput } from '#lib/workflows/types.js';
+import { realRunsOf } from './runs-arazzo';
 import { getService, listServices, refreshServices } from './store';
 
 /*
@@ -283,6 +284,8 @@ function toDocument(
   };
 }
 
+const INPUT_TYPES: WorkflowInput['type'][] = ['string', 'number', 'integer', 'boolean'];
+
 const IN: Record<string, StepParameter['in']> = { path: 'path', query: 'query', header: 'header' };
 
 function toCriterion(c: BackendArazzoStep['successCriteria'][number]): Criterion {
@@ -300,7 +303,7 @@ function toWorkflow(d: BackendArazzoWorkflowDetail, status: BackendArazzoDocumen
     documentId: d.documentId,
     summary: d.summary || status?.description || d.workflowId,
     description: d.description ?? undefined,
-    inputs: d.inputs.map((i) => ({ name: i.name, type: 'string' as const })),
+    inputs: d.inputs.map((i) => ({ name: i.name, type: INPUT_TYPES.includes(i.type as never) ? (i.type as WorkflowInput['type']) : 'string' })),
     steps: d.steps.map((st) => ({
       stepId: st.stepId,
       sourceName: st.operation.sourceName,
@@ -361,7 +364,7 @@ export async function listWorkflowsPayload(token?: string): Promise<WorkflowsPay
   await refreshServices(token);
   const fetched = await fetchReal(token);
   if (!fetched) return { ...listAll(), demo: true };
-  const runs = state.runs.filter((r) => real.documents.has(r.documentId));
+  const runs = await realRunsOf(fetched.documents.map((d) => d.id), fetched.workflows, token);
   return { ...fetched, runs, demo: false };
 }
 
@@ -377,7 +380,7 @@ export async function getWorkflowDetail(
       const document = real.documents.get(docId);
       const workflow = real.workflows.get(key(docId, workflowId));
       if (!document || !workflow) return undefined;
-      const runs = state.runs.filter((r) => r.documentId === docId && r.workflowId === workflowId).sort((a, b) => b.number - a.number);
+      const runs = (await realRunsOf([docId], [workflow], token)).filter((r) => r.workflowId === workflowId);
       return { document, workflow, runs, sessions: [], examples: [], demo: false };
     }
   }
