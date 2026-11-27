@@ -243,6 +243,13 @@ responses as contract tests do and a non-conformant response fails the step with
 `validateSchema` and `missingExample` (`WorkflowMissingExample`, set for a failed step of a run on the mocks when no
 example matches its dispatch values; `ArazzoMockCoherenceService` is CDI).
 
+S14/S19/S21: `ArazzoImportService` and `ArazzoSourceMatcher` are CDI; `JobService` imports Arazzo documents and
+overlays found by importers (`ImportJob.arazzoDocumentRef`); the v1 `SecurityConfiguration` matchers of
+`/api/arazzo/documents*` (MANAGER) are `AccessRule`s of `security.AuthenticationFilter`. `ArazzoRunLaunchDTO` is
+`(inputs, timeout, implementations, secretName, target, validateSchema, example)`. A run can name its document by id
+or `<title>:<version>`; `POST …/workflows/{wf}/examples/runs` plays every recorded example. `api/microcks-openapi-v1.16.yaml`
+comes from `feature/arazzo` (the API integration tests check the Arazzo endpoints against it).
+
 `ObjectIdRepository.save(entity)` was added (Spring Data `save` equivalent: `persistOrUpdate` then return the entity).
 S31, mixed runs: the launch takes the mockup's `target: {kind: "mixed", perSource: {<source>: "mock" | "implementation"}}`
 with `implementations` holding the base URL of each source sent to its implementation; a source `perSource` does not
@@ -281,7 +288,8 @@ and early ends (S17/S21).
 | S5 run on the mocks, S8 refuse missing inputs, S6 why a step failed, S11 runs history, S7 run on implementations | ported |
 | S31 mixed run (new in 2.0, "Proposed · beyond POC" in the mockup): some sources on their mocks, the others on their implementation | done |
 | S10 missing mock examples (coherence), S9 schema validation of step responses | ported |
-| S14 and later (import dialog, importers, retries, examples, mock URL, sessions, sagas) | to do |
+| S14 import dialog and relink, S19 importers, S21 retries and early ends, S14 run through the API, recorded examples judged (S16/S20 part) | backend ported, UI to wire |
+| S20, S28, S29, S27, S30, sessions S15/S16/S17 | to do |
 
 ## Known divergences and TODO
 
