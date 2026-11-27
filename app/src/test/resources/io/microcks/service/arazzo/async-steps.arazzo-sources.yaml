@@ -1,0 +1,12 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: Order events scenarios
+  version: 1.0.0
+sources:
+  orderApi:
+    name: Order API
+    version: 1.0.0
+  orderEvents:
+    name: Order events
+    version: 1.0.0

@@ -1,0 +1,100 @@
+# example: order-api - Order API 1.0.0, the OpenAPI contract declared by orderApi
+openapi: 3.0.2
+info:
+  title: Order API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      operationId: CreateOrder
+      responses:
+        "201":
+          description: The order placed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+---
+# example: order-events - Order events 1.0.0, the AsyncAPI 3 contract declared by orderEvents
+asyncapi: 3.0.0
+info:
+  title: Order events
+  version: 1.0.0
+defaultContentType: application/json
+channels:
+  shippingRequests:
+    address: shipping/requests
+    messages:
+      shippingRequested:
+        $ref: '#/components/messages/shippingRequested'
+  orderConfirmed:
+    address: orders/confirmed
+    messages:
+      orderConfirmed:
+        $ref: '#/components/messages/orderConfirmed'
+  orderCancelled:
+    messages:
+      orderCancelled:
+        $ref: '#/components/messages/orderConfirmed'
+operations:
+  sendShippingRequest:
+    action: send
+    channel:
+      $ref: '#/channels/shippingRequests'
+    messages:
+      - $ref: '#/channels/shippingRequests/messages/shippingRequested'
+  receiveOrderConfirmed:
+    action: receive
+    channel:
+      $ref: '#/channels/orderConfirmed'
+    messages:
+      - $ref: '#/channels/orderConfirmed/messages/orderConfirmed'
+components:
+  messages:
+    shippingRequested:
+      payload:
+        type: object
+        properties:
+          orderId:
+            type: string
+      examples:
+        - name: order-42
+          payload:
+            orderId: '42'
+    orderConfirmed:
+      payload:
+        type: object
+        properties:
+          orderId:
+            type: string
+          status:
+            type: string
+      examples:
+        - name: order-42
+          payload:
+            orderId: '42'
+            status: confirmed
+---
+# example: legacy-order-events - Legacy order events 1.0.0, the AsyncAPI 2 contract declared by legacyEvents
+asyncapi: '2.6.0'
+info:
+  title: Legacy order events
+  version: 1.0.0
+defaultContentType: application/json
+channels:
+  orders/confirmed:
+    subscribe:
+      operationId: receiveOrderConfirmed
+      message:
+        payload:
+          type: object
+          properties:
+            orderId:
+              type: string
+        examples:
+          - name: order-42
+            payload:
+              orderId: '42'

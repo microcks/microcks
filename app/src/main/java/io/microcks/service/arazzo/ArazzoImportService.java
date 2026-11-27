@@ -295,8 +295,8 @@ public class ArazzoImportService {
    }
 
    /**
-    * The distinct operations the steps call on a source, how many of them the linked API defines, and how many steps
-    * call an operation of this source that is not found.
+    * The distinct operations or channels the steps call on a source, how many of them the linked API defines, and how
+    * many steps call an operation or a channel of this source that is not found.
     */
    private static ArazzoSourceAnalysis analyse(ResolvedSource source, String declaredUrl, ArazzoSourceMatch match,
          List<ArazzoStepCall> calls, Map<String, ResolvedSource> sources) {
@@ -306,9 +306,10 @@ public class ArazzoImportService {
       int unresolvedSteps = 0;
       for (ArazzoStepCall call : calls) {
          if (call.sourceName().equals(sourceName)) {
-            operations.add(call.operationId());
+            String called = call.channel() == null ? call.operationId() : "#/channels/" + call.channel();
+            operations.add(called);
             if (ArazzoDocumentService.operationOf(call, sources).reason() == null) {
-               foundOperations.add(call.operationId());
+               foundOperations.add(called);
             } else {
                unresolvedSteps++;
             }

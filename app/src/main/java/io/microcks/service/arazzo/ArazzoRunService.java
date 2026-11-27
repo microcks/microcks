@@ -39,6 +39,7 @@ import io.microcks.repository.SecretRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.artifact.arazzo.ArazzoDataFlow;
+import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
 
 import java.net.URLEncoder;
@@ -253,6 +254,11 @@ public class ArazzoRunService {
    private WorkflowResult launch(ArazzoDocument document, String workflowId, Map<String, Object> inputs, Long timeout,
          ArazzoRunImplementations implementations, boolean validateSchema, WorkflowExampleCheck example)
          throws ArazzoRunRefusedException {
+      List<String> asyncStepIds = workflowOf(document, workflowId).map(ArazzoDocumentService::asyncStepIds)
+            .orElse(List.of());
+      if (!asyncStepIds.isEmpty()) {
+         throw new ArazzoRunRefusedException(ArazzoDocumentService.asyncStepsReason(asyncStepIds));
+      }
       Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
       ArazzoWorkflowStatus status = ArazzoDocumentService.status(workflowId,
             document.getWorkflowCalls().get(workflowId), sources);
@@ -309,9 +315,12 @@ public class ArazzoRunService {
     */
    private static List<String> missingInputs(ArazzoDocument document, String workflowId,
          Map<String, Object> givenInputs) {
-      return ArazzoWorkflowReader.workflow(ArazzoWorkflowService.parse(document.getContent()), workflowId)
-            .map(ArazzoDataFlow::neededInputs).orElse(List.of()).stream()
+      return workflowOf(document, workflowId).map(ArazzoDataFlow::neededInputs).orElse(List.of()).stream()
             .filter(inputName -> givenInputs.get(inputName) == null).toList();
+   }
+
+   private static Optional<ArazzoWorkflow> workflowOf(ArazzoDocument document, String workflowId) {
+      return ArazzoWorkflowReader.workflow(ArazzoWorkflowService.parse(document.getContent()), workflowId);
    }
 
    /** Runs are numbered per document, from 1, independently of the tests of the APIs they call. */

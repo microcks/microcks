@@ -1292,9 +1292,10 @@ paths:
                 type: string
               example: "Unknown workflow: deleteAll"
           description: "The run is refused and no WorkflowResult is created. The\
-            \ body tells why: the workflow is unknown, cannot run, misses an input,\
-            \ misses the base URL of a source, the secret is unknown, or the workflow\
-            \ has no such recorded example"
+            \ body tells why: the workflow is unknown, cannot run, has steps that\
+            \ send or receive messages (async steps cannot be run yet), misses\
+            \ an input, misses the base URL of a source, the secret is unknown,\
+            \ or the workflow has no such recorded example"
         "404":
           description: No Arazzo document has this identifier, or this title and
             version

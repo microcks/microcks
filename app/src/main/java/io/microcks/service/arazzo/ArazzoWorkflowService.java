@@ -25,6 +25,7 @@ import io.microcks.domain.arazzo.ArazzoLastResult;
 import io.microcks.domain.arazzo.ArazzoStepAction;
 import io.microcks.domain.arazzo.ArazzoStepCriterion;
 import io.microcks.domain.arazzo.ArazzoStepDetail;
+import io.microcks.domain.arazzo.ArazzoStepMessaging;
 import io.microcks.domain.arazzo.ArazzoStepOperation;
 import io.microcks.domain.arazzo.ArazzoStepParameter;
 import io.microcks.domain.arazzo.ArazzoStepRequestBody;
@@ -38,6 +39,7 @@ import io.microcks.util.ObjectMapperFactory;
 import io.microcks.artifact.arazzo.ArazzoAction;
 import io.microcks.artifact.arazzo.ArazzoCriterion;
 import io.microcks.artifact.arazzo.ArazzoDataFlow;
+import io.microcks.artifact.arazzo.ArazzoMessaging;
 import io.microcks.artifact.arazzo.ArazzoRequestBody;
 import io.microcks.artifact.arazzo.ArazzoStep;
 import io.microcks.artifact.arazzo.ArazzoUse;
@@ -128,7 +130,8 @@ public class ArazzoWorkflowService {
    private static Set<String> calledOperationNames(List<ArazzoStepCall> apiCalls, Map<String, ResolvedSource> sources) {
       Set<String> operationNames = new HashSet<>();
       for (ArazzoStepCall call : apiCalls) {
-         ArazzoStepOperation operation = sources.get(call.sourceName()).operations().get(call.operationId());
+         ArazzoStepOperation operation = call.operationId() == null ? null
+               : sources.get(call.sourceName()).operations().get(call.operationId());
          if (operation != null) {
             operationNames.add(operation.method() + " " + operation.path());
          }
@@ -147,8 +150,10 @@ public class ArazzoWorkflowService {
                   .map(passing -> new ArazzoDataPassing(passing.fromStepId(), passing.outputName(),
                         expressionUse(passing.use())))
                   .toList(),
-            ArazzoDocumentService.status(workflow.workflowId(), document.getWorkflowCalls().get(workflow.workflowId()),
-                  sources),
+            ArazzoDocumentService.withAsyncSteps(
+                  ArazzoDocumentService.status(workflow.workflowId(),
+                        document.getWorkflowCalls().get(workflow.workflowId()), sources),
+                  ArazzoDocumentService.asyncStepIds(workflow)),
             arazzoDocumentService.getExamples(document, workflow.workflowId()));
    }
 
@@ -175,7 +180,7 @@ public class ArazzoWorkflowService {
       Set<String> usedOperationIds = new HashSet<>();
       document.getWorkflowCalls().values()
             .forEach(calls -> calls.stream()
-                  .filter(call -> call.sourceName().equals(source.link().sourceName())
+                  .filter(call -> call.sourceName().equals(source.link().sourceName()) && call.operationId() != null
                         && source.operations().containsKey(call.operationId()))
                   .forEach(call -> usedOperationIds.add(call.operationId())));
       return new ArazzoSourceDescription(source.link(), source.serviceId(),
@@ -183,14 +188,20 @@ public class ArazzoWorkflowService {
    }
 
    private static ArazzoStepDetail step(ArazzoStep step, Map<String, ResolvedSource> sources) {
-      return new ArazzoStepDetail(step.stepId(), step.description(),
-            ArazzoDocumentService.operationOf(new ArazzoStepCall(step.call().sourceName(), step.call().operationId()),
-                  sources),
+      return new ArazzoStepDetail(step.stepId(), step.description(), ArazzoDocumentService.operationOf(
+            new ArazzoStepCall(step.call().sourceName(), step.call().operationId(), step.call().channel()), sources),
             step.parameters().stream()
                   .map(parameter -> new ArazzoStepParameter(parameter.name(), parameter.in(), parameter.value()))
                   .toList(),
             requestBody(step.requestBody()), criteria(step.successCriteria()), step.outputs(),
-            actions(step.onSuccess()), actions(step.onFailure()));
+            actions(step.onSuccess()), actions(step.onFailure()), messaging(step.messaging()));
+   }
+
+   private static ArazzoStepMessaging messaging(ArazzoMessaging messaging) {
+      if (messaging == null) {
+         return null;
+      }
+      return new ArazzoStepMessaging(messaging.action(), messaging.correlationId(), messaging.timeout());
    }
 
    private static List<ArazzoStepCriterion> criteria(List<ArazzoCriterion> criteria) {

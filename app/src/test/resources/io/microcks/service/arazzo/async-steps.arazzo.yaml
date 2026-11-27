@@ -1,0 +1,175 @@
+# example: order-events - Order events scenarios, mixing an OpenAPI and an AsyncAPI 3 source, CONTRACTS standing for the server of the contracts
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: CONTRACTS/specs/order-api.openapi.yaml?example=order-api
+    type: openapi
+  - name: orderEvents
+    url: CONTRACTS/specs/order-events.asyncapi.yaml?example=order-events
+    type: asyncapi
+workflows:
+  - workflowId: placeThenConfirm
+    summary: Places an order, asks for its shipping, then waits for its confirmation.
+    inputs:
+      type: object
+      properties:
+        customer:
+          type: string
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          orderId: $response.body#/id
+      - stepId: requestShipping
+        operationId: $sourceDescriptions.orderEvents.sendShippingRequest
+        action: send
+        parameters:
+          - name: customer
+            in: header
+            value: $inputs.customer
+        requestBody:
+          payload:
+            orderId: ''
+          replacements:
+            - target: /orderId
+              value: $steps.createOrder.outputs.orderId
+      - stepId: confirmOrder
+        operationId: $sourceDescriptions.orderEvents.receiveOrderConfirmed
+        action: receive
+        correlationId: $steps.createOrder.outputs.orderId
+        timeout: 6000
+        successCriteria:
+          - condition: $message.payload#/status == 'confirmed'
+        outputs:
+          status: $message.payload#/status
+    outputs:
+      status: $steps.confirmOrder.outputs.status
+  - workflowId: placeOnly
+    summary: Places an order.
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+        successCriteria:
+          - condition: $statusCode == 201
+  - workflowId: listenOnChannels
+    summary: Waits for an order to be confirmed, then cancelled, on their channels.
+    steps:
+      - stepId: confirmed
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orderConfirmed'
+        action: receive
+      - stepId: cancelled
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orderCancelled'
+        action: receive
+  - workflowId: listenOnUnknownChannel
+    summary: Waits for an order to be shipped, on a channel the AsyncAPI contract does not define.
+    steps:
+      - stepId: shipped
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orderShipped'
+        action: receive
+---
+# example: legacy-events - Legacy order events scenarios, whose AsyncAPI 2 source names its operations in its channels
+arazzo: 1.1.0
+info:
+  title: Legacy order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: legacyEvents
+    url: CONTRACTS/specs/legacy-order-events.asyncapi.yaml?example=legacy-order-events
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+---
+# example: action-on-http-step - the HTTP step createOrder tells an action, that only applies to an AsyncAPI step
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: CONTRACTS/specs/order-api.openapi.yaml?example=order-api
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        action: send
+---
+# example: correlation-id-on-send - the step requestShipping sends a message and has a correlationId
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: CONTRACTS/specs/order-events.asyncapi.yaml?example=order-events
+    type: asyncapi
+workflows:
+  - workflowId: ship
+    steps:
+      - stepId: requestShipping
+        operationId: sendShippingRequest
+        action: send
+        correlationId: $inputs.orderId
+---
+# example: negative-timeout - the step confirmOrder waits a negative number of milliseconds
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: CONTRACTS/specs/order-events.asyncapi.yaml?example=order-events
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+        timeout: -1
+---
+# example: unknown-action - the step confirmOrder tells an action that is neither send nor receive
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: CONTRACTS/specs/order-events.asyncapi.yaml?example=order-events
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: subscribe
+---
+# example: depends-on - the step confirmOrder waits for the step requestShipping, refused until the runner applies it
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: CONTRACTS/specs/order-events.asyncapi.yaml?example=order-events
+    type: asyncapi
+workflows:
+  - workflowId: ship
+    steps:
+      - stepId: requestShipping
+        operationId: sendShippingRequest
+        action: send
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+        dependsOn:
+          - requestShipping
