@@ -93,3 +93,13 @@ export function workflowVerdict(check: WorkflowCheck): { runnable: boolean; note
   if (check.unlinkedSources.length > 0) return { runnable: false, note: `Needs ${check.unlinkedSources.join(', ')} linked` };
   return { runnable: false, note: check.reasons.map(sentence).join('. ') || 'Not ready to run' };
 }
+
+/** How many workflows of the document can run with the links of the analysis, and what the others wait for. */
+export function readiness(analysis: Pick<ImportAnalysis, 'checks'>): { runnable: number; total: number; blocked: { workflowId: string; note: string }[] } {
+  const verdicts = analysis.checks.map((c) => ({ workflowId: c.workflowId, ...workflowVerdict(c) }));
+  return {
+    runnable: verdicts.filter((v) => v.runnable).length,
+    total: verdicts.length,
+    blocked: verdicts.filter((v) => !v.runnable).map(({ workflowId, note }) => ({ workflowId, note }))
+  };
+}

@@ -11,6 +11,7 @@ import {
   seedSessions
 } from '#lib/placeholders/workflows.js';
 import type { WorkflowsPayload } from '#lib/workflows/list.js';
+import type { ImportAnalysis } from '#lib/workflows/import-analysis.js';
 import { parse as parseYaml } from 'yaml';
 import { formatRelative } from '#lib/format.js';
 import { MICROCKS_BASE } from '#lib/importing.js';
@@ -19,8 +20,10 @@ import {
   fetchArazzoDocuments,
   fetchArazzoSource,
   fetchArazzoWorkflow,
+  analyseImportedArazzoDocument,
   protocolOf,
-  uploadArtifact,
+  relinkArazzoSources,
+  type BackendLinks,
   type BackendArazzoDocumentSummary,
   type BackendArazzoStep,
   type BackendArazzoWorkflowDetail
@@ -395,15 +398,15 @@ export async function getDocumentSource(docId: string, token?: string): Promise<
 }
 
 /**
- * Links a source description of a real document to a Microcks API by importing an ArazzoSources overlay that keeps
- * the current links and adds this one (story S2: the overlay is how Microcks links sources).
+ * The links of a real document with one source description linked (or linked again) to an API of Microcks, as
+ * Microcks takes them (story S19), after the same checks as the dialog.
  */
-export async function linkRealSource(
+async function linksWith(
   docId: string,
   name: string,
   serviceId: string,
   token?: string
-): Promise<ArazzoDocument | { error: string; status: number }> {
+): Promise<{ links: BackendLinks } | { error: string; status: number }> {
   const summaries = await fetchArazzoDocuments(token);
   const summary = summaries.find((d) => d.id === docId);
   if (!summary) return { error: `Document "${docId}" does not exist.`, status: 404 };
@@ -418,9 +421,28 @@ export async function linkRealSource(
   if ((type === 'asyncapi') !== (service.protocol === 'EVENT')) {
     return { error: `${name} is ${type === 'asyncapi' ? 'an AsyncAPI' : 'an OpenAPI'} source: pick a matching API.`, status: 422 };
   }
-  const links = linksOf(summary);
-  links.set(name, [service.name, service.version]);
-  await uploadArtifact(overlayFileOf(summary), overlayYaml(summary.title, summary.version, links), false, token);
+  const links: BackendLinks = Object.fromEntries([...linksOf(summary)].map(([source, [apiName, apiVersion]]) => [source, { name: apiName, version: apiVersion }]));
+  links[name] = { serviceId: service.id, name: service.name, version: service.version };
+  return { links };
+}
+
+/** What Microcks makes of a document if this source were linked to this API; nothing is stored. */
+export async function analyseLink(docId: string, name: string, serviceId: string, token?: string): Promise<ImportAnalysis | { error: string; status: number }> {
+  const out = await linksWith(docId, name, serviceId, token);
+  if ('error' in out) return out;
+  return (await analyseImportedArazzoDocument(docId, out.links, token)) ?? { error: `Document "${docId}" does not exist.`, status: 404 };
+}
+
+/** Links a source description of a real document to a Microcks API: the links replace those of its overlay. */
+export async function linkRealSource(
+  docId: string,
+  name: string,
+  serviceId: string,
+  token?: string
+): Promise<ArazzoDocument | { error: string; status: number }> {
+  const out = await linksWith(docId, name, serviceId, token);
+  if ('error' in out) return out;
+  if (!(await relinkArazzoSources(docId, out.links, token))) return { error: `Document "${docId}" does not exist.`, status: 404 };
   await fetchReal(token);
   return real.documents.get(docId) ?? { error: `Document "${docId}" does not exist.`, status: 404 };
 }

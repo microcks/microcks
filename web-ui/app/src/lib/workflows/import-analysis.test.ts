@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { initialLinks, sourceVerdict, workflowVerdict, type ImportAnalysis } from './import-analysis.ts';
+import { initialLinks, readiness, sourceVerdict, workflowVerdict, type ImportAnalysis } from './import-analysis.ts';
 
 const apis = [
   { serviceId: 's-customer', name: 'Customer API', version: '1.0.0' },
@@ -61,4 +61,9 @@ test('a workflow waits for the sources it calls, or runs', () => {
   assert.deepEqual(workflowVerdict(analysis.checks[1]!), { runnable: false, note: 'Needs orderApi linked' });
   const missing = { workflowId: 'w', runnable: false, apiNames: ['Order API'], unlinkedSources: [], reasons: ['Operation CreateOrder not found in Order API 1.0.0'] };
   assert.equal(workflowVerdict(missing).note, 'Operation CreateOrder not found in Order API 1.0.0');
+});
+
+test('the readiness of a document counts the workflows that can run and says what the others wait for', () => {
+  assert.deepEqual(readiness(analysis), { runnable: 1, total: 2, blocked: [{ workflowId: 'placeOrder', note: 'Needs orderApi linked' }] });
+  assert.deepEqual(readiness({ ...analysis, checks: [analysis.checks[0]!] }), { runnable: 1, total: 1, blocked: [] });
 });
