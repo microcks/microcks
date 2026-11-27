@@ -56,6 +56,7 @@ public class WorkflowResult {
    private WorkflowMissingExample missingExample;
    private boolean validateSchema;
    private WorkflowExampleCheck example;
+   private WorkflowRunOrigin origin;
 
    public String getId() {
       return id;
@@ -218,5 +219,14 @@ public class WorkflowResult {
 
    public void setExample(WorkflowExampleCheck example) {
       this.example = example;
+   }
+
+   /** Where the run was launched from; null when it was launched from the Microcks UI or API. */
+   public WorkflowRunOrigin getOrigin() {
+      return origin;
+   }
+
+   public void setOrigin(WorkflowRunOrigin origin) {
+      this.origin = origin;
    }
 }

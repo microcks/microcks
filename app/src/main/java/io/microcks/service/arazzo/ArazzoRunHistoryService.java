@@ -120,6 +120,6 @@ public class ArazzoRunHistoryService {
       return new WorkflowRunSummary(run.getId(), run.getNumber(), run.getWorkflowId(), run.getTarget(), run.getStatus(),
             failedStepId, run.getStartedDate(), run.getElapsedTime(),
             run.getExample() == null ? null : run.getExample().name(),
-            run.getExample() == null ? null : run.getExample().verdict());
+            run.getExample() == null ? null : run.getExample().verdict(), run.getOrigin());
    }
 }

@@ -17,15 +17,18 @@ package io.microcks.service.arazzo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
- * Stands for the Arazzo minion: keeps the runs it is handed, or refuses them when told to.
+ * Stands for the Arazzo minion: keeps the runs it is handed, and plays them when told how, or refuses them when told
+ * to.
  * @author SebastienDegodez
  */
 public class RecordingMinionClient implements ArazzoMinionClient {
 
    private final List<ArazzoRunRequest> requests = new ArrayList<>();
    private ArazzoMinionException failure;
+   private Consumer<ArazzoRunRequest> play = request -> {};
 
    @Override
    public void launch(ArazzoRunRequest request) throws ArazzoMinionException {
@@ -33,6 +36,12 @@ public class RecordingMinionClient implements ArazzoMinionClient {
          throw failure;
       }
       requests.add(request);
+      play.accept(request);
+   }
+
+   /** Every run handed from now on is played this way, reporting its steps and outcome as the minion does. */
+   public void plays(Consumer<ArazzoRunRequest> play) {
+      this.play = play;
    }
 
    /** The runs handed so far. */

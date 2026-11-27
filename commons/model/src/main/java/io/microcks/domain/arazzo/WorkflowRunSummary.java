@@ -31,9 +31,10 @@ import java.util.Date;
  * @param elapsedTime    How long the run took, in milliseconds
  * @param example        The name of the recorded example the run played; null when it played none
  * @param exampleVerdict Whether the run matches its example; null when it played none or is in progress
+ * @param origin         Where the run was launched from; null when it was launched from the Microcks UI or API
  * @author SebastienDegodez
  */
 public record WorkflowRunSummary(String id, Long number, String workflowId, WorkflowRunTarget target,
       WorkflowRunStatus status, String failedStepId, Date startedDate, long elapsedTime, String example,
-      WorkflowExampleVerdict exampleVerdict) {
+      WorkflowExampleVerdict exampleVerdict, WorkflowRunOrigin origin) {
 }
