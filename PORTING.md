@@ -212,10 +212,15 @@ Port of the Arazzo POC of `feature/arazzo` (1.x, Spring Boot + Angular), story b
 untouched as the 1.x reference. The Angular screens are not ported: the SvelteKit Workflows screens (Deep Ink) are
 wired to the API instead.
 
+In 2.0 the Arazzo code of the app sits in its own subpackages, tests included: `io.microcks.domain.arazzo`,
+`io.microcks.repository.arazzo`, `io.microcks.service.arazzo`, `io.microcks.web.arazzo` and `io.microcks.web.arazzo.dto`
+(1.x keeps them flat in `domain`, `repository`, `service`, `web`). The move is a pure-rename commit, so
+`git log --follow` keeps each file's history.
+
 | 1.x (`feature/arazzo`) | 2.0 |
 |---|---|
 | `commons/util` `io.github.microcks.util.arazzo` (reader, shared kernel) | `artifacts/artifact-arazzo` (`io.microcks.artifact.arazzo`), depends on Jackson only (ArchUnit test) |
-| `commons/model` `Arazzo*` | `commons/model` `io.microcks.domain`; `ArazzoDocument` and `ArazzoSources` are `@MongoEntity` (collections `arazzoDocument`, `arazzoSources`, same as Spring Data) |
+| `commons/model` `Arazzo*`, `Workflow*` | `commons/model` `io.microcks.domain.arazzo`; `ArazzoDocument` and `ArazzoSources` are `@MongoEntity` (collections `arazzoDocument`, `arazzoSources`, same as Spring Data) |
 | `ArazzoDocumentRepository`, `ArazzoSourcesRepository` (Spring Data) | Panache `ObjectIdRepository`; `findAll(Sort)` → `findAllSorted()` |
 | `ArazzoDocumentService`, `ArazzoWorkflowService` | CDI `@ApplicationScoped`, `save` → `persistOrUpdate` |
 | `ArazzoDocumentController`, `ArazzoWorkflowController` (Spring MVC) | JAX-RS, `@RunOnVirtualThread`, same paths under `/api/arazzo` |
