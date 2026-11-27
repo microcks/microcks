@@ -1405,6 +1405,106 @@ paths:
         type: string
       in: path
       required: true
+  /arazzo/sessions:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArazzoSessionRequest'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "201":
+          headers:
+            Location:
+              description: URL of the created ArazzoSession
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoSession'
+          description: Created ArazzoSession, open. The mocks record the calls
+            naming its identifier
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Unknown workflow: cancelSaga"
+          description: "The session is refused and none is created. The body tells\
+            \ why: the workflow is unknown, or one of its steps calls no operation\
+            \ of a linked API"
+        "404":
+          description: No Arazzo document has this identifier, or this title and
+            version
+      security:
+      - jwt-bearer:
+        - user
+      operationId: OpenArazzoSession
+      summary: Open a verification session on a workflow
+      description: "Open a session to verify that an application follows a workflow\
+        \ of an Arazzo document against the Microcks mocks. The application names\
+        \ the session in each call it makes to the mocks, with the x-microcks-session\
+        \ header (or gRPC metadata), or with the microcks-session entry of its W3C\
+        \ baggage header; the mocks record these calls in their order of receipt,\
+        \ until the session is closed or expires, up to a maximum of calls. Then\
+        \ ask for the verification of the session."
+  /arazzo/sessions/{sessionId}:
+    delete:
+      tags:
+      - workflow
+      responses:
+        "204":
+          description: The ArazzoSession is closed. It records no more calls, and
+            it is kept with its calls, to be verified, for a retention delay
+        "404":
+          description: No ArazzoSession has this identifier
+      security:
+      - jwt-bearer:
+        - user
+      operationId: CloseArazzoSession
+      summary: Close a verification session
+      description: Close a verification session, so that the mocks record no more
+        calls in it.
+    parameters:
+    - name: sessionId
+      description: Unique identifier of the ArazzoSession
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/sessions/{sessionId}/verification:
+    post:
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResult'
+          description: "The verification, a WorkflowResult whose origin is SESSION:\
+            \ the result of the steps of the workflow, each with the call it was\
+            \ matched to. It is kept in the runs history of the Arazzo document."
+        "404":
+          description: No ArazzoSession has this identifier
+      security:
+      - jwt-bearer:
+        - user
+      operationId: VerifyArazzoSession
+      summary: Verify that the calls of a session follow its workflow
+      description: Verify that the calls the mocks recorded in a session follow
+        the steps of its workflow.
+    parameters:
+    - name: sessionId
+      description: Unique identifier of the ArazzoSession
+      schema:
+        type: string
+      in: path
+      required: true
 components:
   schemas:
     TestCaseResult:
@@ -2712,12 +2812,113 @@ components:
       - MOCKS
       - IMPLEMENTATIONS
       type: string
+    ArazzoSessionRequest:
+      description: The workflow a verification session is opened on
+      required:
+      - documentId
+      - workflowId
+      properties:
+        documentId:
+          description: "Unique identifier of the Arazzo document, or its title and\
+            \ version as {title}:{version} (for example Order saga:1.0.0)"
+          type: string
+        workflowId:
+          description: Identifier of the workflow in the Arazzo document
+          type: string
+    ArazzoSession:
+      description: A verification session on a workflow of an Arazzo document. The
+        mocks record the calls naming it, in their order of receipt.
+      required:
+      - id
+      - documentId
+      - workflowId
+      - openedDate
+      properties:
+        id:
+          description: Unique identifier of the ArazzoSession, which the calls to
+            the mocks name
+          type: string
+        documentId:
+          description: Unique identifier of the Arazzo document
+          type: string
+        documentTitle:
+          description: Title of the Arazzo document
+          type: string
+        documentVersion:
+          description: Version of the Arazzo document
+          type: string
+        workflowId:
+          description: Identifier of the workflow the session verifies
+          type: string
+        openedDate:
+          format: int64
+          description: Timestamp of the opening of the session
+          type: integer
+        closedDate:
+          format: int64
+          description: Timestamp of the closing of the session; absent while it
+            is open
+          type: integer
+        expireAt:
+          format: int64
+          description: Timestamp the session expires at, with its calls
+          type: integer
+        callCount:
+          format: int64
+          description: How many calls the session recorded
+          type: integer
+    WorkflowSessionCall:
+      description: A call the mocks recorded in a verification session
+      required:
+      - index
+      - method
+      - path
+      properties:
+        index:
+          format: int64
+          description: Place of the call in the order the session received its calls,
+            from 0
+          type: integer
+        apiName:
+          description: Name of the Microcks API whose mocks received the call
+          type: string
+        apiVersion:
+          description: Version of that API
+          type: string
+        method:
+          description: Method of the call
+          type: string
+        path:
+          description: Path of the call, after the name and version of the API
+          type: string
+        stepId:
+          description: The step of the workflow the call was matched to; absent when
+            it matches none
+          type: string
+    WorkflowSessionCheck:
+      description: The verification session a WorkflowResult whose origin is SESSION
+        verifies
+      required:
+      - sessionId
+      - calls
+      properties:
+        sessionId:
+          description: Unique identifier of the ArazzoSession
+          type: string
+        calls:
+          description: The calls the session recorded, in their order of receipt
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowSessionCall'
     WorkflowRunOrigin:
       description: Where a workflow run was launched from, when not from the Microcks
         UI or API. MOCK_URL is an application posting the inputs of the workflow to
-        its Mock URL, to get its outputs played on the Microcks mocks.
+        its Mock URL, to get its outputs played on the Microcks mocks. SESSION is
+        not a run but the verification of the calls an application made to the
+        mocks in a verification session.
       enum:
       - MOCK_URL
+      - SESSION
       type: string
     WorkflowStepStatus:
       description: Status of a step of a workflow run
@@ -2987,6 +3188,9 @@ components:
           $ref: '#/components/schemas/WorkflowRunOrigin'
           description: Where the run was launched from; absent when it was launched
             from the Microcks UI or API
+        session:
+          $ref: '#/components/schemas/WorkflowSessionCheck'
+          description: The verification session verified, when the origin is SESSION
     WorkflowExampleVerdict:
       description: Whether a run matches the recorded example it plays, apart from
         the status of the run, as an example may expect the workflow to fail

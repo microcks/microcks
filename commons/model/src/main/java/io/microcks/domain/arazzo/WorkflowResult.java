@@ -57,6 +57,7 @@ public class WorkflowResult {
    private boolean validateSchema;
    private WorkflowExampleCheck example;
    private WorkflowRunOrigin origin;
+   private WorkflowSessionCheck session;
 
    public String getId() {
       return id;
@@ -228,5 +229,14 @@ public class WorkflowResult {
 
    public void setOrigin(WorkflowRunOrigin origin) {
       this.origin = origin;
+   }
+
+   /** The verification session the result verifies; null for a run. */
+   public WorkflowSessionCheck getSession() {
+      return session;
+   }
+
+   public void setSession(WorkflowSessionCheck session) {
+      this.session = session;
    }
 }

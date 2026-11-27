@@ -21,5 +21,10 @@ package io.microcks.domain.arazzo;
  */
 public enum WorkflowRunOrigin {
    /** An application posted the inputs of the workflow to its Mock URL, to get its outputs played on the mocks. */
-   MOCK_URL
+   MOCK_URL,
+   /**
+    * Not a run: the verification of the calls an application made to the mocks in a session, against the steps of the
+    * workflow.
+    */
+   SESSION
 }

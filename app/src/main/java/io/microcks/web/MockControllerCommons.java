@@ -28,6 +28,7 @@ import io.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.microcks.util.el.EvaluableRequest;
 import io.microcks.util.el.TemplateEngine;
 import io.microcks.util.el.TemplateEngineFactory;
+import io.microcks.util.tracing.ArazzoSessionCarrier;
 import io.microcks.util.tracing.ArazzoTraceAttributes;
 import io.microcks.util.tracing.TraceUtil;
 import io.opentelemetry.api.common.Attributes;
@@ -430,5 +431,17 @@ public class MockControllerCommons {
       Enumeration<String> baggage = request.getHeaders(ArazzoTraceAttributes.BAGGAGE_HEADER);
       return ArazzoTraceAttributes.fromBaggage(baggage == null ? List.of() : Collections.list(baggage))
             .orElse(Attributes.empty());
+   }
+
+   /**
+    * The Arazzo verification session a mock invocation names, in which the mocks record it: its x-microcks-session
+    * header, else the microcks-session entry of its W3C baggage.
+    * @param request The request of the mock invocation
+    * @return The id of the session, empty when the invocation names none
+    */
+   public static Optional<String> getArazzoSessionId(HttpServletRequest request) {
+      Enumeration<String> baggage = request.getHeaders(ArazzoTraceAttributes.BAGGAGE_HEADER);
+      return ArazzoSessionCarrier.sessionId(request.getHeader(ArazzoSessionCarrier.SESSION_HEADER),
+            baggage == null ? List.of() : Collections.list(baggage));
    }
 }

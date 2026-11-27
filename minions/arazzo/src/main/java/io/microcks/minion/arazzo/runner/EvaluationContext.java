@@ -15,9 +15,12 @@
  */
 package io.microcks.minion.arazzo.runner;
 
+import io.microcks.artifact.arazzo.ArazzoExpressionContext;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +31,8 @@ import java.util.Map;
  * @param response The response of the step; null before it is called
  * @author SebastienDegodez
  */
-record EvaluationContext(Map<String, Object> inputs, Map<String, Map<String, Object>> steps, HttpOutcome response) {
+record EvaluationContext(Map<String, Object> inputs, Map<String, Map<String, Object>> steps, HttpOutcome response)
+      implements ArazzoExpressionContext {
 
    private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -48,8 +52,19 @@ record EvaluationContext(Map<String, Object> inputs, Map<String, Map<String, Obj
       return response;
    }
 
+   @Override
+   public int statusCode(String expression) {
+      return responseFor(expression).status();
+   }
+
+   @Override
+   public Map<String, List<String>> responseHeaders(String expression) {
+      return responseFor(expression).headers();
+   }
+
    /** The body of the response read as JSON, or as text when it is not JSON. */
-   Object responseBody(String expression) {
+   @Override
+   public Object responseBody(String expression) {
       String body = responseFor(expression).body();
       try {
          return JSON.readValue(body, Object.class);

@@ -16,6 +16,8 @@
 package io.microcks.minion.arazzo.runner;
 
 import io.microcks.artifact.arazzo.ArazzoCriterion;
+import io.microcks.artifact.arazzo.ArazzoExpressionEvaluator;
+import io.microcks.artifact.arazzo.ArazzoExpressionException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,13 +39,13 @@ final class ConditionEvaluator {
    private static final Pattern TOKEN = Pattern.compile("\\s*('[^']*'|&&|\\|\\||==|!=|<=|>=|<|>|[^\\s=!<>&|']+)");
    private static final Set<String> COMPARATORS = Set.of("==", "!=", "<", "<=", ">", ">=");
 
-   private final ExpressionEvaluator expressions = new ExpressionEvaluator();
+   private final ArazzoExpressionEvaluator expressions = new ArazzoExpressionEvaluator();
 
    /**
     * @param criterion A success criterion of a step
     * @param context   What its runtime expressions can see
     * @return Whether it holds, with the values of its runtime expressions
-    * @throws ArazzoRunException if the condition is malformed or one of its expressions has no value
+    * @throws ArazzoExpressionException if the condition is malformed or one of its expressions has no value
     */
    CriterionResult evaluate(ArazzoCriterion criterion, EvaluationContext context) {
       List<ExpressionValue> values = new ArrayList<>();

@@ -349,8 +349,11 @@ public class ArazzoRunService {
       return ArazzoWorkflowReader.workflow(ArazzoWorkflowService.parse(document.getContent()), workflowId);
    }
 
-   /** Runs are numbered per document, from 1, independently of the tests of the APIs they call. */
-   private long nextNumber(String documentId) {
+   /**
+    * Runs are numbered per document, from 1, independently of the tests of the APIs they call; the verifications of
+    * sessions share this numbering, as they join the runs history.
+    */
+   long nextNumber(String documentId) {
       WorkflowResult last = workflowResultRepository.findTopByDocumentIdOrderByNumberDesc(documentId);
       return last == null || last.getNumber() == null ? 1L : last.getNumber() + 1L;
    }
@@ -489,8 +492,11 @@ public class ArazzoRunService {
       return targets;
    }
 
-   /** The main OpenAPI or Swagger contract Microcks stored for the API a source is linked to; null when none. */
-   private String openApiContractOf(ResolvedSource source) {
+   /**
+    * The main OpenAPI or Swagger contract Microcks stored for the API a source is linked to; null when none. The calls
+    * a session verifies are checked against it too.
+    */
+   String openApiContractOf(ResolvedSource source) {
       return resourceRepository.findMainByServiceId(source.serviceId()).stream().filter(
             resource -> resource.getType() == ResourceType.OPEN_API_SPEC || resource.getType() == ResourceType.SWAGGER)
             .map(Resource::getContent).findFirst().orElse(null);
@@ -532,8 +538,11 @@ public class ArazzoRunService {
       });
    }
 
-   /** The request and response of a step are stored as those of tests, under the run and the index of the step. */
-   private void storeExchange(String testCaseId, Request request, Response response) {
+   /**
+    * The request and response of a step are stored as those of tests, under the run and the index of the step; so are
+    * the call a session received for a step of its verification.
+    */
+   void storeExchange(String testCaseId, Request request, Response response) {
       request.setTestCaseId(testCaseId);
       if (response != null) {
          response.setTestCaseId(testCaseId);

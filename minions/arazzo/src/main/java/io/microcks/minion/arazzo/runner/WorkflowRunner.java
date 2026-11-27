@@ -17,6 +17,9 @@ package io.microcks.minion.arazzo.runner;
 
 import io.microcks.artifact.arazzo.ArazzoAction;
 import io.microcks.artifact.arazzo.ArazzoCriterion;
+import io.microcks.artifact.arazzo.ArazzoExpressionEvaluator;
+import io.microcks.artifact.arazzo.ArazzoExpressionException;
+import io.microcks.artifact.arazzo.ArazzoJsonPointer;
 import io.microcks.artifact.arazzo.ArazzoParameter;
 import io.microcks.artifact.arazzo.ArazzoRequestBody;
 import io.microcks.artifact.arazzo.ArazzoStep;
@@ -60,7 +63,7 @@ public class WorkflowRunner {
    private final HttpTransport transport;
    private final Clock clock;
    private final Pause pause;
-   private final ExpressionEvaluator expressions = new ExpressionEvaluator();
+   private final ArazzoExpressionEvaluator expressions = new ArazzoExpressionEvaluator();
    private final ConditionEvaluator conditions = new ConditionEvaluator();
 
    /**
@@ -140,7 +143,7 @@ public class WorkflowRunner {
    private boolean holds(List<ArazzoCriterion> criteria, EvaluationContext context) {
       try {
          return criteria.stream().allMatch(criterion -> conditions.evaluate(criterion, context).held());
-      } catch (ArazzoRunException are) {
+      } catch (ArazzoExpressionException are) {
          return false;
       }
    }
@@ -164,7 +167,7 @@ public class WorkflowRunner {
       workflow.outputs().forEach((name, expression) -> {
          try {
             outputs.put(name, expressions.resolve(expression, context));
-         } catch (ArazzoRunException notRun) {
+         } catch (ArazzoExpressionException notRun) {
             // The output comes from a step the run did not reach.
          }
       });
@@ -174,7 +177,7 @@ public class WorkflowRunner {
    private RunOutcome outcome(ArazzoWorkflow workflow, EvaluationContext context, Instant start) {
       try {
          return new RunOutcome(RunStatus.SUCCESS, evaluateAll(workflow.outputs(), context), elapsedSince(start), null);
-      } catch (ArazzoRunException are) {
+      } catch (ArazzoExpressionException are) {
          return new RunOutcome(RunStatus.FAILURE, Map.of(), elapsedSince(start), are.getMessage());
       }
    }
@@ -226,7 +229,7 @@ public class WorkflowRunner {
                passed ? step.outputs() : Map.of());
       } catch (IOException ioe) {
          return failed(index, step, operation, start, new Exchange(parameters, call, null), "No response: " + ioe);
-      } catch (ArazzoRunException are) {
+      } catch (ArazzoExpressionException are) {
          return failed(index, step, operation, start, new Exchange(parameters, call, response), are.getMessage());
       }
    }
@@ -238,7 +241,7 @@ public class WorkflowRunner {
    private CriterionResult evaluate(ArazzoCriterion criterion, EvaluationContext context, List<String> unevaluable) {
       try {
          return conditions.evaluate(criterion, context);
-      } catch (ArazzoRunException are) {
+      } catch (ArazzoExpressionException are) {
          unevaluable.add(are.getMessage());
          return new CriterionResult(criterion.condition(), List.of(), false);
       }
@@ -285,7 +288,7 @@ public class WorkflowRunner {
       return parameters.stream()
             .map(parameter -> new ParameterValue(parameter.name(), parameter.in(),
                   expressions.resolve(parameter.value(), context),
-                  ExpressionEvaluator.isExpression(parameter.value()) ? parameter.value() : null))
+                  ArazzoExpressionEvaluator.isExpression(parameter.value()) ? parameter.value() : null))
             .toList();
    }
 
@@ -326,7 +329,8 @@ public class WorkflowRunner {
          return requestBody.payload();
       }
       for (Map.Entry<String, String> replacement : requestBody.replacements().entrySet()) {
-         payload = JsonPointer.set(payload, replacement.getKey(), expressions.resolve(replacement.getValue(), context));
+         payload = ArazzoJsonPointer.set(payload, replacement.getKey(),
+               expressions.resolve(replacement.getValue(), context));
       }
       return JSON.valueToTree(payload).toString();
    }

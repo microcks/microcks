@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.minion.arazzo.runner;
+package io.microcks.artifact.arazzo;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Tests of the JSON pointers of response bodies, inputs, outputs and request body replacements.
  * @author SebastienDegodez
  */
-class JsonPointerTest {
+class ArazzoJsonPointerTest {
 
    private static final Map<String, Object> DOCUMENT = Map.of("a/b", 1, "m~n", 2, "list", List.of("x", "y"), "nested",
          Map.of("deep", "value"));
@@ -41,19 +41,20 @@ class JsonPointerTest {
    @CsvSource(delimiter = '|', value = { "/a~1b | 1", "/m~0n | 2", "/list/0 | x", "/list/1 | y",
          "/nested/deep | value" })
    void aValueIsReadThroughObjectsAndArrays(String pointer, String value) {
-      assertEquals(value, String.valueOf(JsonPointer.get(DOCUMENT, pointer, "the body")));
+      assertEquals(value, String.valueOf(ArazzoJsonPointer.get(DOCUMENT, pointer, "the body")));
    }
 
    @Test
    void theEmptyPointerIsTheWholeValue() {
-      assertSame(DOCUMENT, JsonPointer.get(DOCUMENT, "", "the body"));
+      assertSame(DOCUMENT, ArazzoJsonPointer.get(DOCUMENT, "", "the body"));
    }
 
    @ParameterizedTest
    @CsvSource({ "/missing", "/list/2", "/list/-1", "/list/first", "/nested/deep/deeper" })
    void aMissingValueIsReported(String pointer) {
       assertEquals("No value at JSON pointer " + pointer + " in the body",
-            assertThrows(ArazzoRunException.class, () -> JsonPointer.get(DOCUMENT, pointer, "the body")).getMessage());
+            assertThrows(ArazzoExpressionException.class, () -> ArazzoJsonPointer.get(DOCUMENT, pointer, "the body"))
+                  .getMessage());
    }
 
    @Test
@@ -61,12 +62,12 @@ class JsonPointerTest {
       Map<String, Object> item = new LinkedHashMap<>(Map.of("quantity", 1));
       Map<String, Object> payload = new LinkedHashMap<>(Map.of("items", new ArrayList<>(List.of(item, "b"))));
 
-      assertSame(payload, JsonPointer.set(payload, "/items/0/quantity", 3));
-      assertSame(payload, JsonPointer.set(payload, "/items/1", "c"));
-      assertSame(payload, JsonPointer.set(payload, "/tier", "GOLD"));
+      assertSame(payload, ArazzoJsonPointer.set(payload, "/items/0/quantity", 3));
+      assertSame(payload, ArazzoJsonPointer.set(payload, "/items/1", "c"));
+      assertSame(payload, ArazzoJsonPointer.set(payload, "/tier", "GOLD"));
 
       assertEquals(Map.of("items", List.of(Map.of("quantity", 3), "c"), "tier", "GOLD"), payload);
-      assertEquals("whole", JsonPointer.set(payload, "", "whole"));
+      assertEquals("whole", ArazzoJsonPointer.set(payload, "", "whole"));
    }
 
    @ParameterizedTest
@@ -75,6 +76,7 @@ class JsonPointerTest {
       Map<String, Object> payload = new LinkedHashMap<>(Map.of("name", "Eclair", "list", new ArrayList<>()));
 
       assertEquals("No value at JSON pointer " + pointer + " in the request body",
-            assertThrows(ArazzoRunException.class, () -> JsonPointer.set(payload, pointer, "x")).getMessage());
+            assertThrows(ArazzoExpressionException.class, () -> ArazzoJsonPointer.set(payload, pointer, "x"))
+                  .getMessage());
    }
 }

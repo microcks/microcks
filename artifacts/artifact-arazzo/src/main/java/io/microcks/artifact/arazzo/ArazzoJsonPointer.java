@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.minion.arazzo.runner;
+package io.microcks.artifact.arazzo;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,9 +23,9 @@ import java.util.Map;
  * RFC 6901 JSON pointers over the values Jackson reads: maps, lists and scalars.
  * @author SebastienDegodez
  */
-final class JsonPointer {
+public final class ArazzoJsonPointer {
 
-   private JsonPointer() {
+   private ArazzoJsonPointer() {
    }
 
    /**
@@ -33,9 +33,9 @@ final class JsonPointer {
     * @param pointer The JSON pointer, empty for the whole value
     * @param owner   What the value is, to tell where a value is missing
     * @return The value at the pointer
-    * @throws ArazzoRunException if there is no value at the pointer
+    * @throws ArazzoExpressionException if there is no value at the pointer
     */
-   static Object get(Object root, String pointer, String owner) {
+   public static Object get(Object root, String pointer, String owner) {
       Object current = root;
       for (String token : tokens(pointer)) {
          current = child(current, token, pointer, owner);
@@ -49,10 +49,10 @@ final class JsonPointer {
     * @param pointer The JSON pointer of an existing member or item; empty to replace the whole payload
     * @param value   The value to write
     * @return The payload with the value written
-    * @throws ArazzoRunException if the pointer does not lead to a member or an item
+    * @throws ArazzoExpressionException if the pointer does not lead to a member or an item
     */
    @SuppressWarnings("unchecked")
-   static Object set(Object root, String pointer, Object value) {
+   public static Object set(Object root, String pointer, Object value) {
       List<String> tokens = tokens(pointer);
       if (tokens.isEmpty()) {
          return value;
@@ -102,7 +102,7 @@ final class JsonPointer {
       throw noValue(pointer, owner);
    }
 
-   private static ArazzoRunException noValue(String pointer, String owner) {
-      return new ArazzoRunException("No value at JSON pointer " + pointer + " in " + owner);
+   private static ArazzoExpressionException noValue(String pointer, String owner) {
+      return new ArazzoExpressionException("No value at JSON pointer " + pointer + " in " + owner);
    }
 }

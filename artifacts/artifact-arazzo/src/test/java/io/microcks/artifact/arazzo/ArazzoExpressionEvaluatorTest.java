@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.minion.arazzo.runner;
+package io.microcks.artifact.arazzo;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,14 +29,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Tests of the runtime expressions a workflow can use, evaluated after a step answered.
  * @author SebastienDegodez
  */
-class ExpressionEvaluatorTest {
+class ArazzoExpressionEvaluatorTest {
 
-   private static final EvaluationContext CONTEXT = new EvaluationContext(
+   private static final Context CONTEXT = new Context(
          Map.of("pastry", "Eclair Cafe", "address", Map.of("city", "Lille")),
-         Map.of("list", Map.of("first", "Baba Rhum", "pastries", List.of("Baba Rhum", "Divorces"))),
-         new HttpOutcome(201, Map.of("X-Trace", List.of("t-1", "t-2")), "[{\"id\":7}]"));
+         Map.of("list", Map.of("first", "Baba Rhum", "pastries", List.of("Baba Rhum", "Divorces"))), 201,
+         Map.of("X-Trace", List.of("t-1", "t-2")), List.of(Map.of("id", 7)));
 
-   private final ExpressionEvaluator evaluator = new ExpressionEvaluator();
+   private final ArazzoExpressionEvaluator evaluator = new ArazzoExpressionEvaluator();
 
    @ParameterizedTest
    @CsvSource(delimiter = '|', value = { "$statusCode | 201", "$response.body | [{id=7}]", "$response.body#/0/id | 7",
@@ -48,9 +48,9 @@ class ExpressionEvaluatorTest {
    }
 
    @Test
-   void aBodyThatIsNotJsonIsText() {
+   void theBodyIsWhatTheContextReadsOfTheResponse() {
       assertEquals("<pastry/>",
-            evaluator.evaluate("$response.body", CONTEXT.with(new HttpOutcome(200, Map.of(), "<pastry/>"))));
+            evaluator.evaluate("$response.body", new Context(Map.of(), Map.of(), 200, Map.of(), "<pastry/>")));
    }
 
    @ParameterizedTest
@@ -64,15 +64,26 @@ class ExpressionEvaluatorTest {
          "$response.body#/1/id | No value at JSON pointer /1/id in $response.body" })
    void anExpressionWithoutValueIsReportedWithTheReason(String expression, String reason) {
       assertEquals(reason,
-            assertThrows(ArazzoRunException.class, () -> evaluator.evaluate(expression, CONTEXT)).getMessage());
+            assertThrows(ArazzoExpressionException.class, () -> evaluator.evaluate(expression, CONTEXT)).getMessage());
    }
 
-   @ParameterizedTest
-   @CsvSource({ "$statusCode", "$response.body", "$response.header.X-Trace" })
-   void anExpressionOnTheResponseHasNoValueBeforeTheCall(String expression) {
-      EvaluationContext beforeTheCall = new EvaluationContext(Map.of(), Map.of(), null);
+   /** A response already read, as the minion and Microcks give it. */
+   private record Context(Map<String, Object> inputs, Map<String, Map<String, Object>> steps, int status,
+         Map<String, List<String>> headers, Object body) implements ArazzoExpressionContext {
 
-      assertEquals("No response yet for " + expression,
-            assertThrows(ArazzoRunException.class, () -> evaluator.evaluate(expression, beforeTheCall)).getMessage());
+      @Override
+      public int statusCode(String expression) {
+         return status;
+      }
+
+      @Override
+      public Map<String, List<String>> responseHeaders(String expression) {
+         return headers;
+      }
+
+      @Override
+      public Object responseBody(String expression) {
+         return body;
+      }
    }
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.minion.arazzo.runner;
+package io.microcks.artifact.arazzo;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ import java.util.Map;
  * followed by an optional {@code #<JSON pointer>}.
  * @author SebastienDegodez
  */
-final class ExpressionEvaluator {
+public final class ArazzoExpressionEvaluator {
 
    private static final String STATUS_CODE = "$statusCode";
    private static final String RESPONSE_BODY = "$response.body";
@@ -38,7 +38,7 @@ final class ExpressionEvaluator {
     * @param context What the expression can see
     * @return The value of the expression, or the constant
     */
-   Object resolve(String value, EvaluationContext context) {
+   public Object resolve(String value, ArazzoExpressionContext context) {
       return isExpression(value) ? evaluate(value, context) : value;
    }
 
@@ -46,7 +46,7 @@ final class ExpressionEvaluator {
     * @param value A value of the workflow
     * @return Whether it is a runtime expression rather than a constant
     */
-   static boolean isExpression(String value) {
+   public static boolean isExpression(String value) {
       return value.startsWith("$");
    }
 
@@ -54,23 +54,23 @@ final class ExpressionEvaluator {
     * @param expression A runtime expression
     * @param context    What the expression can see
     * @return Its value
-    * @throws ArazzoRunException if the expression has no value
+    * @throws ArazzoExpressionException if the expression has no value
     */
-   Object evaluate(String expression, EvaluationContext context) {
+   public Object evaluate(String expression, ArazzoExpressionContext context) {
       String[] parts = expression.split("#", 2);
       Object value = base(parts[0], context);
-      return parts.length == 2 ? JsonPointer.get(value, parts[1], parts[0]) : value;
+      return parts.length == 2 ? ArazzoJsonPointer.get(value, parts[1], parts[0]) : value;
    }
 
-   private static Object base(String expression, EvaluationContext context) {
+   private static Object base(String expression, ArazzoExpressionContext context) {
       if (expression.equals(STATUS_CODE)) {
-         return context.responseFor(expression).status();
+         return context.statusCode(expression);
       }
       if (expression.equals(RESPONSE_BODY)) {
          return context.responseBody(expression);
       }
       if (expression.startsWith(RESPONSE_HEADER)) {
-         return header(context.responseFor(expression).headers(), expression.substring(RESPONSE_HEADER.length()));
+         return header(context.responseHeaders(expression), expression.substring(RESPONSE_HEADER.length()));
       }
       if (expression.startsWith(INPUTS)) {
          return lookup(context.inputs(), expression.substring(INPUTS.length()), "Unknown input: ");
@@ -81,18 +81,18 @@ final class ExpressionEvaluator {
          return lookup(lookup(context.steps(), stepId, "Unknown step: "),
                expression.substring(outputs + OUTPUTS.length()), "Unknown output of step " + stepId + ": ");
       }
-      throw new ArazzoRunException("Unsupported runtime expression: " + expression);
+      throw new ArazzoExpressionException("Unsupported runtime expression: " + expression);
    }
 
    private static String header(Map<String, List<String>> headers, String name) {
       return headers.entrySet().stream().filter(header -> header.getKey().equalsIgnoreCase(name))
             .map(header -> header.getValue().get(0)).findFirst()
-            .orElseThrow(() -> new ArazzoRunException("No response header " + name));
+            .orElseThrow(() -> new ArazzoExpressionException("No response header " + name));
    }
 
    private static <T> T lookup(Map<String, T> values, String name, String unknown) {
       if (!values.containsKey(name)) {
-         throw new ArazzoRunException(unknown + name);
+         throw new ArazzoExpressionException(unknown + name);
       }
       return values.get(name);
    }

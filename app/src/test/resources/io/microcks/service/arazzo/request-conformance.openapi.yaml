@@ -1,0 +1,76 @@
+# example: refund-api - Refund API 1.0.0: a refund needs an idempotency key, a reason in query and a JSON body
+openapi: 3.0.2
+info:
+  title: Refund API
+  version: 1.0.0
+paths:
+  /refunds/{paymentId}:
+    parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - name: paymentId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: refund
+      parameters:
+        - name: reason
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: notify
+          in: query
+          schema:
+            type: boolean
+      requestBody:
+        $ref: '#/components/requestBodies/Refund'
+      responses:
+        "201":
+          description: The refund made
+    delete:
+      operationId: cancelRefund
+      responses:
+        "204":
+          description: The refund cancelled
+  /notes:
+    post:
+      operationId: addNote
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        "201":
+          description: The note added
+  /memos:
+    post:
+      operationId: addMemo
+      requestBody:
+        content:
+          application/json: {}
+      responses:
+        "201":
+          description: The memo added
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+  requestBodies:
+    Refund:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - amount
+            properties:
+              amount:
+                type: number
