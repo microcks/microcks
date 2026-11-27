@@ -35,6 +35,7 @@ import io.microcks.util.tracing.CommonEvents;
 import io.microcks.util.tracing.TraceUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.smallrye.common.annotation.RunOnVirtualThread;
@@ -233,6 +234,9 @@ public class RestController {
       // Add an event for the invocation reception with a human-friendly message.
       Span span = Span.current();
       TraceUtil.enableExplainTracing();
+      // Tell Live Traces when the invocation comes from an Arazzo workflow.
+      Attributes arazzo = MockControllerCommons.getArazzoAttributes(request);
+      span.setAllAttributes(arazzo);
 
       span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
             .explainSpanEventBuilder(String.format("Received REST invocation %s %s", method, request.getRequestURI()))
@@ -245,7 +249,7 @@ public class RestController {
                   request.getRequestURL().toString()
                         + (request.getQueryString() != null ? "?" + request.getQueryString() : ""))
             .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr() != null ? request.getRemoteAddr() : "")
-            .build());
+            .putAll(arazzo).build());
 
       // Find matching service and operation.
       MockInvocationContext ic = findInvocationContext(serviceName, version, request, method);

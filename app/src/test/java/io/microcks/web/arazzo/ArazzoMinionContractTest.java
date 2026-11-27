@@ -114,7 +114,8 @@ class ArazzoMinionContractTest {
                   new WorkflowParameterValue("Accept", "header", "application/json", null)),
             Map.of("name", "$response.body#/name", "price", "$response.body#/price")), report.toStepResult());
       Request request = report.toRequest();
-      assertEquals("readPastry Accept=[application/json] null",
+      assertEquals("readPastry Accept=[application/json], baggage=[microcks-arazzo-run=6719f0c2a1b2c3d4e5f60718,"
+            + "microcks-arazzo-workflow=readThenReprice,microcks-arazzo-step=readPastry,microcks-arazzo-attempt=1] null",
             request.getName() + " " + headers(request.getHeaders()) + " " + request.getContent());
       Response response = report.toResponse();
       assertEquals(

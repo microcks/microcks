@@ -86,4 +86,15 @@ public class CommonAttributes {
 
    /** A 'error.status' span attribute. */
    public static final AttributeKey<Long> ERROR_STATUS = AttributeKey.longKey("error.status");
+
+   /** A 'arazzo.run.id' span attribute: the Arazzo run a mock invocation comes from. */
+   public static final AttributeKey<String> ARAZZO_RUN_ID = AttributeKey.stringKey("arazzo.run.id");
+   /** A 'arazzo.workflow.id' span attribute: the Arazzo workflow a mock invocation comes from. */
+   public static final AttributeKey<String> ARAZZO_WORKFLOW_ID = AttributeKey.stringKey("arazzo.workflow.id");
+   /** A 'arazzo.step.id' span attribute: the step of the Arazzo workflow a mock invocation comes from. */
+   public static final AttributeKey<String> ARAZZO_STEP_ID = AttributeKey.stringKey("arazzo.step.id");
+   /** A 'arazzo.attempt' span attribute: which call of its step a mock invocation is, from 1. */
+   public static final AttributeKey<Long> ARAZZO_ATTEMPT = AttributeKey.longKey("arazzo.attempt");
+   /** A 'arazzo.via' span attribute: how an Arazzo workflow reached the mock, such as 'run'. */
+   public static final AttributeKey<String> ARAZZO_VIA = AttributeKey.stringKey("arazzo.via");
 }
