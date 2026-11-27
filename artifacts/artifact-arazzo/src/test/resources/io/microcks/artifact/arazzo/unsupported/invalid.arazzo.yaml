@@ -1,0 +1,77 @@
+# Documents Arazzo forbids: invalid Arazzo, refused permanently. One YAML document per example.
+# example: lone-operation-id - an operationId that does not name its source while there are several source descriptions
+arazzo: 1.0.1
+info:
+  title: Order fulfilment
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: readCustomer
+        operationId: $sourceDescriptions.customerApi.GetCustomer
+      - stepId: createOrder
+        operationId: CreateOrder
+---
+# example: unknown-source - an operationId naming a source description the document does not declare
+arazzo: 1.0.1
+info:
+  title: API Pastry scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readThenReprice
+    steps:
+      - stepId: readPastry
+        operationId: $sourceDescriptions.pastryApi.GetPastryByName
+      - stepId: reprice
+        operationId: $sourceDescriptions.unknown.PatchPastry
+---
+# example: no-info - a document without the info block Arazzo requires
+arazzo: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readOne
+    steps:
+      - stepId: readPastry
+        operationId: GetPastryByName
+---
+# example: no-info-title - a document whose info has a version but no title
+arazzo: 1.0.1
+info:
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readOne
+    steps:
+      - stepId: readPastry
+        operationId: GetPastryByName
+---
+# example: no-info-version - a document whose info has a title but no version
+arazzo: 1.0.1
+info:
+  title: API Pastry scenarios
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readOne
+    steps:
+      - stepId: readPastry
+        operationId: GetPastryByName

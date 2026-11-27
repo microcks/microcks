@@ -1,0 +1,50 @@
+# example: operation-id-alone - with a single source description, an operationId alone calls that source
+arazzo: 1.0.1
+info:
+  title: Called sources
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: callOne
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+---
+# example: named-source - with several source descriptions, an operationId names the source it calls
+arazzo: 1.0.1
+info:
+  title: Called sources
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: callOne
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+---
+# example: dotted-operation-id - an operationId may contain dots, a source name may not
+arazzo: 1.0.1
+info:
+  title: Called sources
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: callOne
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.orders.create

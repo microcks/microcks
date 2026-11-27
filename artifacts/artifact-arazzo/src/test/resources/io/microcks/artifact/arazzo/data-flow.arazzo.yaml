@@ -1,0 +1,143 @@
+# example: parameters - step outputs and inputs used as path, query and header parameters
+arazzo: 1.0.1
+info:
+  title: Parameters
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    inputs:
+      type: object
+      properties:
+        pastry:
+          type: string
+    steps:
+      - stepId: list
+        operationId: GetPastries
+        parameters:
+          - name: size
+            in: query
+            value: $inputs.size
+        outputs:
+          first: $response.body#/0/name
+          size: $response.body#/0/size
+      - stepId: read
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $steps.list.outputs.first
+          - name: size
+            in: query
+            value: $steps.list.outputs.size
+          - name: X-Pastry
+            in: header
+            value: $inputs.pastry
+          - name: Accept
+            in: header
+            value: application/json
+---
+# example: body - a step output and an input replacing parts of a request body
+arazzo: 1.0.1
+info:
+  title: Body
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+        outputs:
+          price: $response.body#/price
+      - stepId: reprice
+        operationId: PatchPastry
+        requestBody:
+          payload:
+            name: ''
+            price: 0
+          replacements:
+            - target: /price
+              value: $steps.read.outputs.price
+            - target: /name
+              value: $inputs.pastry
+---
+# example: criteria - step outputs and inputs checked by the condition or the context of criteria
+arazzo: 1.0.1
+info:
+  title: Criteria
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+        outputs:
+          name: $response.body#/name
+          price: $response.body#/price
+      - stepId: reprice
+        operationId: PatchPastry
+        successCriteria:
+          - condition: $response.body#/price == $inputs.newPrice
+          - condition: $response.body#/price != $steps.read.outputs.price
+          - context: $steps.read.outputs.name
+            condition: ^[A-Z].*
+            type: regex
+---
+# example: embedded - expressions embedded in a value, several in one value, and the same one used twice in a place
+arazzo: 1.0.1
+info:
+  title: Embedded
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: login
+        operationId: GetPastries
+        outputs:
+          token: $response.header.X-Token
+          scheme: $response.header.X-Scheme
+      - stepId: read
+        operationId: GetPastryByName
+        parameters:
+          - name: Authorization
+            in: header
+            value: '{$steps.login.outputs.scheme} {$steps.login.outputs.token} for {$inputs.user-name}'
+        successCriteria:
+          - condition: $statusCode == 200 && $inputs.user-name != '' && $inputs.user-name != $steps.login.outputs.token
+          - condition: $response.header.X-Token == $steps.login.outputs.token
+---
+# example: constants - a workflow whose steps use neither step outputs nor the input it declares
+arazzo: 1.0.1
+info:
+  title: Constants
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    inputs:
+      type: object
+      properties:
+        unused:
+          type: string
+    steps:
+      - stepId: list
+        operationId: GetPastries
+        parameters:
+          - name: size
+            in: query
+            value: S
+        successCriteria:
+          - condition: $statusCode == 200

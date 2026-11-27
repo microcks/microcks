@@ -1,0 +1,63 @@
+# Steps using a field the workflow runner does not execute yet. One YAML document per example.
+# example: on-failure - the step createOrder retries on failure
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        onFailure:
+          - name: retryOnce
+            type: retry
+            retryLimit: 1
+---
+# example: on-success - the step createOrder ends the workflow on success
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        onSuccess:
+          - name: done
+            type: end
+---
+# example: operation-path - the step createOrder targets its operation by path rather than by id
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationPath: '{$sourceDescriptions.orderApi.url}#/paths/~1orders/post'
+---
+# example: nested-workflow - the step createOrder runs another workflow
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        workflowId: payOrder

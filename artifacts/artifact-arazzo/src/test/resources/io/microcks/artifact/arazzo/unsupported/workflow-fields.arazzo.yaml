@@ -1,0 +1,50 @@
+# Workflows using a field the workflow runner does not execute yet. One YAML document per example.
+# example: depends-on - the workflow placeOrder runs after createCustomer
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    dependsOn:
+      - createCustomer
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+---
+# example: success-actions - the workflow placeOrder declares default success actions for its steps
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    successActions:
+      - name: done
+        type: end
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+---
+# example: failure-actions - the workflow placeOrder declares default failure actions for its steps
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    failureActions:
+      - name: stop
+        type: end
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder

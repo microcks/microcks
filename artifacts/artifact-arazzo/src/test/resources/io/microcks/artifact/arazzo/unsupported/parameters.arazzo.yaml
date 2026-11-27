@@ -1,0 +1,36 @@
+# Parameters sent where the workflow runner cannot send them yet. One YAML document per example.
+# example: step-cookie - the step createOrder sends a cookie
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        parameters:
+          - name: session
+            in: cookie
+            value: $inputs.session
+---
+# example: workflow-cookie - the workflow placeOrder sends a cookie on every step
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    parameters:
+      - name: session
+        in: cookie
+        value: $inputs.session
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder

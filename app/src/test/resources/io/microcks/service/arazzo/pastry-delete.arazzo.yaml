@@ -1,0 +1,44 @@
+arazzo: 1.0.1
+info:
+  title: API Pastry scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readThenReprice
+    summary: Reads a pastry, changes its price, then deletes it.
+    steps:
+      - stepId: readPastry
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          name: $response.body#/name
+      - stepId: reprice
+        operationId: $sourceDescriptions.pastryApi.PatchPastry
+        parameters:
+          - name: name
+            in: path
+            value: $steps.readPastry.outputs.name
+        requestBody:
+          payload:
+            price: 0
+          replacements:
+            - target: /price
+              value: $inputs.newPrice
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: deletePastry
+        operationId: $sourceDescriptions.pastryApi.DeletePastry
+        parameters:
+          - name: name
+            in: path
+            value: $steps.readPastry.outputs.name
+        successCriteria:
+          - condition: $statusCode == 204

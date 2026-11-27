@@ -16,6 +16,7 @@
 package io.microcks.web;
 
 import io.microcks.repository.SecretRepository;
+import io.microcks.service.ArazzoDocumentService;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -42,6 +43,9 @@ class UploadArtifactControllerTest {
 
    @Mock
    private SecretRepository secretRepository;
+
+   @Mock
+   private ArazzoDocumentService arazzoDocumentService;
 
    @InjectMocks
    private UploadArtifactController sut;

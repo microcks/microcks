@@ -206,6 +206,31 @@ mock-controller classes are refactored. Moved unit tests keep their fixtures und
 - The *Run a test* page (`/tests/create`) is also new: runners are derived from imported artifact kinds; launch records a request only.
 - Service detail: the "Used in N workflows" block is hidden (`SHOW_WORKFLOW_USAGE = false` in the service page) until workflows are wired to the backend. To re-enable (see IDEAS.md M2-009).
 
+## Arazzo (fork `SebastienDegodez/microcks`, branch `v2/arazzo`)
+
+Port of the Arazzo POC of `feature/arazzo` (1.x, Spring Boot + Angular), story by story. `feature/arazzo` is kept
+untouched as the 1.x reference. The Angular screens are not ported: the SvelteKit Workflows screens (Deep Ink) are
+wired to the API instead.
+
+| 1.x (`feature/arazzo`) | 2.0 |
+|---|---|
+| `commons/util` `io.github.microcks.util.arazzo` (reader, shared kernel) | `artifacts/artifact-arazzo` (`io.microcks.artifact.arazzo`), depends on Jackson only (ArchUnit test) |
+| `commons/model` `Arazzo*` | `commons/model` `io.microcks.domain`; `ArazzoDocument` and `ArazzoSources` are `@MongoEntity` (collections `arazzoDocument`, `arazzoSources`, same as Spring Data) |
+| `ArazzoDocumentRepository`, `ArazzoSourcesRepository` (Spring Data) | Panache `ObjectIdRepository`; `findAll(Sort)` → `findAllSorted()` |
+| `ArazzoDocumentService`, `ArazzoWorkflowService` | CDI `@ApplicationScoped`, `save` → `persistOrUpdate` |
+| `ArazzoDocumentController`, `ArazzoWorkflowController` (Spring MVC) | JAX-RS, `@RunOnVirtualThread`, same paths under `/api/arazzo` |
+| `UploadArtifactController` Arazzo branch | same branch in the Quarkus controller (upload and download) |
+| Tests (`@SpringJUnitConfig`, `@DirtiesContext`) | `@QuarkusTest` (database emptied by `MongoCleanupCallback`); multipart and download calls through RestAssured (download takes query parameters in 2.0) |
+
+New in 2.0: `GET /api/arazzo/documents/{id}/source` returns the document as uploaded (Source tab).
+
+| Story | Status |
+|---|---|
+| S1 import (upload, download, refusal of unsupported documents) | ported |
+| S2 link source descriptions through an ArazzoSources overlay | ported |
+| S3 browse, S4 read the steps and the diagram, S12 workflows using an API | ported |
+| S5 and later (runs, history, sessions, mock URL, minion) | to do |
+
 ## Known divergences and TODO
 
 - Check `ServiceLoader` provider registration under Quarkus native mode (unverified).

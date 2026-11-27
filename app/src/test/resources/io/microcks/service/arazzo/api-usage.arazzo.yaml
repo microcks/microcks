@@ -1,0 +1,51 @@
+# example: pastry-checks - a document whose workflows call API Pastry - 2.0 in ways the domain examples do not show
+arazzo: 1.0.1
+info:
+  title: Pastry checks
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readTwice
+    summary: Reads the same pastry twice, to check that it does not change.
+    steps:
+      - stepId: firstRead
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: secondRead
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+        successCriteria:
+          - condition: $statusCode == 200
+  - workflowId: deleteOnly
+    summary: Deletes a pastry, with an operation API Pastry - 2.0 does not define.
+    steps:
+      - stepId: deletePastry
+        operationId: DeletePastry
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+        successCriteria:
+          - condition: $statusCode == 204
+---
+# example: pastry-checks-sources - the overlay linking the source description of Pastry checks to API Pastry - 2.0
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: Pastry checks
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0

@@ -1,0 +1,12 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: Order fulfilment
+  version: 1.0.0
+sources:
+  customerApi:
+    name: Customer API
+    version: 1.0.0
+  orderApi:
+    name: Order API
+    version: 1.0.0

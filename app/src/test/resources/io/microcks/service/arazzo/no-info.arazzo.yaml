@@ -1,0 +1,16 @@
+# The shape of the Specmatic sample uuid_order_workflow.arazzo.yaml: no info block, which Arazzo requires.
+arazzo: 1.0.0
+sourceDescriptions:
+  - name: OrderApi
+    url: ./api_order_v4.yaml
+    type: openapi
+  - name: UuidApi
+    url: ./api_uuid_v1.yaml
+    type: openapi
+workflows:
+  - workflowId: PlaceOrder
+    steps:
+      - stepId: GetUUID
+        operationId: $sourceDescriptions.UuidApi.CreateUuid
+      - stepId: PlaceOrder
+        operationId: $sourceDescriptions.OrderApi.postOrders
