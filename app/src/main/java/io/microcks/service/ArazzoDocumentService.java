@@ -17,7 +17,6 @@ package io.microcks.service;
 
 import io.microcks.domain.ArazzoDocument;
 import io.microcks.domain.ArazzoDocumentSummary;
-import io.microcks.domain.ArazzoLastResult;
 import io.microcks.domain.ArazzoSourceLink;
 import io.microcks.domain.ArazzoSourceSummary;
 import io.microcks.domain.ArazzoSources;
@@ -29,6 +28,7 @@ import io.microcks.domain.Resource;
 import io.microcks.domain.ResourceType;
 import io.microcks.domain.Service;
 import io.microcks.domain.ServiceRef;
+import io.microcks.domain.WorkflowRunSummary;
 import io.microcks.repository.ArazzoDocumentRepository;
 import io.microcks.repository.ArazzoSourcesRepository;
 import io.microcks.repository.ResourceRepository;
@@ -71,6 +71,7 @@ public class ArazzoDocumentService {
    private final ArazzoSourcesRepository arazzoSourcesRepository;
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
+   private final ArazzoRunHistoryService arazzoRunHistoryService;
 
    /**
     * Build a new ArazzoDocumentService with its required dependencies.
@@ -78,15 +79,17 @@ public class ArazzoDocumentService {
     * @param arazzoSourcesRepository  The repository of imported ArazzoSources overlays
     * @param serviceRepository        The repository of the APIs the source descriptions are linked to
     * @param resourceRepository       The repository of the contracts that define the operations of these APIs
+    * @param arazzoRunHistoryService  The service reading the runs history, for the last run of each workflow
     */
    @Inject
    public ArazzoDocumentService(ArazzoDocumentRepository arazzoDocumentRepository,
          ArazzoSourcesRepository arazzoSourcesRepository, ServiceRepository serviceRepository,
-         ResourceRepository resourceRepository) {
+         ResourceRepository resourceRepository, ArazzoRunHistoryService arazzoRunHistoryService) {
       this.arazzoDocumentRepository = arazzoDocumentRepository;
       this.arazzoSourcesRepository = arazzoSourcesRepository;
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
+      this.arazzoRunHistoryService = arazzoRunHistoryService;
    }
 
    /**
@@ -185,12 +188,14 @@ public class ArazzoDocumentService {
       return sources.values().stream().anyMatch(source -> apiName.equals(source.link().apiName()));
    }
 
-   private static ArazzoDocumentSummary summary(ArazzoDocument document, Map<String, ResolvedSource> sources) {
+   private ArazzoDocumentSummary summary(ArazzoDocument document, Map<String, ResolvedSource> sources) {
       List<ArazzoSourceSummary> sourceSummaries = sources.values().stream().map(ResolvedSource::summary).toList();
-      List<ArazzoWorkflowSummary> workflowSummaries = statuses(document, sources).stream()
-            .map(status -> new ArazzoWorkflowSummary(status, description(document, status.workflowId()),
-                  document.getWorkflowCalls().get(status.workflowId()).size(), ArazzoLastResult.NEVER_RUN))
-            .toList();
+      List<ArazzoWorkflowSummary> workflowSummaries = statuses(document, sources).stream().map(status -> {
+         WorkflowRunSummary lastRun = arazzoRunHistoryService.getLastRun(document.getId(), status.workflowId());
+         return new ArazzoWorkflowSummary(status, description(document, status.workflowId()),
+               document.getWorkflowCalls().get(status.workflowId()).size(), ArazzoRunHistoryService.lastResult(lastRun),
+               lastRun);
+      }).toList();
       return new ArazzoDocumentSummary(document.getId(), document.getTitle(), document.getVersion(),
             document.getArazzoVersion(), document.getFileName(), document.getImportDate(), sourceSummaries,
             workflowSummaries);
@@ -264,7 +269,7 @@ public class ArazzoDocumentService {
     * A workflow is runnable when each of its steps calls an operation found in a linked API; else these are the
     * reasons, in the order of the steps, each given once.
     */
-   private static ArazzoWorkflowStatus status(String workflowId, List<ArazzoStepCall> calls,
+   static ArazzoWorkflowStatus status(String workflowId, List<ArazzoStepCall> calls,
          Map<String, ResolvedSource> sources) {
       Set<String> reasons = new LinkedHashSet<>();
       for (ArazzoStepCall call : calls) {

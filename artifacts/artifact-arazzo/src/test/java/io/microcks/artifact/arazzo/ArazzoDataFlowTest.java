@@ -23,13 +23,15 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Tests of the data flow of an Arazzo workflow: where its steps use the outputs of earlier steps. One multi-document
- * fixture, {@code data-flow.arazzo.yaml}, holds the examples.
+ * Tests of the data flow of an Arazzo workflow: where its steps use the outputs of earlier steps and its inputs, and
+ * which inputs a run needs. The multi-document fixtures {@code data-flow.arazzo.yaml} and
+ * {@code needed-inputs.arazzo.yaml} hold the examples.
  * @author SebastienDegodez
  */
 class ArazzoDataFlowTest {
 
    private static final String FIXTURE = "data-flow.arazzo.yaml";
+   private static final String NEEDED_INPUTS = "needed-inputs.arazzo.yaml";
 
    @ParameterizedTest
    @CsvSource(delimiter = ';', value = {
@@ -58,8 +60,21 @@ class ArazzoDataFlowTest {
                         .toList()));
    }
 
+   /** S8: a run is refused when one of the inputs its workflow needs is missing. */
+   @ParameterizedTest
+   @CsvSource(delimiter = ';', value = { "parameters; size, pastry, customer", "body; pastry, newPrice",
+         "criteria; newPrice, label", "outputs; size, label", "schema; pastry, note, size, token", "none; ''" })
+   void theInputsAWorkflowNeedsAreThoseItsExpressionsUseAndThoseItsSchemaRequires(String example, String inputs)
+         throws IOException {
+      assertEquals(inputs, String.join(", ", ArazzoDataFlow.neededInputs(workflow(NEEDED_INPUTS, example))));
+   }
+
    private static ArazzoWorkflow workflow(String example) throws IOException {
-      return ArazzoWorkflowReader.workflow(ArazzoFixtures.exampleOf(FIXTURE, example), "flow").orElseThrow();
+      return workflow(FIXTURE, example);
+   }
+
+   private static ArazzoWorkflow workflow(String fixture, String example) throws IOException {
+      return ArazzoWorkflowReader.workflow(ArazzoFixtures.exampleOf(fixture, example), "flow").orElseThrow();
    }
 
    private static String describe(ArazzoUse use) {

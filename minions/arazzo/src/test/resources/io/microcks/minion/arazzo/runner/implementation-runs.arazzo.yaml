@@ -1,0 +1,70 @@
+# example: order-fulfilment - a workflow whose steps call two source descriptions, each at the base URL of its own implementation
+arazzo: 1.0.1
+info:
+  title: Order fulfilment
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: placeOrder
+    summary: Reads a customer, then places an order for this customer.
+    inputs:
+      type: object
+      properties:
+        customerId:
+          type: string
+    steps:
+      - stepId: getCustomer
+        operationId: $sourceDescriptions.customerApi.GetCustomer
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.customerId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          customerId: $response.body#/id
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+        requestBody:
+          contentType: application/json
+          payload:
+            customerId: ""
+          replacements:
+            - target: /customerId
+              value: $steps.getCustomer.outputs.customerId
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          orderId: $response.body#/id
+    outputs:
+      orderId: $steps.createOrder.outputs.orderId
+---
+# example: own-authorization - a step that sets its own authorization header, which the secret of the run replaces
+arazzo: 1.0.1
+info:
+  title: Order fulfilment with an authorization
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readCustomerWithItsOwnAuthorization
+    steps:
+      - stepId: getCustomer
+        operationId: $sourceDescriptions.customerApi.GetCustomer
+        parameters:
+          - name: id
+            in: path
+            value: c-42
+          - name: authorization
+            in: header
+            value: Basic c3RlcDpvd24=
+        successCriteria:
+          - condition: $statusCode == 200

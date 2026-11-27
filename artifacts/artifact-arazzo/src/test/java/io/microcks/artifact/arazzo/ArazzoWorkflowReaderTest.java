@@ -60,6 +60,7 @@ class ArazzoWorkflowReaderTest {
             workflow.summary());
       assertEquals("The price is changed on the pastry the first call returns.", workflow.description());
       assertEquals(List.of("pastry", "newPrice"), workflow.inputNames());
+      assertEquals("{pastry=string, newPrice=number}", workflow.inputTypes().toString());
       assertEquals("{before=$steps.readPastry.outputs.price, after=$steps.reprice.outputs.price}",
             workflow.outputs().toString());
    }

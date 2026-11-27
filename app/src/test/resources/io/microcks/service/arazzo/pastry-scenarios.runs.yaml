@@ -1,0 +1,46 @@
+# example: run 1 - readThenReprice passed against the Microcks mocks
+documentId: API Pastry scenarios
+workflowId: readThenReprice
+number: 1
+target: MOCKS
+status: SUCCESS
+startedDate: 2026-10-20T09:00:00Z
+elapsedTime: 24
+steps:
+  - { index: 0, stepId: readPastry, status: PASSED, statusCode: 200, elapsedTime: 10 }
+  - { index: 1, stepId: reprice, status: PASSED, statusCode: 200, elapsedTime: 14 }
+---
+# example: run 2 - readThenReprice failed at reprice against the implementations at http://localhost:8080
+documentId: API Pastry scenarios
+workflowId: readThenReprice
+number: 2
+target: IMPLEMENTATIONS
+status: FAILURE
+startedDate: 2026-10-21T09:00:00Z
+elapsedTime: 58
+steps:
+  - { index: 0, stepId: readPastry, status: PASSED, statusCode: 200, elapsedTime: 30 }
+  - { index: 1, stepId: reprice, status: FAILED, statusCode: 500, elapsedTime: 28 }
+---
+# example: run 3 - listThenReadFirst failed at readFirst against the Microcks mocks
+documentId: API Pastry scenarios
+workflowId: listThenReadFirst
+number: 3
+target: MOCKS
+status: FAILURE
+startedDate: 2026-10-21T10:00:00Z
+elapsedTime: 15
+steps:
+  - { index: 0, stepId: list, status: PASSED, statusCode: 200, elapsedTime: 8 }
+  - { index: 1, stepId: readFirst, status: FAILED, statusCode: 400, elapsedTime: 7 }
+---
+# example: another document - a run of Order fulfilment, never in the history of API Pastry scenarios
+documentId: Order fulfilment
+workflowId: searchThenRead
+number: 4
+target: MOCKS
+status: SUCCESS
+startedDate: 2026-10-21T11:00:00Z
+elapsedTime: 12
+steps:
+  - { index: 0, stepId: search, status: PASSED, statusCode: 200, elapsedTime: 12 }

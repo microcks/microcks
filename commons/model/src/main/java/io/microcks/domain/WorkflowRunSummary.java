@@ -1,0 +1,36 @@
+/*
+ * Copyright The Microcks Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.microcks.domain;
+
+import java.util.Date;
+
+/**
+ * What the runs history shows of a run of a workflow: its number in its document, what it ran against, and how it
+ * ended.
+ * @param id           The id of the run
+ * @param number       The number of the run in its Arazzo document, from 1; null for a run launched before runs were
+ *                     numbered
+ * @param workflowId   The id of the workflow that ran
+ * @param target       What the steps of the run called
+ * @param status       How the run ended, or that it is in progress
+ * @param failedStepId The id of the step the run failed at; null when no step failed
+ * @param startedDate  When the run started
+ * @param elapsedTime  How long the run took, in milliseconds
+ * @author SebastienDegodez
+ */
+public record WorkflowRunSummary(String id, Long number, String workflowId, WorkflowRunTarget target,
+      WorkflowRunStatus status, String failedStepId, Date startedDate, long elapsedTime) {
+}

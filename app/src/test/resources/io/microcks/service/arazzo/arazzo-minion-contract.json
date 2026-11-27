@@ -1,0 +1,138 @@
+{
+  "_comment": "The contract between Microcks and the Arazzo minion: the run request Microcks posts to the minion on POST /api/runs, the reports the minion posts back on POST /api/arazzo/runs/{runId}/steps and /outcome. The same file is in the webapp test resources: change both together.",
+  "runRequest": {
+    "runId": "6719f0c2a1b2c3d4e5f60718",
+    "workflowId": "readThenReprice",
+    "arazzoDocument": "arazzo: 1.0.1",
+    "inputs": {
+      "pastry": "Eclair Cafe",
+      "newPrice": 2.6
+    },
+    "sources": {
+      "pastryApi": {
+        "baseUrl": "/rest/API+Pastry+-+2.0/2.0.0",
+        "operations": {
+          "GetPastries": { "method": "GET", "path": "/pastry" },
+          "GetPastryByName": { "method": "GET", "path": "/pastry/{name}" },
+          "PatchPastry": { "method": "PATCH", "path": "/pastry/{name}" }
+        }
+      }
+    },
+    "timeoutMS": 10000
+  },
+  "passedStep": {
+    "index": 0,
+    "stepId": "readPastry",
+    "operation": { "sourceName": "pastryApi", "operationId": "GetPastryByName", "method": "GET", "path": "/pastry/{name}" },
+    "status": "PASSED",
+    "statusCode": 200,
+    "elapsedTime": 8,
+    "criteria": [
+      {
+        "condition": "$statusCode == 200 && $response.body#/status == 'available'",
+        "values": [
+          { "expression": "$statusCode", "value": 200 },
+          { "expression": "$response.body#/status", "value": "available" }
+        ],
+        "held": true
+      }
+    ],
+    "outputs": { "name": "Eclair Cafe", "price": 2.5 },
+    "request": {
+      "method": "GET",
+      "url": "http://microcks:8080/rest/API+Pastry+-+2.0/2.0.0/pastry/Eclair%20Cafe",
+      "headers": { "Accept": "application/json" },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": { "Content-Type": ["application/json"] },
+      "body": "{\"name\":\"Eclair Cafe\",\"price\":2.5,\"status\":\"available\"}"
+    },
+    "message": null,
+    "parameters": [
+      { "name": "name", "in": "path", "value": "Eclair Cafe", "expression": "$inputs.pastry" },
+      { "name": "Accept", "in": "header", "value": "application/json", "expression": null }
+    ],
+    "outputOrigins": { "name": "$response.body#/name", "price": "$response.body#/price" }
+  },
+  "failedStep": {
+    "index": 1,
+    "stepId": "readFirst",
+    "operation": { "sourceName": "pastryApi", "operationId": "GetPastryByName", "method": "GET", "path": "/pastry/{name}" },
+    "status": "FAILED",
+    "statusCode": 400,
+    "elapsedTime": 5,
+    "criteria": [
+      {
+        "condition": "$statusCode == 200",
+        "values": [ { "expression": "$statusCode", "value": 400 } ],
+        "held": false
+      }
+    ],
+    "outputs": {},
+    "request": {
+      "method": "GET",
+      "url": "http://microcks:8080/rest/API+Pastry+-+2.0/2.0.0/pastry/Baba%20Rhum",
+      "headers": {},
+      "body": null
+    },
+    "response": {
+      "status": 400,
+      "headers": { "Content-Type": ["text/plain"] },
+      "body": "The response /name=Baba Rhum does not exist!"
+    },
+    "message": null,
+    "parameters": [
+      { "name": "name", "in": "path", "value": "Baba Rhum", "expression": "$steps.list.outputs.first" }
+    ],
+    "outputOrigins": {}
+  },
+  "notRunStep": {
+    "index": 2,
+    "stepId": "reprice",
+    "operation": { "sourceName": "pastryApi", "operationId": "PatchPastry", "method": "PATCH", "path": "/pastry/{name}" },
+    "status": "NOT_RUN",
+    "statusCode": null,
+    "elapsedTime": 0,
+    "criteria": [],
+    "outputs": {},
+    "request": null,
+    "response": null,
+    "message": null,
+    "parameters": [],
+    "outputOrigins": {}
+  },
+  "runOutcome": {
+    "status": "SUCCESS",
+    "outputs": { "before": 2.5, "after": 2.6 },
+    "elapsedTime": 16,
+    "message": null
+  },
+  "implementationRunRequest": {
+    "runId": "6719f0c2a1b2c3d4e5f60719",
+    "workflowId": "readThenReprice",
+    "arazzoDocument": "arazzo: 1.0.1",
+    "inputs": {
+      "pastry": "Eclair Cafe",
+      "newPrice": 2.6
+    },
+    "sources": {
+      "pastryApi": {
+        "baseUrl": "http://localhost:8080",
+        "operations": {
+          "GetPastryByName": { "method": "GET", "path": "/pastry/{name}" },
+          "PatchPastry": { "method": "PATCH", "path": "/pastry/{name}" }
+        }
+      }
+    },
+    "timeoutMS": 10000,
+    "secret": {
+      "name": "pastry-staging-token",
+      "username": null,
+      "password": null,
+      "token": "s3cr3t-t0k3n",
+      "tokenHeader": "X-Pastry-Token"
+    }
+  }
+}

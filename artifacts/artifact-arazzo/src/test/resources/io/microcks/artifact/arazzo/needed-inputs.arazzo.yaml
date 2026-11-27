@@ -1,0 +1,156 @@
+# example: parameters - inputs used as path, query and header parameters, one embedded in a value
+arazzo: 1.0.1
+info:
+  title: Parameters
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: list
+        operationId: GetPastries
+        parameters:
+          - name: size
+            in: query
+            value: $inputs.size
+      - stepId: read
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+          - name: X-Customer
+            in: header
+            value: 'customer {$inputs.customer}'
+          - name: Accept
+            in: header
+            value: application/json
+---
+# example: body - inputs in the payload of a request body and in its replacements
+arazzo: 1.0.1
+info:
+  title: Body
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: reprice
+        operationId: PatchPastry
+        requestBody:
+          payload:
+            name: $inputs.pastry
+            price: 0
+          replacements:
+            - target: /price
+              value: $inputs.newPrice
+---
+# example: criteria - inputs checked by the condition or the context of criteria
+arazzo: 1.0.1
+info:
+  title: Criteria
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: reprice
+        operationId: PatchPastry
+        successCriteria:
+          - condition: $response.body#/price == $inputs.newPrice
+          - context: $inputs.label
+            condition: ^[A-Z].*
+            type: regex
+---
+# example: outputs - inputs given back by the outputs of a step and of the workflow
+arazzo: 1.0.1
+info:
+  title: Outputs
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: list
+        operationId: GetPastries
+        outputs:
+          asked: $inputs.size
+    outputs:
+      told: $inputs.label
+---
+# example: schema - declared inputs first, used or required by the schema, then used undeclared and required undeclared
+arazzo: 1.0.1
+info:
+  title: Schema
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    inputs:
+      type: object
+      required:
+        - note
+        - token
+      properties:
+        pastry:
+          type: string
+        unused:
+          type: string
+        note:
+          type: string
+    steps:
+      - stepId: list
+        operationId: GetPastries
+        parameters:
+          - name: size
+            in: query
+            value: $inputs.size
+      - stepId: read
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+        successCriteria:
+          - condition: $inputs.size != ''
+---
+# example: none - a workflow whose steps use no input and that declares an optional one
+arazzo: 1.0.1
+info:
+  title: None
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: flow
+    inputs:
+      type: object
+      properties:
+        unused:
+          type: string
+    steps:
+      - stepId: list
+        operationId: GetPastries
+        parameters:
+          - name: size
+            in: query
+            value: S
+        requestBody:
+          payload: plain text
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          first: $response.body#/0/name
+    outputs:
+      first: $steps.list.outputs.first

@@ -74,6 +74,53 @@ public final class ArazzoDataFlow {
       return inputUses;
    }
 
+   /**
+    * @param workflow A workflow of an Arazzo document
+    * @return The inputs a run of the workflow needs: those its steps and outputs use, and those its inputs schema
+    *         requires; each once. The inputs the workflow declares come first, in the order of the document, then the
+    *         inputs used without being declared, in the order of use, then those required without being declared
+    */
+   public static List<String> neededInputs(ArazzoWorkflow workflow) {
+      Set<String> used = new LinkedHashSet<>();
+      for (String expression : expressions(workflow)) {
+         Matcher matcher = INPUT.matcher(expression);
+         while (matcher.find()) {
+            used.add(matcher.group(1));
+         }
+      }
+      Set<String> needed = new LinkedHashSet<>();
+      workflow.inputNames().stream()
+            .filter(inputName -> used.contains(inputName) || workflow.requiredInputNames().contains(inputName))
+            .forEach(needed::add);
+      needed.addAll(used);
+      needed.addAll(workflow.requiredInputNames());
+      return List.copyOf(needed);
+   }
+
+   /**
+    * All the values of a workflow that may hold runtime expressions, in the order of the document: for each step, its
+    * parameters, request body payload and replacements, success criteria and outputs; then the outputs of the workflow.
+    */
+   private static List<String> expressions(ArazzoWorkflow workflow) {
+      List<String> expressions = new ArrayList<>();
+      for (ArazzoStep step : workflow.steps()) {
+         step.parameters().forEach(parameter -> expressions.add(parameter.value()));
+         if (step.requestBody() != null) {
+            expressions.add(step.requestBody().payload());
+            expressions.addAll(step.requestBody().replacements().values());
+         }
+         for (ArazzoCriterion successCriterion : step.successCriteria()) {
+            expressions.add(successCriterion.condition());
+            if (successCriterion.context() != null) {
+               expressions.add(successCriterion.context());
+            }
+         }
+         expressions.addAll(step.outputs().values());
+      }
+      expressions.addAll(workflow.outputs().values());
+      return expressions;
+   }
+
    /** The places where the steps of a workflow may use runtime expressions, in the order of the steps. */
    private static List<ExpressionPlace> places(ArazzoWorkflow workflow) {
       List<ExpressionPlace> places = new ArrayList<>();

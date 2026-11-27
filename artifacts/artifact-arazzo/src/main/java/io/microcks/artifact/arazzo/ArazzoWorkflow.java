@@ -20,14 +20,20 @@ import java.util.Map;
 
 /**
  * A workflow of an Arazzo document.
- * @param workflowId  The id of the workflow
- * @param summary     The summary of the workflow, null if it has none
- * @param description The description of the workflow, null if it has none
- * @param inputNames  The names of the inputs the workflow declares, in the order of the document
- * @param steps       The steps of the workflow, in the order of the document
- * @param outputs     The outputs of the workflow, by name in the order of the document, with their runtime expressions
+ * @param workflowId         The id of the workflow
+ * @param summary            The summary of the workflow, null if it has none
+ * @param description        The description of the workflow, null if it has none
+ * @param inputNames         The names of the inputs the workflow declares, in the order of the document
+ * @param steps              The steps of the workflow, in the order of the document
+ * @param outputs            The outputs of the workflow, by name in the order of the document, with their runtime
+ *                           expressions
+ * @param inputTypes         The JSON schema type of each input the workflow declares, by name; null for an input
+ *                           without type
+ * @param requiredInputNames The names of the inputs the inputs schema of the workflow requires, in the order of the
+ *                           document
  * @author SebastienDegodez
  */
 public record ArazzoWorkflow(String workflowId, String summary, String description, List<String> inputNames,
-      List<ArazzoStep> steps, Map<String, String> outputs) {
+      List<ArazzoStep> steps, Map<String, String> outputs, Map<String, String> inputTypes,
+      List<String> requiredInputNames) {
 }

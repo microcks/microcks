@@ -52,6 +52,12 @@ public interface ObjectIdRepository<E> extends PanacheMongoRepositoryBase<E, Str
       return delete(new Document("_id", toStoredId(id))) > 0;
    }
 
+   /** Insert or update an entity and return it, with its generated id (Spring Data {@code save} equivalent). */
+   default E save(E entity) {
+      persistOrUpdate(entity);
+      return entity;
+   }
+
    /** Delete a collection of entities (Spring Data {@code deleteAll(Iterable)} equivalent). */
    default void deleteAll(Iterable<? extends E> entities) {
       for (E entity : entities) {

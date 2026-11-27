@@ -222,6 +222,21 @@ wired to the API instead.
 | `UploadArtifactController` Arazzo branch | same branch in the Quarkus controller (upload and download) |
 | Tests (`@SpringJUnitConfig`, `@DirtiesContext`) | `@QuarkusTest` (database emptied by `MongoCleanupCallback`); multipart and download calls through RestAssured (download takes query parameters in 2.0) |
 
+Runs (S5–S11):
+
+| 1.x | 2.0 |
+|---|---|
+| `minions/arazzo` (Quarkus 3.33, `io.github.microcks`, standalone BOM) | `minions/arazzo` (`io.microcks.minion.arazzo`, parent `microcks-parent`, depends on `microcks-artifact-arazzo`) |
+| `WorkflowResult` (Spring Data) | `@MongoEntity(collection = "workflowResult")`; the `Object` values (inputs, outputs, criteria, parameters) need `config.AnyValueCodecProvider` |
+| `WorkflowResultRepository` + `CustomWorkflowResultRepository` + `MongoTemplate` impl | one Panache `WorkflowResultRepository` (filters as a BSON `Document`, page with `Page.of`) |
+| `HttpArazzoMinionClient` (`RestClient`, `@Component`) | JDK `HttpClient`, produced as `ArazzoMinionClient` by `ArazzoMinionClientProducer` (so tests swap it with `QuarkusMock`) |
+| `ArazzoRunController`, `ArazzoRunHistoryController` | JAX-RS; an unknown `target`/`result` filter still answers 400 (JAX-RS would answer 404) |
+| `arazzo-minion.url` | same property (`ARAZZO_MINION_URL`, default `http://localhost:8082`) |
+
+`ObjectIdRepository.save(entity)` was added (Spring Data `save` equivalent: `persistOrUpdate` then return the entity).
+Known gap: when authentication is enabled, the minion reports to `/api/arazzo/runs/**` without a token (the async
+minion's `MicrocksTokenProvider` is not wired in the Arazzo minion yet).
+
 New in 2.0: `GET /api/arazzo/documents/{id}/source` returns the document as uploaded (Source tab).
 
 Web UI: `lib/server/workflows.ts` reads `/api/arazzo` and maps it to the Deep Ink types (`lib/workflows/types.ts`);
@@ -235,7 +250,8 @@ refused (Microcks keeps the document as imported).
 | S1 import (upload, download, refusal of unsupported documents) | ported |
 | S2 link source descriptions through an ArazzoSources overlay | ported |
 | S3 browse, S4 read the steps and the diagram, S12 workflows using an API | ported |
-| S5 and later (runs, history, sessions, mock URL, minion) | to do |
+| S5 run on the mocks, S8 refuse missing inputs, S6 why a step failed, S11 runs history, S7 run on implementations | ported |
+| S9, S10 and later (schema validation, coherence, sessions, mock URL, examples, sagas) | to do |
 
 ## Known divergences and TODO
 

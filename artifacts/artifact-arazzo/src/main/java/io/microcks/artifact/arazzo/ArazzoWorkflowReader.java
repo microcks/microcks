@@ -56,9 +56,20 @@ public final class ArazzoWorkflowReader {
          steps.add(step(step, sourceNames));
       }
       List<String> inputNames = new ArrayList<>();
-      workflow.path("inputs").path("properties").fieldNames().forEachRemaining(inputNames::add);
+      Map<String, String> inputTypes = new LinkedHashMap<>();
+      workflow.path("inputs").path("properties").properties().forEach(input -> {
+         inputNames.add(input.getKey());
+         inputTypes.put(input.getKey(), input.getValue().path("type").asText(null));
+      });
       return new ArazzoWorkflow(workflow.path("workflowId").asText(), optionalText(workflow, "summary"),
-            optionalText(workflow, "description"), inputNames, steps, expressions(workflow.path("outputs")));
+            optionalText(workflow, "description"), inputNames, steps, expressions(workflow.path("outputs")), inputTypes,
+            texts(workflow.path("inputs").path("required")));
+   }
+
+   private static List<String> texts(JsonNode array) {
+      List<String> texts = new ArrayList<>();
+      array.forEach(item -> texts.add(item.asText()));
+      return texts;
    }
 
    private static ArazzoStep step(JsonNode step, List<String> sourceNames) {

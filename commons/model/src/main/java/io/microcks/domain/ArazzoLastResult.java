@@ -16,10 +16,16 @@
 package io.microcks.domain;
 
 /**
- * How the last run of an Arazzo workflow went. Workflows do not run yet, so they have all never run.
+ * How the last run of an Arazzo workflow went.
  * @author SebastienDegodez
  */
 public enum ArazzoLastResult {
    /** The workflow has not run yet. */
-   NEVER_RUN
+   NEVER_RUN,
+   /** The last run of the workflow is in progress. */
+   IN_PROGRESS,
+   /** The last run of the workflow passed. */
+   PASSED,
+   /** The last run of the workflow failed. */
+   FAILED
 }

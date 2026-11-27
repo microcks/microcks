@@ -21,8 +21,9 @@ package io.microcks.domain;
  * @param description The summary of the workflow, or else its description; null when it has none
  * @param stepCount   The number of steps of the workflow
  * @param lastResult  How the last run of the workflow went
+ * @param lastRun     The last run of the workflow; null when it never ran
  * @author SebastienDegodez
  */
 public record ArazzoWorkflowSummary(ArazzoWorkflowStatus status, String description, int stepCount,
-      ArazzoLastResult lastResult) {
+      ArazzoLastResult lastResult, WorkflowRunSummary lastRun) {
 }
