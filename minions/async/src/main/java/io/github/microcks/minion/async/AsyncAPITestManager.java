@@ -33,6 +33,7 @@ import io.github.microcks.minion.async.consumer.NATSMessageConsumptionTask;
 import io.github.microcks.util.SchemaMap;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaUtil;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
+import io.github.microcks.util.protobuf.ProtobufUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -208,6 +209,11 @@ public class AsyncAPITestManager {
                schemaRegistry.updateRegistryForService(specification.getServiceId());
                schemaRegistry.getSchemaEntries(specification.getServiceId()).stream()
                      .forEach(schemaEntry -> schemaMap.putSchemaEntry(schemaEntry.getPath(), schemaEntry.getContent()));
+            } else if (Constants.PROTOBUF_BINARY_CONTENT_TYPES.contains(expectedContentType)) {
+               logger.debug("Expected content type is Protobuf so extracting service descriptors into a SchemaMap");
+               schemaRegistry.updateRegistryForService(specification.getServiceId());
+               SchemaRegistry.putProtobufDescriptors(schemaRegistry.getSchemaEntries(specification.getServiceId()),
+                     schemaMap);
             }
          }
 
@@ -252,6 +258,14 @@ public class AsyncAPITestManager {
                         errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayload(),
                               messagePathPointer, schemaMap);
                      }
+                  } else if (Constants.PROTOBUF_BINARY_CONTENT_TYPES.contains(expectedContentType)) {
+                     errors = AsyncAPISchemaValidator.validateProtobufMessage(specificationNode, message.getPayload(),
+                           messagePathPointer, schemaMap);
+                     if (errors.isEmpty()) {
+                        // Replace binary content with a readable JSON representation for test results.
+                        eventMessage.setContent(getProtobufJsonContent(message.getPayload(), specificationNode,
+                              messagePathPointer, schemaMap));
+                     }
                   } else if (expectedContentType.contains("application/json")) {
                      // Now parse the payloadNode and validate it according the operation message
                      // found in specificationNode.
@@ -279,6 +293,18 @@ public class AsyncAPITestManager {
                }
             }
             testCaseReturn.addTestReturn(testReturn);
+         }
+      }
+
+      /** Get a readable JSON representation of a valid Protobuf payload, falling back to raw content. */
+      private String getProtobufJsonContent(byte[] payload, JsonNode specificationNode, String messagePathPointer,
+            SchemaMap schemaMap) {
+         try {
+            return ProtobufUtil.protobufToJson(payload, AsyncAPISchemaUtil
+                  .retrieveMessageProtobufDescriptor(specificationNode, messagePathPointer, schemaMap));
+         } catch (Exception e) {
+            logger.debugf("Cannot convert Protobuf payload to JSON: %s", e.getMessage());
+            return new String(payload);
          }
       }
 

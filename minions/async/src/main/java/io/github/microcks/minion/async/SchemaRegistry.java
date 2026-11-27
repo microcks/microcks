@@ -19,6 +19,9 @@ import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
+import io.github.microcks.util.SchemaMap;
+import io.github.microcks.util.protobuf.ProtobufUtil;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -127,6 +130,26 @@ public class SchemaRegistry {
          return correspondingEntry.getContent();
       }
       return null;
+   }
+
+   /**
+    * Put the Protobuf descriptors found in schema entries into a SchemaMap. Descriptors are indexed by the path and by
+    * the name of the Protobuf schema resource they have been compiled from, so that they can be retrieved from an
+    * AsyncAPI payload reference.
+    * @param entries   The schema entries of a Service
+    * @param schemaMap The SchemaMap to fill with Base64 encoded Protobuf descriptors
+    */
+   public static void putProtobufDescriptors(List<SchemaEntry> entries, SchemaMap schemaMap) {
+      entries.stream().filter(entry -> ResourceType.PROTOBUF_DESCRIPTOR.equals(entry.getType())).forEach(entry -> {
+         if (entry.getPath() != null) {
+            schemaMap.putSchemaEntry(entry.getPath(), entry.getContent());
+         }
+         String name = entry.getName();
+         if (name != null && name.endsWith(ProtobufUtil.DESCRIPTOR_RESOURCE_SUFFIX)) {
+            name = name.substring(0, name.length() - ProtobufUtil.DESCRIPTOR_RESOURCE_SUFFIX.length());
+         }
+         schemaMap.putSchemaEntry(name, entry.getContent());
+      });
    }
 
    /**

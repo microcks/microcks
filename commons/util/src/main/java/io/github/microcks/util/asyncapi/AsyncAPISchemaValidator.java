@@ -18,12 +18,14 @@ package io.github.microcks.util.asyncapi;
 import io.github.microcks.util.AvroUtil;
 import io.github.microcks.util.JsonSchemaValidator;
 import io.github.microcks.util.SchemaMap;
+import io.github.microcks.util.protobuf.ProtobufUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.protobuf.Descriptors;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -268,6 +270,26 @@ public class AsyncAPISchemaValidator {
       }
       // Produce some insights on what's going wrong. We'll accumulate the errors on different schemas.
       return AvroUtil.getValidationErrors(avroSchema, avroRecord);
+   }
+
+   /**
+    * Validate a Protobuf binary message against the Protobuf schema referenced as payload of the expected AsyncAPI
+    * message.
+    * @param specificationNode  The AsyncAPI full specification as a Jackson node
+    * @param protobufBinary     The Protobuf binary payload to validate
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param schemaMap          A map of Base64 encoded Protobuf descriptors, indexed by their schema reference path
+    * @return The list of validation failures. If empty, message is valid !
+    */
+   public static List<String> validateProtobufMessage(JsonNode specificationNode, byte[] protobufBinary,
+         String messagePathPointer, SchemaMap schemaMap) {
+      try {
+         Descriptors.Descriptor descriptor = AsyncAPISchemaUtil.retrieveMessageProtobufDescriptor(specificationNode,
+               messagePathPointer, schemaMap);
+         return ProtobufUtil.getValidationErrors(protobufBinary, descriptor);
+      } catch (AsyncAPISchemaException e) {
+         return List.of(e.getMessage());
+      }
    }
 
    /**

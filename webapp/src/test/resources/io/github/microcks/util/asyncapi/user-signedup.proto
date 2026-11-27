@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.github.microcks.event.user;
+
+message UserSignedUp {
+  string fullName = 1;
+  string email = 2;
+  int32 age = 3;
+}

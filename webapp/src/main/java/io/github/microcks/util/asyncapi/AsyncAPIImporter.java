@@ -35,6 +35,7 @@ import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
+import io.github.microcks.util.protobuf.ProtobufSchemaCompiler;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -148,16 +149,15 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                      findAllExternalRefsAsyncAPI(payloadNode, references);
 
                      for (String ref : references) {
+                        // Remove trailing anchor marker (we may have this in Avro or Protobuf schema to point exact
+                        // Resource)
+                        if (ref.contains("#")) {
+                           ref = ref.substring(0, ref.indexOf("#"));
+                        }
                         // We may have already resolved it if referenced more than once.
                         Resource schemaResource = resolvedExternalRefResources.get(ref);
                         if (schemaResource == null) {
                            try {
-                              // Remove trailing anchor marker (we may have this in Avro schema to point exact
-                              // Resource)
-                              if (ref.contains("#")) {
-                                 ref = ref.substring(0, ref.indexOf("#"));
-                              }
-
                               // Extract content using resolver.
                               String content = referenceResolver.getReferenceContent(ref, StandardCharsets.UTF_8);
                               String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
@@ -181,6 +181,8 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                                     schemaResource.setType(ResourceType.JSON_SCHEMA);
                                  } else if (schemaFormat.startsWith("application/vnd.apache.avro")) {
                                     schemaResource.setType(ResourceType.AVRO_SCHEMA);
+                                 } else if (schemaFormat.startsWith("application/vnd.google.protobuf")) {
+                                    schemaResource.setType(ResourceType.PROTOBUF_SCHEMA);
                                  }
                               } else {
                                  // We should probably go deeper here and inspect the content of resolved
@@ -220,6 +222,9 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
       // Set the content of main AsyncAPI that may have been updated with dereferenced
       // dependencies.
       resource.setContent(rootSpecificationContent);
+
+      // Compile Protobuf schemas so that the async minion can encode/decode binary messages.
+      results.addAll(ProtobufSchemaCompiler.buildDescriptorResources(results));
 
       return results;
    }

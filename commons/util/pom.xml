@@ -33,6 +33,7 @@
     <java.version>25</java.version>
     <json-schema-validator.version>1.5.9</json-schema-validator.version>
     <avro.version>1.12.1</avro.version>
+    <protobuf.version>4.36.2</protobuf.version>
     <mockito.version>5.20.0</mockito.version>
   </properties>
 
@@ -62,6 +63,17 @@
     <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java-util</artifactId>
+      <version>${protobuf.version}</version>
     </dependency>
 
     <!-- Test related dependencies -->

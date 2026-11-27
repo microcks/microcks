@@ -181,12 +181,14 @@ public abstract class AbstractJsonRepositoryImporter {
                referenceResources.put(refUrl, referenceResource);
                externalResources.add(referenceResource);
 
-               // Now go down the resource content and resolve its embedded references.
-               // Also update the references bases to track the root url for this ref in order
-               ObjectMapper mapper = getObjectMapper(!ref.endsWith(".json"));
-               JsonNode refResourceSpecification = mapper.readTree(content);
-               resolveExternalReferences(service, referenceResources, refUrl, referenceContext,
-                     refResourceSpecification);
+               // Now go down the resource content and resolve its embedded references (Protobuf schemas are not
+               // JSON/YAML). Also update the references bases to track the root url for this ref in order
+               if (!ResourceType.PROTOBUF_SCHEMA.equals(referenceResource.getType())) {
+                  ObjectMapper mapper = getObjectMapper(!ref.endsWith(".json"));
+                  JsonNode refResourceSpecification = mapper.readTree(content);
+                  resolveExternalReferences(service, referenceResources, refUrl, referenceContext,
+                        refResourceSpecification);
+               }
             } catch (IOException ioe) {
                log.error("IOException while trying to resolve reference {}", ref, ioe);
                log.info("Ignoring the reference {} cause it could not be resolved", ref);
@@ -261,10 +263,11 @@ public abstract class AbstractJsonRepositoryImporter {
       if (node.has("$ref")) {
          String ref = node.path("$ref").asText();
          if (!ref.startsWith("#")) {
-            // Our ref could be used for examples and be something like './weather-examples.json#/0'.
+            // Our ref could be used for examples and be something like './weather-examples.json#/0'
+            // or point to a Protobuf message type like './user-signedup.proto#microcks.UserSignedUp'.
             String filePath = ref;
-            if (ref.contains("#/")) {
-               filePath = ref.substring(0, ref.indexOf("#/"));
+            if (ref.contains("#")) {
+               filePath = ref.substring(0, ref.indexOf('#'));
             }
             externalRefs.add(filePath);
          }
