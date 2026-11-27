@@ -9,7 +9,8 @@ export const RECOGNIZED_FORMATS = [
   'SoapUI',
   'HAR',
   'APIMetadata',
-  'OpenCollection'
+  'OpenCollection',
+  'Arazzo'
 ] as const;
 
 export const ACCEPTED_EXTENSIONS = '.yaml,.yml,.json,.xml,.wsdl,.proto,.graphql,.har';

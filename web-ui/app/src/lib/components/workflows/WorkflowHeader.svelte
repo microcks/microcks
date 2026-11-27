@@ -58,7 +58,7 @@
   breadcrumbSeparator="›"
   breadcrumb={[{ label: 'Workflows', href: '/workflows' }, { label: `${document.title} ${document.version}`, href: '/workflows' }, { label: workflow.summary }]}
 >
-  {#snippet title()}<ApiBadge arazzo name={workflow.summary} version={document.version} size="xl" />{/snippet}
+  {#snippet title()}<ApiBadge arazzo name={workflow.summary} version={document.version} size="xl" class="wf-title-badge" />{/snippet}
   {#snippet actions()}
     {#if canRun}
       <Button variant="primary" icon="play" href={runSetupPath(document.id, workflow.workflowId)}>Run workflow</Button>
@@ -114,3 +114,10 @@
     </div>
   {/snippet}
 </CatalogPageHeader>
+
+<style>
+  /* Arazzo summaries can be a sentence: the title badge wraps instead of running under the actions. */
+  :global(.demo-page-header-text:has(.wf-title-badge)) { min-width: 0; }
+  :global(.wf-title-badge) { max-width: 100%; }
+  :global(.wf-title-badge > .api-badge-name) { white-space: normal; min-width: 0; line-height: 1.1; }
+</style>

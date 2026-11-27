@@ -128,7 +128,7 @@ workflows:
     size="lg"
     description="Multi-step API journeys described with Arazzo. Each step calls an operation of an API already in Microcks; play them against the mocks or against your implementations, or call them through their Mock URL."
   >
-    {#snippet meta()}{countLine} <DemoFlag />{/snippet}
+    {#snippet meta()}{countLine}{#if data.demo} <DemoFlag />{/if}{/snippet}
     {#snippet actions()}
       <Button href="/sources" icon="git-branch">Sources</Button>
       <Button href="/sources/new" variant="primary" icon="download">Import Arazzo document</Button>

@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
-import { parseArtifact } from './parser';
+import { isWorkflowArtifact, parseArtifact } from './parser';
 import {
   BackendError,
   createBackendJob,
@@ -312,9 +312,40 @@ export async function setServiceLabels(id: string, labels: Record<string, string
   return services.get(id);
 }
 
+/** What an Arazzo document or ArazzoSources overlay import produced: `name` is the title (or overlay name). */
+export interface WorkflowImport {
+  kind: 'arazzo' | 'arazzo-sources';
+  name: string;
+  version: string;
+}
+
+/**
+ * Imports an Arazzo document or ArazzoSources overlay once, uploaded or downloaded from its URL (importers of Arazzo
+ * documents come with a later story). The backend answers `<title>:<version>`.
+ */
+async function importWorkflowArtifact(req: ImportRequest, kind: WorkflowImport['kind'], token?: string): Promise<{ workflows: WorkflowImport }> {
+  const mainArtifact = kind === 'arazzo';
+  let outcome: string;
+  try {
+    outcome = req.origin !== 'upload' && req.url
+      ? await downloadArtifact(req.url, mainArtifact, req.secret, token)
+      : await uploadArtifact(req.fileName, req.content, mainArtifact, token);
+  } catch (e) {
+    if (e instanceof BackendError) throw new BackendError(e.message, e.status === 503 ? 503 : 422);
+    throw e;
+  }
+  const at = outcome.lastIndexOf(':');
+  if (!outcome || at < 0) throw new BackendError('The backend did not import this Arazzo artifact.', 422);
+  return { workflows: { kind, name: outcome.slice(0, at), version: outcome.slice(at + 1) } };
+}
+
 /** Imports an artifact through the backend, then records the Source that carries it. */
-export async function importViaBackend(req: ImportRequest, token?: string): Promise<{ source?: Source; service?: Service }> {
+export async function importViaBackend(
+  req: ImportRequest,
+  token?: string
+): Promise<{ source?: Source; service?: Service; workflows?: WorkflowImport }> {
   const artifact = parseArtifact(req.fileName, req.content);
+  if (isWorkflowArtifact(artifact)) return importWorkflowArtifact(req, artifact.kind as WorkflowImport['kind'], token);
   const role = req.role ?? artifact.role;
   // A URL or Git import is an importer: the backend keeps it as an ImportJob. A one-off upload only creates Services.
   if (req.origin !== 'upload' && req.url) return createJobSource(req, role, token);

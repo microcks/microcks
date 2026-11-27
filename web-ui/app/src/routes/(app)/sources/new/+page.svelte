@@ -45,6 +45,12 @@
     service: Service;
     direct?: DirectKind;
   }
+  /** An Arazzo document or ArazzoSources overlay: imported as workflows, not as an API. */
+  interface WorkflowResult {
+    kind: 'arazzo' | 'arazzo-sources';
+    name: string;
+    version: string;
+  }
 
   let { data } = $props();
 
@@ -63,6 +69,7 @@
   let insecure = $state(false);
   let secret = $state('');
   let result = $state<Result>();
+  let workflowResult = $state<WorkflowResult>();
   let role = $state<'primary' | 'secondary'>('primary');
   let error = $state<string>();
   let touched = $state(false);
@@ -90,6 +97,7 @@
   const recent = $derived(data.sources.slice(0, 3));
 
   const secondaryOnly = $derived(preview?.artifact.role === 'SECONDARY');
+  const workflowArtifact = $derived(preview?.artifact.kind === 'arazzo' || preview?.artifact.kind === 'arazzo-sources');
 
   async function analyze(origin: SourceOrigin, body: { url: string } | { fileName: string; content: string }, name?: string) {
     const withSecret = 'url' in body && secret ? { secret } : {};
@@ -138,7 +146,7 @@
     step = 'importing';
     announcement = 'Importing…';
     try {
-      const res = await api<{ source?: Source; service?: Service }>('/api/sources', {
+      const res = await api<{ source?: Source; service?: Service; workflows?: WorkflowResult }>('/api/sources', {
         method: 'POST',
         json: {
           origin: preview.origin,
@@ -151,6 +159,13 @@
           tlsValidation: !insecure
         }
       });
+      if (res.workflows) {
+        workflowResult = res.workflows;
+        step = 'done';
+        announcement = res.workflows.kind === 'arazzo' ? 'Arazzo document imported.' : 'ArazzoSources overlay imported.';
+        await invalidate('app:workflows');
+        return;
+      }
       if (!res.service) throw new Error(res.source?.error ?? 'No matching API: a secondary artifact only enriches an existing Service.');
       result = { source: res.source, service: res.service };
       step = 'done';
@@ -185,6 +200,7 @@
     step = 'idle';
     preview = undefined;
     result = undefined;
+    workflowResult = undefined;
     role = 'primary';
     error = undefined;
     touched = false;
@@ -400,13 +416,29 @@
               </div>
               <div class="artifact-card-badges">
                 <Chip><Icon name="check" size={12} /> {p.artifact.format}</Chip>
-                <ApiBadge protocol={svc.protocol} name={svc.name} version={svc.version} />
+                {#if workflowArtifact}
+                  <ApiBadge arazzo name={svc.name} version={svc.version} />
+                {:else}
+                  <ApiBadge protocol={svc.protocol} name={svc.name} version={svc.version} />
+                {/if}
               </div>
             </div>
             {#each p.artifact.warnings as w (w)}
               <div role="note" class="note-box" data-tone="warning"><Icon name="alert-circle" size={16} /><span>{w}</span></div>
             {/each}
             <div class="step-section">
+              {#if workflowArtifact}
+                <h3>{p.artifact.kind === 'arazzo' ? pluralize(p.artifact.operations.length, 'workflow') + ' discovered' : pluralize(p.artifact.operations.length, 'source description') + ' linked'}</h3>
+                <ul class="boxed-list">
+                  {#each p.artifact.operations as o (o.name)}
+                    <li>
+                      <Icon name={p.artifact.kind === 'arazzo' ? 'branch' : 'link'} size={14} />
+                      <span class="boxed-list-path">{o.name}</span>
+                      <span class="boxed-list-meta">{o.resource}</span>
+                    </li>
+                  {/each}
+                </ul>
+              {:else}
               <h3>{pluralize(p.artifact.operations.length, 'Operation')} discovered{svc.exists ? ` · updates the existing ${svc.name} ${svc.version}` : ''}</h3>
               {#if p.artifact.operations.length}
                 <ul class="boxed-list">
@@ -421,9 +453,18 @@
               {:else}
                 <p class="source-help">This artifact carries no operation: it only enriches Services that already exist.</p>
               {/if}
+              {/if}
             </div>
           </div>
 
+          {#if workflowArtifact}
+            <div role="note" class="note-box" data-tone="info">
+              <Icon name="info" size={16} />
+              <span>{p.artifact.kind === 'arazzo'
+                ? 'An Arazzo document describes workflows across APIs: it is imported once, without creating a Service. Link its source descriptions with an ArazzoSources overlay or from the Workflows page.'
+                : 'An ArazzoSources overlay links the source descriptions of an imported Arazzo document (same title and version) to Microcks APIs.'}</span>
+            </div>
+          {:else}
           <div class="step-section">
             <h3 id="role-title">Artifact role</h3>
             <Segmented
@@ -447,13 +488,14 @@
             </p>
           </div>
 
-          {#if p.origin === 'git'}
+          {/if}
+          {#if p.origin === 'git' && !workflowArtifact}
             <div class="note-box">
               <Icon name="clock" size={16} />
               <span>The source “{gitName}” will be created, scanned and imported immediately, then re-scanned on the global schedule. <a href="/sources">Manage sources</a></span>
             </div>
           {/if}
-          {#if secondaryOnly && role === 'primary'}
+          {#if secondaryOnly && role === 'primary' && !workflowArtifact}
             <div role="note" class="note-box" data-tone="info"><Icon name="info" size={16} /><span>This file is normally a secondary artifact. Keep it Primary only if it should create its own Service.</span></div>
           {/if}
 
@@ -465,6 +507,26 @@
       {/if}
 
       {#if step === 'importing' && !preview}<p role="status">Creating the mock…</p>{/if}
+
+      {#if step === 'done' && workflowResult}
+        {@const w = workflowResult}
+        <div class="step-card" data-step="done">
+          <div role="status" class="step-head">
+            <Icon name="check-circle" size={32} />
+            <div class="step-head-text">
+              <h2>{w.kind === 'arazzo' ? 'Arazzo document imported' : 'ArazzoSources overlay imported'}</h2>
+              <p>{w.kind === 'arazzo'
+                ? `${w.name} ${w.version} is imported. Its workflows can run once each source description is linked to a Microcks API.`
+                : `The source descriptions of ${w.name} ${w.version} are linked to the APIs the overlay names.`}</p>
+            </div>
+          </div>
+          <div class="step-actions">
+            <Button variant="primary" icon="arrow-right" href="/workflows">Open workflows</Button>
+            <Button variant="secondary" href="/sources">Back to Sources</Button>
+            <Button variant="ghost" onclick={reset}>Add another source</Button>
+          </div>
+        </div>
+      {/if}
 
       {#if step === 'done' && result}
         {@const r = result}

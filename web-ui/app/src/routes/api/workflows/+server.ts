@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { listAll } from '#lib/server/workflows.js';
+import { listWorkflowsPayload } from '#lib/server/workflows.js';
 
-/** PLACEHOLDER: stands for the future Microcks workflows listing (Arazzo documents, workflows, runs). */
-export const GET = () => json(listAll());
+/** Arazzo documents and workflows from Microcks (`/api/arazzo/documents`); placeholder data when it is unreachable. */
+export const GET = async ({ locals }) => json(await listWorkflowsPayload(locals.token));

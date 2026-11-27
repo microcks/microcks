@@ -63,7 +63,7 @@
 {:else}
   <div class="wf-page">
     <WorkflowHeader document={doc} {workflow} {runs} {serviceLabel} onmockurl={() => go('mock-url')} />
-    <DemoFlag />
+    {#if data.detail?.demo}<DemoFlag />{/if}
 
     {#if !workflow.runnability.runnable}
       <Callout tone="warning" title="This workflow cannot run yet"><span id="wf-run-why">{workflow.runnability.message}.</span></Callout>

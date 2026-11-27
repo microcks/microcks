@@ -518,3 +518,82 @@ export async function secretHeaders(secretName: string, token?: string): Promise
   }
   return headers;
 }
+
+/* ---- Arazzo (`/api/arazzo`, ported from feature/arazzo S1–S4) ---- */
+
+export interface BackendArazzoSourceLink {
+  sourceName: string;
+  apiName?: string | null;
+  apiVersion?: string | null;
+  linked: boolean;
+}
+
+export interface BackendArazzoDocumentSummary {
+  id: string;
+  title: string;
+  version: string;
+  arazzoVersion: string;
+  fileName?: string | null;
+  importDate?: number | string;
+  sources: { link: BackendArazzoSourceLink; apiId?: string | null; apiType?: string | null }[];
+  workflows: {
+    status: { workflowId: string; runnable: boolean; reasons: string[] };
+    description?: string | null;
+    stepCount: number;
+    lastResult: 'NEVER_RUN' | 'SUCCESS' | 'FAILURE' | string;
+  }[];
+}
+
+export interface BackendArazzoStep {
+  stepId: string;
+  description?: string | null;
+  operation: { sourceName: string; operationId: string; method?: string | null; path?: string | null; reason?: string | null };
+  parameters: { name: string; in: string; value: string }[];
+  requestBody?: { contentType?: string | null; payload?: string | null; replacements?: Record<string, string> | null } | null;
+  successCriteria: { condition: string; context?: string | null; type?: string | null }[];
+  outputs: Record<string, string>;
+}
+
+export interface BackendArazzoWorkflowDetail {
+  documentId: string;
+  title: string;
+  version: string;
+  arazzoVersion: string;
+  fileName?: string | null;
+  importDate?: number | string;
+  workflowIds: string[];
+  sources: { link: BackendArazzoSourceLink; serviceId?: string | null; reason?: string | null; operations: number; usedOperations: number }[];
+  workflowId: string;
+  summary?: string | null;
+  description?: string | null;
+  inputs: { name: string; usedBy: { stepId: string; place: string; target: string }[] }[];
+  steps: BackendArazzoStep[];
+  outputs: Record<string, string>;
+  dataPassings: { fromStepId: string; outputName: string; to: { stepId: string; place: string; target: string } }[];
+}
+
+export async function fetchArazzoDocuments(token?: string): Promise<BackendArazzoDocumentSummary[]> {
+  const res = await call('/api/arazzo/documents', token, { headers: { accept: 'application/json' } });
+  return (await res.json()) as BackendArazzoDocumentSummary[];
+}
+
+export async function fetchArazzoWorkflow(docId: string, workflowId: string, token?: string): Promise<BackendArazzoWorkflowDetail | undefined> {
+  try {
+    const path = `/api/arazzo/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}`;
+    const res = await call(path, token, { headers: { accept: 'application/json' } });
+    return (await res.json()) as BackendArazzoWorkflowDetail;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+export async function fetchArazzoSource(docId: string, token?: string): Promise<string | undefined> {
+  try {
+    const res = await call(`/api/arazzo/documents/${encodeURIComponent(docId)}/source`, token);
+    return await res.text();
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}

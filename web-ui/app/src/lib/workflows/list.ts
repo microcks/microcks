@@ -57,4 +57,6 @@ export interface WorkflowsPayload {
   documents: ArazzoDocument[];
   workflows: Workflow[];
   runs: WorkflowRun[];
+  /** True when the Microcks backend is unreachable and the screen shows placeholder data. */
+  demo?: boolean;
 }

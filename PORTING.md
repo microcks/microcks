@@ -204,7 +204,7 @@ mock-controller classes are refactored. Moved unit tests keep their fixtures und
 - All remaining demo screens (Cockpit, Service, Behavior, Copilot, Workflows, Runs, Agent test, Tests, Usage, Traces, Hub, Map, 404) are ported; see `web-ui/README.md` for the placeholder status.
 - The *Administration* page (`/admin`) is new: groups and memberships (`/api/groups`), secrets, snapshots and configuration are real; the Users tab shows the accounts created at first OIDC sign-in (`/api/users`) joined with memberships; see `v2/demo/keycloak/`.
 - The *Run a test* page (`/tests/create`) is also new: runners are derived from imported artifact kinds; launch records a request only.
-- Service detail: the "Used in N workflows" block is hidden (`SHOW_WORKFLOW_USAGE = false` in the service page) until workflows are wired to the backend. To re-enable (see IDEAS.md M2-009).
+- Service detail: the "Used in N workflows" block lists the workflows of the imported Arazzo documents whose linked sources point at the service (hidden on placeholder data).
 
 ## Arazzo (fork `SebastienDegodez/microcks`, branch `v2/arazzo`)
 
@@ -223,6 +223,12 @@ wired to the API instead.
 | Tests (`@SpringJUnitConfig`, `@DirtiesContext`) | `@QuarkusTest` (database emptied by `MongoCleanupCallback`); multipart and download calls through RestAssured (download takes query parameters in 2.0) |
 
 New in 2.0: `GET /api/arazzo/documents/{id}/source` returns the document as uploaded (Source tab).
+
+Web UI: `lib/server/workflows.ts` reads `/api/arazzo` and maps it to the Deep Ink types (`lib/workflows/types.ts`);
+the placeholder is used only when the backend is unreachable (then flagged "demo data"). *Add a source* recognises
+Arazzo documents and ArazzoSources overlays and imports them once (upload or URL). Linking a source in the dialog
+imports an ArazzoSources overlay holding the current links plus the new one. Editing a real workflow from the Loom is
+refused (Microcks keeps the document as imported).
 
 | Story | Status |
 |---|---|

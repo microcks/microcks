@@ -1,13 +1,14 @@
 import { error, json } from '@sveltejs/kit';
-import { getDetail, updateWorkflow } from '#lib/server/workflows.js';
+import { getWorkflowDetail, isPlaceholderDocument, updateWorkflow } from '#lib/server/workflows.js';
 
-export const GET = ({ params }) => {
-  const detail = getDetail(params.docId, params.workflowId);
+export const GET = async ({ params, locals }) => {
+  const detail = await getWorkflowDetail(params.docId, params.workflowId, locals.token);
   if (!detail) error(404, `Workflow "${params.workflowId}" does not exist in document "${params.docId}".`);
   return json(detail);
 };
 
 export const PUT = async ({ params, request }) => {
+  if (!isPlaceholderDocument(params.docId)) error(405, 'Microcks keeps Arazzo documents as imported: edit the file and import it again.');
   const b = await request.json().catch(() => null);
   if (!b || typeof b !== 'object') error(400, 'A JSON body is required');
   if (b.steps !== undefined && (!Array.isArray(b.steps) || b.steps.length === 0)) error(422, 'A workflow needs at least one step');

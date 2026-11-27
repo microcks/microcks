@@ -202,6 +202,34 @@ function metadata(fileName: string, doc: Obj, content: string): ParsedArtifact {
 }
 
 /** Recognises an artifact from its file name and content, as the Microcks importers do. */
+/** An Arazzo document: its workflows are listed as the "operations" of the preview (workflow id, step count). */
+function arazzo(fileName: string, doc: Obj): ParsedArtifact {
+  const a = base(fileName, 'arazzo', `Arazzo ${doc.arazzo}`);
+  a.name = doc.info?.title;
+  a.version = doc.info?.version !== undefined ? String(doc.info.version) : undefined;
+  for (const wf of Array.isArray(doc.workflows) ? (doc.workflows as Obj[]) : []) {
+    const steps = Array.isArray(wf.steps) ? wf.steps.length : 0;
+    a.operations.push({ name: String(wf.workflowId), method: 'WORKFLOW', resource: `${steps} step${steps === 1 ? '' : 's'}` });
+  }
+  if (!a.name || !a.version) a.warnings.push('An Arazzo document needs info.title and info.version: Microcks will refuse it.');
+  return a;
+}
+
+/** An ArazzoSources overlay: it links the source descriptions of an Arazzo document to Microcks APIs. */
+function arazzoSources(fileName: string, doc: Obj): ParsedArtifact {
+  const a = base(fileName, 'arazzo-sources', 'ArazzoSources overlay');
+  a.role = 'SECONDARY';
+  a.name = doc.metadata?.name;
+  a.version = doc.metadata?.version !== undefined ? String(doc.metadata.version) : undefined;
+  for (const [source, api] of Object.entries<Obj>(isObj(doc.sources) ? doc.sources : {})) {
+    a.operations.push({ name: source, method: 'LINK', resource: `${api?.name ?? '?'} ${api?.version ?? ''}`.trim() });
+  }
+  return a;
+}
+
+/** Arazzo documents and overlays are imported as workflows, not as APIs. */
+export const isWorkflowArtifact = (a: ParsedArtifact) => a.kind === 'arazzo' || a.kind === 'arazzo-sources';
+
 export function parseArtifact(fileName: string, content: string): ParsedArtifact {
   const lower = fileName.toLowerCase();
   if (lower.endsWith('.proto')) return proto(fileName, content);
@@ -217,6 +245,8 @@ export function parseArtifact(fileName: string, content: string): ParsedArtifact
   }
   const doc = lower.endsWith('.json') ? tryJson(content) : tryYaml(content) ?? tryJson(content);
   if (isObj(doc)) {
+    if (doc.arazzo) return arazzo(fileName, doc);
+    if (doc.kind === 'ArazzoSources') return arazzoSources(fileName, doc);
     if (doc.openapi || doc.swagger) return openApi(fileName, doc);
     if (doc.asyncapi) return asyncApi(fileName, doc);
     if (isObj(doc.info) && String(doc.info.schema ?? '').includes('postman')) return postman(fileName, doc);

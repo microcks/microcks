@@ -133,7 +133,7 @@
             </span>
             <span role="cell" class="wf-src-ops" data-tone={s.link.status === 'linked' ? undefined : 'warning'}>
               <Icon name={s.link.status === 'linked' ? 'check-circle' : 'warning'} size={12} />
-              {s.link.status === 'linked' ? s.link.operationsFound : `${stepsOn(s.name)} steps unresolved`}
+              {s.link.status === 'linked' ? s.link.operationsFound : `${stepsOn(s.name)} step${stepsOn(s.name) === 1 ? '' : 's'} unresolved`}
             </span>
           </div>
         {/each}

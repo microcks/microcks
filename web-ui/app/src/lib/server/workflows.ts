@@ -11,9 +11,29 @@ import {
   seedSessions
 } from '#lib/placeholders/workflows.js';
 import type { WorkflowsPayload } from '#lib/workflows/list.js';
-import { getService, listServices } from './store';
+import { parse as parseYaml } from 'yaml';
+import { formatRelative } from '#lib/format.js';
+import { MICROCKS_BASE } from '#lib/importing.js';
+import {
+  BackendError,
+  fetchArazzoDocuments,
+  fetchArazzoSource,
+  fetchArazzoWorkflow,
+  protocolOf,
+  uploadArtifact,
+  type BackendArazzoDocumentSummary,
+  type BackendArazzoStep,
+  type BackendArazzoWorkflowDetail
+} from './backend';
+import type { Criterion, StepParameter } from '#lib/workflows/types.js';
+import { getService, listServices, refreshServices } from './store';
 
 /*
+ * Arazzo documents and workflows come from the Microcks backend (`/api/arazzo`, stories S1–S4 of feature/arazzo).
+ * When the backend is unreachable, the placeholder below is shown instead, flagged as demo data.
+ * Runs, sessions and examples (S5 and later) are not served by the backend yet: real workflows get none, and runs
+ * launched from the UI are simulated in memory.
+ *
  * PLACEHOLDER: Microcks has no Arazzo API yet (the parser does not recognise Arazzo artifacts), so documents,
  * workflows, runs, sessions and examples come from the placeholder module and live in memory. What is real:
  * the services a source description links to (resolved against the store) and the edits made from the UI.
@@ -67,9 +87,16 @@ export interface WorkflowDetailPayload {
   runs: WorkflowRun[];
   sessions: Session[];
   examples: WorkflowExample[];
+  /** True for placeholder data (the Microcks backend is unreachable or does not know the document). */
+  demo?: boolean;
 }
 
 export function getDetail(docId: string, workflowId: string): WorkflowDetailPayload | undefined {
+  const realWorkflow = real.workflows.get(key(docId, workflowId));
+  if (realWorkflow) {
+    const runs = state.runs.filter((r) => r.documentId === docId && r.workflowId === workflowId).sort((a, b) => b.number - a.number);
+    return { document: real.documents.get(docId)!, workflow: realWorkflow, runs, sessions: [], examples: [] };
+  }
   ensureResolved();
   const document = state.documents.find((d) => d.id === docId);
   const workflow = state.workflows.find((w) => w.documentId === docId && w.workflowId === workflowId);
@@ -86,6 +113,7 @@ export function getDetail(docId: string, workflowId: string): WorkflowDetailPayl
 }
 
 export const getDocument = (docId: string) => {
+  if (real.documents.has(docId)) return real.documents.get(docId);
   ensureResolved();
   return state.documents.find((d) => d.id === docId);
 };
@@ -152,3 +180,244 @@ export const addRun = (run: WorkflowRun): void => {
 
 export const nextRunNumber = (docId: string, workflowId: string): number =>
   state.runs.filter((r) => r.documentId === docId && r.workflowId === workflowId).reduce((max, r) => Math.max(max, r.number), 0) + 1;
+
+/* ---------------------------------------------------------------------------------------------------------------
+ * Backend mode: documents and workflows read from `/api/arazzo`, mapped to the UI types of the Deep Ink mockup.
+ * ------------------------------------------------------------------------------------------------------------- */
+
+/** Real documents and workflows, cached for the synchronous accessors used by the (simulated) run pages. */
+const real = { documents: new Map<string, ArazzoDocument>(), workflows: new Map<string, Workflow>() };
+const key = (docId: string, workflowId: string) => `${docId}/${workflowId}`;
+
+type Obj = Record<string, any>;
+
+/** The source descriptions as written in the document: type and URL are not in the backend summary. */
+function sourceDescriptionsOf(content: string | undefined): Map<string, { type: 'openapi' | 'asyncapi'; url: string }> {
+  const out = new Map<string, { type: 'openapi' | 'asyncapi'; url: string }>();
+  let doc: Obj | undefined;
+  try {
+    doc = content ? (parseYaml(content) as Obj) : undefined;
+  } catch {
+    doc = undefined;
+  }
+  for (const sd of Array.isArray(doc?.sourceDescriptions) ? (doc!.sourceDescriptions as Obj[]) : []) {
+    out.set(String(sd.name), { type: sd.type === 'asyncapi' ? 'asyncapi' : 'openapi', url: String(sd.url ?? '') });
+  }
+  return out;
+}
+
+const fileOf = (url: string) => url.split('/').pop() || url;
+
+/** Microcks keeps the links of an overlay, not its file: the overlay is named after the document it applies to. */
+const overlayFileOf = (summary: BackendArazzoDocumentSummary) =>
+  `${summary.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.arazzo-sources.yaml`;
+
+/** The ArazzoSources overlay giving these links, as Microcks imports it. */
+function overlayYaml(title: string, version: string, links: Map<string, readonly [string, string]>): string {
+  const q = (v: string) => JSON.stringify(v);
+  return [
+    'apiVersion: mocks.microcks.io/v1alpha1',
+    'kind: ArazzoSources',
+    'metadata:',
+    `  name: ${q(title)}`,
+    `  version: ${q(version)}`,
+    'sources:',
+    ...[...links].flatMap(([source, [api, v]]) => [`  ${q(source)}:`, `    name: ${q(api)}`, `    version: ${q(v)}`])
+  ].join('\n') + '\n';
+}
+
+const linksOf = (summary: BackendArazzoDocumentSummary) =>
+  new Map(
+    summary.sources.filter((s) => s.link.apiName).map((s) => [s.link.sourceName, [s.link.apiName!, s.link.apiVersion ?? ''] as const])
+  );
+
+/** Overlay of a real document, rebuilt from the links Microcks holds; null when it has none. */
+export async function getDocumentOverlay(docId: string, token?: string): Promise<string | null | undefined> {
+  if (isPlaceholderDocument(docId)) return getOverlay(docId);
+  const summary = (await fetchArazzoDocuments(token)).find((d) => d.id === docId);
+  if (!summary) return undefined;
+  const links = linksOf(summary);
+  return links.size ? overlayYaml(summary.title, summary.version, links) : null;
+}
+
+function toDocument(
+  summary: BackendArazzoDocumentSummary,
+  details: BackendArazzoWorkflowDetail[],
+  content: string | undefined
+): ArazzoDocument {
+  const described = sourceDescriptionsOf(content);
+  const counts = new Map(details[0]?.sources.map((s) => [s.link.sourceName, s]) ?? []);
+  const imported = summary.importDate !== undefined ? new Date(summary.importDate).toISOString() : undefined;
+  return {
+    id: summary.id,
+    apiId: summary.id,
+    file: summary.fileName ?? `${summary.title}.arazzo.yaml`,
+    title: summary.title,
+    arazzoVersion: summary.arazzoVersion,
+    version: summary.version,
+    origin: imported ? `Imported ${formatRelative(imported)}` : 'Imported',
+    sources: summary.sources.map((s) => {
+      const sd = described.get(s.link.sourceName);
+      const type = sd?.type ?? (s.apiType === 'EVENT' ? 'asyncapi' : 'openapi');
+      const used = counts.get(s.link.sourceName);
+      return {
+        name: s.link.sourceName,
+        type,
+        url: sd?.url ?? '',
+        link: s.link.linked && s.apiId
+          ? {
+              status: 'linked' as const,
+              serviceId: s.apiId,
+              protocol: protocolOf(s.apiType ?? 'REST') as SourceProtocol,
+              operationsFound: used ? `${used.usedOperations} of ${used.operations} found` : 'linked'
+            }
+          : {
+              status: 'not-linked' as const,
+              expectedFile: s.link.apiName ? `${s.link.apiName} ${s.link.apiVersion ?? ''}`.trim() : fileOf(sd?.url ?? s.link.sourceName)
+            }
+      };
+    }),
+    overlay: summary.sources.some((s) => s.link.apiName) ? overlayFileOf(summary) : undefined,
+    workflowIds: summary.workflows.map((w) => w.status.workflowId),
+    importIssues: []
+  };
+}
+
+const IN: Record<string, StepParameter['in']> = { path: 'path', query: 'query', header: 'header' };
+
+function toCriterion(c: BackendArazzoStep['successCriteria'][number]): Criterion {
+  return c.type === 'regex' && c.context
+    ? { type: 'regex', context: c.context, condition: c.condition }
+    : { type: 'simple', condition: c.condition };
+}
+
+const named = (m: Record<string, string> | undefined) => Object.entries(m ?? {}).map(([name, expression]) => ({ name, expression }));
+
+function toWorkflow(d: BackendArazzoWorkflowDetail, status: BackendArazzoDocumentSummary['workflows'][number] | undefined): Workflow {
+  const reasons = status?.status.reasons ?? [];
+  return {
+    workflowId: d.workflowId,
+    documentId: d.documentId,
+    summary: d.summary || status?.description || d.workflowId,
+    description: d.description ?? undefined,
+    inputs: d.inputs.map((i) => ({ name: i.name, type: 'string' as const })),
+    steps: d.steps.map((st) => ({
+      stepId: st.stepId,
+      sourceName: st.operation.sourceName,
+      operationId: st.operation.operationId,
+      method: st.operation.method ?? '',
+      path: st.operation.path ?? '',
+      description: st.description ?? '',
+      parameters: st.parameters.map((p) => ({ name: p.name, in: IN[p.in] ?? 'query', value: p.value })),
+      requestBody: st.requestBody?.payload ?? undefined,
+      successCriteria: st.successCriteria.map(toCriterion),
+      onSuccess: [],
+      onFailure: [],
+      outputs: named(st.outputs)
+    })),
+    outputs: named(d.outputs),
+    mockUrl: `${MICROCKS_BASE}/arazzo/${encodeURIComponent(d.title)}/${encodeURIComponent(d.version)}/${d.workflowId}`,
+    runnability: status === undefined || status.status.runnable
+      ? { runnable: true }
+      : { runnable: false, reason: 'source-not-linked', message: reasons.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join('. ') }
+  };
+}
+
+/** Reads every document with its workflows from the backend; undefined when the backend is unreachable. */
+async function fetchReal(token?: string): Promise<{ documents: ArazzoDocument[]; workflows: Workflow[] } | undefined> {
+  let summaries: BackendArazzoDocumentSummary[];
+  try {
+    summaries = await fetchArazzoDocuments(token);
+  } catch (e) {
+    if (e instanceof BackendError && (e.status === 503 || e.status === 404)) return undefined;
+    throw e;
+  }
+  const documents: ArazzoDocument[] = [];
+  const workflows: Workflow[] = [];
+  await Promise.all(
+    summaries.map(async (summary) => {
+      const [content, ...details] = await Promise.all([
+        fetchArazzoSource(summary.id, token),
+        ...summary.workflows.map((w) => fetchArazzoWorkflow(summary.id, w.status.workflowId, token))
+      ]);
+      const found = details.filter((d): d is BackendArazzoWorkflowDetail => d !== undefined);
+      documents.push(toDocument(summary, found, content as string | undefined));
+      for (const d of found) workflows.push(toWorkflow(d, summary.workflows.find((w) => w.status.workflowId === d.workflowId)));
+    })
+  );
+  const order = new Map(summaries.map((s, i) => [s.id, i]));
+  documents.sort((a, b) => order.get(a.id)! - order.get(b.id)!);
+  workflows.sort((a, b) => order.get(a.documentId)! - order.get(b.documentId)!);
+  real.documents = new Map(documents.map((d) => [d.id, d]));
+  real.workflows = new Map(workflows.map((w) => [key(w.documentId, w.workflowId), w]));
+  return { documents, workflows };
+}
+
+/** Whether a document belongs to the placeholder data (otherwise it is a real one, read from the backend). */
+export const isPlaceholderDocument = (docId: string) => state.documents.some((d) => d.id === docId);
+
+/** Workflows screen: real documents and workflows, or the placeholder when the backend is unreachable. */
+export async function listWorkflowsPayload(token?: string): Promise<WorkflowsPayload & { demo: boolean }> {
+  await refreshServices(token);
+  const fetched = await fetchReal(token);
+  if (!fetched) return { ...listAll(), demo: true };
+  const runs = state.runs.filter((r) => real.documents.has(r.documentId));
+  return { ...fetched, runs, demo: false };
+}
+
+/** Workflow page: the real workflow when the backend knows the document, else the placeholder one. */
+export async function getWorkflowDetail(
+  docId: string,
+  workflowId: string,
+  token?: string
+): Promise<(WorkflowDetailPayload & { demo: boolean }) | undefined> {
+  if (!isPlaceholderDocument(docId)) {
+    const fetched = await fetchReal(token);
+    if (fetched) {
+      const document = real.documents.get(docId);
+      const workflow = real.workflows.get(key(docId, workflowId));
+      if (!document || !workflow) return undefined;
+      const runs = state.runs.filter((r) => r.documentId === docId && r.workflowId === workflowId).sort((a, b) => b.number - a.number);
+      return { document, workflow, runs, sessions: [], examples: [], demo: false };
+    }
+  }
+  const detail = getDetail(docId, workflowId);
+  return detail && { ...detail, demo: true };
+}
+
+/** Source tab: the document as uploaded. */
+export async function getDocumentSource(docId: string, token?: string): Promise<string | undefined> {
+  if (isPlaceholderDocument(docId)) return getSource(docId);
+  return fetchArazzoSource(docId, token);
+}
+
+/**
+ * Links a source description of a real document to a Microcks API by importing an ArazzoSources overlay that keeps
+ * the current links and adds this one (story S2: the overlay is how Microcks links sources).
+ */
+export async function linkRealSource(
+  docId: string,
+  name: string,
+  serviceId: string,
+  token?: string
+): Promise<ArazzoDocument | { error: string; status: number }> {
+  const summaries = await fetchArazzoDocuments(token);
+  const summary = summaries.find((d) => d.id === docId);
+  if (!summary) return { error: `Document "${docId}" does not exist.`, status: 404 };
+  if (!summary.sources.some((s) => s.link.sourceName === name)) {
+    return { error: `Source "${name}" does not exist in ${summary.fileName ?? summary.title}.`, status: 404 };
+  }
+  await refreshServices(token);
+  const service = getService(serviceId);
+  if (!service) return { error: `Service "${serviceId}" does not exist.`, status: 422 };
+  const content = await fetchArazzoSource(docId, token);
+  const type = sourceDescriptionsOf(content).get(name)?.type ?? 'openapi';
+  if ((type === 'asyncapi') !== (service.protocol === 'EVENT')) {
+    return { error: `${name} is ${type === 'asyncapi' ? 'an AsyncAPI' : 'an OpenAPI'} source: pick a matching API.`, status: 422 };
+  }
+  const links = linksOf(summary);
+  links.set(name, [service.name, service.version]);
+  await uploadArtifact(overlayFileOf(summary), overlayYaml(summary.title, summary.version, links), false, token);
+  await fetchReal(token);
+  return real.documents.get(docId) ?? { error: `Document "${docId}" does not exist.`, status: 404 };
+}
