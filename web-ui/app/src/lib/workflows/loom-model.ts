@@ -1,3 +1,4 @@
+import { criteriaState } from './criteria-state.js';
 import { actionLabel, criteriaText } from './describe.js';
 import { resolveExpression } from './expression.js';
 import type { ArazzoDocument, Step, StepResult, Workflow, WorkflowRun, SourceProtocol as Protocol } from './types.js';
@@ -175,7 +176,8 @@ function checksOf(result: StepResult | undefined, validate: boolean, run?: Workf
     ];
   }
   if (result.status === 'not-run') return { successCriteria: 'not-evaluated', schemaValidation: validate ? 'not-evaluated' : undefined };
-  const criteria = result.criteria.every((c) => c.held) ? 'passed' : 'failed';
+  const state = criteriaState(result);
+  const criteria: LoomCheckState = state === 'held' ? 'passed' : state === 'failed' ? 'failed' : 'not-evaluated';
   const schema: LoomCheckState = result.schema.state === 'pass' ? 'passed' : result.schema.state === 'fail' ? 'failed' : result.schema.state === 'off' ? 'off' : 'not-evaluated';
   return { successCriteria: criteria, schemaValidation: validate ? schema : undefined };
 }

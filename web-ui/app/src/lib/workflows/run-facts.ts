@@ -1,3 +1,4 @@
+import { criteriaState } from './criteria-state.js';
 import { stoppedStep } from './describe.js';
 import type { Session, Step, StepResult, Workflow, WorkflowRun } from './types.js';
 import { formatDuration } from './time.js';
@@ -108,10 +109,14 @@ export function stepChecksOf(result: StepResult | undefined, run: WorkflowRun): 
       { label: 'Contract', tone: 'pass', word: 'conforms' },
     ];
   }
-  const held = result.criteria.every((c) => c.held);
+  const criteria = criteriaState(result);
   const sc = result.schema.state;
   return [
-    { label: 'Success criteria', tone: notRun ? 'off' : held ? 'pass' : 'fail', word: notRun ? 'not evaluated' : held ? 'held' : 'did not hold' },
+    {
+      label: 'Success criteria',
+      tone: criteria === 'held' ? 'pass' : criteria === 'failed' ? 'fail' : 'off',
+      word: criteria === 'held' ? 'held' : criteria === 'failed' ? 'did not hold' : 'not evaluated'
+    },
     {
       label: 'Schema validation',
       tone: notRun || sc === 'off' || sc === 'na' ? 'off' : sc === 'pass' ? 'pass' : 'fail',
