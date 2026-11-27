@@ -57,6 +57,13 @@
       <groupId>io.microcks</groupId>
       <artifactId>microcks-async-minion</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <!-- Shaded Netty is not linkable by native-image: gRPC runs on grpc-netty and Quarkus Netty. -->
+        <exclusion>
+          <groupId>io.grpc</groupId>
+          <artifactId>grpc-netty-shaded</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
