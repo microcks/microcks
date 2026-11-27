@@ -598,6 +598,53 @@ export async function fetchArazzoSource(docId: string, token?: string): Promise<
   }
 }
 
+/* ---- Arazzo import dialog and relink (`/api/arazzo/documents/analysis`, stories S14 and S19) ---- */
+
+import type { ApiRef, ImportAnalysis } from '#lib/workflows/import-analysis.js';
+
+/** The links chosen per source description; absent or null = not linked, undefined `links` = the proposed ones. */
+export type BackendLinks = Record<string, ApiRef | null>;
+
+const jsonCall = (path: string, token: string | undefined, method: string, body: unknown) =>
+  call(path, token, { method, headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(body) });
+
+/** What Microcks says about a document before importing it; nothing is stored. */
+export async function analyseArazzoDocument(content: string, links: BackendLinks | undefined, token?: string): Promise<ImportAnalysis> {
+  return (await (await jsonCall('/api/arazzo/documents/analysis', token, 'POST', { content, links: links ?? null })).json()) as ImportAnalysis;
+}
+
+/** Imports a document with the links chosen for its sources, all or nothing; answers its summary. */
+export async function importArazzoDocument(
+  content: string,
+  fileName: string,
+  links: BackendLinks,
+  token?: string
+): Promise<BackendArazzoDocumentSummary> {
+  return (await (await jsonCall('/api/arazzo/documents', token, 'POST', { content, fileName, links })).json()) as BackendArazzoDocumentSummary;
+}
+
+/** The same analysis for an imported document; `links` undefined = the links of its overlay. Undefined when unknown. */
+export async function analyseImportedArazzoDocument(docId: string, links: BackendLinks | undefined, token?: string): Promise<ImportAnalysis | undefined> {
+  try {
+    const res = await jsonCall(`/api/arazzo/documents/${encodeURIComponent(docId)}/analysis`, token, 'POST', { links: links ?? null });
+    return (await res.json()) as ImportAnalysis;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+/** Links the sources of an imported document again (replaces the sources of its overlay). Undefined when unknown. */
+export async function relinkArazzoSources(docId: string, links: BackendLinks, token?: string): Promise<BackendArazzoDocumentSummary | undefined> {
+  try {
+    const res = await jsonCall(`/api/arazzo/documents/${encodeURIComponent(docId)}/sources`, token, 'PUT', { links });
+    return (await res.json()) as BackendArazzoDocumentSummary;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
 /* ---- Arazzo runs (`/api/arazzo`, ported from feature/arazzo S5–S11) ---- */
 
 export interface BackendWorkflowRunSummary {

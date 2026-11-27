@@ -424,3 +424,9 @@ export async function linkRealSource(
   await fetchReal(token);
   return real.documents.get(docId) ?? { error: `Document "${docId}" does not exist.`, status: 404 };
 }
+
+/** A real document as the screens show it, read again from the backend (e.g. right after an import). */
+export async function arazzoDocumentOf(docId: string, token?: string): Promise<ArazzoDocument | undefined> {
+  await fetchReal(token);
+  return real.documents.get(docId);
+}
