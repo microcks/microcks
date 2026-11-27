@@ -20,8 +20,8 @@ package io.microcks.artifact.arazzo;
  * @param stepId The id of the step
  * @param place  Where the step uses it: the location of a parameter (path, query or header), {@link #BODY} for a
  *               request body replacement, or {@link #CRITERION} for a success criterion or the criterion of a success
- *               or failure action
- * @param target The name of the parameter, or the pointer replaced in the body; null for a criterion
+ *               or failure action, or {@link #CORRELATION_ID} for the correlationId of a receive step
+ * @param target The name of the parameter, or the pointer replaced in the body; null for a criterion or a correlationId
  * @author SebastienDegodez
  */
 public record ArazzoUse(String stepId, String place, String target) {
@@ -31,4 +31,7 @@ public record ArazzoUse(String stepId, String place, String target) {
 
    /** The place of a success criterion, or of a criterion of a success or failure action. */
    public static final String CRITERION = "criterion";
+
+   /** The place of the correlationId of a step receiving a message. */
+   public static final String CORRELATION_ID = "correlationId";
 }

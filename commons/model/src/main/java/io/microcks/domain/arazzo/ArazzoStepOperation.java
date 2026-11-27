@@ -16,13 +16,19 @@
 package io.microcks.domain.arazzo;
 
 /**
- * The operation a step of an Arazzo workflow calls, as found in the main OpenAPI contract of the linked Microcks API.
+ * The operation a step of an Arazzo workflow calls, as found in the main OpenAPI or AsyncAPI contract of the linked
+ * Microcks API, or the AsyncAPI channel it sends or receives on.
  * @param sourceName  The name of the source description the operation belongs to
- * @param operationId The id of the operation in that source description
- * @param method      The HTTP method of the operation, null when it is not found
- * @param path        The path of the operation, null when it is not found
- * @param reason      Why the operation is not found, null when it is found
+ * @param operationId The id of the operation in that source description; null for a step on a channel
+ * @param method      The HTTP method of the operation, or the action Microcks names an AsyncAPI operation with (SEND,
+ *                    RECEIVE, PUBLISH or SUBSCRIBE); null when it is not found, or for a step on a channel
+ * @param path        The path of the operation, or what Microcks names an AsyncAPI operation with after its action;
+ *                    null when it is not found, or for a step on a channel
+ * @param reason      Why the operation or the channel is not found, null when it is found
+ * @param channel     The address of the AsyncAPI channel the step sends or receives on, else the name the step gives it
+ *                    when it is not found; null for an HTTP operation
  * @author SebastienDegodez
  */
-public record ArazzoStepOperation(String sourceName, String operationId, String method, String path, String reason) {
+public record ArazzoStepOperation(String sourceName, String operationId, String method, String path, String reason,
+      String channel) {
 }

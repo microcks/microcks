@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 
 /**
  * The data flow of an Arazzo workflow: where its steps use its inputs and the outputs of earlier steps, read from the
- * runtime expressions of their parameters, request body replacements and success criteria.
+ * runtime expressions of their parameters, request body replacements, success criteria and correlation ids.
  * @author SebastienDegodez
  */
 public final class ArazzoDataFlow {
@@ -117,6 +117,9 @@ public final class ArazzoDataFlow {
             }
          }
          expressions.addAll(step.outputs().values());
+         if (step.messaging() != null && step.messaging().correlationId() != null) {
+            expressions.add(step.messaging().correlationId());
+         }
       }
       expressions.addAll(workflow.outputs().values());
       return expressions;
@@ -140,6 +143,10 @@ public final class ArazzoDataFlow {
             if (criterion.context() != null) {
                places.add(new ExpressionPlace(criterion.context(), use));
             }
+         }
+         if (step.messaging() != null && step.messaging().correlationId() != null) {
+            places.add(new ExpressionPlace(step.messaging().correlationId(),
+                  new ArazzoUse(step.stepId(), ArazzoUse.CORRELATION_ID, null)));
          }
       }
       return places;

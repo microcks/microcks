@@ -26,3 +26,39 @@ workflows:
     steps:
       - stepId: createOrder
         workflowId: payOrder
+---
+# example: depends-on - the step confirmOrder waits for the step requestShipping, as Arazzo 1.1 allows
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: ship
+    steps:
+      - stepId: requestShipping
+        operationId: sendShippingRequest
+        action: send
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+        dependsOn:
+          - requestShipping
+---
+# example: http-timeout - the HTTP step createOrder waits at most 2 seconds for its response, as Arazzo 1.1 allows
+arazzo: 1.1.0
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        timeout: 2000

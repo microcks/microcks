@@ -28,14 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests of reading the steps of an Arazzo workflow: the operation each step calls, its parameters, request body,
- * success criteria, outputs and actions. Two multi-document fixtures hold the examples:
- * {@code workflow-steps.arazzo.yaml} and, for the actions of the steps, {@code step-actions.arazzo.yaml}.
+ * success criteria, outputs and actions. The multi-document fixtures hold the examples:
+ * {@code workflow-steps.arazzo.yaml} and, for the actions of the steps, {@code step-actions.arazzo.yaml}; a third one,
+ * {@code async-steps.arazzo.yaml}, holds the steps of AsyncAPI sources.
  * @author SebastienDegodez
  */
 class ArazzoWorkflowReaderTest {
 
    private static final String FIXTURE = "workflow-steps.arazzo.yaml";
    private static final String ACTIONS_FIXTURE = "step-actions.arazzo.yaml";
+   private static final String ASYNC_FIXTURE = "async-steps.arazzo.yaml";
 
    @Test
    void theStepsOfAWorkflowAreReadWithWhatTheyCallSendCheckAndGive() throws IOException {
@@ -118,6 +120,42 @@ class ArazzoWorkflowReaderTest {
             .workflow(ArazzoFixtures.exampleOf(ACTIONS_FIXTURE, example), workflowId).orElseThrow();
 
       assertEquals(steps, String.join(", ", workflow.steps().stream().map(ArazzoWorkflowReaderTest::actions).toList()));
+   }
+
+   /**
+    * S28: a step of an AsyncAPI source is read with the operation it calls or the channel it listens on, and with what
+    * it tells of its messages: its action, the correlationId of the message it receives and how long it waits for it. A
+    * step that does not tell its action takes the one of its AsyncAPI operation. An HTTP step exchanges no message.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = ';', value = {
+         "mixed-sources; placeThenConfirm; createOrder calls orderApi CreateOrder, requestShipping calls orderEvents "
+               + "sendShippingRequest | messages send, confirmOrder calls orderEvents receiveOrderConfirmed | messages "
+               + "receive correlationId $steps.createOrder.outputs.orderId timeout 6000",
+         "channel-path; listen; confirmOrder calls orderEvents channel orderConfirmed | messages receive",
+         "escaped-channel-path; listen; confirmOrder calls orderEvents channel orders/confirmed~v1 | messages receive",
+         "implicit-action; listen; confirmOrder calls orderEvents receiveOrderConfirmed | messages",
+         "zero-timeout; listen; confirmOrder calls orderEvents receiveOrderConfirmed | messages receive timeout 0" })
+   void aStepOfAnAsyncApiSourceIsReadWithWhatItTellsOfItsMessages(String example, String workflowId, String steps)
+         throws IOException {
+      ArazzoWorkflow workflow = ArazzoWorkflowReader
+            .workflow(ArazzoFixtures.exampleOf(ASYNC_FIXTURE, example), workflowId).orElseThrow();
+
+      assertEquals(steps,
+            String.join(", ", workflow.steps().stream().map(ArazzoWorkflowReaderTest::messages).toList()));
+   }
+
+   private static String messages(ArazzoStep step) {
+      ArazzoOperationCall call = step.call();
+      String called = call.channel() == null ? call.operationId() : "channel " + call.channel();
+      String line = step.stepId() + " calls " + call.sourceName() + " " + called;
+      ArazzoMessaging messaging = step.messaging();
+      if (messaging == null) {
+         return line;
+      }
+      return line + " | messages" + (messaging.action() == null ? "" : " " + messaging.action())
+            + (messaging.correlationId() == null ? "" : " correlationId " + messaging.correlationId())
+            + (messaging.timeout() == null ? "" : " timeout " + messaging.timeout());
    }
 
    private static String actions(ArazzoStep step) {

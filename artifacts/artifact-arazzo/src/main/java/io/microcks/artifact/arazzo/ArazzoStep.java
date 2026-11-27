@@ -29,9 +29,11 @@ import java.util.Map;
  * @param outputs         The outputs of the step, by name in the order of the document, with their runtime expressions
  * @param onSuccess       What the step does when it succeeds, in the order of the document; empty to go on
  * @param onFailure       What the step does when it fails, in the order of the document; empty to end the workflow
+ * @param messaging       What the step tells of the messages it sends or receives when it belongs to an AsyncAPI
+ *                        source; null for a step calling an HTTP operation
  * @author SebastienDegodez
  */
 public record ArazzoStep(String stepId, String description, ArazzoOperationCall call, List<ArazzoParameter> parameters,
       ArazzoRequestBody requestBody, List<ArazzoCriterion> successCriteria, Map<String, String> outputs,
-      List<ArazzoAction> onSuccess, List<ArazzoAction> onFailure) {
+      List<ArazzoAction> onSuccess, List<ArazzoAction> onFailure, ArazzoMessaging messaging) {
 }

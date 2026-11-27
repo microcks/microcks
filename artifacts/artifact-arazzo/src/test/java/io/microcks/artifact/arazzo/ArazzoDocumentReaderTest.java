@@ -37,11 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Tests of the subset of Arazzo that Microcks supports. The webapp import tests cover one example of each acceptance
  * criterion; this reader is shared with the components that run workflows, so every refused feature is covered here.
  * <p>
- * All the features below are valid Arazzo 1.0.1: they are refused ONLY TEMPORARILY, until the workflow runner executes
- * them. A document using one of them is refused rather than imported, because a run that silently skipped them would
- * report a result the journey does not have: an ignored retry fails a run that should pass, an ignored dependsOn runs
- * workflows in the wrong order. When a story makes the runner handle one of them, it removes its example from these
- * tests and from ArazzoSubset.
+ * All the features below are valid Arazzo 1.0.1 or 1.1.0: they are refused ONLY TEMPORARILY, until the workflow runner
+ * executes them. A document using one of them is refused rather than imported, because a run that silently skipped them
+ * would report a result the journey does not have: an ignored retry fails a run that should pass, an ignored dependsOn
+ * runs workflows in the wrong order. When a story makes the runner handle one of them, it removes its example from
+ * these tests and from ArazzoSubset.
  * @author SebastienDegodez
  */
 class ArazzoDocumentReaderTest {
@@ -99,12 +99,83 @@ class ArazzoDocumentReaderTest {
    }
 
    /**
+    * S28: an Arazzo 1.1 document may describe AsyncAPI sources, whose steps send or receive messages through an
+    * operation, or on a channel its channelPath points to. A step of an AsyncAPI source calls the operation it names,
+    * or listens on the channel, read from the JSON pointer of its channelPath, ~1 standing for a slash and ~0 for a
+    * tilde.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = ';', value = {
+         "mixed-sources; placeThenConfirm=[orderApi CreateOrder, orderEvents sendShippingRequest, orderEvents "
+               + "receiveOrderConfirmed]",
+         "channel-path; listen=[orderEvents channel orderConfirmed]",
+         "escaped-channel-path; listen=[orderEvents channel orders/confirmed~v1]",
+         "implicit-action; listen=[orderEvents receiveOrderConfirmed]",
+         "zero-timeout; listen=[orderEvents receiveOrderConfirmed]" })
+   void aDocumentWithAsyncApiSourcesIsReadWithWhatItsStepsCall(String example, String calls) throws Exception {
+      JsonNode document = exampleOf("async-steps.arazzo.yaml", example);
+
+      ArazzoDocumentReader.read(document);
+
+      assertEquals(calls,
+            ArazzoDocumentReader.workflowCalls(document).entrySet().stream()
+                  .map(workflow -> workflow.getKey() + "=" + workflow.getValue().stream()
+                        .map(call -> call.sourceName() + " "
+                              + (call.channel() == null ? call.operationId() : "channel " + call.channel()))
+                        .toList())
+                  .findFirst().orElseThrow());
+   }
+
+   /**
+    * S28: Arazzo 1.1 lets a step send or receive messages only on an AsyncAPI source, and only receive a message by its
+    * correlationId; a timeout is a number of milliseconds; a step names an operation or a channel, not both, and a
+    * channelPath points to a channel of a source description of the document. These documents are invalid Arazzo,
+    * refused permanently. A step on a channel must also tell its action: Arazzo leaves it optional, but a channel,
+    * unlike an operation, does not tell whether the step sends or receives, so Microcks refuses such a step rather than
+    * guess. The fields of an AsyncAPI step are never ignored silently.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = ';', value = {
+         "action-on-http-step; Invalid Arazzo document: action only applies to a step of an AsyncAPI source: "
+               + "createOrder",
+         "correlation-id-on-http-step; Invalid Arazzo document: correlationId only applies to a step of an AsyncAPI "
+               + "source: createOrder",
+         "channel-path-to-openapi; Invalid Arazzo document: channelPath only applies to a step of an AsyncAPI source: "
+               + "createOrder",
+         "unknown-action; Invalid Arazzo document: a step action is send or receive, not subscribe: confirmOrder",
+         "correlation-id-on-send; Invalid Arazzo document: only a receive step has a correlationId: requestShipping",
+         "negative-timeout; Invalid Arazzo document: a step timeout is a number of milliseconds, not -1: "
+               + "confirmOrder",
+         "text-timeout; Invalid Arazzo document: a step timeout is a number of milliseconds, not 6s: confirmOrder",
+         "decimal-timeout; Invalid Arazzo document: a step timeout is a number of milliseconds, not 1.5: "
+               + "confirmOrder",
+         "operation-and-channel; Invalid Arazzo document: a step names an operationId or a channelPath, not both: "
+               + "confirmOrder",
+         "not-a-channel; Invalid Arazzo document: channelPath does not point to a channel of a source description: "
+               + "confirmOrder",
+         "nested-channel-pointer; Invalid Arazzo document: channelPath does not point to a channel of a source "
+               + "description: confirmOrder",
+         "channel-of-unknown-source; Unknown source description: unknown",
+         "channel-without-action; Invalid Arazzo document: a step on a channel tells its action, send or receive: "
+               + "confirmOrder" })
+   void aStepSendingOrReceivingMessagesOutsideTheRulesOfArazzoIsRefusedWithItsReason(String example, String reason)
+         throws IOException {
+      assertRefused(example("async-steps", example), reason);
+   }
+
+   /**
     * Temporary refusal: nested workflows and operationPath are listed under "Later" in the Arazzo epic. The runner only
     * calls one operation per step, by operationId. Success and failure actions are no longer refused here since S17:
     * see {@link #aStepActionOutsideTheSupportedSubsetIsRefusedWithItsReason(String, String)}.
+    * <p>
+    * Temporary refusal since S28: the dependsOn of a step, that Arazzo 1.1 adds to wait for an earlier step, mostly an
+    * asynchronous one; and the timeout of an HTTP step, as the runner gives every HTTP step the timeout of the run. The
+    * timeout of an AsyncAPI step is read: see
+    * {@link #aDocumentWithAsyncApiSourcesIsReadWithWhatItsStepsCall(String, String)}.
     */
    @ParameterizedTest
-   @CsvSource({ "operation-path, operationPath", "nested-workflow, workflowId" })
+   @CsvSource({ "operation-path, operationPath", "nested-workflow, workflowId", "depends-on, dependsOn",
+         "http-timeout, timeout" })
    void aStepFieldOutsideTheSupportedSubsetIsRefusedWithItsReason(String example, String field) throws IOException {
       assertRefused(example("step-fields", example), "Unsupported step field: " + field);
    }
@@ -163,12 +234,13 @@ class ArazzoDocumentReaderTest {
    }
 
    /**
-    * Temporary refusal: AsyncAPI source descriptions come with Arazzo 1.1 and are listed under "Later" in the Arazzo
-    * epic (microcks/microcks#1665). The runner only calls HTTP operations of OpenAPI descriptions.
+    * Temporary refusal: Arazzo source descriptions, whose workflows a step would run, are listed under "Later" in the
+    * Arazzo epic, as nested workflows are. AsyncAPI source descriptions are read since S28: see
+    * {@link #aDocumentWithAsyncApiSourcesIsReadWithWhatItsStepsCall(String, String)}.
     */
    @Test
    void aSourceDescriptionTypeOutsideTheSupportedSubsetIsRefusedWithItsReason() throws IOException {
-      assertRefused(example("source-descriptions", "asyncapi"), "Unsupported source description type: asyncapi");
+      assertRefused(example("source-descriptions", "arazzo"), "Unsupported source description type: arazzo");
    }
 
    /**

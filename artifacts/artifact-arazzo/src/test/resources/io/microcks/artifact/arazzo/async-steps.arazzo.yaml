@@ -1,0 +1,112 @@
+# example: mixed-sources - an OpenAPI and an AsyncAPI source, an HTTP step, then steps sending and receiving messages
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: placeThenConfirm
+    inputs:
+      type: object
+      properties:
+        customer:
+          type: string
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          orderId: $response.body#/id
+      - stepId: requestShipping
+        operationId: $sourceDescriptions.orderEvents.sendShippingRequest
+        action: send
+        parameters:
+          - name: customer
+            in: header
+            value: $inputs.customer
+        requestBody:
+          payload:
+            orderId: ''
+          replacements:
+            - target: /orderId
+              value: $steps.createOrder.outputs.orderId
+      - stepId: confirmOrder
+        operationId: $sourceDescriptions.orderEvents.receiveOrderConfirmed
+        action: receive
+        correlationId: $steps.createOrder.outputs.orderId
+        timeout: 6000
+        successCriteria:
+          - condition: $message.payload#/status == 'confirmed'
+        outputs:
+          status: $message.payload#/status
+---
+# example: channel-path - a step receiving on a channel of its AsyncAPI source, named by a JSON pointer
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orderConfirmed'
+        action: receive
+---
+# example: escaped-channel-path - a channel whose name holds a slash, escaped as ~1 in the JSON pointer
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orders~1confirmed~0v1'
+        action: receive
+---
+# example: implicit-action - a step calling an AsyncAPI operation without telling its action, given by the operation
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+---
+# example: zero-timeout - a step checking a message already received, without waiting for one
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+        timeout: 0

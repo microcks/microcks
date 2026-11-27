@@ -16,10 +16,13 @@
 package io.microcks.domain.arazzo;
 
 /**
- * The operation a step of an Arazzo workflow calls, as kept with the imported document.
- * @param sourceName  The name of the source description the operation belongs to
- * @param operationId The id of the operation in that source description
+ * The operation a step of an Arazzo workflow calls, or the AsyncAPI channel it sends or receives on, as kept with the
+ * imported document.
+ * @param sourceName  The name of the source description the operation or the channel belongs to
+ * @param operationId The id of the operation in that source description; null for a step on a channel
+ * @param channel     The name of the channel in that AsyncAPI source description; null for a step calling an operation,
+ *                    and for the documents imported before Arazzo 1.1 was read
  * @author SebastienDegodez
  */
-public record ArazzoStepCall(String sourceName, String operationId) {
+public record ArazzoStepCall(String sourceName, String operationId, String channel) {
 }

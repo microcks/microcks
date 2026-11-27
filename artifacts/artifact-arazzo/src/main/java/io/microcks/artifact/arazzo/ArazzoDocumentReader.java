@@ -110,14 +110,22 @@ public final class ArazzoDocumentReader {
       for (JsonNode workflow : document.path("workflows")) {
          List<ArazzoOperationCall> calls = new ArrayList<>();
          for (JsonNode step : workflow.path("steps")) {
-            calls.add(call(step.path("operationId").asText(), sourceNames));
+            calls.add(call(step, sourceNames));
          }
          workflowCalls.put(workflow.path("workflowId").asText(), calls);
       }
       return workflowCalls;
    }
 
-   /** The operation a step calls, also read by {@link ArazzoWorkflowReader}. */
+   /** The operation a step calls, or the channel it sends or receives on, also read by {@link ArazzoWorkflowReader}. */
+   static ArazzoOperationCall call(JsonNode step, List<String> sourceNames) {
+      if (step.has("channelPath")) {
+         return ArazzoSubset.channelCall(step.path("channelPath").asText());
+      }
+      return call(step.path("operationId").asText(), sourceNames);
+   }
+
+   /** The operation an operationId names, in the source it names or else in the only one. */
    static ArazzoOperationCall call(String operationId, List<String> sourceNames) {
       if (operationId.startsWith(ArazzoSubset.SOURCE_DESCRIPTIONS_EXPRESSION)) {
          String sourceName = ArazzoSubset.sourceNameOf(operationId);

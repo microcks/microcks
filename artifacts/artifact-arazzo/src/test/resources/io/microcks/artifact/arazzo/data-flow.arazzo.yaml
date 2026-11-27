@@ -171,3 +171,31 @@ workflows:
             type: retry
             criteria:
               - condition: $response.body#/status != $steps.read.outputs.status
+---
+# example: correlation-id - a step output and an input telling which message receive steps wait for
+arazzo: 1.1.0
+info:
+  title: Correlation ids
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: create
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+        outputs:
+          orderId: $response.body#/id
+      - stepId: confirm
+        operationId: $sourceDescriptions.orderEvents.receiveOrderConfirmed
+        action: receive
+        correlationId: $steps.create.outputs.orderId
+      - stepId: ship
+        operationId: $sourceDescriptions.orderEvents.receiveOrderShipped
+        action: receive
+        correlationId: $inputs.reference

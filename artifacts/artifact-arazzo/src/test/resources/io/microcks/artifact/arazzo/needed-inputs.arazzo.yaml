@@ -180,3 +180,20 @@ workflows:
               - context: $inputs.label
                 condition: ^[A-Z].*
                 type: regex
+---
+# example: correlation-id - an input telling which message a receive step waits for
+arazzo: 1.1.0
+info:
+  title: Correlation ids
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: flow
+    steps:
+      - stepId: confirm
+        operationId: receiveOrderConfirmed
+        action: receive
+        correlationId: $inputs.reference

@@ -41,19 +41,19 @@ public final class ArazzoWorkflowReader {
     * @return The workflow, empty if the document has no workflow with that id
     */
    public static Optional<ArazzoWorkflow> workflow(JsonNode document, String workflowId) {
-      List<String> sourceNames = ArazzoDocumentReader.sourceDescriptionNames(document);
+      Map<String, String> sourceTypes = ArazzoSubset.sourceTypes(document);
       for (JsonNode workflow : document.path("workflows")) {
          if (workflow.path("workflowId").asText().equals(workflowId)) {
-            return Optional.of(workflow(workflow, sourceNames));
+            return Optional.of(workflow(workflow, sourceTypes));
          }
       }
       return Optional.empty();
    }
 
-   private static ArazzoWorkflow workflow(JsonNode workflow, List<String> sourceNames) {
+   private static ArazzoWorkflow workflow(JsonNode workflow, Map<String, String> sourceTypes) {
       List<ArazzoStep> steps = new ArrayList<>();
       for (JsonNode step : workflow.path("steps")) {
-         steps.add(step(step, sourceNames));
+         steps.add(step(step, sourceTypes));
       }
       List<String> inputNames = new ArrayList<>();
       Map<String, String> inputTypes = new LinkedHashMap<>();
@@ -72,16 +72,26 @@ public final class ArazzoWorkflowReader {
       return texts;
    }
 
-   private static ArazzoStep step(JsonNode step, List<String> sourceNames) {
+   private static ArazzoStep step(JsonNode step, Map<String, String> sourceTypes) {
+      ArazzoOperationCall call = ArazzoDocumentReader.call(step, List.copyOf(sourceTypes.keySet()));
       List<ArazzoParameter> parameters = new ArrayList<>();
       for (JsonNode parameter : step.path("parameters")) {
          parameters.add(new ArazzoParameter(parameter.path("name").asText(), parameter.path("in").asText(),
                text(parameter.path("value"))));
       }
-      return new ArazzoStep(step.path("stepId").asText(), optionalText(step, "description"),
-            ArazzoDocumentReader.call(step.path("operationId").asText(), sourceNames), parameters,
+      return new ArazzoStep(step.path("stepId").asText(), optionalText(step, "description"), call, parameters,
             requestBody(step.path("requestBody")), criteria(step.path("successCriteria")),
-            expressions(step.path("outputs")), actions(step.path("onSuccess")), actions(step.path("onFailure")));
+            expressions(step.path("outputs")), actions(step.path("onSuccess")), actions(step.path("onFailure")),
+            messaging(step, sourceTypes.get(call.sourceName())));
+   }
+
+   /** A step of an AsyncAPI source tells what it sends or receives; a step calling an HTTP operation does not. */
+   private static ArazzoMessaging messaging(JsonNode step, String sourceType) {
+      if (!ArazzoSubset.ASYNCAPI.equals(sourceType)) {
+         return null;
+      }
+      Long timeout = step.has("timeout") ? step.path("timeout").asLong() : null;
+      return new ArazzoMessaging(optionalText(step, "action"), optionalText(step, "correlationId"), timeout);
    }
 
    private static List<ArazzoCriterion> criteria(JsonNode criteria) {
