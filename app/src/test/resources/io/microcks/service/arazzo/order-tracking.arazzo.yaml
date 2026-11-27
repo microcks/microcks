@@ -1,0 +1,118 @@
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+  summary: Follows an order while it is prepared, polling its status.
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: waitUntilReady
+    summary: Polls the status of an order every second until it is ready, up to 5 retries, then reads the order.
+    inputs:
+      type: object
+      properties:
+        orderId:
+          type: string
+      required:
+        - orderId
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body#/status == 'ready'
+        onFailure:
+          - name: notReadyYet
+            type: retry
+            retryAfter: 1
+            retryLimit: 5
+        outputs:
+          status: $response.body#/status
+      - stepId: readOrder
+        operationId: getOrder
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          item: $response.body#/item
+    outputs:
+      status: $steps.pollStatus.outputs.status
+      item: $steps.readOrder.outputs.item
+  - workflowId: giveUpQuickly
+    summary: Polls the status of an order once more only when it is not ready, then gives up.
+    inputs:
+      type: object
+      properties:
+        orderId:
+          type: string
+      required:
+        - orderId
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body#/status == 'ready'
+        onFailure:
+          - name: onceMore
+            type: retry
+            retryAfter: 1
+            retryLimit: 1
+        outputs:
+          status: $response.body#/status
+    outputs:
+      status: $steps.pollStatus.outputs.status
+  - workflowId: readUnlessPreparing
+    summary: Checks the status of an order once, and ends there while the order is still being prepared.
+    inputs:
+      type: object
+      properties:
+        orderId:
+          type: string
+      required:
+        - orderId
+    steps:
+      - stepId: checkStatus
+        operationId: getOrderStatus
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+        onSuccess:
+          - name: stillPreparing
+            type: end
+            criteria:
+              - condition: $response.body#/status == 'preparing'
+        onFailure:
+          - name: unknownOrder
+            type: end
+        outputs:
+          status: $response.body#/status
+      - stepId: readOrder
+        operationId: getOrder
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          item: $response.body#/item
+    outputs:
+      status: $steps.checkStatus.outputs.status
+      item: $steps.readOrder.outputs.item

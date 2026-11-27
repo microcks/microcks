@@ -16,12 +16,18 @@
 package io.microcks.web;
 
 import io.microcks.domain.ArazzoDocumentSummary;
+import io.microcks.domain.ArazzoImportAnalysis;
 import io.microcks.repository.ArazzoDocumentRepository;
 import io.microcks.service.ArazzoDocumentService;
+import io.microcks.service.ArazzoImportService;
+import io.microcks.artifact.MockRepositoryImportException;
 
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -30,6 +36,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Rest controller for the Arazzo documents imported into Microcks.
@@ -42,17 +49,20 @@ public class ArazzoDocumentController {
 
    private final ArazzoDocumentService arazzoDocumentService;
    private final ArazzoDocumentRepository arazzoDocumentRepository;
+   private final ArazzoImportService arazzoImportService;
 
    /**
     * Build a new ArazzoDocumentController with its dependencies.
     * @param arazzoDocumentService    to summarise the imported Arazzo documents
     * @param arazzoDocumentRepository to read an imported Arazzo document as it was uploaded
+    * @param arazzoImportService      to analyse and import the Arazzo documents dropped in the import dialog
     */
    @Inject
    public ArazzoDocumentController(ArazzoDocumentService arazzoDocumentService,
-         ArazzoDocumentRepository arazzoDocumentRepository) {
+         ArazzoDocumentRepository arazzoDocumentRepository, ArazzoImportService arazzoImportService) {
       this.arazzoDocumentService = arazzoDocumentService;
       this.arazzoDocumentRepository = arazzoDocumentRepository;
+      this.arazzoImportService = arazzoImportService;
    }
 
    /**
@@ -78,5 +88,71 @@ public class ArazzoDocumentController {
       return arazzoDocumentRepository.findByIdOptional(documentId)
             .map(document -> Response.ok(document.getContent(), "application/yaml").build())
             .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+   }
+
+   /**
+    * Analyse an Arazzo document before importing it. Nothing is stored.
+    * @param request The document, with the links chosen for its source descriptions, if any
+    * @return Whether the document can be imported, the API each source is linked to, and whether each workflow is ready
+    *         to run
+    */
+   @POST
+   @Path("/documents/analysis")
+   @Consumes(MediaType.APPLICATION_JSON)
+   public ArazzoImportAnalysis analyseDocument(ArazzoImportRequest request) {
+      return arazzoImportService.analyseArazzoDocument(request.content(), request.links());
+   }
+
+   /**
+    * Import an Arazzo document with the links chosen for its source descriptions, all or nothing.
+    * @param request The document, with the links chosen for its source descriptions
+    * @return The summary of the imported document, or why it is refused
+    */
+   @POST
+   @Path("/documents")
+   @Consumes(MediaType.APPLICATION_JSON)
+   public Response importDocument(ArazzoImportRequest request) {
+      try {
+         return Response.status(Response.Status.CREATED).entity(arazzoImportService.importArazzoDocument(
+               request.content(), request.fileName(), request.links() == null ? Map.of() : request.links())).build();
+      } catch (MockRepositoryImportException mrie) {
+         return Response.status(Response.Status.BAD_REQUEST).entity(mrie.getMessage()).build();
+      }
+   }
+
+   /**
+    * Analyse the links of the source descriptions of an imported Arazzo document, to link them again. Nothing is
+    * stored.
+    * @param documentId The identifier of the imported document
+    * @param request    The links chosen for its source descriptions; none for the links of its overlay
+    * @return The API each source is linked to, and whether each workflow is ready to run; 404 for an unknown document
+    * @throws MockRepositoryImportException if the stored document cannot be read anymore
+    */
+   @POST
+   @Path("/documents/{id}/analysis")
+   @Consumes(MediaType.APPLICATION_JSON)
+   public Response analyseImportedDocument(@PathParam("id") String documentId, ArazzoLinksRequest request)
+         throws MockRepositoryImportException {
+      ArazzoImportAnalysis analysis = arazzoImportService.analyseImportedDocument(documentId, request.links());
+      return analysis == null ? Response.status(Response.Status.NOT_FOUND).build() : Response.ok(analysis).build();
+   }
+
+   /**
+    * Link the source descriptions of an imported Arazzo document again, replacing the sources of its overlay.
+    * @param documentId The identifier of the imported document
+    * @param request    The links chosen for its source descriptions
+    * @return The summary of the document, why the links are refused, or 404 for an unknown document
+    */
+   @PUT
+   @Path("/documents/{id}/sources")
+   @Consumes(MediaType.APPLICATION_JSON)
+   public Response relinkSources(@PathParam("id") String documentId, ArazzoLinksRequest request) {
+      try {
+         ArazzoDocumentSummary summary = arazzoImportService.relinkSources(documentId,
+               request.links() == null ? Map.of() : request.links());
+         return summary == null ? Response.status(Response.Status.NOT_FOUND).build() : Response.ok(summary).build();
+      } catch (MockRepositoryImportException mrie) {
+         return Response.status(Response.Status.BAD_REQUEST).entity(mrie.getMessage()).build();
+      }
    }
 }

@@ -22,6 +22,7 @@ import io.microcks.domain.ArazzoSourceSummary;
 import io.microcks.domain.ArazzoSources;
 import io.microcks.domain.ArazzoStepCall;
 import io.microcks.domain.ArazzoStepOperation;
+import io.microcks.domain.ArazzoWorkflowExample;
 import io.microcks.domain.ArazzoWorkflowStatus;
 import io.microcks.domain.ArazzoWorkflowSummary;
 import io.microcks.domain.Resource;
@@ -55,6 +56,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -138,24 +140,45 @@ public class ArazzoDocumentService {
     * @throws MockRepositoryImportException if the document cannot be imported
     */
    public ArazzoDocument importArazzoDocument(String content, String fileName) throws MockRepositoryImportException {
-      JsonNode parsed = parse(content);
+      return save(document(parse(content), content), fileName);
+   }
+
+   /**
+    * Read an Arazzo document without storing it.
+    * @param parsed  The document, parsed from YAML or JSON
+    * @param content The document as uploaded
+    * @return The document, not stored yet
+    * @throws MockRepositoryImportException if the document is outside of the subset Microcks supports
+    */
+   static ArazzoDocument document(JsonNode parsed, String content) throws MockRepositoryImportException {
       ArazzoDescription description = read(parsed);
-      // Re-importing the same title and version updates the existing document.
-      ArazzoDocument document = arazzoDocumentRepository.findByTitleAndVersion(description.title(),
-            description.version());
-      if (document == null) {
-         document = new ArazzoDocument();
-      }
+      ArazzoDocument document = new ArazzoDocument();
       document.setTitle(description.title());
       document.setVersion(description.version());
       document.setWorkflowIds(description.workflowIds());
       document.setSourceNames(ArazzoDocumentReader.sourceDescriptionNames(parsed));
       document.setWorkflowCalls(stepCalls(ArazzoDocumentReader.workflowCalls(parsed)));
       document.setArazzoVersion(ArazzoDocumentReader.arazzoVersion(parsed));
-      document.setFileName(fileName);
-      document.setImportDate(new Date());
       document.setWorkflowDescriptions(ArazzoDocumentReader.workflowDescriptions(parsed));
       document.setContent(content);
+      return document;
+   }
+
+   /**
+    * Store a document read by {@link #document(JsonNode, String)}.
+    * @param document The document to store
+    * @param fileName The name of the file the document was uploaded from; null when it is not known
+    * @return The stored document
+    */
+   ArazzoDocument save(ArazzoDocument document, String fileName) {
+      // Re-importing the same title and version updates the existing document.
+      ArazzoDocument existing = arazzoDocumentRepository.findByTitleAndVersion(document.getTitle(),
+            document.getVersion());
+      if (existing != null) {
+         document.setId(existing.getId());
+      }
+      document.setFileName(fileName);
+      document.setImportDate(new Date());
       arazzoDocumentRepository.persistOrUpdate(document);
       return document;
    }
@@ -177,6 +200,21 @@ public class ArazzoDocumentService {
       return summaries;
    }
 
+   /**
+    * Find an imported Arazzo document by its id, or by its title and version, as the id of a Microcks API can be given.
+    * @param documentId The id of the document, or its title and version as {@code <title>:<version>}, a + standing for
+    *                   a space in the title
+    * @return The document, empty if none
+    */
+   public Optional<ArazzoDocument> getDocument(String documentId) {
+      if (documentId.contains(":")) {
+         String title = documentId.substring(0, documentId.indexOf(':')).replace('+', ' ');
+         String version = documentId.substring(documentId.indexOf(':') + 1);
+         return Optional.ofNullable(arazzoDocumentRepository.findByTitleAndVersion(title, version));
+      }
+      return arazzoDocumentRepository.findByIdOptional(documentId);
+   }
+
    /** A document stored before workflow descriptions were kept has none. */
    private static String description(ArazzoDocument document, String workflowId) {
       Map<String, String> descriptions = document.getWorkflowDescriptions();
@@ -186,6 +224,14 @@ public class ArazzoDocumentService {
    /** A document uses an API when its overlay maps one of its sources to it, whether this API exists or not. */
    private static boolean mapsToApi(Map<String, ResolvedSource> sources, String apiName) {
       return sources.values().stream().anyMatch(source -> apiName.equals(source.link().apiName()));
+   }
+
+   /**
+    * @param document An imported Arazzo document
+    * @return Its summary, with the APIs its source descriptions are linked to and its workflows
+    */
+   ArazzoDocumentSummary summary(ArazzoDocument document) {
+      return summary(document, resolveSources(document));
    }
 
    private ArazzoDocumentSummary summary(ArazzoDocument document, Map<String, ResolvedSource> sources) {
@@ -217,16 +263,48 @@ public class ArazzoDocumentService {
       }
       String name = requiredMetadata(overlay, "name");
       String version = requiredMetadata(overlay, "version");
-      // Re-importing the same name and version replaces the existing overlay.
+      List<ArazzoWorkflowExample> examples = ArazzoExamplesReader.read(overlay.path("examples"),
+            arazzoDocumentRepository.findByTitleAndVersion(name, version), name, version);
+      ArazzoSources arazzoSources = overlayOf(name, version);
+      arazzoSources.setSources(sources);
+      arazzoSources.setExamples(examples);
+      arazzoSourcesRepository.persistOrUpdate(arazzoSources);
+      return arazzoSources;
+   }
+
+   /**
+    * Store the links of the source descriptions of an Arazzo document in its ArazzoSources overlay, replacing the
+    * existing links and keeping the recorded examples of its workflows.
+    * @param name    The title of the Arazzo document
+    * @param version The version of the Arazzo document
+    * @param sources The Microcks API each linked source description is linked to, by name
+    */
+   void saveSources(String name, String version, Map<String, ServiceRef> sources) {
+      ArazzoSources arazzoSources = overlayOf(name, version);
+      arazzoSources.setSources(sources);
+      arazzoSourcesRepository.persistOrUpdate(arazzoSources);
+   }
+
+   /** Re-importing the same name and version replaces the existing overlay. */
+   private ArazzoSources overlayOf(String name, String version) {
       ArazzoSources arazzoSources = arazzoSourcesRepository.findByNameAndVersion(name, version);
       if (arazzoSources == null) {
          arazzoSources = new ArazzoSources();
+         arazzoSources.setName(name);
+         arazzoSources.setVersion(version);
       }
-      arazzoSources.setName(name);
-      arazzoSources.setVersion(version);
-      arazzoSources.setSources(sources);
-      arazzoSourcesRepository.persistOrUpdate(arazzoSources);
       return arazzoSources;
+   }
+
+   /**
+    * @param document   An imported Arazzo document
+    * @param workflowId The id of a workflow of that document
+    * @return The recorded examples of that workflow, in the order of the overlay of the document
+    */
+   public List<ArazzoWorkflowExample> getExamples(ArazzoDocument document, String workflowId) {
+      ArazzoSources overlay = arazzoSourcesRepository.findByNameAndVersion(document.getTitle(), document.getVersion());
+      return overlay == null ? List.of()
+            : overlay.getExamples().stream().filter(example -> example.workflowId().equals(workflowId)).toList();
    }
 
    /** An overlay is matched to its Arazzo document by its metadata name and version: without them, it links nothing. */
@@ -322,15 +400,24 @@ public class ArazzoDocumentService {
    /** Resolve each source description of a document, in the order of the document. */
    Map<String, ResolvedSource> resolveSources(ArazzoDocument document) {
       ArazzoSources overlay = arazzoSourcesRepository.findByNameAndVersion(document.getTitle(), document.getVersion());
+      return resolveSources(document.getSourceNames(), overlay == null ? Map.of() : overlay.getSources());
+   }
+
+   /**
+    * Resolve source descriptions with the Microcks APIs they are linked to.
+    * @param sourceNames The names of the source descriptions, in the order of the document
+    * @param links       The Microcks API each linked source description is linked to, by name
+    * @return Each source description resolved, in the order of the document
+    */
+   Map<String, ResolvedSource> resolveSources(List<String> sourceNames, Map<String, ServiceRef> links) {
       Map<String, ResolvedSource> sources = new LinkedHashMap<>();
-      for (String sourceName : document.getSourceNames()) {
-         sources.put(sourceName, resolve(sourceName, overlay));
+      for (String sourceName : sourceNames) {
+         sources.put(sourceName, resolve(sourceName, links.get(sourceName)));
       }
       return sources;
    }
 
-   private ResolvedSource resolve(String sourceName, ArazzoSources overlay) {
-      ServiceRef api = overlay == null ? null : overlay.getSources().get(sourceName);
+   private ResolvedSource resolve(String sourceName, ServiceRef api) {
       if (api == null) {
          return new ResolvedSource(new ArazzoSourceLink(sourceName, null, null, false), null, Map.of());
       }
@@ -408,7 +495,7 @@ public class ArazzoDocumentService {
       }
    }
 
-   private static JsonNode parse(String content) throws MockRepositoryImportException {
+   static JsonNode parse(String content) throws MockRepositoryImportException {
       try {
          return ObjectMapperFactory.getYamlObjectMapper().readTree(content);
       } catch (JsonProcessingException jpe) {

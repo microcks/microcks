@@ -27,9 +27,12 @@ import java.util.Map;
  * @param requestBody     The request body the step sends, null if it sends none
  * @param successCriteria The criteria the response must meet, in the order of the document
  * @param outputs         The outputs of the step, by name, with their runtime expressions
+ * @param onSuccess       What the step does when it succeeds, in the order of the document; empty to go on
+ * @param onFailure       What the step does when it fails, in the order of the document; empty to end the workflow
  * @author SebastienDegodez
  */
 public record ArazzoStepDetail(String stepId, String description, ArazzoStepOperation operation,
       List<ArazzoStepParameter> parameters, ArazzoStepRequestBody requestBody,
-      List<ArazzoStepCriterion> successCriteria, Map<String, String> outputs) {
+      List<ArazzoStepCriterion> successCriteria, Map<String, String> outputs, List<ArazzoStepAction> onSuccess,
+      List<ArazzoStepAction> onFailure) {
 }

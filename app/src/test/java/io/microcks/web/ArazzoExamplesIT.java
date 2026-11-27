@@ -1,0 +1,143 @@
+/*
+ * Copyright The Microcks Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.microcks.web;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.microcks.service.ArazzoMinionClient;
+import io.microcks.service.HttpArazzoMinionClient;
+import io.quarkus.test.junit.QuarkusMock;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import io.microcks.testsupport.http.HttpEntity;
+import io.microcks.testsupport.http.HttpHeaders;
+import io.microcks.testsupport.http.MediaType;
+import io.microcks.testsupport.http.ResponseEntity;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * End-to-end replay of the recorded examples of a workflow: the overlay uploaded with its examples, every example
+ * played in one call as a CI does, through the Arazzo minion against mocks answering 404 for an unknown pastry, then
+ * each run judged on its example.
+ * @author SebastienDegodez
+ */
+@QuarkusTest
+class ArazzoExamplesIT extends AbstractBaseIT {
+
+   private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
+   private static final ArazzoMinionProcess MINION = new ArazzoMinionProcess();
+   private static final ObjectMapper JSON = new ObjectMapper();
+
+   /** The runs are handed to the minion at its URL, as configured with arazzo-minion.url. */
+   @BeforeEach
+   void handTheRunsToTheMinionAtItsUrl() {
+      QuarkusMock.installMockForType(new HttpArazzoMinionClient(MINION.url()), ArazzoMinionClient.class);
+   }
+
+   @BeforeEach
+   void startTheMinionAgainstThisWebapp() throws Exception {
+      if (!MINION.isStarted()) {
+         MINION.start(getServerUrl());
+      }
+   }
+
+   @AfterAll
+   static void stopTheMinion() {
+      MINION.stop();
+   }
+
+   @Test
+   void everyExampleOfAWorkflowIsReplayedInOneCallAndJudgedOnWhatItExpects() throws Exception {
+      String documentId = pastryExamplesAreImported();
+
+      ResponseEntity<String> launched = restTemplate.postForEntity(
+            "/api/arazzo/documents/" + documentId + "/workflows/listThenReadFirst/examples/runs",
+            json("{\"timeout\": 10000}"), String.class);
+
+      assertEquals(200, launched.getStatusCode().value(), launched.getBody());
+      List<String> verdicts = new ArrayList<>();
+      for (JsonNode launch : JSON.readTree(launched.getBody())) {
+         JsonNode run = awaitFinalRun(launch.get("runId").asText());
+         verdicts.add(launch.get("example").asText() + ": run " + run.get("status").asText() + ", "
+               + run.get("example").get("verdict").asText() + " " + run.get("example").get("unmetExpectations"));
+      }
+      assertEquals(List.of("unknown-first-pastry: run FAILURE, MATCHES []",
+            "first-pastry-read: run FAILURE, DOES_NOT_MATCH [\"Step readFirst: expecting 200 but got 404\","
+                  + "\"Expected to run to its end but stopped at readFirst\","
+                  + "\"Output price: expected 3.2 but was absent\"]"),
+            verdicts);
+      List<String> history = new ArrayList<>();
+      JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents/" + documentId + "/runs", String.class).getBody())
+            .forEach(run -> history.add(run.get("example").asText() + " " + run.get("exampleVerdict").asText()));
+      assertEquals(List.of("first-pastry-read DOES_NOT_MATCH", "unknown-first-pastry MATCHES"), history);
+   }
+
+   @Test
+   void aRunNamingAnExamplePlaysItAndTheExamplesAreKeptWhenTheSourcesAreLinkedAgain() throws Exception {
+      String documentId = pastryExamplesAreImported();
+
+      ResponseEntity<String> relinked = restTemplate.postForEntity("/api/arazzo/documents",
+            Map.of("content",
+                  Files.readString(Path.of(FIXTURES + "recorded-examples.arazzo.yaml"), StandardCharsets.UTF_8),
+                  "fileName", "recorded-examples.arazzo.yaml", "links",
+                  Map.of("pastryApi", Map.of("name", "Pastry Examples API", "version", "1.0.0"))),
+            String.class);
+      assertEquals(201, relinked.getStatusCode().value(), relinked.getBody());
+      ResponseEntity<String> launched = restTemplate.postForEntity(
+            "/api/arazzo/documents/" + documentId + "/workflows/listThenReadFirst/runs",
+            json("{\"example\": \"unknown-first-pastry\", \"timeout\": 10000}"), String.class);
+
+      assertEquals(201, launched.getStatusCode().value(), launched.getBody());
+      JsonNode run = awaitFinalRun(JSON.readTree(launched.getBody()).get("id").asText());
+      assertEquals("unknown-first-pastry MATCHES",
+            run.get("example").get("name").asText() + " " + run.get("example").get("verdict").asText());
+   }
+
+   private String pastryExamplesAreImported() throws Exception {
+      uploadArtifactFile(FIXTURES + "recorded-examples.openapi.yaml", true);
+      uploadArtifactFile(FIXTURES + "recorded-examples.arazzo.yaml", true);
+      uploadArtifactFile(FIXTURES + "recorded-examples.arazzo-sources.yaml", false);
+      return JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody()).get(0).get("id").asText();
+   }
+
+   private static HttpEntity<String> json(String body) {
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      return new HttpEntity<>(body, headers);
+   }
+
+   private JsonNode awaitFinalRun(String runId) throws Exception {
+      JsonNode run = null;
+      for (int attempt = 0; attempt < 100; attempt++) {
+         run = JSON.readTree(restTemplate.getForEntity("/api/arazzo/runs/" + runId, String.class).getBody());
+         if (!"IN_PROGRESS".equals(run.get("status").asText())) {
+            return run;
+         }
+         Thread.sleep(200);
+      }
+      return run;
+   }
+}

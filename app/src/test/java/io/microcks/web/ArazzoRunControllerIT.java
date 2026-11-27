@@ -149,10 +149,12 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   void anUnknownWorkflowOrRunIsNotFound() throws Exception {
+   void anUnknownDocumentOrRunIsNotFoundAndAnUnknownWorkflowIsABadRequest() throws Exception {
       String documentId = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
-      assertEquals(404, launch(documentId, "unknown").getStatusCode().value());
+      assertEquals(404, launch("unknown", "readThenReprice").getStatusCode().value());
+      ResponseEntity<String> refused = launch(documentId, "unknown");
+      assertEquals("400 Unknown workflow: unknown", refused.getStatusCode().value() + " " + refused.getBody());
       assertEquals(404, restTemplate.getForEntity("/api/arazzo/runs/unknown", String.class).getStatusCode().value());
       assertEquals(404, report("unknown", "steps", ArazzoMinionContractTest.contract().get("passedStep")));
       assertEquals(404, report("unknown", "outcome", ArazzoMinionContractTest.contract().get("runOutcome")));

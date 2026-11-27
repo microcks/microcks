@@ -29,10 +29,12 @@ import java.util.Map;
  *                        each source goes, {@code mock} or {@code implementation}; null when every source goes to the
  *                        same place
  * @param validateSchema  Whether each response is validated against the OpenAPI schema of its operation; null for no
+ * @param example         The name of the recorded example the run plays, whose inputs replace the given ones; null to
+ *                        play none
  * @author SebastienDegodez
  */
 public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<String, String> implementations,
-      String secretName, MixedTarget target, Boolean validateSchema) {
+      String secretName, MixedTarget target, Boolean validateSchema, String example) {
 
    /**
     * A run against the Microcks mocks.
@@ -40,7 +42,7 @@ public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<S
     * @param timeout How long a step waits for its response, in milliseconds; null for the default
     */
    public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout) {
-      this(inputs, timeout, null, null, null, null);
+      this(inputs, timeout, null, null, null, null, null);
    }
 
    /**
@@ -52,7 +54,7 @@ public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<S
     */
    public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<String, String> implementations,
          String secretName) {
-      this(inputs, timeout, implementations, secretName, null, null);
+      this(inputs, timeout, implementations, secretName, null, null, null);
    }
 
    /**
@@ -62,7 +64,7 @@ public record ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Map<S
     * @param validateSchema Whether each response is validated against the OpenAPI schema of its operation; null for no
     */
    public ArazzoRunLaunchDTO(Map<String, Object> inputs, Long timeout, Boolean validateSchema) {
-      this(inputs, timeout, null, null, null, validateSchema);
+      this(inputs, timeout, null, null, null, validateSchema, null);
    }
 
    /**

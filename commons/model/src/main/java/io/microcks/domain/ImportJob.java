@@ -50,6 +50,7 @@ public class ImportJob {
    private Metadata metadata;
    private SecretRef secretRef;
    private Set<ServiceRef> serviceRefs;
+   private ArazzoDocumentRef arazzoDocumentRef;
 
    public String getId() {
       return id;
@@ -168,5 +169,14 @@ public class ImportJob {
          this.serviceRefs = new HashSet<>();
       }
       serviceRefs.add(serviceRef);
+   }
+
+   /** @return The Arazzo document the last import imported, or whose overlay it imported; null for an API */
+   public ArazzoDocumentRef getArazzoDocumentRef() {
+      return arazzoDocumentRef;
+   }
+
+   public void setArazzoDocumentRef(ArazzoDocumentRef arazzoDocumentRef) {
+      this.arazzoDocumentRef = arazzoDocumentRef;
    }
 }

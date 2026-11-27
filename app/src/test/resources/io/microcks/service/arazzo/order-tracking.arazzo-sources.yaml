@@ -1,0 +1,9 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: Order tracking
+  version: 1.0.0
+sources:
+  orderStatusApi:
+    name: Order status
+    version: 1.0.0

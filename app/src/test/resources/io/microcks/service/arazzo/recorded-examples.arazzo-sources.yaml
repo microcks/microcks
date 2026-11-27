@@ -1,0 +1,26 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: Pastry examples
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: Pastry Examples API
+    version: 1.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        list:
+          status: 200
+          outputs:
+            first: Baba Rhum
+        readFirst:
+          status: 404
+      stopsAt: readFirst
+    first-pastry-read:
+      steps:
+        readFirst:
+          status: 200
+      outputs:
+        price: 3.2

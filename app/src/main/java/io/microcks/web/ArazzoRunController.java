@@ -15,6 +15,7 @@
  */
 package io.microcks.web;
 
+import io.microcks.domain.ArazzoExampleLaunch;
 import io.microcks.domain.WorkflowResult;
 import io.microcks.service.ArazzoRunImplementations;
 import io.microcks.service.ArazzoRunRefusedException;
@@ -22,7 +23,6 @@ import io.microcks.service.ArazzoRunService;
 import io.microcks.web.dto.ArazzoRunLaunchDTO;
 import io.microcks.web.dto.ArazzoRunOutcomeDTO;
 import io.microcks.web.dto.ArazzoStepReportDTO;
-
 
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;
@@ -36,6 +36,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -70,14 +71,45 @@ public class ArazzoRunController {
             throw new ArazzoRunRefusedException("Unknown run target kind '" + launch.target().kind()
                   + "': a run target is mixed, or left out to run on the mocks or on the implementations");
          }
-         Optional<WorkflowResult> run = arazzoRunService.launchRun(documentId, workflowId, launch.inputs(),
-               launch.timeout(), implementationsOf(launch), Boolean.TRUE.equals(launch.validateSchema()));
+         boolean validateSchema = Boolean.TRUE.equals(launch.validateSchema());
+         Optional<WorkflowResult> run = launch.example() == null
+               ? arazzoRunService.launchRun(documentId, workflowId, launch.inputs(), launch.timeout(),
+                     implementationsOf(launch), validateSchema)
+               : arazzoRunService.launchExampleRun(documentId, workflowId, launch.example(), launch.timeout(),
+                     implementationsOf(launch), validateSchema);
          return run.map(launched -> Response.created(URI.create("/api/arazzo/runs/" + launched.getId()))
                .entity(launched).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
       } catch (ArazzoRunRefusedException arre) {
-         return Response.status(Response.Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(arre.getMessage())
-               .build();
+         return refused(arre);
       }
+   }
+
+   /**
+    * Play every recorded example of a workflow, one run per example, as a CI does in one call.
+    * @param documentId The id of the Arazzo document
+    * @param workflowId The id of the workflow in that document
+    * @param launch     What the runs target and how; its inputs and example are not used
+    * @return How the run of each example was launched, in the order of the examples; the reason in plain text when the
+    *         workflow is unknown
+    */
+   @POST
+   @Path("/documents/{documentId}/workflows/{workflowId}/examples/runs")
+   public Response launchExampleRuns(@PathParam("documentId") String documentId,
+         @PathParam("workflowId") String workflowId, ArazzoRunLaunchDTO launch) {
+      try {
+         Optional<List<ArazzoExampleLaunch>> launches = arazzoRunService.launchExampleRuns(documentId, workflowId,
+               launch.timeout(), implementationsOf(launch), Boolean.TRUE.equals(launch.validateSchema()));
+         return launches.map(done -> Response.ok(done).build())
+               .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+      } catch (ArazzoRunRefusedException arre) {
+         return refused(arre);
+      }
+   }
+
+   /** The reason is plain text, whatever the client accepts, as the Microcks API describes it. */
+   private static Response refused(ArazzoRunRefusedException arre) {
+      return Response.status(Response.Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(arre.getMessage())
+            .build();
    }
 
    @GET

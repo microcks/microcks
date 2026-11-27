@@ -90,14 +90,16 @@ class ArazzoDocumentServiceTest {
       assertEquals(0, repository.count());
    }
 
+   /** S17: a step may retry or end the workflow, but going to another step stays refused, temporarily. */
    @Test
    void aFeatureOutsideTheSupportedSubsetIsRefusedWithItsReason() throws Exception {
-      String content = fixture("step-on-failure.arazzo.yaml");
+      String content = fixture("step-goto.arazzo.yaml");
 
       MockRepositoryImportException refusal = assertThrows(MockRepositoryImportException.class,
             () -> service.importArazzoDocument(content));
 
-      assertEquals("Unsupported step field: onFailure", refusal.getMessage());
+      assertEquals("Unsupported action type: goto", refusal.getMessage());
+      assertEquals(0, repository.count());
    }
 
    @Test

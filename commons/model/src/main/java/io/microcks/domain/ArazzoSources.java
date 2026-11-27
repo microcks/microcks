@@ -20,11 +20,14 @@ import org.bson.BsonType;
 import org.bson.codecs.pojo.annotations.BsonId;
 import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * An ArazzoSources overlay: a secondary artifact giving the Microcks API name and version of each source description of
- * an Arazzo document, which Arazzo does not carry. It is identified by the title and version of that document.
+ * an Arazzo document, which Arazzo does not carry, and the recorded examples of its workflows. It is identified by the
+ * title and version of that document.
  * @author SebastienDegodez
  */
 @MongoEntity(collection = "arazzoSources")
@@ -36,6 +39,7 @@ public class ArazzoSources {
    private String name;
    private String version;
    private Map<String, ServiceRef> sources;
+   private List<ArazzoWorkflowExample> examples = new ArrayList<>();
 
    public String getId() {
       return id;
@@ -67,5 +71,14 @@ public class ArazzoSources {
 
    public void setSources(Map<String, ServiceRef> sources) {
       this.sources = sources;
+   }
+
+   /** The recorded examples of the workflows of the document, in the order of the overlay. */
+   public List<ArazzoWorkflowExample> getExamples() {
+      return examples;
+   }
+
+   public void setExamples(List<ArazzoWorkflowExample> examples) {
+      this.examples = examples;
    }
 }

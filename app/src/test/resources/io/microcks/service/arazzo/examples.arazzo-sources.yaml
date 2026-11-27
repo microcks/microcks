@@ -1,0 +1,306 @@
+# ArazzoSources overlays of API Pastry scenarios 1.0.0 recording examples of its workflows. One YAML document per example.
+# example: recorded - the examples of readThenReprice and listThenReadFirst, with the link of pastryApi
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  readThenReprice:
+    eclair-repriced:
+      inputs:
+        pastry: Eclair Cafe
+        newPrice: 2.6
+      outputs:
+        before: 2.5
+        after: 2.6
+    millefeuille-repriced:
+      inputs:
+        pastry: Millefeuille
+        newPrice: 4.5
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        list:
+          status: 200
+          outputs:
+            first: Baba Rhum
+        readFirst:
+          status: 404
+      stopsAt: readFirst
+---
+# example: missing-input - a third example of readThenReprice that gives no newPrice, which the workflow needs
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  readThenReprice:
+    eclair-repriced:
+      inputs:
+        pastry: Eclair Cafe
+        newPrice: 2.6
+      outputs:
+        before: 2.5
+        after: 2.6
+    millefeuille-repriced:
+      inputs:
+        pastry: Millefeuille
+        newPrice: 4.5
+    eclair-without-price:
+      inputs:
+        pastry: Eclair Cafe
+---
+# example: numbers - an example of readThenReprice whose expected prices are written as other numbers than the mocks give
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  readThenReprice:
+    tartelette-repriced:
+      inputs:
+        pastry: Tartelette Fraise
+        newPrice: 3
+      steps:
+        readPastry:
+          outputs:
+            price: 2.0
+      outputs:
+        before: 2.0
+        after: 3
+---
+# example: no-example - the link of pastryApi only, recording no example
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+---
+# example: unknown-workflow - an example of a workflow the document does not have
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  readThenReprice:
+    eclair-repriced:
+      inputs:
+        pastry: Eclair Cafe
+        newPrice: 2.6
+  readTwice:
+    eclair-read-twice:
+      inputs:
+        pastry: Eclair Cafe
+---
+# example: unknown-input - an example giving an input the workflow does not declare
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  readThenReprice:
+    eclair-repriced:
+      inputs:
+        pastry: Eclair Cafe
+        price: 2.6
+---
+# example: unknown-output - an example expecting an output the workflow does not produce
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  readThenReprice:
+    eclair-repriced:
+      inputs:
+        pastry: Eclair Cafe
+        newPrice: 2.6
+      outputs:
+        total: 2.6
+---
+# example: unknown-step - an example expecting a step the workflow does not have
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        readSecond:
+          status: 404
+---
+# example: unknown-step-output - an example expecting an output its step does not produce
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        list:
+          outputs:
+            last: Tartelette Fraise
+---
+# example: unknown-stop - an example expecting the workflow to stop at a step it does not have
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      stopsAt: readSecond
+---
+# example: status-range - an example expecting a range of statuses rather than an exact one
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        readFirst:
+          status: 4XX
+---
+# example: status-default - an example expecting the default response rather than an exact status
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        readFirst:
+          status: default
+---
+# example: status-below-range - an example expecting a number below the HTTP statuses
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        readFirst:
+          status: 99
+---
+# example: status-above-range - an example expecting a number above the HTTP statuses
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        readFirst:
+          status: 600
+---
+# example: status-bounds - an example expecting the lowest and the highest HTTP statuses
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: API Pastry scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  listThenReadFirst:
+    unknown-first-pastry:
+      steps:
+        list:
+          status: 100
+        readFirst:
+          status: 599
+---
+# example: no-document - examples of an Arazzo document that is not imported
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoSources
+metadata:
+  name: Unknown scenarios
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: API Pastry - 2.0
+    version: 2.0.0
+examples:
+  readThenReprice:
+    eclair-repriced:
+      inputs:
+        pastry: Eclair Cafe

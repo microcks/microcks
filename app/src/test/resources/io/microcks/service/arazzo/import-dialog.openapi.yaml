@@ -1,0 +1,87 @@
+# example: customer-api - Customer API 1.0.0, declared by customerApi
+openapi: 3.0.2
+info:
+  title: Customer API
+  version: 1.0.0
+paths:
+  /customers:
+    get:
+      operationId: SearchCustomers
+      responses:
+        "200":
+          description: The customers with that name
+  /customers/{id}:
+    get:
+      operationId: GetCustomer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The customer with that id
+---
+# example: order-api - Order API 1.0.0, declared by orderApi
+openapi: 3.0.2
+info:
+  title: Order API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      operationId: CreateOrder
+      responses:
+        "201":
+          description: The order placed
+  /orders/{id}:
+    get:
+      operationId: GetOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The order with that id
+---
+# example: loyalty-api - Loyalty API whose unquoted version 1.10 is a YAML number
+openapi: 3.0.2
+info:
+  title: Loyalty API
+  version: 1.10
+paths:
+  /points:
+    get:
+      operationId: GetPoints
+      responses:
+        "200":
+          description: The loyalty points
+---
+# example: no-info - a contract that gives no title and no version
+openapi: 3.0.2
+paths:
+  /points:
+    get:
+      operationId: GetPoints
+      responses:
+        "200":
+          description: The loyalty points
+---
+# example: no-title - a contract that gives a version but no title
+openapi: 3.0.2
+info:
+  version: 1.0.0
+paths: {}
+---
+# example: no-version - a contract that gives a title but no version
+openapi: 3.0.2
+info:
+  title: Customer API
+paths: {}
+---
+# example: unparseable - a contract that is neither YAML nor JSON
+openapi: [ 3.0.2

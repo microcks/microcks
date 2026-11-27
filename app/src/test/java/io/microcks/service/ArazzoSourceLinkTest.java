@@ -183,8 +183,9 @@ class ArazzoSourceLinkTest {
    void reImportingAnOverlayWithTheSameNameAndVersionReplacesIt() throws Exception {
       arazzoDocumentService.importArazzoSources(fixture("pastry-previous.arazzo-sources.yaml"));
 
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      ArazzoSources imported = arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
 
+      assertEquals("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}", describe(imported));
       assertEquals(List.of("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}"),
             arazzoSourcesRepository.listAll().stream().map(ArazzoSourceLinkTest::describe).toList());
    }

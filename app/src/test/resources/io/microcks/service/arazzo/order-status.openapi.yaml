@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: Order status
+  version: 1.0.0
+  description: |
+    Tells where an order stands while it is prepared. The status of order 42 is mocked with a stateful SCRIPT
+    dispatcher: it answers preparing, preparing, then ready, and starts over. Order 7 is always preparing; any other
+    order is ready.
+paths:
+  /order/{id}/status:
+    get:
+      operationId: getOrderStatus
+      summary: Get the status of an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            preparing:
+              value: '7'
+            ready:
+              value: '1'
+      x-microcks-operation:
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          def id = mockRequest.getURIParameters().get("id")
+          if (id == "7") {
+             return "preparing"
+          }
+          if (id != "42") {
+             return "ready"
+          }
+          def polls = (store.get("order-42-polls") ?: "0") as int
+          if (polls >= 2) {
+             store.delete("order-42-polls")
+             return "ready"
+          }
+          store.put("order-42-polls", String.valueOf(polls + 1))
+          return "preparing"
+      responses:
+        '200':
+          description: The status of the order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatus'
+              examples:
+                preparing:
+                  value:
+                    status: preparing
+                ready:
+                  value:
+                    status: ready
+  /order/{id}:
+    get:
+      operationId: getOrder
+      summary: Get an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            order-1:
+              value: '1'
+            order-7:
+              value: '7'
+            order-42:
+              value: '42'
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                order-1:
+                  value:
+                    id: '1'
+                    item: Baba Rhum
+                    quantity: 2
+                order-7:
+                  value:
+                    id: '7'
+                    item: Tartelette Fraise
+                    quantity: 6
+                order-42:
+                  value:
+                    id: '42'
+                    item: Eclair Cafe
+                    quantity: 12
+components:
+  schemas:
+    OrderStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - preparing
+            - ready
+    Order:
+      type: object
+      required:
+        - id
+        - item
+        - quantity
+      properties:
+        id:
+          type: string
+        item:
+          type: string
+        quantity:
+          type: integer

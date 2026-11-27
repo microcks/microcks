@@ -109,11 +109,17 @@ public class ArazzoRunHistoryService {
       };
    }
 
-   /** The history shows a run with the first step it failed at. */
+   /**
+    * The history shows a failed run with the step it failed at: its last failed step, as the attempts of a retried step
+    * before it fail too. A run that passed failed at no step, even when some attempts of a retried step failed.
+    */
    private static WorkflowRunSummary summary(WorkflowResult run) {
-      String failedStepId = run.getSteps().stream().filter(step -> step.status() == WorkflowStepStatus.FAILED)
-            .map(WorkflowStepResult::stepId).findFirst().orElse(null);
+      String failedStepId = run.getStatus() != WorkflowRunStatus.FAILURE ? null
+            : run.getSteps().stream().filter(step -> step.status() == WorkflowStepStatus.FAILED)
+                  .map(WorkflowStepResult::stepId).reduce((first, last) -> last).orElse(null);
       return new WorkflowRunSummary(run.getId(), run.getNumber(), run.getWorkflowId(), run.getTarget(), run.getStatus(),
-            failedStepId, run.getStartedDate(), run.getElapsedTime());
+            failedStepId, run.getStartedDate(), run.getElapsedTime(),
+            run.getExample() == null ? null : run.getExample().name(),
+            run.getExample() == null ? null : run.getExample().verdict());
    }
 }

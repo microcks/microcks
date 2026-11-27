@@ -375,13 +375,22 @@ class ArazzoRunTest {
       assertEquals(List.of(Map.of(), Map.of()), minion.requests().stream().map(ArazzoRunRequest::inputs).toList());
    }
 
-   @ParameterizedTest
-   @CsvSource({ "false, readThenReprice", "true, unknown" })
-   void anUnknownDocumentOrWorkflowHasNoRun(boolean knownDocument, String workflowId) throws Exception {
+   @Test
+   void anUnknownDocumentHasNoRun() throws Exception {
+      pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+
+      assertEquals(Optional.empty(), arazzoRunService.launchRun("unknown", "readThenReprice", Map.of(), 10000L));
+      assertEquals(List.of(), minion.requests());
+   }
+
+   @Test
+   void anUnknownWorkflowIsRefusedNamingIt() throws Exception {
       ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
 
-      assertEquals(Optional.empty(),
-            arazzoRunService.launchRun(knownDocument ? document.getId() : "unknown", workflowId, Map.of(), 10000L));
+      ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class,
+            () -> arazzoRunService.launchRun(document.getId(), "unknown", Map.of(), 10000L));
+
+      assertEquals("Unknown workflow: unknown", refused.getMessage());
       assertEquals(List.of(), minion.requests());
    }
 

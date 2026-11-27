@@ -54,6 +54,7 @@ public class WorkflowResult {
    private Long number;
    private WorkflowMissingExample missingExample;
    private boolean validateSchema;
+   private WorkflowExampleCheck example;
 
    public String getId() {
       return id;
@@ -207,5 +208,14 @@ public class WorkflowResult {
 
    public void setValidateSchema(boolean validateSchema) {
       this.validateSchema = validateSchema;
+   }
+
+   /** The recorded example the run plays, with its verdict once the run ended; null when it plays none. */
+   public WorkflowExampleCheck getExample() {
+      return example;
+   }
+
+   public void setExample(WorkflowExampleCheck example) {
+      this.example = example;
    }
 }

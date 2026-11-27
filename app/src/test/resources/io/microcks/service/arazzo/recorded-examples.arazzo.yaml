@@ -1,0 +1,30 @@
+arazzo: 1.0.1
+info:
+  title: Pastry examples
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./recorded-examples.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: listThenReadFirst
+    summary: Reads the first pastry of the list.
+    steps:
+      - stepId: list
+        operationId: GetPastries
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          first: $response.body#/0/name
+      - stepId: readFirst
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $steps.list.outputs.first
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          price: $response.body#/price
+    outputs:
+      price: $steps.readFirst.outputs.price

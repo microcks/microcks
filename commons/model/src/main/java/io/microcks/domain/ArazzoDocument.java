@@ -44,6 +44,7 @@ public class ArazzoDocument {
    private List<String> sourceNames;
    private Map<String, List<ArazzoStepCall>> workflowCalls;
    private String content;
+   private Map<String, String> sourceUrls;
 
    public String getId() {
       return id;
@@ -131,5 +132,17 @@ public class ArazzoDocument {
 
    public void setContent(String content) {
       this.content = content;
+   }
+
+   /**
+    * @return The url the contract of each source description is read from, by name: its declared url resolved against
+    *         the url the document was imported from; null when the document was not imported from a url
+    */
+   public Map<String, String> getSourceUrls() {
+      return sourceUrls;
+   }
+
+   public void setSourceUrls(Map<String, String> sourceUrls) {
+      this.sourceUrls = sourceUrls;
    }
 }
