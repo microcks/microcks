@@ -492,6 +492,9 @@
                   {#if analysis.refusal}
                     <Callout tone="danger" title="Microcks will refuse this document">{analysis.refusal}. Nothing is imported: fix the document and drop it again.</Callout>
                   {:else}
+                    {#each analysis.warnings ?? [] as w (w)}
+                      <div role="note" class="note-box" data-tone="warning"><Icon name="alert-circle" size={16} /><span>{w}. Microcks imports it and plays the steps in the order of the list.</span></div>
+                    {/each}
                     <ImportLinks {analysis} {choices} {stepCounts} busy={analysing} onchoose={choose} />
                   {/if}
                 {:else}

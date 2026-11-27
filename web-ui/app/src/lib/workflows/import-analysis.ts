@@ -40,6 +40,8 @@ export interface ImportAnalysis {
   checks: WorkflowCheck[];
   /** The APIs of Microcks a source can be linked to. */
   apis: ApiRef[];
+  /** What the document does that Arazzo allows but does not recommend (dependsOn between synchronous steps): imported anyway. */
+  warnings?: string[];
 }
 
 /** The API chosen for each source description by name; null for a source left not linked. */
