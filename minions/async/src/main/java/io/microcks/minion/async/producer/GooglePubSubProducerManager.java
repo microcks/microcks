@@ -92,6 +92,30 @@ public class GooglePubSubProducerManager {
    String emulatorHostPort;
 
    /**
+    * Get the configured Google Cloud project name.
+    * @return The project name PubSub topics and subscriptions are bound to.
+    */
+   public String getProject() {
+      return project;
+   }
+
+   /**
+    * Get the credentials provider used to connect to PubSub (or the emulator).
+    * @return The credentials provider set up at post-construct time.
+    */
+   public CredentialsProvider getCredentialsProvider() {
+      return credentialsProvider;
+   }
+
+   /**
+    * Get the transport channel provider used to connect to a PubSub emulator, if any.
+    * @return The transport channel provider, or {@code null} when connecting to real Google Cloud PubSub.
+    */
+   public TransportChannelProvider getChannelProvider() {
+      return channelProvider;
+   }
+
+   /**
     * Initialize the PubSub connection post construction.
     * @throws Exception If connection to PubSub cannot be done.
     */

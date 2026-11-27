@@ -46,6 +46,7 @@ public class RequestReplyHandlerManager {
 
    final AsyncMockRepository mockRepository;
    final KafkaRequestReplyHandlerFactory kafkaHandlerFactory;
+   final GooglePubSubRequestReplyHandlerFactory googlePubSubHandlerFactory;
 
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
@@ -53,13 +54,16 @@ public class RequestReplyHandlerManager {
    /**
     * Create a new RequestReplyHandlerManager with required dependencies.
     *
-    * @param mockRepository      The repository for mock definitions
-    * @param kafkaHandlerFactory Factory for creating Kafka handlers
+    * @param mockRepository             The repository for mock definitions
+    * @param kafkaHandlerFactory        Factory for creating Kafka handlers
+    * @param googlePubSubHandlerFactory Factory for creating Google PubSub handlers
     */
    public RequestReplyHandlerManager(AsyncMockRepository mockRepository,
-         KafkaRequestReplyHandlerFactory kafkaHandlerFactory) {
+         KafkaRequestReplyHandlerFactory kafkaHandlerFactory,
+         GooglePubSubRequestReplyHandlerFactory googlePubSubHandlerFactory) {
       this.mockRepository = mockRepository;
       this.kafkaHandlerFactory = kafkaHandlerFactory;
+      this.googlePubSubHandlerFactory = googlePubSubHandlerFactory;
    }
 
    /**
@@ -165,6 +169,7 @@ public class RequestReplyHandlerManager {
 
          return switch (bindingType) {
             case KAFKA -> kafkaHandlerFactory.createHandler(definition, bindingDef);
+            case GOOGLEPUBSUB -> googlePubSubHandlerFactory.createHandler(definition, bindingDef);
             // TODO: Add other binding types as they are implemented
             // case MQTT -> mqttHandlerFactory.createHandler(definition, bindingDef);
             // case AMQP -> amqpHandlerFactory.createHandler(definition, bindingDef);
