@@ -189,6 +189,7 @@ export class TestCreatePageComponent implements OnInit {
     } else {
       this.removedOperationsNames.push(operationName);
     }
+    this.checkForm();
   }
 
   public resetOperations(
@@ -196,6 +197,14 @@ export class TestCreatePageComponent implements OnInit {
       this.resolvedService.operations
   ): void {
     this.removedOperationsNames = operations.map((op) => op.name);
+    this.checkForm();
+  }
+
+  // True when at least one operation is still selected (or there is nothing to select).
+  public hasSelectedOperations(): boolean {
+    const operations = this.resolvedService?.operations ?? [];
+    return operations.length === 0
+      || operations.some(op => !this.removedOperationsNames.includes(op.name));
   }
 
   public addHeaderValue(operationName: string) {
@@ -218,7 +227,8 @@ export class TestCreatePageComponent implements OnInit {
 
   public checkForm(): void {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
-        && (this.resolvedService.type != 'EVENT' || (this.filteredOperation !== undefined));
+        && (this.resolvedService.type != 'EVENT' || (this.filteredOperation !== undefined))
+        && (this.resolvedService.type === 'EVENT' || this.hasSelectedOperations());
     // Check also the OAuth2 parameters.
     if (this.submitEnabled && this.oAuth2ClientContext != undefined && this.oAuth2ClientContext.grantType !== undefined) {
       this.submitEnabled = (this.oAuth2ClientContext.tokenUri !== undefined && this.oAuth2ClientContext.tokenUri.length > 0
