@@ -192,14 +192,19 @@
             <Select
               {...c}
               class="wfr-mono-control"
-              value={workflow.workflowId}
+              value={`${document.id}/${workflow.workflowId}`}
               onchange={(e) => {
-                const w = setup.workflows.find((x) => x.workflowId === e.currentTarget.value);
+                const w = setup.workflows.find((x) => `${x.documentId}/${x.workflowId}` === e.currentTarget.value);
                 if (w) goto(runSetupPath(w.documentId, w.workflowId));
               }}
             >
-              {#each setup.workflows as w (`${w.documentId}/${w.workflowId}`)}
-                <option value={w.workflowId}>{w.workflowId} · {w.steps.length} step{w.steps.length === 1 ? "" : "s"}{w.runnability.runnable ? '' : ' · not runnable'}</option>
+              <!-- Two documents can both define placeOrder: the options are grouped by document and keyed by both ids. -->
+              {#each setup.documents.filter((d) => setup.workflows.some((w) => w.documentId === d.id)) as d (d.id)}
+                <optgroup label="{d.title} {d.version}">
+                  {#each setup.workflows.filter((w) => w.documentId === d.id) as w (w.workflowId)}
+                    <option value={`${d.id}/${w.workflowId}`}>{w.workflowId} · {w.steps.length} step{w.steps.length === 1 ? "" : "s"}{w.runnability.runnable ? '' : ' · not runnable'}</option>
+                  {/each}
+                </optgroup>
               {/each}
             </Select>
           {/snippet}

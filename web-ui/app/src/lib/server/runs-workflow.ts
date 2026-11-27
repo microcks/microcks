@@ -39,10 +39,12 @@ export async function getRunSetup(docId: string, workflowId: string, scenario: s
   const secrets = cachedSecrets().map((s) => ({ id: s.id, name: s.name }));
   // The restock-pastry scenario selects this secret by name; the demo secret is offered even when the store has none.
   if (!real && !secrets.some((s) => s.name === SECRET_STAGING)) secrets.push({ id: 'demo-secret', name: SECRET_STAGING });
+  const all = real ? await listWorkflowsPayload(token) : listAll();
   return {
     document,
     workflow,
-    workflows: real ? (await listWorkflowsPayload(token)).workflows : listAll().workflows,
+    workflows: all.workflows,
+    documents: all.documents,
     examples,
     secrets,
     defaults: defaultsFor(workflow, isRunScenario(scenario) ? scenario : undefined, real),

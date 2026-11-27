@@ -224,6 +224,8 @@ export interface RunSetupPayload {
   document: ArazzoDocument;
   workflow: Workflow;
   workflows: Workflow[];
+  /** The documents of those workflows, to say which one each belongs to. */
+  documents: Pick<ArazzoDocument, 'id' | 'title' | 'version'>[];
   examples: WorkflowExample[];
   secrets: { id: string; name: string }[];
   defaults: RunFormDefaults;
