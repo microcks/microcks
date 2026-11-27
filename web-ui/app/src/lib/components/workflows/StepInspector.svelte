@@ -90,6 +90,12 @@
         </span>
       {/if}
       <span class="wf-ins-opref">operationId: $sourceDescriptions.{step.sourceName}.{step.operationId}</span>
+      {#if step.messaging}
+        <span class="wf-ins-opref">action: {step.messaging.action}{step.messaging.action === 'send' ? ' (publishes the message)' : ' (waits for the message)'}</span>
+        {#if step.messaging.correlationId}<span class="wf-ins-opref">correlationId: {step.messaging.correlationId}</span>{/if}
+        {#if step.messaging.timeoutMs !== undefined}<span class="wf-ins-opref">timeout: {formatDuration(step.messaging.timeoutMs)}</span>{/if}
+      {/if}
+      {#if step.prerequisites?.length}<span class="wf-ins-opref">runs after: {step.prerequisites.join(', ')}</span>{/if}
     </div>
 
     <section class="wf-ins-section" aria-labelledby="wf-ins-result">

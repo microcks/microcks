@@ -96,6 +96,20 @@ export interface Step {
   outputs: NamedExpression[];
   /** Step-level dependsOn (Arazzo 1.1): parallel branches that join. */
   dependsOn?: string[];
+  /** Every step Microcks makes this one wait for (S30): dependsOn and the steps whose outputs it uses, else those listed before. */
+  prerequisites?: string[];
+  /** Only for a step that sends or waits for a message on an AsyncAPI channel (S28, Arazzo 1.1). */
+  messaging?: StepMessaging;
+}
+
+/** The messaging side of an AsyncAPI step. */
+export interface StepMessaging {
+  action: 'send' | 'receive';
+  channel?: string;
+  /** Expression matching a received message with the message sent before. */
+  correlationId?: string;
+  /** How long a receive waits, in ms. */
+  timeoutMs?: number;
 }
 
 export interface WorkflowInput {

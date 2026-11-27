@@ -18,6 +18,7 @@
   let { document, workflow, runs, serviceLabel, onmockurl }: Props = $props();
 
   const canRun = $derived(workflow.runnability.runnable);
+  const mockOffReason = $derived(unavailableReason('mock-url', document) ?? (workflow.runnability.runnable ? undefined : workflow.runnability.message));
   const lastRun = $derived(runs[0]);
   const used = $derived([...new Set(workflow.steps.map((s) => s.sourceName))]);
   const synced = $derived(syncedText(document));
@@ -115,13 +116,13 @@
         </a>
       {/if}
       {#if week.length}<ApiBadge label="runs · 7 d" value="{passed}/{week.length} passed" />{/if}
-      {#if isAvailable('mock-url', document)}
+      {#if isAvailable('mock-url', document) && canRun}
         <button type="button" class="wf-badge-button" onclick={onmockurl} aria-label="Mock URL ready: open the Mock URL tab">
           <ApiBadge label="mock url" value="ready" status="success" />
         </button>
       {:else}
-        <span class="wf-badge-off" title={unavailableReason('mock-url', document)}>
-          <ApiBadge label="mock url" value="not available yet" status="neutral" />
+        <span class="wf-badge-off" title={mockOffReason}>
+          <ApiBadge label="mock url" value={isAvailable('mock-url', document) ? 'not available' : 'not available yet'} status="neutral" />
         </span>
       {/if}
     </div>

@@ -3,6 +3,7 @@
   import { criteriaText } from '#lib/workflows/describe.js';
   import { effectiveDependencies, stepResultLine } from '#lib/workflows/loom-model.js';
   import { stepChecksOf, stepStatusOf } from '#lib/workflows/run-facts.js';
+  import { formatDuration } from '#lib/workflows/time.js';
   import { STATUS_ICON } from '#lib/workflows/status.js';
   import type { Action, ArazzoDocument, Step, Workflow, WorkflowRun } from '#lib/workflows/types.js';
 
@@ -81,6 +82,13 @@
             {#if link}<a href="/services/{link.serviceId}" class="wf-st-path">{step.path}</a>{:else}<span class="wf-st-path">{step.path}</span>{/if}
           </span>
           <span class="wf-st-opref">$sourceDescriptions.{step.sourceName}.{step.operationId}</span>
+          {#if step.messaging}
+            <span class="wf-st-opref">
+              {step.messaging.action}{step.messaging.correlationId ? ` · correlationId ${step.messaging.correlationId}` : ''}{step.messaging.timeoutMs !== undefined
+                ? ` · timeout ${formatDuration(step.messaging.timeoutMs)}`
+                : ''}
+            </span>
+          {/if}
         </span>
       {:else if col.key === 'criteria'}
         <span class="wf-st-stack">

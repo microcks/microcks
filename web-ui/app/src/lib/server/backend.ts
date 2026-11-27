@@ -549,7 +549,12 @@ export interface BackendArazzoDocumentSummary {
 export interface BackendArazzoStep {
   stepId: string;
   description?: string | null;
-  operation: { sourceName: string; operationId: string; method?: string | null; path?: string | null; reason?: string | null };
+  operation: { sourceName: string; operationId: string; method?: string | null; path?: string | null; channel?: string | null; reason?: string | null };
+  /** S28: only for a step that sends or waits for a message. */
+  messaging?: { action: string; correlationId?: string | null; timeout?: number | null } | null;
+  /** S30 */
+  dependsOn?: string[] | null;
+  prerequisites?: string[] | null;
   parameters: { name: string; in: string; value: string }[];
   requestBody?: { contentType?: string | null; payload?: string | null; replacements?: Record<string, string> | null } | null;
   successCriteria: { condition: string; context?: string | null; type?: string | null }[];

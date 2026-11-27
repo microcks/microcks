@@ -12,6 +12,7 @@ import {
 } from '#lib/placeholders/workflows.js';
 import type { WorkflowsPayload } from '#lib/workflows/list.js';
 import { mockUrlOf } from '#lib/workflows/mock-url.js';
+import { dependsOnOf, messagingOf, runnabilityOf } from '#lib/workflows/step-mapping.js';
 import { toActions } from '#lib/workflows/attempts.js';
 import { toWorkflowExample } from '#lib/workflows/examples.js';
 import { documentOrigin, jobOfDocument } from '#lib/workflows/source-job.js';
@@ -308,32 +309,37 @@ function toCriterion(c: BackendArazzoStep['successCriteria'][number]): Criterion
 const named = (m: Record<string, string> | undefined) => Object.entries(m ?? {}).map(([name, expression]) => ({ name, expression }));
 
 function toWorkflow(d: BackendArazzoWorkflowDetail, status: BackendArazzoDocumentSummary['workflows'][number] | undefined): Workflow {
-  const reasons = status?.status.reasons ?? [];
+  const dependsOn = dependsOnOf(d.steps.map((st) => ({ stepId: st.stepId, dependsOn: st.dependsOn ?? [], prerequisites: st.prerequisites ?? [] })));
   return {
     workflowId: d.workflowId,
     documentId: d.documentId,
     summary: d.summary || status?.description || d.workflowId,
     description: d.description ?? undefined,
     inputs: d.inputs.map((i) => ({ name: i.name, type: INPUT_TYPES.includes(i.type as never) ? (i.type as WorkflowInput['type']) : 'string' })),
-    steps: d.steps.map((st) => ({
-      stepId: st.stepId,
-      sourceName: st.operation.sourceName,
-      operationId: st.operation.operationId,
-      method: st.operation.method ?? '',
-      path: st.operation.path ?? '',
-      description: st.description ?? '',
-      parameters: st.parameters.map((p) => ({ name: p.name, in: IN[p.in] ?? 'query', value: p.value })),
-      requestBody: st.requestBody?.payload ?? undefined,
-      successCriteria: st.successCriteria.map(toCriterion),
-      onSuccess: toActions(st.onSuccess),
-      onFailure: toActions(st.onFailure),
-      outputs: named(st.outputs)
-    })),
+    steps: d.steps.map((st, i) => {
+      const messaging = messagingOf(st.messaging, st.operation.channel);
+      return {
+        stepId: st.stepId,
+        sourceName: st.operation.sourceName,
+        operationId: st.operation.operationId,
+        method: st.operation.method ?? '',
+        // As in the mockup, an AsyncAPI step shows its channel where an HTTP step shows its path.
+        path: (messaging && st.operation.channel) || st.operation.path || '',
+        description: st.description ?? '',
+        parameters: st.parameters.map((p) => ({ name: p.name, in: IN[p.in] ?? 'query', value: p.value })),
+        requestBody: st.requestBody?.payload ?? undefined,
+        successCriteria: st.successCriteria.map(toCriterion),
+        onSuccess: toActions(st.onSuccess),
+        onFailure: toActions(st.onFailure),
+        outputs: named(st.outputs),
+        ...(dependsOn[i] ? { dependsOn: dependsOn[i] } : {}),
+        ...(st.prerequisites?.length ? { prerequisites: st.prerequisites } : {}),
+        ...(messaging ? { messaging } : {})
+      };
+    }),
     outputs: named(d.outputs),
     mockUrl: mockUrlOf(MICROCKS_API_URL, d.title, d.version, d.workflowId),
-    runnability: status === undefined || status.status.runnable
-      ? { runnable: true }
-      : { runnable: false, reason: 'source-not-linked', message: reasons.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join('. ') }
+    runnability: runnabilityOf(status?.status)
   };
 }
 
