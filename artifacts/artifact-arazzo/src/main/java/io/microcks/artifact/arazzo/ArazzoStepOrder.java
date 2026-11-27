@@ -67,6 +67,23 @@ public final class ArazzoStepOrder {
    }
 
    /**
+    * Tell the steps that declare dependsOn although neither they nor any step they name send or receive messages.
+    * Arazzo 1.1 (5.8.5.2) intends dependsOn to coordinate asynchronous steps and recommends the order of the list for
+    * synchronous ones, without forbidding it: such a document is accepted, and these steps are worth a warning.
+    * @param workflow A workflow of an Arazzo document
+    * @return The ids of these steps, in the order of the workflow; empty when there is none
+    */
+   public static List<String> dependsOnBetweenSynchronousSteps(ArazzoWorkflow workflow) {
+      Set<String> asynchronous = new HashSet<>();
+      workflow.steps().stream().filter(step -> step.messaging() != null)
+            .forEach(step -> asynchronous.add(step.stepId()));
+      return workflow.steps().stream()
+            .filter(step -> step.dependsOn() != null && !asynchronous.contains(step.stepId())
+                  && step.dependsOn().stream().noneMatch(asynchronous::contains))
+            .map(ArazzoStep::stepId).toList();
+   }
+
+   /**
     * @param workflow A workflow of an Arazzo document
     * @return The prerequisites of each step, by step id in the order of the workflow
     */

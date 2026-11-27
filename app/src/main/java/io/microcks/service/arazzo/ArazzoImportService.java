@@ -33,6 +33,8 @@ import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.artifact.MockRepositoryImportException;
 import io.microcks.util.ReferenceResolver;
 import io.microcks.artifact.arazzo.ArazzoDocumentReader;
+import io.microcks.artifact.arazzo.ArazzoStepOrder;
+import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -46,6 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -230,7 +233,29 @@ public class ArazzoImportService {
       List<ArazzoWorkflowCheck> checks = document.getWorkflowIds().stream()
             .map(workflowId -> check(workflowId, document.getWorkflowCalls().get(workflowId), sources)).toList();
       return new ArazzoImportAnalysis(null, document.getArazzoVersion(), document.getTitle(), document.getVersion(),
-            document.getWorkflowIds(), sourceAnalyses, checks, apis());
+            document.getWorkflowIds(), sourceAnalyses, checks, apis(), warnings(document));
+   }
+
+   /**
+    * Arazzo 1.1 (5.8.5.2) intends dependsOn to coordinate asynchronous steps and recommends the order of the list for
+    * synchronous ones, without forbidding it: such a document is imported, with a warning per workflow.
+    */
+   private static List<String> warnings(ArazzoDocument document) {
+      JsonNode parsed;
+      try {
+         parsed = ArazzoDocumentService.parse(document.getContent());
+      } catch (MockRepositoryImportException e) {
+         // The document was read to build the candidate: its content parses.
+         return List.of();
+      }
+      return document.getWorkflowIds().stream()
+            .map(workflowId -> ArazzoWorkflowReader.workflow(parsed, workflowId).map(workflow -> {
+               List<String> stepIds = ArazzoStepOrder.dependsOnBetweenSynchronousSteps(workflow);
+               return stepIds.isEmpty() ? null
+                     : workflowId + ": " + String.join(", ", stepIds) + " declare"
+                           + (stepIds.size() == 1 ? "s" : "") + " dependsOn between synchronous steps, while Arazzo"
+                           + " 1.1 intends dependsOn to coordinate asynchronous steps";
+            }).orElse(null)).filter(Objects::nonNull).toList();
    }
 
    /**

@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -179,6 +180,22 @@ class ArazzoStepDependenciesTest {
       assertEquals(document.getContent(), minion.requests().get(0).arazzoDocument());
       assertEquals(WorkflowRunStatus.SUCCESS, run.getStatus());
       assertEquals(STEPS, run.getSteps().stream().map(WorkflowStepResult::stepId).toList());
+   }
+
+   /**
+    * Arazzo 1.1 (5.8.5.2) intends dependsOn to coordinate asynchronous steps, and recommends the order of the list for
+    * synchronous ones without forbidding dependsOn there: the maintainer decided that Microcks imports such a document
+    * and warns about it before the import.
+    */
+   @Test
+   void aDependsOnBetweenSynchronousStepsIsWarnedBeforeImport() throws Exception {
+      ArazzoImportAnalysis analysis = arazzoImportService.analyseArazzoDocument(fixture("pastry-tasting.arazzo.yaml"),
+            null);
+
+      assertNull(analysis.refusal());
+      assertEquals(List.of("tasteThenReprice: tasteEclair, tasteMillefeuille, tasteEclairXml declare dependsOn between "
+            + "synchronous steps, while Arazzo 1.1 intends dependsOn to coordinate asynchronous steps"),
+            analysis.warnings());
    }
 
    private static WorkflowStepResult passed(int index, String stepId) {

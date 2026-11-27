@@ -412,3 +412,29 @@ workflows:
         operationId: getSirene
         dependsOn:
           - 1
+---
+# example: joins-async - synthesis waits for the registered message in flight, the use of dependsOn Arazzo 1.1 intends
+arazzo: 1.1.0
+info:
+  title: Company events
+  version: 1.0.0
+sourceDescriptions:
+  - name: companyApi
+    url: ./company-api.openapi.yaml
+  - name: companyEvents
+    url: ./company-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: register
+        operationId: $sourceDescriptions.companyApi.postSynthesis
+      - stepId: registered
+        operationId: $sourceDescriptions.companyEvents.receiveRegistered
+        action: receive
+        dependsOn:
+          - register
+      - stepId: synthesis
+        operationId: $sourceDescriptions.companyApi.postSynthesis
+        dependsOn:
+          - registered

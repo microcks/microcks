@@ -29,11 +29,13 @@ import java.util.List;
  * @param checks        Whether each of its workflows is ready to run, in the order of the document; empty when it is
  *                      refused
  * @param apis          The APIs of Microcks a source can be linked to, by name then version
+ * @param warnings      What the document does that Arazzo allows but does not recommend, imported anyway; empty when
+ *                      there is nothing to say or when it is refused
  * @author SebastienDegodez
  */
 public record ArazzoImportAnalysis(String refusal, String arazzoVersion, String title, String version,
       List<String> workflowIds, List<ArazzoSourceAnalysis> sources, List<ArazzoWorkflowCheck> checks,
-      List<ServiceRef> apis) {
+      List<ServiceRef> apis, List<String> warnings) {
 
    /**
     * @param refusal Why the document cannot be imported
@@ -41,6 +43,6 @@ public record ArazzoImportAnalysis(String refusal, String arazzoVersion, String 
     * @return The analysis of a refused document
     */
    public static ArazzoImportAnalysis refused(String refusal, List<ServiceRef> apis) {
-      return new ArazzoImportAnalysis(refusal, null, null, null, List.of(), List.of(), List.of(), apis);
+      return new ArazzoImportAnalysis(refusal, null, null, null, List.of(), List.of(), List.of(), apis, List.of());
    }
 }

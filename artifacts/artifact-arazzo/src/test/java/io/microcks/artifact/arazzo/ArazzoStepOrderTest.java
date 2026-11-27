@@ -77,6 +77,24 @@ class ArazzoStepOrderTest {
    }
 
    /**
+    * Arazzo 1.1 (5.8.5.2) intends dependsOn to coordinate asynchronous steps, and recommends the order of the list for
+    * synchronous ones without forbidding dependsOn there. The maintainer decided to accept such a document and to warn:
+    * the steps declaring dependsOn when neither they nor any step they name send or receive messages.
+    */
+   @ParameterizedTest
+   @CsvSource(delimiter = ';', value = { "parallel; checkCompany; [sirene, bodacc, financials]",
+         "every-place; checkCompany; [inPayload, inReplacement, inCriterion, inContext, inActionCriterion, inOutput, "
+               + "alone]",
+         "in-correlation-id; listen; []", "joins-async; listen; []", "sequential; checkCompany; []" })
+   void theStepsDeclaringDependsOnBetweenSynchronousStepsAreTold(String example, String workflowId, String stepIds)
+         throws IOException {
+      ArazzoWorkflow workflow = ArazzoWorkflowReader.workflow(ArazzoFixtures.exampleOf(FIXTURE, example), workflowId)
+            .orElseThrow();
+
+      assertEquals(stepIds, ArazzoStepOrder.dependsOnBetweenSynchronousSteps(workflow).toString());
+   }
+
+   /**
     * AC-02: Arazzo requires a dependsOn to name steps that exist, and only defines it for a step since 1.1; a step that
     * depends on itself or on steps depending on it cannot run. These documents are refused permanently. Depending on a
     * step of another workflow, or on a step listed later, is refused temporarily: the runner plays one workflow, and
