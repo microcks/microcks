@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -152,18 +153,17 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
    }
 
    /**
-    * The deliberate mistake: the test of saga B names session A too, so both sagas land in A, B first. B receives
-    * nothing and keeps nothing; A fails, as its createOrder step got the customer of B and 4 calls match no step.
+    * The deliberate mistake: the test of saga B names session A too, so both sagas land in A, each step of both sagas
+    * at the same instant. B receives nothing and keeps nothing; A fails, as 4 calls match no step, and keeps one state
+    * per step. Its createOrder step takes the createOrder call A counted first: B's fails on its customer c-8, A's own
+    * passes.
     */
    @Test
    void twoSagasNamingTheSameSessionAreCaughtByItsVerification() throws Exception {
       String a = openSession("c-7");
       String b = openSession("c-8");
-      String inA = a;
 
-      interleaved(List.of(new Turn("B", inA, 0, "c-8"), new Turn("A", inA, 0, "c-7"), new Turn("A", inA, 1, "c-7"),
-            new Turn("B", inA, 1, "c-8"), new Turn("A", inA, 2, "c-7"), new Turn("B", inA, 2, "c-8"),
-            new Turn("A", inA, 3, "c-7"), new Turn("B", inA, 3, "c-8")));
+      atTheSameInstant(new Saga("A", a, "c-7"), new Saga("B", a, "c-8"));
 
       JsonNode verificationOfB = verify(b);
       assertEquals("FAILURE", verificationOfB.get("status").asText(), verificationOfB.toPrettyString());
@@ -173,8 +173,16 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
 
       JsonNode verificationOfA = verify(a);
       assertEquals("FAILURE", verificationOfA.get("status").asText(), verificationOfA.toPrettyString());
-      assertEquals("`createOrder` body `/customerId` should come from `$inputs.customerId` (c-7), got c-8",
-            messagesOf(verificationOfA).get(0));
+      List<String> customers = customersSentTo(a);
+      assertEquals(List.of("c-7", "c-8"), customers.stream().sorted().toList());
+      JsonNode createOrder = verificationOfA.get("steps").get(0);
+      if ("c-8".equals(customers.get(0))) {
+         assertEquals("FAILED", createOrder.get("status").asText(), createOrder.toPrettyString());
+         assertEquals("`createOrder` body `/customerId` should come from `$inputs.customerId` (c-7), got c-8",
+               createOrder.get("message").asText());
+      } else {
+         assertEquals("PASSED", createOrder.get("status").asText(), createOrder.toPrettyString());
+      }
       List<String> steps = stepsOfTheCalls(verificationOfA);
       assertEquals(8, steps.size(), steps::toString);
       assertEquals(4, steps.stream().filter("none"::equals).count(), steps::toString);
@@ -189,9 +197,10 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
             "unexpected call `reserveStock` after `reserveStock`",
             "unexpected call `chargePayment` after `chargePayment`",
             "unexpected call `confirmOrder` after `confirmOrder`"), unexpected);
-      // Both sagas landed in A, B first.
-      assertEquals(List.of("c-8", "c-7"), customersSentTo(a));
+      // Each step answered twice at the same instant keeps one state.
       assertEquals(STEPS, stateOf(a));
+      assertEquals(STEPS.size(), serviceStateRepository
+            .count(new Document("key", new Document("$regex", "^arazzo-session:" + a + ":"))));
    }
 
    /**
@@ -251,6 +260,54 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
          threads.shutdownNow();
       }
       return answers;
+   }
+
+   /**
+    * One saga: its name, the session its test names and its customer.
+    * @param name     A or B
+    * @param session  The session its calls name
+    * @param customer The customer of the saga
+    */
+   private record Saga(String name, String session, String customer) {
+   }
+
+   /**
+    * Play two sagas from two threads, step after step: at each step, both wait for each other, then both call the mocks
+    * at the same instant, and both wait for the two answers before the next step.
+    */
+   private void atTheSameInstant(Saga... sagas) throws Exception {
+      CyclicBarrier together = new CyclicBarrier(sagas.length);
+      ExecutorService threads = Executors.newFixedThreadPool(sagas.length);
+      try {
+         List<Future<?>> running = new ArrayList<>();
+         for (Saga saga : sagas) {
+            running.add(threads.submit(() -> {
+               for (int step = 0; step < STEPS.size(); step++) {
+                  together.await(10, TimeUnit.SECONDS);
+                  call(new Turn(saga.name(), saga.session(), step, saga.customer()));
+                  together.await(10, TimeUnit.SECONDS);
+               }
+               return null;
+            }));
+         }
+         // A saga whose call failed leaves the other one waiting at the barrier: report the failed call first.
+         Throwable failure = null;
+         for (Future<?> saga : running) {
+            try {
+               saga.get(60, TimeUnit.SECONDS);
+            } catch (ExecutionException ee) {
+               failure = failure == null || ee.getCause() instanceof AssertionError ? ee.getCause() : failure;
+            }
+         }
+         if (failure instanceof AssertionError assertion) {
+            throw assertion;
+         }
+         if (failure != null) {
+            throw new IllegalStateException(failure);
+         }
+      } finally {
+         threads.shutdownNow();
+      }
    }
 
    /** The call of a turn to the mocks; its answer must be the one of the step. */

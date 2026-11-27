@@ -117,7 +117,7 @@ class ArazzoSagaConcurrentSessionsIT extends AbstractBaseIT {
          String a = openSession(COMPENSATION, CARD_REFUSED);
          String b = openSession(NORMAL, null);
 
-         Map<String, Integer> charged = runBothSagas(a, b, false);
+         Map<String, Integer> charged = runBothSagas(a, b);
 
          assertEquals(Map.of("A", 402, "B", 201), charged, "round " + round);
          assertEquals("SUCCESS", verify(a).get("status").asText(), "round " + round + ": " + verify(a));
@@ -128,15 +128,14 @@ class ArazzoSagaConcurrentSessionsIT extends AbstractBaseIT {
    /**
     * The deliberate mistake: saga B sends its calls with A's session id. B's chargePayment is then refused, as it is
     * A's session; A's verification fails on the calls of B it did not expect, and B's on the steps it never received.
-    * The two sagas take turns at each step, A then B: two calls of the same step landing in one session at the very
-    * same instant are not this mistake.
+    * The calls of each step of both sagas land in A at the same instant.
     */
    @Test
    void callsSentWithTheSessionIdOfAnotherTestFailBothVerifications() throws Exception {
       String a = openSession(COMPENSATION, CARD_REFUSED);
       String b = openSession(NORMAL, null);
 
-      Map<String, Integer> charged = runBothSagas(a, a, true);
+      Map<String, Integer> charged = runBothSagas(a, a);
 
       assertEquals(Map.of("A", 402, "B", 402), charged);
       JsonNode verificationOfA = verify(a);
@@ -160,11 +159,10 @@ class ArazzoSagaConcurrentSessionsIT extends AbstractBaseIT {
 
    /**
     * Saga A (the compensation) and saga B (the normal saga) run in two threads; a barrier makes them call the mocks
-    * step after step together, at the same time or taking turns, A then B. Each names the session given to it.
+    * step after step together, at the same instant. Each names the session given to it.
     * @return The status chargePayment answered to each saga, by saga
     */
-   private Map<String, Integer> runBothSagas(String sessionOfA, String sessionOfB, boolean turnByTurn)
-         throws Exception {
+   private Map<String, Integer> runBothSagas(String sessionOfA, String sessionOfB) throws Exception {
       CyclicBarrier together = new CyclicBarrier(2);
       Map<String, Integer> charged = new ConcurrentHashMap<>();
       List<Runnable> sagaA = List.of(() -> placeOrder(sessionOfA), () -> reserveStock(sessionOfA),
@@ -174,8 +172,8 @@ class ArazzoSagaConcurrentSessionsIT extends AbstractBaseIT {
       List<Runnable> sagaB = List.of(() -> placeOrder(sessionOfB), () -> reserveStock(sessionOfB),
             () -> charged.put("B", chargePayment(sessionOfB)),
             () -> assertEquals(200, callMocks(sessionOfB, HttpMethod.POST, "Order+API", "/orders/o-42/confirm", null)));
-      Future<?> a = sagas.submit(() -> play(sagaA, true, turnByTurn, together));
-      Future<?> b = sagas.submit(() -> play(sagaB, false, turnByTurn, together));
+      Future<?> a = sagas.submit(() -> play(sagaA, together));
+      Future<?> b = sagas.submit(() -> play(sagaB, together));
       a.get(30, TimeUnit.SECONDS);
       b.get(30, TimeUnit.SECONDS);
       return Map.copyOf(charged);
@@ -183,19 +181,15 @@ class ArazzoSagaConcurrentSessionsIT extends AbstractBaseIT {
 
    /**
     * Play the steps of one saga, step after step with the other saga: at each step, both wait for each other, then both
-    * call; or, turn by turn, A calls, both wait again, then B calls.
+    * call at the same instant, and both wait for the two answers before the next step.
     */
-   private static Void play(List<Runnable> steps, boolean sagaA, boolean turnByTurn, CyclicBarrier together)
-         throws Exception {
+   private static Void play(List<Runnable> steps, CyclicBarrier together) throws Exception {
       for (int step = 0; step < 5; step++) {
          together.await(10, TimeUnit.SECONDS);
-         if ((sagaA || !turnByTurn) && step < steps.size()) {
+         if (step < steps.size()) {
             steps.get(step).run();
          }
          together.await(10, TimeUnit.SECONDS);
-         if (!sagaA && turnByTurn && step < steps.size()) {
-            steps.get(step).run();
-         }
       }
       return null;
    }
