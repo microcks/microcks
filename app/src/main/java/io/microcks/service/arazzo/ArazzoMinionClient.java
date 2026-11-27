@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
 /**
  * Hands the runs of Arazzo workflows to the Arazzo minion, which executes them and reports them back.

@@ -15,12 +15,12 @@
  */
 package io.microcks.web;
 
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoSources;
 import io.microcks.domain.Secret;
 import io.microcks.domain.Service;
 import io.microcks.repository.SecretRepository;
-import io.microcks.service.ArazzoDocumentService;
+import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.util.HTTPDownloader;

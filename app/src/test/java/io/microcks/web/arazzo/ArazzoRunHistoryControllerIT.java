@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
+import io.microcks.web.AbstractBaseIT;
 import jakarta.inject.Inject;
 import io.quarkus.test.junit.QuarkusTest;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.repository.WorkflowResultRepository;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoStepExpectation;
-import io.microcks.domain.ArazzoWorkflowExample;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoStepExpectation;
+import io.microcks.domain.arazzo.ArazzoWorkflowExample;
 import io.microcks.artifact.MockRepositoryImportException;
 import io.microcks.util.ObjectMapperFactory;
 import io.microcks.artifact.arazzo.ArazzoDataFlow;

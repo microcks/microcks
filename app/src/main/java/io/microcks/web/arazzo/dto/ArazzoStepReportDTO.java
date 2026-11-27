@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web.dto;
+package io.microcks.web.arazzo.dto;
 
 import io.microcks.domain.Header;
 import io.microcks.domain.Request;
 import io.microcks.domain.Response;
-import io.microcks.domain.WorkflowCriterionResult;
-import io.microcks.domain.WorkflowExpressionValue;
-import io.microcks.domain.WorkflowParameterValue;
-import io.microcks.domain.WorkflowStepOperation;
-import io.microcks.domain.WorkflowStepResult;
-import io.microcks.domain.WorkflowStepStatus;
+import io.microcks.domain.arazzo.WorkflowCriterionResult;
+import io.microcks.domain.arazzo.WorkflowExpressionValue;
+import io.microcks.domain.arazzo.WorkflowParameterValue;
+import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowStepStatus;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;

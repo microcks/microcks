@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoExampleLaunch;
-import io.microcks.domain.WorkflowExampleCheck;
-import io.microcks.domain.WorkflowExampleVerdict;
-import io.microcks.domain.WorkflowResult;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoExampleLaunch;
+import io.microcks.domain.arazzo.WorkflowExampleCheck;
+import io.microcks.domain.arazzo.WorkflowExampleVerdict;
+import io.microcks.domain.arazzo.WorkflowResult;
 
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowRunSummary;
-import io.microcks.domain.WorkflowStepOperation;
-import io.microcks.domain.WorkflowStepResult;
-import io.microcks.domain.WorkflowStepStatus;
-import io.microcks.repository.WorkflowRunFilter;
-import io.microcks.repository.WorkflowResultRepository;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunSummary;
+import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.repository.arazzo.WorkflowRunFilter;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
+import io.microcks.web.AbstractBaseIT;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.repository.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.arazzo.ArazzoSourcesRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository;
+package io.microcks.repository.arazzo;
 
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowRunTarget;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunTarget;
 
 /**
  * The filters of a runs history; a null filter keeps every run.

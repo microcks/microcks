@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
 import io.microcks.domain.Operation;
 import io.microcks.domain.Service;
-import io.microcks.domain.WorkflowMissingExample;
-import io.microcks.domain.WorkflowParameterValue;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunTarget;
-import io.microcks.domain.WorkflowStepResult;
-import io.microcks.domain.WorkflowStepStatus;
+import io.microcks.domain.arazzo.WorkflowMissingExample;
+import io.microcks.domain.arazzo.WorkflowParameterValue;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowStepStatus;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.util.DispatchCriteriaHelper;

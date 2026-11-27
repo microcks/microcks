@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
 import jakarta.inject.Inject;
 import io.quarkus.test.junit.QuarkusTest;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunCounts;
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowRunSummary;
-import io.microcks.domain.WorkflowRunTarget;
-import io.microcks.repository.WorkflowResultRepository;
-import io.microcks.service.ArazzoRunHistoryService;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunCounts;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunSummary;
+import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.service.arazzo.ArazzoRunHistoryService;
 
 import org.junit.jupiter.api.Test;
 

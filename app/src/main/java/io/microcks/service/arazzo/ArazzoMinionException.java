@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
 /**
  * Why the Arazzo minion did not receive a run.

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain;
+package io.microcks.domain.arazzo;
 
+import io.microcks.domain.SecretRef;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.BsonType;
 import org.bson.codecs.pojo.annotations.BsonId;

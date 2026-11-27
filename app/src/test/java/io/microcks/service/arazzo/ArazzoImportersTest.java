@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.JobService;
+import io.microcks.service.ServiceService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoDocumentRef;
-import io.microcks.domain.ArazzoDocumentSummary;
-import io.microcks.domain.ArazzoImportAnalysis;
-import io.microcks.domain.ArazzoSourceAnalysis;
-import io.microcks.domain.ArazzoSourceMatch;
-import io.microcks.domain.ArazzoSources;
-import io.microcks.domain.ArazzoWorkflowSummary;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoDocumentRef;
+import io.microcks.domain.arazzo.ArazzoDocumentSummary;
+import io.microcks.domain.arazzo.ArazzoImportAnalysis;
+import io.microcks.domain.arazzo.ArazzoSourceAnalysis;
+import io.microcks.domain.arazzo.ArazzoSourceMatch;
+import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoWorkflowSummary;
 import io.microcks.domain.ImportJob;
 import io.microcks.domain.Secret;
 import io.microcks.domain.SecretRef;
 import io.microcks.domain.ServiceRef;
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.repository.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.arazzo.ArazzoSourcesRepository;
 import io.microcks.repository.ImportJobRepository;
 import io.microcks.repository.SecretRepository;
 import io.microcks.artifact.MockRepositoryImportException;

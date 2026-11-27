@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain;
+package io.microcks.domain.arazzo;
 
 /**
  * Where a run calls the operations of a source description, and the Microcks API it is linked to, kept by reference so

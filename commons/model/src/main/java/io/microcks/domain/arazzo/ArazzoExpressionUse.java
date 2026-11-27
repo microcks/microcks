@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain;
+package io.microcks.domain.arazzo;
 
 /**
  * Where a step of an Arazzo workflow uses a runtime expression.

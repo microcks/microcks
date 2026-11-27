@@ -13,31 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoExampleLaunch;
-import io.microcks.domain.ArazzoStepOperation;
-import io.microcks.domain.ArazzoWorkflowExample;
-import io.microcks.domain.ArazzoWorkflowStatus;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoExampleLaunch;
+import io.microcks.domain.arazzo.ArazzoStepOperation;
+import io.microcks.domain.arazzo.ArazzoWorkflowExample;
+import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
 import io.microcks.domain.Request;
 import io.microcks.domain.Resource;
 import io.microcks.domain.ResourceType;
 import io.microcks.domain.Response;
 import io.microcks.domain.Secret;
 import io.microcks.domain.SecretRef;
-import io.microcks.domain.WorkflowExampleCheck;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowRunTarget;
-import io.microcks.domain.WorkflowSourceTarget;
-import io.microcks.domain.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowExampleCheck;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.domain.arazzo.WorkflowSourceTarget;
+import io.microcks.domain.arazzo.WorkflowStepResult;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.SecretRepository;
-import io.microcks.repository.WorkflowResultRepository;
-import io.microcks.service.ArazzoDocumentService.ResolvedSource;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.artifact.arazzo.ArazzoDataFlow;
 import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
 

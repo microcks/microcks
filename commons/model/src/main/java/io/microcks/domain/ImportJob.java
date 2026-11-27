@@ -15,6 +15,7 @@
  */
 package io.microcks.domain;
 
+import io.microcks.domain.arazzo.ArazzoDocumentRef;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.BsonType;
 import org.bson.codecs.pojo.annotations.BsonId;

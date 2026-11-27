@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoApiUsage;
-import io.microcks.domain.ArazzoDataPassing;
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoExpressionUse;
-import io.microcks.domain.ArazzoSourceDescription;
-import io.microcks.domain.ArazzoStepCall;
-import io.microcks.domain.ArazzoLastResult;
-import io.microcks.domain.ArazzoStepAction;
-import io.microcks.domain.ArazzoStepCriterion;
-import io.microcks.domain.ArazzoStepDetail;
-import io.microcks.domain.ArazzoStepOperation;
-import io.microcks.domain.ArazzoStepParameter;
-import io.microcks.domain.ArazzoStepRequestBody;
-import io.microcks.domain.ArazzoUsingDocument;
-import io.microcks.domain.ArazzoUsingWorkflow;
-import io.microcks.domain.ArazzoWorkflowDetail;
-import io.microcks.domain.ArazzoWorkflowInput;
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.service.ArazzoDocumentService.ResolvedSource;
+import io.microcks.domain.arazzo.ArazzoApiUsage;
+import io.microcks.domain.arazzo.ArazzoDataPassing;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoExpressionUse;
+import io.microcks.domain.arazzo.ArazzoSourceDescription;
+import io.microcks.domain.arazzo.ArazzoStepCall;
+import io.microcks.domain.arazzo.ArazzoLastResult;
+import io.microcks.domain.arazzo.ArazzoStepAction;
+import io.microcks.domain.arazzo.ArazzoStepCriterion;
+import io.microcks.domain.arazzo.ArazzoStepDetail;
+import io.microcks.domain.arazzo.ArazzoStepOperation;
+import io.microcks.domain.arazzo.ArazzoStepParameter;
+import io.microcks.domain.arazzo.ArazzoStepRequestBody;
+import io.microcks.domain.arazzo.ArazzoUsingDocument;
+import io.microcks.domain.arazzo.ArazzoUsingWorkflow;
+import io.microcks.domain.arazzo.ArazzoWorkflowDetail;
+import io.microcks.domain.arazzo.ArazzoWorkflowInput;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.util.ObjectMapperFactory;
 import io.microcks.artifact.arazzo.ArazzoAction;
 import io.microcks.artifact.arazzo.ArazzoCriterion;

@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
+import io.microcks.web.AbstractBaseIT;
 import io.microcks.testsupport.http.ResponseEntity;
 import io.restassured.RestAssured;
 import io.microcks.testsupport.http.HttpStatus;
 import io.microcks.testsupport.http.HttpHeaders;
-import io.microcks.domain.ArazzoSourceLink;
-import io.microcks.domain.ArazzoWorkflowStatus;
+import io.microcks.domain.arazzo.ArazzoSourceLink;
+import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
 import io.microcks.domain.Service;
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.repository.ArazzoSourcesRepository;
-import io.microcks.service.ArazzoDocumentService;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.service.arazzo.ArazzoDocumentService;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;

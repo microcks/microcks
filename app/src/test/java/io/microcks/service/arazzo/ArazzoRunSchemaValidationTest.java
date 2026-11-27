@@ -13,23 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoDocument;
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
+import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.Resource;
 import io.microcks.domain.ResourceType;
-import io.microcks.domain.WorkflowCriterionResult;
-import io.microcks.domain.WorkflowExpressionValue;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowStepOperation;
-import io.microcks.domain.WorkflowStepResult;
-import io.microcks.domain.WorkflowStepStatus;
+import io.microcks.domain.arazzo.WorkflowCriterionResult;
+import io.microcks.domain.arazzo.WorkflowExpressionValue;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowStepStatus;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
-import io.microcks.repository.WorkflowResultRepository;
-import io.microcks.web.ArazzoRunController;
-import io.microcks.web.dto.ArazzoRunLaunchDTO;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.web.arazzo.ArazzoRunController;
+import io.microcks.web.arazzo.dto.ArazzoRunLaunchDTO;
 
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;

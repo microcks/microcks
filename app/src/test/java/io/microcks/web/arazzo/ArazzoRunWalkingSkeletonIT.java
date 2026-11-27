@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
+import io.microcks.web.AbstractBaseIT;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.testsupport.http.MediaType;
 import io.microcks.testsupport.http.ResponseEntity;
 import io.quarkus.test.junit.QuarkusTest;
-import io.microcks.service.HttpArazzoMinionClient;
-import io.microcks.service.ArazzoMinionClient;
+import io.microcks.service.arazzo.HttpArazzoMinionClient;
+import io.microcks.service.arazzo.ArazzoMinionClient;
 import io.quarkus.test.junit.QuarkusMock;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

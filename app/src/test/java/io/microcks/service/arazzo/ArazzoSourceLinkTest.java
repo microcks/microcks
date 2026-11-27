@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoSourceLink;
-import io.microcks.domain.ArazzoSources;
-import io.microcks.domain.ArazzoWorkflowStatus;
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
+import io.microcks.domain.arazzo.ArazzoSourceLink;
+import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
 import io.microcks.domain.Resource;
-import io.microcks.repository.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoSourcesRepository;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.artifact.MockRepositoryImportException;

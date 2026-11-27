@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
+import io.microcks.web.AbstractBaseIT;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.testsupport.http.MediaType;
 import io.microcks.testsupport.http.ResponseEntity;
 import jakarta.inject.Inject;
 import io.quarkus.test.junit.QuarkusTest;
-import io.microcks.service.HttpArazzoMinionClient;
-import io.microcks.service.ArazzoMinionClient;
+import io.microcks.service.arazzo.HttpArazzoMinionClient;
+import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.microcks.domain.Secret;
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.repository.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.arazzo.ArazzoSourcesRepository;
 import io.microcks.repository.SecretRepository;
-import io.microcks.repository.WorkflowResultRepository;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

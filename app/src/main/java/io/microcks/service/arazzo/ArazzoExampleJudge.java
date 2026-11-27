@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoStepExpectation;
-import io.microcks.domain.ArazzoWorkflowExample;
-import io.microcks.domain.WorkflowExampleCheck;
-import io.microcks.domain.WorkflowExampleVerdict;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowStepResult;
-import io.microcks.domain.WorkflowStepStatus;
+import io.microcks.domain.arazzo.ArazzoStepExpectation;
+import io.microcks.domain.arazzo.ArazzoWorkflowExample;
+import io.microcks.domain.arazzo.WorkflowExampleCheck;
+import io.microcks.domain.arazzo.WorkflowExampleVerdict;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowStepStatus;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;

@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoDocumentRef;
-import io.microcks.domain.ArazzoDocumentSummary;
-import io.microcks.domain.ArazzoImportAnalysis;
-import io.microcks.domain.ArazzoSourceAnalysis;
-import io.microcks.domain.ArazzoSourceLink;
-import io.microcks.domain.ArazzoSourceMatch;
-import io.microcks.domain.ArazzoSources;
-import io.microcks.domain.ArazzoStepCall;
-import io.microcks.domain.ArazzoWorkflowCheck;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoDocumentRef;
+import io.microcks.domain.arazzo.ArazzoDocumentSummary;
+import io.microcks.domain.arazzo.ArazzoImportAnalysis;
+import io.microcks.domain.arazzo.ArazzoSourceAnalysis;
+import io.microcks.domain.arazzo.ArazzoSourceLink;
+import io.microcks.domain.arazzo.ArazzoSourceMatch;
+import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoStepCall;
+import io.microcks.domain.arazzo.ArazzoWorkflowCheck;
 import io.microcks.domain.ServiceRef;
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.repository.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.arazzo.ArazzoSourcesRepository;
 import io.microcks.repository.ServiceRepository;
-import io.microcks.service.ArazzoDocumentService.ResolvedSource;
+import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.artifact.MockRepositoryImportException;
 import io.microcks.util.ReferenceResolver;
 import io.microcks.artifact.arazzo.ArazzoDocumentReader;

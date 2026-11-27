@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
-import io.microcks.domain.ArazzoApiUsage;
-import io.microcks.service.ArazzoWorkflowService;
+import io.microcks.domain.arazzo.ArazzoApiUsage;
+import io.microcks.service.arazzo.ArazzoWorkflowService;
 
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;

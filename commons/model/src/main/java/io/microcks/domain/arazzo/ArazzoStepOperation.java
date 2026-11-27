@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain;
+package io.microcks.domain.arazzo;
 
 /**
  * The operation a step of an Arazzo workflow calls, as found in the main OpenAPI contract of the linked Microcks API.

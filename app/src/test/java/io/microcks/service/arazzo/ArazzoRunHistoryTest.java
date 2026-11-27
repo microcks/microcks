@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
 import jakarta.inject.Inject;
 import io.quarkus.test.junit.QuarkusTest;
-import io.microcks.service.ArazzoMinionClient;
+import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoWorkflowSummary;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoWorkflowSummary;
 import io.microcks.domain.TestResult;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunCounts;
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowRunSummary;
-import io.microcks.domain.WorkflowRunTarget;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunCounts;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunSummary;
+import io.microcks.domain.arazzo.WorkflowRunTarget;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.TestResultRepository;
-import io.microcks.repository.WorkflowResultRepository;
-import io.microcks.repository.WorkflowRunFilter;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.arazzo.WorkflowRunFilter;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.MappingIterator;

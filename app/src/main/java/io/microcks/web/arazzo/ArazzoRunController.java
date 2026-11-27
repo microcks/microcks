@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
-import io.microcks.domain.ArazzoExampleLaunch;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.service.ArazzoRunImplementations;
-import io.microcks.service.ArazzoRunRefusedException;
-import io.microcks.service.ArazzoRunService;
-import io.microcks.web.dto.ArazzoRunLaunchDTO;
-import io.microcks.web.dto.ArazzoRunOutcomeDTO;
-import io.microcks.web.dto.ArazzoStepReportDTO;
+import io.microcks.domain.arazzo.ArazzoExampleLaunch;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.service.arazzo.ArazzoRunImplementations;
+import io.microcks.service.arazzo.ArazzoRunRefusedException;
+import io.microcks.service.arazzo.ArazzoRunService;
+import io.microcks.web.arazzo.dto.ArazzoRunLaunchDTO;
+import io.microcks.web.arazzo.dto.ArazzoRunOutcomeDTO;
+import io.microcks.web.arazzo.dto.ArazzoStepReportDTO;
 
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;

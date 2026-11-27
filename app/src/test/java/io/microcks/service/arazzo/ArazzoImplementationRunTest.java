@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
+import io.microcks.service.ArtifactInfo;
+import io.microcks.service.ServiceService;
 import jakarta.inject.Inject;
 import io.quarkus.test.junit.QuarkusTest;
-import io.microcks.service.ArazzoMinionClient;
+import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
-import io.microcks.domain.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.Secret;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunTarget;
-import io.microcks.domain.WorkflowSourceTarget;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.domain.arazzo.WorkflowSourceTarget;
 import io.microcks.repository.SecretRepository;
 import io.microcks.repository.ServiceRepository;
-import io.microcks.repository.WorkflowResultRepository;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

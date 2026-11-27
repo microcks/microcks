@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
 import io.microcks.domain.Header;
 import io.microcks.domain.Request;
 import io.microcks.domain.Response;
-import io.microcks.domain.WorkflowCriterionResult;
-import io.microcks.domain.WorkflowExpressionValue;
-import io.microcks.domain.WorkflowParameterValue;
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowStepOperation;
-import io.microcks.domain.WorkflowStepResult;
-import io.microcks.domain.WorkflowStepStatus;
-import io.microcks.service.ArazzoMinionException;
-import io.microcks.service.ArazzoRunRequest;
-import io.microcks.service.HttpArazzoMinionClient;
-import io.microcks.web.dto.ArazzoRunOutcomeDTO;
-import io.microcks.web.dto.ArazzoStepReportDTO;
+import io.microcks.domain.arazzo.WorkflowCriterionResult;
+import io.microcks.domain.arazzo.WorkflowExpressionValue;
+import io.microcks.domain.arazzo.WorkflowParameterValue;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.service.arazzo.ArazzoMinionException;
+import io.microcks.service.arazzo.ArazzoRunRequest;
+import io.microcks.service.arazzo.HttpArazzoMinionClient;
+import io.microcks.web.arazzo.dto.ArazzoRunOutcomeDTO;
+import io.microcks.web.arazzo.dto.ArazzoStepReportDTO;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

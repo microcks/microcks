@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository;
+package io.microcks.repository.arazzo;
 
-import io.microcks.domain.WorkflowResult;
+import io.microcks.repository.ObjectIdRepository;
+import io.microcks.domain.arazzo.WorkflowResult;
 
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;

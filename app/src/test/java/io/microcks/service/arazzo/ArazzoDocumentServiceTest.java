@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.repository.ArazzoDocumentRepository;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
 import io.quarkus.test.junit.QuarkusTest;

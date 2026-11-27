@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
-import io.microcks.domain.ArazzoDocumentSummary;
-import io.microcks.domain.ArazzoImportAnalysis;
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.service.ArazzoDocumentService;
-import io.microcks.service.ArazzoImportService;
+import io.microcks.domain.arazzo.ArazzoDocumentSummary;
+import io.microcks.domain.arazzo.ArazzoImportAnalysis;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.service.arazzo.ArazzoDocumentService;
+import io.microcks.service.arazzo.ArazzoImportService;
 import io.microcks.artifact.MockRepositoryImportException;
 
 import io.smallrye.common.annotation.RunOnVirtualThread;

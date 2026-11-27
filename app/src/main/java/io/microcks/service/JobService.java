@@ -15,6 +15,8 @@
  */
 package io.microcks.service;
 
+import io.microcks.service.arazzo.ArazzoDocumentService;
+import io.microcks.service.arazzo.ArazzoImportService;
 import io.microcks.domain.ImportJob;
 import io.microcks.domain.Secret;
 import io.microcks.domain.Service;

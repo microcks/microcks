@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository;
+package io.microcks.repository.arazzo;
 
-import io.microcks.domain.ArazzoSources;
+import io.microcks.repository.ObjectIdRepository;
+import io.microcks.domain.arazzo.ArazzoSources;
 
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;

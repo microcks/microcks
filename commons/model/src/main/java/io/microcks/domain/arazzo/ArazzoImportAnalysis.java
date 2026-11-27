@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain;
+package io.microcks.domain.arazzo;
 
+import io.microcks.domain.ServiceRef;
 import java.util.List;
 
 /**

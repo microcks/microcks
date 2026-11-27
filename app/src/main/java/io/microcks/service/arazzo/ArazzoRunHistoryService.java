@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.service;
+package io.microcks.service.arazzo;
 
-import io.microcks.domain.ArazzoLastResult;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.domain.WorkflowRunCounts;
-import io.microcks.domain.WorkflowRunStatus;
-import io.microcks.domain.WorkflowRunSummary;
-import io.microcks.domain.WorkflowStepResult;
-import io.microcks.domain.WorkflowStepStatus;
-import io.microcks.repository.WorkflowResultRepository;
-import io.microcks.repository.WorkflowRunFilter;
+import io.microcks.domain.arazzo.ArazzoLastResult;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.arazzo.WorkflowRunCounts;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunSummary;
+import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.arazzo.WorkflowRunFilter;
 
 
 import java.util.List;

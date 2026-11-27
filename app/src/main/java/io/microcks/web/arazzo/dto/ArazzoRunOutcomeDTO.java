@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web.dto;
+package io.microcks.web.arazzo.dto;
 
-import io.microcks.domain.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
 
 import java.util.Map;
 

@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
-import io.microcks.repository.ArazzoDocumentRepository;
-import io.microcks.repository.ArazzoSourcesRepository;
-import io.microcks.repository.WorkflowResultRepository;
+import io.microcks.web.AbstractBaseIT;
+import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.WorkflowResultRepository;
 
-import io.microcks.service.ArazzoMinionClient;
-import io.microcks.service.HttpArazzoMinionClient;
+import io.microcks.service.arazzo.ArazzoMinionClient;
+import io.microcks.service.arazzo.HttpArazzoMinionClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

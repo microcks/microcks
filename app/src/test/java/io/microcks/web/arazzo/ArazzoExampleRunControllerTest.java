@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.web;
+package io.microcks.web.arazzo;
 
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.ArazzoDocument;
-import io.microcks.domain.ArazzoExampleLaunch;
-import io.microcks.domain.WorkflowResult;
-import io.microcks.service.ArazzoDocumentService;
-import io.microcks.service.ArazzoMinionClient;
-import io.microcks.service.ArazzoRunService;
+import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.arazzo.ArazzoExampleLaunch;
+import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.service.arazzo.ArazzoDocumentService;
+import io.microcks.service.arazzo.ArazzoMinionClient;
+import io.microcks.service.arazzo.ArazzoRunService;
 import io.microcks.service.ArtifactInfo;
-import io.microcks.service.RecordingMinionClient;
+import io.microcks.service.arazzo.RecordingMinionClient;
 import io.microcks.service.ServiceService;
-import io.microcks.web.dto.ArazzoRunLaunchDTO;
+import io.microcks.web.arazzo.dto.ArazzoRunLaunchDTO;
 
 import org.junit.jupiter.api.Test;
 import jakarta.ws.rs.core.Response;
