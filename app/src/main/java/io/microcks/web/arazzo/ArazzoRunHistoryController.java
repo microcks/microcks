@@ -19,7 +19,7 @@ import io.microcks.service.arazzo.view.WorkflowRunCounts;
 import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.service.arazzo.view.WorkflowRunSummary;
 import io.microcks.domain.workflow.WorkflowRunTarget;
-import io.microcks.repository.arazzo.WorkflowRunFilter;
+import io.microcks.repository.workflow.WorkflowRunFilter;
 import io.microcks.service.arazzo.ArazzoRunHistoryService;
 
 

@@ -27,7 +27,7 @@ import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.domain.workflow.WorkflowStepStatus;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

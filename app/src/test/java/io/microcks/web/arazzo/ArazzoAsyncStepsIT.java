@@ -16,9 +16,9 @@
 package io.microcks.web.arazzo;
 
 import io.microcks.web.AbstractBaseIT;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.testsupport.http.MediaType;
@@ -52,10 +52,10 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -65,8 +65,8 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
    }
 
    /** AC-02: the workflow endpoint gives the channel, action, correlationId and timeout of each async step. */
@@ -109,7 +109,7 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
       uploadArtifactFile(example("async-steps.contracts.yaml", "order-events"), true);
       uploadArtifactFile(example("async-steps.arazzo.yaml", "order-events"), true);
       uploadArtifactFile(FIXTURES + "async-steps.arazzo-metadata.yaml", false);
-      return arazzoDocumentRepository.findByTitleAndVersion("Order events scenarios", "1.0.0").getId();
+      return workflowDocumentRepository.findByTitleAndVersion("Order events scenarios", "1.0.0").getId();
    }
 
    /** Writes the example of a multi-document fixture to its own file, as the API developer would upload it. */

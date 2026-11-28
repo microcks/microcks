@@ -21,7 +21,7 @@ import io.microcks.service.ServiceService;
 import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 import io.microcks.repository.ServiceRepository;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -61,7 +61,7 @@ class ArazzoWorkflowDetailTest {
    private ServiceService serviceService;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
    private ServiceRepository serviceRepository;
@@ -274,7 +274,7 @@ class ArazzoWorkflowDetailTest {
    void aStoredDocumentThatCannotBeReadHasNoWorkflow() throws Exception {
       WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       document.setContent("workflows: [ readThenReprice");
-      arazzoDocumentRepository.persistOrUpdate(document);
+      workflowDocumentRepository.persistOrUpdate(document);
 
       assertEquals(Optional.empty(), arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice"));
    }

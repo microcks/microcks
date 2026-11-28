@@ -28,7 +28,7 @@ import io.microcks.domain.Request;
 import io.microcks.domain.RequestResponsePair;
 import io.microcks.domain.Response;
 import io.microcks.domain.workflow.WorkflowResult;
-import io.microcks.repository.arazzo.WorkflowRunFilter;
+import io.microcks.repository.workflow.WorkflowRunFilter;
 import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.domain.workflow.WorkflowStepResult;

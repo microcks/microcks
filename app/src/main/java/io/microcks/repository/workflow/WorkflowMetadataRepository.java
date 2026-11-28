@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository.arazzo;
+package io.microcks.repository.workflow;
 
 import io.microcks.repository.ObjectIdRepository;
 import io.microcks.domain.workflow.WorkflowMetadata;
@@ -28,7 +28,7 @@ import java.util.List;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoMetadataRepository implements ObjectIdRepository<WorkflowMetadata> {
+public class WorkflowMetadataRepository implements ObjectIdRepository<WorkflowMetadata> {
 
    public WorkflowMetadata findByNameAndVersion(String name, String version) {
       return find("name = ?1 and version = ?2", name, version).firstResult();

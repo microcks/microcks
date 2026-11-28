@@ -26,8 +26,8 @@ import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.ServiceStateRepository;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 
@@ -92,10 +92,10 @@ class ArazzoSessionAnswerTest {
    private ServiceStateRepository serviceStateRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    /** Walking skeleton, AC-02: the order reserveStock receives flows into the reservation the mock answers. */
    @Test
@@ -226,15 +226,15 @@ class ArazzoSessionAnswerTest {
    void aSessionWithoutDocumentRecordsItsCallsAndAnswersAsToday(String what, String document) throws Exception {
       WorkflowSession session = sessionOnTheSaga();
       if ("deleted".equals(document)) {
-         arazzoDocumentRepository.deleteById(session.getDocumentId());
+         workflowDocumentRepository.deleteById(session.getDocumentId());
       } else {
          session.setDocumentId(null);
-         session = arazzoSessionRepository.save(session);
+         session = workflowSessionRepository.save(session);
       }
 
       mocksAnswer(session, createOrder(), dispatched("Order API", "POST /orders"));
 
-      assertEquals(1, arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow().getCallCount());
+      assertEquals(1, workflowSessionRepository.findByIdOptional(session.getId()).orElseThrow().getCallCount());
       assertEquals(Optional.empty(), arazzoSessionAnswerService.answer(session.getId(), confirmOrder("o-42"), null));
    }
 
@@ -319,7 +319,7 @@ class ArazzoSessionAnswerTest {
 
       arazzoSessionService.closeSession(session.getId());
 
-      assertExpiresWith(arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow(),
+      assertExpiresWith(workflowSessionRepository.findByIdOptional(session.getId()).orElseThrow(),
             serviceStateRepository.findByServiceIdAndKey(orderApi.getId(), key));
    }
 

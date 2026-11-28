@@ -30,7 +30,7 @@ import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.ServiceRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;

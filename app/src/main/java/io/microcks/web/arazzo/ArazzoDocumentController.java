@@ -17,7 +17,7 @@ package io.microcks.web.arazzo;
 
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.arazzo.ArazzoImportService;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -48,20 +48,20 @@ import java.util.Map;
 public class ArazzoDocumentController {
 
    private final ArazzoDocumentService arazzoDocumentService;
-   private final ArazzoDocumentRepository arazzoDocumentRepository;
+   private final WorkflowDocumentRepository workflowDocumentRepository;
    private final ArazzoImportService arazzoImportService;
 
    /**
     * Build a new ArazzoDocumentController with its dependencies.
     * @param arazzoDocumentService    to summarise the imported Arazzo documents
-    * @param arazzoDocumentRepository to read an imported Arazzo document as it was uploaded
+    * @param workflowDocumentRepository to read an imported Arazzo document as it was uploaded
     * @param arazzoImportService      to analyse and import the Arazzo documents dropped in the import dialog
     */
    @Inject
    public ArazzoDocumentController(ArazzoDocumentService arazzoDocumentService,
-         ArazzoDocumentRepository arazzoDocumentRepository, ArazzoImportService arazzoImportService) {
+         WorkflowDocumentRepository workflowDocumentRepository, ArazzoImportService arazzoImportService) {
       this.arazzoDocumentService = arazzoDocumentService;
-      this.arazzoDocumentRepository = arazzoDocumentRepository;
+      this.workflowDocumentRepository = workflowDocumentRepository;
       this.arazzoImportService = arazzoImportService;
    }
 
@@ -85,7 +85,7 @@ public class ArazzoDocumentController {
    @Path("/documents/{documentId}/source")
    @Produces({ "application/yaml", MediaType.TEXT_PLAIN })
    public Response getDocumentSource(@PathParam("documentId") String documentId) {
-      return arazzoDocumentRepository.findByIdOptional(documentId)
+      return workflowDocumentRepository.findByIdOptional(documentId)
             .map(document -> Response.ok(document.getContent(), "application/yaml").build())
             .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
    }

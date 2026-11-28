@@ -20,7 +20,7 @@ import io.microcks.service.arazzo.view.ArazzoApiUsage;
 import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoLastResult;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.util.ObjectMapperFactory;
 import io.microcks.artifact.arazzo.ArazzoAction;
@@ -57,18 +57,18 @@ import java.util.Set;
 @ApplicationScoped
 public class ArazzoWorkflowService {
 
-   private final ArazzoDocumentRepository arazzoDocumentRepository;
+   private final WorkflowDocumentRepository workflowDocumentRepository;
    private final ArazzoDocumentService arazzoDocumentService;
 
    /**
     * Build a new ArazzoWorkflowService with its required dependencies.
-    * @param arazzoDocumentRepository The repository of imported Arazzo documents
+    * @param workflowDocumentRepository The repository of imported Arazzo documents
     * @param arazzoDocumentService    The service linking the source descriptions of a document to Microcks APIs
     */
    @Inject
-   public ArazzoWorkflowService(ArazzoDocumentRepository arazzoDocumentRepository,
+   public ArazzoWorkflowService(WorkflowDocumentRepository workflowDocumentRepository,
          ArazzoDocumentService arazzoDocumentService) {
-      this.arazzoDocumentRepository = arazzoDocumentRepository;
+      this.workflowDocumentRepository = workflowDocumentRepository;
       this.arazzoDocumentService = arazzoDocumentService;
    }
 
@@ -79,7 +79,7 @@ public class ArazzoWorkflowService {
     * @return The workflow, empty if the document or the workflow does not exist
     */
    public Optional<ArazzoWorkflowDetail> getWorkflowDetail(String documentId, String workflowId) {
-      return arazzoDocumentRepository.findByIdOptional(documentId).flatMap(document -> ArazzoWorkflowReader
+      return workflowDocumentRepository.findByIdOptional(documentId).flatMap(document -> ArazzoWorkflowReader
             .workflow(parse(document.getContent()), workflowId).map(workflow -> detail(document, workflow)));
    }
 
@@ -91,7 +91,7 @@ public class ArazzoWorkflowService {
    public ArazzoApiUsage getApiUsage(String serviceId) {
       List<ArazzoApiUsage.Document> documents = new ArrayList<>();
       Map<String, Integer> operationWorkflowCounts = new HashMap<>();
-      for (WorkflowDocument document : arazzoDocumentRepository.findAllSorted()) {
+      for (WorkflowDocument document : workflowDocumentRepository.findAllSorted()) {
          Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
          List<ArazzoApiUsage.Workflow> workflows = new ArrayList<>();
          for (String workflowId : document.getWorkflowIds()) {

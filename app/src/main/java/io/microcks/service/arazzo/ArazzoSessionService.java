@@ -34,9 +34,9 @@ import io.microcks.domain.workflow.WorkflowSessionCheck;
 import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.domain.workflow.WorkflowStepStatus;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.ExpectedStep;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.LinkedApi;
@@ -67,8 +67,8 @@ public class ArazzoSessionService {
 
    private final ArazzoDocumentService arazzoDocumentService;
    private final ArazzoRunService arazzoRunService;
-   private final ArazzoSessionRepository arazzoSessionRepository;
-   private final ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private final WorkflowSessionRepository workflowSessionRepository;
+   private final WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
    private final WorkflowResultRepository workflowResultRepository;
    private final ArazzoSessionAnswerService arazzoSessionAnswerService;
    private final ArazzoSessionFailures arazzoSessionFailures;
@@ -93,21 +93,22 @@ public class ArazzoSessionService {
     * Build a new ArazzoSessionService with its required dependencies.
     * @param arazzoDocumentService       The service finding the Arazzo documents and linking their sources to APIs
     * @param arazzoRunService            The service numbering the runs and storing their exchanges
-    * @param arazzoSessionRepository     The repository of the sessions
-    * @param arazzoSessionCallRepository The repository of the calls the sessions received
+    * @param workflowSessionRepository     The repository of the sessions
+    * @param workflowSessionRecordedCallRepository The repository of the calls the sessions received
     * @param workflowResultRepository    The repository the verifications are kept in, with the runs
     * @param arazzoSessionAnswerService  The service keeping the state of the sessions the mocks answer with
     * @param arazzoSessionFailures       The service resolving the steps a session sets to fail
     */
    @Inject
    public ArazzoSessionService(ArazzoDocumentService arazzoDocumentService, ArazzoRunService arazzoRunService,
-         ArazzoSessionRepository arazzoSessionRepository, ArazzoSessionCallRepository arazzoSessionCallRepository,
+         WorkflowSessionRepository workflowSessionRepository,
+         WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository,
          WorkflowResultRepository workflowResultRepository, ArazzoSessionAnswerService arazzoSessionAnswerService,
          ArazzoSessionFailures arazzoSessionFailures) {
       this.arazzoDocumentService = arazzoDocumentService;
       this.arazzoRunService = arazzoRunService;
-      this.arazzoSessionRepository = arazzoSessionRepository;
-      this.arazzoSessionCallRepository = arazzoSessionCallRepository;
+      this.workflowSessionRepository = workflowSessionRepository;
+      this.workflowSessionRecordedCallRepository = workflowSessionRecordedCallRepository;
       this.workflowResultRepository = workflowResultRepository;
       this.arazzoSessionAnswerService = arazzoSessionAnswerService;
       this.arazzoSessionFailures = arazzoSessionFailures;
@@ -190,7 +191,7 @@ public class ArazzoSessionService {
                .setInjectedFailures(arazzoSessionFailures.resolve(failures, workflowOf(document, workflowId), sources));
          session.setFailures(new LinkedHashMap<>(failures));
       }
-      return Optional.of(arazzoSessionRepository.save(session));
+      return Optional.of(workflowSessionRepository.save(session));
    }
 
    /**
@@ -201,16 +202,16 @@ public class ArazzoSessionService {
     */
    public void recordCall(String sessionId, WorkflowSessionRecordedCall call) {
       Date now = new Date();
-      WorkflowSession session = arazzoSessionRepository.countCall(sessionId, maxCalls, now);
+      WorkflowSession session = workflowSessionRepository.countCall(sessionId, maxCalls, now);
       if (session == null) {
          // A session that recorded its maximum of calls counts those it does not record.
-         arazzoSessionRepository.countDroppedCall(sessionId, maxCalls, now);
+         workflowSessionRepository.countDroppedCall(sessionId, maxCalls, now);
       } else {
          call.setSessionId(sessionId);
          call.setIndex(session.getCallCount() - 1);
          call.setReceivedDate(now);
          call.setExpireAt(session.getExpireAt());
-         arazzoSessionCallRepository.save(call);
+         workflowSessionRecordedCallRepository.save(call);
          // The outputs of the step the mocks answered become the state of the session.
          arazzoSessionAnswerService.remember(session, call);
       }
@@ -224,12 +225,12 @@ public class ArazzoSessionService {
    public boolean closeSession(String sessionId) {
       Date now = new Date();
       Date expireAt = new Date(now.getTime() + retention * 1000L);
-      if (arazzoSessionRepository.closeOpen(sessionId, now, expireAt)) {
-         arazzoSessionCallRepository.expireCalls(sessionId, expireAt);
+      if (workflowSessionRepository.closeOpen(sessionId, now, expireAt)) {
+         workflowSessionRecordedCallRepository.expireCalls(sessionId, expireAt);
          arazzoSessionAnswerService.expireWithSession(sessionId);
          return true;
       }
-      return arazzoSessionRepository.findByIdOptional(sessionId).isPresent();
+      return workflowSessionRepository.findByIdOptional(sessionId).isPresent();
    }
 
    /**
@@ -238,7 +239,7 @@ public class ArazzoSessionService {
     * @return The session; empty if it does not exist, or expired
     */
    public Optional<WorkflowSession> getSession(String sessionId) {
-      return arazzoSessionRepository.findByIdOptional(sessionId)
+      return workflowSessionRepository.findByIdOptional(sessionId)
             .filter(session -> session.getExpireAt().after(new Date()));
    }
 
@@ -250,7 +251,7 @@ public class ArazzoSessionService {
     */
    public List<WorkflowSession> listSessions(String documentId, String workflowId) {
       return arazzoDocumentService.getDocument(documentId)
-            .map(document -> arazzoSessionRepository.findLiveByWorkflow(document.getId(), workflowId, new Date()))
+            .map(document -> workflowSessionRepository.findLiveByWorkflow(document.getId(), workflowId, new Date()))
             .orElse(List.of());
    }
 
@@ -260,13 +261,13 @@ public class ArazzoSessionService {
     * @return The verification, kept with the runs of the workflow; empty if the session does not exist
     */
    public Optional<WorkflowResult> verify(String sessionId) {
-      return arazzoSessionRepository.findByIdOptional(sessionId).flatMap(session -> arazzoDocumentService
+      return workflowSessionRepository.findByIdOptional(sessionId).flatMap(session -> arazzoDocumentService
             .getDocument(session.getDocumentId()).map(document -> verify(session, document)));
    }
 
    private WorkflowResult verify(WorkflowSession session, WorkflowDocument document) {
       Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
-      List<WorkflowSessionRecordedCall> calls = arazzoSessionCallRepository
+      List<WorkflowSessionRecordedCall> calls = workflowSessionRecordedCallRepository
             .findBySessionIdOrderByIndexAsc(session.getId());
       Map<String, Object> inputs = session.getInputs() == null ? Map.of() : session.getInputs();
       List<StepVerdict> verdicts = ArazzoSessionVerifier.verify(workflowOf(document, session.getWorkflowId()),
@@ -311,7 +312,7 @@ public class ArazzoSessionService {
                   call.getMethod(), call.getPath(), stepOfCall.get(call.getIndex()), unexpected.get(call.getIndex())))
             .toList()));
       WorkflowResult verified = workflowResultRepository.save(saved);
-      arazzoSessionRepository.setVerificationRunId(session.getId(), verified.getId());
+      workflowSessionRepository.setVerificationRunId(session.getId(), verified.getId());
       return verified;
    }
 

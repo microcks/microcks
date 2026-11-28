@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository.arazzo;
+package io.microcks.repository.workflow;
 
 import io.microcks.repository.ObjectIdRepository;
 import io.microcks.domain.workflow.WorkflowResult;

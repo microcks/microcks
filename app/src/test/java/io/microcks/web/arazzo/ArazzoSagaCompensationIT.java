@@ -15,11 +15,11 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.testsupport.http.HttpMethod;
@@ -64,19 +64,19 @@ class ArazzoSagaCompensationIT extends AbstractBaseIT {
    private static final ObjectMapper JSON = new ObjectMapper();
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
 
    @TempDir
    private Path uploads;
@@ -92,11 +92,11 @@ class ArazzoSagaCompensationIT extends AbstractBaseIT {
 
    @AfterEach
    void deleteDocumentsSessionsAndVerifications() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
-      arazzoSessionRepository.deleteAll();
-      arazzoSessionCallRepository.deleteAll();
+      workflowSessionRepository.deleteAll();
+      workflowSessionRecordedCallRepository.deleteAll();
    }
 
    /**
@@ -206,7 +206,7 @@ class ArazzoSagaCompensationIT extends AbstractBaseIT {
       assertEquals(400, refused.getStatusCode().value());
       assertEquals("Cannot make step `chargePayment` fail: POST /payments of Payment API 1.0.0 has no example "
             + "`card expired`", refused.getBody());
-      assertEquals(0, arazzoSessionRepository.count());
+      assertEquals(0, workflowSessionRepository.count());
    }
 
    private void placeOrderAndReserveStock(String sessionId) {

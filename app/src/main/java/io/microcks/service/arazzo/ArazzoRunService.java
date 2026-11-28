@@ -37,7 +37,7 @@ import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.SecretRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.artifact.arazzo.ArazzoDataFlow;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;

@@ -19,7 +19,7 @@ import io.microcks.web.AbstractBaseIT;
 import jakarta.inject.Inject;
 import io.quarkus.test.junit.QuarkusTest;
 import io.microcks.domain.workflow.WorkflowResult;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;

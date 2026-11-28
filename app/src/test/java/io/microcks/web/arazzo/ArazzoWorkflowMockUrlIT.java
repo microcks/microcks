@@ -15,9 +15,9 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.service.arazzo.ArazzoMinionClient;
 import io.microcks.service.arazzo.HttpArazzoMinionClient;
 import io.microcks.testsupport.http.HttpEntity;
@@ -58,10 +58,10 @@ class ArazzoWorkflowMockUrlIT extends AbstractBaseIT {
    private static final ObjectMapper JSON = new ObjectMapper();
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -79,8 +79,8 @@ class ArazzoWorkflowMockUrlIT extends AbstractBaseIT {
 
    @AfterEach
    void deleteDocumentsAndRuns() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
    }
 

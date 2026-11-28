@@ -17,8 +17,8 @@ package io.microcks.web.arazzo;
 
 import io.microcks.domain.workflow.WorkflowSession;
 import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
 import io.microcks.web.AbstractBaseIT;
 
 import io.grpc.CallOptions;
@@ -58,15 +58,15 @@ class ArazzoSessionGrpcIT extends AbstractBaseIT {
    private static final String GREETING = "io.microcks.grpc.hello.v1.HelloService/greeting";
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
 
    @AfterEach
    void deleteSessions() {
-      arazzoSessionRepository.deleteAll();
-      arazzoSessionCallRepository.deleteAll();
+      workflowSessionRepository.deleteAll();
+      workflowSessionRecordedCallRepository.deleteAll();
    }
 
    @Test
@@ -80,7 +80,7 @@ class ArazzoSessionGrpcIT extends AbstractBaseIT {
       greet("baggage", "tenant=bakery,microcks-session=" + second);
 
       for (String sessionId : List.of(first, second)) {
-         List<WorkflowSessionRecordedCall> calls = arazzoSessionCallRepository
+         List<WorkflowSessionRecordedCall> calls = workflowSessionRecordedCallRepository
                .findBySessionIdOrderByIndexAsc(sessionId);
          assertEquals(List.of("0 GRPC greeting 0"), calls.stream().map(call -> call.getIndex() + " " + call.getMethod()
                + " " + call.getOperationName() + " " + call.getResponseStatus()).toList());
@@ -92,7 +92,7 @@ class ArazzoSessionGrpcIT extends AbstractBaseIT {
       session.setWorkflowId("greetWorkflow");
       session.setOpenedDate(new Date());
       session.setExpireAt(new Date(System.currentTimeMillis() + 60_000L));
-      return arazzoSessionRepository.save(session).getId();
+      return workflowSessionRepository.save(session).getId();
    }
 
    /** Laurent Broudoux asks for a greeting, as protobuf bytes, carrying a metadata entry. */

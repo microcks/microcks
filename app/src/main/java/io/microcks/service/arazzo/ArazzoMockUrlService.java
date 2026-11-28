@@ -21,7 +21,7 @@ import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.domain.workflow.WorkflowStepStatus;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -46,7 +46,7 @@ public class ArazzoMockUrlService {
    private static final long POLL_INTERVAL = 50L;
    private static final ObjectMapper JSON = new ObjectMapper();
 
-   private final ArazzoDocumentRepository arazzoDocumentRepository;
+   private final WorkflowDocumentRepository workflowDocumentRepository;
    private final ArazzoRunService arazzoRunService;
 
    /** How long a call waits for the run to end before answering 504, in milliseconds. */
@@ -55,12 +55,13 @@ public class ArazzoMockUrlService {
 
    /**
     * Build a new ArazzoMockUrlService with its required dependencies.
-    * @param arazzoDocumentRepository The repository of the imported Arazzo documents
+    * @param workflowDocumentRepository The repository of the imported Arazzo documents
     * @param arazzoRunService         The service running the workflows and recording their runs
     */
    @Inject
-   public ArazzoMockUrlService(ArazzoDocumentRepository arazzoDocumentRepository, ArazzoRunService arazzoRunService) {
-      this.arazzoDocumentRepository = arazzoDocumentRepository;
+   public ArazzoMockUrlService(WorkflowDocumentRepository workflowDocumentRepository,
+         ArazzoRunService arazzoRunService) {
+      this.workflowDocumentRepository = workflowDocumentRepository;
       this.arazzoRunService = arazzoRunService;
    }
 
@@ -73,7 +74,7 @@ public class ArazzoMockUrlService {
     * @return The outputs of the workflow, or why it did not pass
     */
    public ArazzoMockUrlAnswer play(String documentTitle, String documentVersion, String workflowId, String inputs) {
-      WorkflowDocument document = arazzoDocumentRepository.findByTitleAndVersion(documentTitle, documentVersion);
+      WorkflowDocument document = workflowDocumentRepository.findByTitleAndVersion(documentTitle, documentVersion);
       if (document == null) {
          return refusal(404, "Unknown Arazzo document: " + documentTitle + " " + documentVersion);
       }

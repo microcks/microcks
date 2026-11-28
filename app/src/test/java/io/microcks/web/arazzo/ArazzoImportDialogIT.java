@@ -18,8 +18,8 @@ package io.microcks.web.arazzo;
 import io.microcks.web.AbstractBaseIT;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
@@ -68,10 +68,10 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
    private ServiceRepository serviceRepository;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @TempDir
    private Path importedContracts;
@@ -92,8 +92,8 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
    @AfterEach
    void deleteApisDocumentsAndOverlays() {
       serviceRepository.deleteAll();
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
    }
 
    @Test
@@ -113,7 +113,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
       assertEquals("placeOrder [\"orderApi\"]",
             analysis.at("/checks/1/workflowId").asText() + " " + analysis.at("/checks/1/unlinkedSources"));
       assertEquals("Customer API", analysis.at("/apis/0/name").asText());
-      assertEquals(0, arazzoDocumentRepository.count());
+      assertEquals(0, workflowDocumentRepository.count());
    }
 
    @Test
@@ -143,7 +143,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
       JsonNode summary = new ObjectMapper().readTree(response.getBody());
       assertEquals("place-order.arazzo.yaml true",
             summary.path("fileName").asText() + " " + summary.at("/workflows/0/status/runnable").asText());
-      assertNotNull(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
+      assertNotNull(workflowMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
    }
 
    @Test
@@ -153,7 +153,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       assertEquals("{}",
-            arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().toString());
+            workflowMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().toString());
    }
 
    @Test
@@ -164,8 +164,8 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
 
       assertEquals(400, response.getStatusCode().value());
       assertEquals("Unknown source description: paymentApi", response.getBody());
-      assertEquals(0, arazzoDocumentRepository.count());
-      assertEquals(0, arazzoMetadataRepository.count());
+      assertEquals(0, workflowDocumentRepository.count());
+      assertEquals(0, workflowMetadataRepository.count());
    }
 
    private void apiIsImported(String contractExample) throws Exception {

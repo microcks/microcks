@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository.arazzo;
+package io.microcks.repository.workflow;
 
 import io.microcks.repository.ObjectIdRepository;
 import io.microcks.domain.workflow.WorkflowExamples;
@@ -25,7 +25,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoExamplesRepository implements ObjectIdRepository<WorkflowExamples> {
+public class WorkflowExamplesRepository implements ObjectIdRepository<WorkflowExamples> {
 
    public WorkflowExamples findByNameAndVersion(String name, String version) {
       return find("name = ?1 and version = ?2", name, version).firstResult();

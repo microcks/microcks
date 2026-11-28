@@ -21,8 +21,8 @@ import io.restassured.RestAssured;
 import io.microcks.testsupport.http.HttpStatus;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.domain.workflow.WorkflowDocument;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -58,10 +58,10 @@ class ArazzoDownloadIT extends AbstractBaseIT {
    private static HttpServer artifactServer;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    /** Serves the fixture named by the last segment of the requested path, whatever the directories and query. */
    @BeforeAll
@@ -78,8 +78,8 @@ class ArazzoDownloadIT extends AbstractBaseIT {
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
    }
 
    @Test
@@ -89,7 +89,7 @@ class ArazzoDownloadIT extends AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       assertEquals("{\"name\": \"API Pastry scenarios:1.0.0\"}", response.getBody());
-      WorkflowDocument imported = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      WorkflowDocument imported = workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
       assertNotNull(imported);
       assertEquals(List.of("readThenReprice", "listThenReadFirst"), imported.getWorkflowIds());
       assertEquals("pastry scenarios.arazzo.yaml", imported.getFileName());
@@ -101,7 +101,7 @@ class ArazzoDownloadIT extends AbstractBaseIT {
 
       assertEquals(400, response.getStatusCode().value());
       assertEquals("Invalid Arazzo document: info.title is required", response.getBody());
-      assertEquals(0, arazzoDocumentRepository.count());
+      assertEquals(0, workflowDocumentRepository.count());
    }
 
    @Test
@@ -110,7 +110,7 @@ class ArazzoDownloadIT extends AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       assertEquals("{\"name\": \"Order fulfilment:1.0.0\"}", response.getBody());
-      assertNotNull(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
+      assertNotNull(workflowMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
    }
 
    private ResponseEntity<String> download(String url, boolean mainArtifact) {

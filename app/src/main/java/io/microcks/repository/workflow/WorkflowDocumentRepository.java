@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository.arazzo;
+package io.microcks.repository.workflow;
 
 import io.microcks.repository.ObjectIdRepository;
 import io.microcks.domain.workflow.WorkflowDocument;
@@ -28,7 +28,7 @@ import java.util.List;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoDocumentRepository implements ObjectIdRepository<WorkflowDocument> {
+public class WorkflowDocumentRepository implements ObjectIdRepository<WorkflowDocument> {
 
    public WorkflowDocument findByTitleAndVersion(String title, String version) {
       return find("title = ?1 and version = ?2", title, version).firstResult();

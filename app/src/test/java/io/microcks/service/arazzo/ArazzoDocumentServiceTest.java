@@ -16,7 +16,7 @@
 package io.microcks.service.arazzo;
 
 import io.microcks.domain.workflow.WorkflowDocument;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -45,7 +45,7 @@ class ArazzoDocumentServiceTest {
    private ArazzoDocumentService service;
 
    @Inject
-   private ArazzoDocumentRepository repository;
+   private WorkflowDocumentRepository repository;
 
    @Test
    void aSupportedDocumentIsImported() throws Exception {

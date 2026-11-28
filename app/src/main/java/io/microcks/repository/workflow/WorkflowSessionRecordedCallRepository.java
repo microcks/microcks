@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository.arazzo;
+package io.microcks.repository.workflow;
 
 import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.ObjectIdRepository;
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoSessionCallRepository implements ObjectIdRepository<WorkflowSessionRecordedCall> {
+public class WorkflowSessionRecordedCallRepository implements ObjectIdRepository<WorkflowSessionRecordedCall> {
 
    /** Panache has no declarative index support: create the indexes (idempotent) at startup. */
    void ensureIndexes(@Observes StartupEvent event) {

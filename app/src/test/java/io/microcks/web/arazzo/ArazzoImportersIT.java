@@ -18,8 +18,8 @@ package io.microcks.web.arazzo;
 import io.microcks.web.AbstractBaseIT;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.repository.ImportJobRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
@@ -72,10 +72,10 @@ class ArazzoImportersIT extends AbstractBaseIT {
    private ImportJobRepository jobRepository;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @TempDir
    private Path importedContracts;
@@ -97,8 +97,8 @@ class ArazzoImportersIT extends AbstractBaseIT {
    void deleteJobsApisDocumentsAndOverlays() {
       jobRepository.deleteAll();
       serviceRepository.deleteAll();
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
    }
 
    @Test
@@ -126,7 +126,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
 
       assertEquals("Order fulfilment []",
             job.at("/arazzoDocumentRef/title").asText() + " " + job.at("/arazzoDocumentRef/unlinkedSources"));
-      assertEquals(2, arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
+      assertEquals(2, workflowMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
    }
 
    @Test
@@ -142,7 +142,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       JsonNode analysis = new ObjectMapper().readTree(response.getBody());
       assertEquals("./order-api.openapi.yaml MATCHED Order API", analysis.at("/sources/1/declaredUrl").asText() + " "
             + analysis.at("/sources/1/match/status").asText() + " " + analysis.at("/sources/1/link/apiName").asText());
-      assertEquals(1, arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
+      assertEquals(1, workflowMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
    }
 
    @Test
@@ -176,8 +176,8 @@ class ArazzoImportersIT extends AbstractBaseIT {
       JsonNode summary = new ObjectMapper().readTree(response.getBody());
       assertEquals("false true", summary.at("/workflows/0/status/runnable").asText() + " "
             + summary.at("/workflows/1/status/runnable").asText());
-      assertEquals(List.of("orderApi"), List
-            .copyOf(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
+      assertEquals(List.of("orderApi"), List.copyOf(
+            workflowMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
    }
 
    @Test
@@ -190,8 +190,8 @@ class ArazzoImportersIT extends AbstractBaseIT {
 
       assertEquals(400, response.getStatusCode().value());
       assertEquals("Unknown source description: paymentApi", response.getBody());
-      assertEquals(List.of("customerApi"), List
-            .copyOf(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
+      assertEquals(List.of("customerApi"), List.copyOf(
+            workflowMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
    }
 
    @Test
@@ -228,7 +228,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
    }
 
    private String documentId() {
-      return arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0").getId();
+      return workflowDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0").getId();
    }
 
    private void apiIsImported(String contractExample) throws Exception {

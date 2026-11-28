@@ -32,8 +32,8 @@ import io.microcks.service.arazzo.view.WorkflowRunSummary;
 import io.microcks.domain.workflow.WorkflowRunTarget;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.TestResultRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
-import io.microcks.repository.arazzo.WorkflowRunFilter;
+import io.microcks.repository.workflow.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowRunFilter;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.MappingIterator;

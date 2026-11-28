@@ -22,7 +22,7 @@ import io.microcks.service.arazzo.view.WorkflowRunCounts;
 import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.service.arazzo.view.WorkflowRunSummary;
 import io.microcks.domain.workflow.WorkflowRunTarget;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.service.arazzo.ArazzoRunHistoryService;
 
 import org.junit.jupiter.api.Test;

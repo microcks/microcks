@@ -28,7 +28,7 @@ import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceStateRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
 import io.microcks.service.ServiceStateStore;
 import io.microcks.service.StateStore;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
@@ -64,7 +64,7 @@ public class ArazzoSessionAnswerService {
    private static final ArazzoExpressionEvaluator EXPRESSIONS = new ArazzoExpressionEvaluator();
 
    private final ArazzoDocumentService arazzoDocumentService;
-   private final ArazzoSessionRepository arazzoSessionRepository;
+   private final WorkflowSessionRepository workflowSessionRepository;
    private final RequestRepository requestRepository;
    private final ResponseRepository responseRepository;
    private final ServiceStateRepository serviceStateRepository;
@@ -72,17 +72,17 @@ public class ArazzoSessionAnswerService {
    /**
     * Build a new ArazzoSessionAnswerService with its required dependencies.
     * @param arazzoDocumentService   The service finding the Arazzo documents and linking their sources to APIs
-    * @param arazzoSessionRepository The repository of the sessions
+    * @param workflowSessionRepository The repository of the sessions
     * @param requestRepository       The repository of the requests of the examples
     * @param responseRepository      The repository of the responses of the examples
     * @param serviceStateRepository  The repository of the state stores of the APIs
     */
    @Inject
    public ArazzoSessionAnswerService(ArazzoDocumentService arazzoDocumentService,
-         ArazzoSessionRepository arazzoSessionRepository, RequestRepository requestRepository,
+         WorkflowSessionRepository workflowSessionRepository, RequestRepository requestRepository,
          ResponseRepository responseRepository, ServiceStateRepository serviceStateRepository) {
       this.arazzoDocumentService = arazzoDocumentService;
-      this.arazzoSessionRepository = arazzoSessionRepository;
+      this.workflowSessionRepository = workflowSessionRepository;
       this.requestRepository = requestRepository;
       this.responseRepository = responseRepository;
       this.serviceStateRepository = serviceStateRepository;
@@ -97,7 +97,7 @@ public class ArazzoSessionAnswerService {
     */
    public Optional<Response> answer(String sessionId, WorkflowSessionRecordedCall received, Response dispatched) {
       Date now = new Date();
-      return arazzoSessionRepository.findByIdOptional(sessionId)
+      return workflowSessionRepository.findByIdOptional(sessionId)
             .filter(session -> session.getClosedDate() == null && session.getExpireAt().after(now))
             .flatMap(this::stepsOf).flatMap(
                   steps -> steps.stepOf(received)
@@ -153,7 +153,7 @@ public class ArazzoSessionAnswerService {
     * @param sessionId The id of the session
     */
    public void expireWithSession(String sessionId) {
-      arazzoSessionRepository.findByIdOptional(sessionId).ifPresent(session -> stepsOf(session).ifPresent(steps -> {
+      workflowSessionRepository.findByIdOptional(sessionId).ifPresent(session -> stepsOf(session).ifPresent(steps -> {
          for (ExpectedStep step : steps.steps()) {
             String outputs = steps.store(step).get(stateKey(sessionId, step));
             if (outputs != null) {

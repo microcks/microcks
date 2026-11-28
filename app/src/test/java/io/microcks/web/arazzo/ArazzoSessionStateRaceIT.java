@@ -22,10 +22,10 @@ import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceStateRepository;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.service.ServiceStateStore;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.arazzo.ArazzoSessionAnswerService;
@@ -84,16 +84,16 @@ class ArazzoSessionStateRaceIT extends AbstractBaseIT {
    private ArazzoDocumentService arazzoDocumentService;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
 
    @Inject
    private RequestRepository requestRepository;
@@ -124,10 +124,10 @@ class ArazzoSessionStateRaceIT extends AbstractBaseIT {
    @AfterEach
    void deleteDocumentsSessionsAndState() {
       writers.shutdownNow();
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
-      arazzoSessionRepository.deleteAll();
-      arazzoSessionCallRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
+      workflowSessionRepository.deleteAll();
+      workflowSessionRecordedCallRepository.deleteAll();
       serviceStateRepository.deleteAll();
    }
 
@@ -138,9 +138,9 @@ class ArazzoSessionStateRaceIT extends AbstractBaseIT {
    @Test
    void twoCallsOfOneStepAtTheSameInstantKeepOneStateAndTheSessionGoesOn() throws Exception {
       String sessionId = openSession();
-      WorkflowSession session = arazzoSessionRepository.findByIdOptional(sessionId).orElseThrow();
+      WorkflowSession session = workflowSessionRepository.findByIdOptional(sessionId).orElseThrow();
       ArazzoSessionAnswerService answers = new ArazzoSessionAnswerService(arazzoDocumentService,
-            arazzoSessionRepository, requestRepository, responseRepository, readingInLockstep());
+            workflowSessionRepository, requestRepository, responseRepository, readingInLockstep());
 
       bothAtTheSameInstant(() -> answers.remember(session, createOrderAnswered()));
 

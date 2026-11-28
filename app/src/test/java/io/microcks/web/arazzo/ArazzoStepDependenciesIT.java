@@ -15,8 +15,8 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.testsupport.http.ResponseEntity;
 import io.microcks.web.AbstractBaseIT;
 
@@ -43,15 +43,15 @@ class ArazzoStepDependenciesIT extends AbstractBaseIT {
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
    }
 
    /**
@@ -63,7 +63,7 @@ class ArazzoStepDependenciesIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-tasting.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-tasting.arazzo-metadata.yaml", false);
-      String documentId = arazzoDocumentRepository.findByTitleAndVersion("Pastry tasting", "1.0.0").getId();
+      String documentId = workflowDocumentRepository.findByTitleAndVersion("Pastry tasting", "1.0.0").getId();
 
       ResponseEntity<String> response = restTemplate
             .getForEntity("/api/arazzo/documents/" + documentId + "/workflows/tasteThenReprice", String.class);

@@ -21,7 +21,7 @@ import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 import io.microcks.repository.ServiceRepository;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -60,7 +60,7 @@ class ArazzoDocumentSummaryTest {
    private ServiceRepository serviceRepository;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Test
    void documentsAreListedWithTheirWorkflowsApisAndLastResult() throws Exception {
@@ -118,12 +118,12 @@ class ArazzoDocumentSummaryTest {
    @Test
    void aDocumentStoredBeforeTheWorkflowsPageIsListedWithoutWhatWasNotStored() throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"), "pastry.arazzo.yaml");
-      WorkflowDocument storedBefore = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      WorkflowDocument storedBefore = workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
       storedBefore.setFormatVersion(null);
       storedBefore.setFileName(null);
       storedBefore.setImportDate(null);
       storedBefore.setWorkflowDescriptions(null);
-      arazzoDocumentRepository.persistOrUpdate(storedBefore);
+      workflowDocumentRepository.persistOrUpdate(storedBefore);
 
       List<ArazzoDocumentSummary> documents = arazzoDocumentService.getDocumentSummaries(null);
 

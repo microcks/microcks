@@ -17,8 +17,8 @@ package io.microcks.web.arazzo;
 
 import io.microcks.web.AbstractBaseIT;
 import io.microcks.testsupport.http.ResponseEntity;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,18 +44,18 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private ServiceRepository serviceRepository;
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
    }
 
    @Test
@@ -140,7 +140,7 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
-      return arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId();
+      return workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId();
    }
 
    private static String operation(JsonNode step) {

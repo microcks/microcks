@@ -29,7 +29,7 @@ import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.web.arazzo.ArazzoRunController;
 import io.microcks.web.arazzo.dto.ArazzoRunLaunchDTO;
 

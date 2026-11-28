@@ -30,8 +30,8 @@ import io.microcks.domain.workflow.WorkflowSessionCall;
 import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.WorkflowRunFilter;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
+import io.microcks.repository.workflow.WorkflowRunFilter;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 
@@ -90,7 +90,7 @@ class ArazzoSessionVerificationTest {
    private RequestRepository requestRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
    private ResponseRepository responseRepository;
@@ -285,7 +285,7 @@ class ArazzoSessionVerificationTest {
 
       assertEquals(reason, assertThrows(ArazzoRunRefusedException.class,
             () -> arazzoSessionService.openSession(saga.getId(), SAGA, given)).getMessage());
-      assertEquals(0, arazzoSessionRepository.count());
+      assertEquals(0, workflowSessionRepository.count());
    }
 
    /**

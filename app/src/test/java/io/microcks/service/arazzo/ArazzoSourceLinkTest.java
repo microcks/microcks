@@ -21,7 +21,7 @@ import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.Resource;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -67,7 +67,7 @@ class ArazzoSourceLinkTest {
    private ResourceRepository resourceRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Test
    void theOverlayLinksASourceToTheApiWithThatNameAndVersion() throws Exception {
@@ -189,7 +189,7 @@ class ArazzoSourceLinkTest {
 
       assertEquals("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}", describe(imported));
       assertEquals(List.of("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}"),
-            arazzoMetadataRepository.listAll().stream().map(ArazzoSourceLinkTest::describe).toList());
+            workflowMetadataRepository.listAll().stream().map(ArazzoSourceLinkTest::describe).toList());
    }
 
    /**
@@ -207,7 +207,7 @@ class ArazzoSourceLinkTest {
             () -> arazzoDocumentService.importArazzoMetadata(content));
 
       assertEquals(reason, refusal.getMessage());
-      assertEquals(0, arazzoMetadataRepository.count());
+      assertEquals(0, workflowMetadataRepository.count());
    }
 
    @ParameterizedTest

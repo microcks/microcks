@@ -18,7 +18,7 @@ package io.microcks.service.arazzo;
 import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.domain.workflow.WorkflowRunStatus;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,9 +39,9 @@ import static org.mockito.Mockito.when;
  */
 class ArazzoMockUrlServiceTest {
 
-   private final ArazzoDocumentRepository arazzoDocumentRepository = mock(ArazzoDocumentRepository.class);
+   private final WorkflowDocumentRepository workflowDocumentRepository = mock(WorkflowDocumentRepository.class);
    private final ArazzoRunService arazzoRunService = mock(ArazzoRunService.class);
-   private final ArazzoMockUrlService service = new ArazzoMockUrlService(arazzoDocumentRepository, arazzoRunService);
+   private final ArazzoMockUrlService service = new ArazzoMockUrlService(workflowDocumentRepository, arazzoRunService);
    private final WorkflowResult inProgress = run(WorkflowRunStatus.IN_PROGRESS);
 
    @BeforeEach
@@ -49,7 +49,7 @@ class ArazzoMockUrlServiceTest {
       WorkflowDocument document = new WorkflowDocument();
       document.setId("doc-1");
       document.setWorkflowIds(List.of("readThenReprice"));
-      when(arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0")).thenReturn(document);
+      when(workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0")).thenReturn(document);
       when(arazzoRunService.launchMockUrlRun("doc-1", "readThenReprice", Map.of())).thenReturn(Optional.of(inProgress));
       service.timeout = 2000L;
    }

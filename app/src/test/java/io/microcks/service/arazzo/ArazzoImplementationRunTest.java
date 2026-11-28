@@ -29,7 +29,7 @@ import io.microcks.domain.workflow.WorkflowRunTarget;
 import io.microcks.domain.workflow.WorkflowSourceTarget;
 import io.microcks.repository.SecretRepository;
 import io.microcks.repository.ServiceRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

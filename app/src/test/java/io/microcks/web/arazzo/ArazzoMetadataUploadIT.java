@@ -23,9 +23,9 @@ import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.Service;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoExamplesRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowExamplesRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -52,19 +52,19 @@ class ArazzoMetadataUploadIT extends AbstractBaseIT {
    private ArazzoDocumentService arazzoDocumentService;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
-   private ArazzoExamplesRepository arazzoExamplesRepository;
+   private WorkflowExamplesRepository workflowExamplesRepository;
 
    @AfterEach
    void deleteDocumentsAndMetadata() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
-      arazzoExamplesRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
+      workflowExamplesRepository.deleteAll();
       // Order API is missing at the start of each test.
       Service orderApi = serviceRepository.findByNameAndVersion("Order API", "1.0.0");
       if (orderApi != null) {
@@ -106,14 +106,14 @@ class ArazzoMetadataUploadIT extends AbstractBaseIT {
       ResponseEntity<String> refused = upload("recorded-examples.arazzo-examples.yaml");
 
       assertEquals(400, refused.getStatusCode().value());
-      assertEquals(0, arazzoExamplesRepository.count());
+      assertEquals(0, workflowExamplesRepository.count());
 
       uploadArtifactFile(FIXTURES + "recorded-examples.arazzo.yaml", true);
       ResponseEntity<String> accepted = upload("recorded-examples.arazzo-examples.yaml");
 
       assertEquals(201, accepted.getStatusCode().value());
       assertEquals("Pastry examples:1.0.0", accepted.getBody());
-      assertEquals(1, arazzoExamplesRepository.count());
+      assertEquals(1, workflowExamplesRepository.count());
    }
 
    private ResponseEntity<String> upload(String fixture) {

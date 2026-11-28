@@ -24,8 +24,8 @@ import io.microcks.service.arazzo.view.WorkflowRunSummary;
 import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.domain.workflow.WorkflowStepStatus;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
-import io.microcks.repository.arazzo.WorkflowRunFilter;
+import io.microcks.repository.workflow.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowRunFilter;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 

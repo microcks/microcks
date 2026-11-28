@@ -23,8 +23,8 @@ import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.domain.workflow.WorkflowStepStatus;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -85,7 +85,7 @@ class ArazzoStepDependenciesTest {
    private ServiceService serviceService;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -132,7 +132,7 @@ class ArazzoStepDependenciesTest {
 
       assertEquals(reason, analysis.refusal());
       assertEquals(reason, refusal.getMessage());
-      assertEquals(0, arazzoDocumentRepository.count());
+      assertEquals(0, workflowDocumentRepository.count());
    }
 
    /**

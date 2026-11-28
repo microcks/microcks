@@ -15,11 +15,11 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.testsupport.http.HttpMethod;
@@ -63,19 +63,19 @@ class ArazzoSessionAnswerIT extends AbstractBaseIT {
          + "\"amount\": 25.0, \"currency\": \"EUR\"}";
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
 
    @TempDir
    private Path uploads;
@@ -91,11 +91,11 @@ class ArazzoSessionAnswerIT extends AbstractBaseIT {
 
    @AfterEach
    void deleteDocumentsAndSessions() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
-      arazzoSessionRepository.deleteAll();
-      arazzoSessionCallRepository.deleteAll();
+      workflowSessionRepository.deleteAll();
+      workflowSessionRecordedCallRepository.deleteAll();
    }
 
    /** Walking skeleton, AC-02: the order reserveStock receives flows into the reservation the mock answers. */

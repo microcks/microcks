@@ -26,7 +26,7 @@ import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.domain.workflow.WorkflowSessionCall;
 import io.microcks.repository.ServiceRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 
@@ -80,7 +80,7 @@ class ArazzoSagaCompensationTest {
    private ServiceRepository serviceRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    /** AC-01: chargePayment, set to fail in the session, answers with the example card refused of Payment API. */
    @Test
@@ -216,7 +216,7 @@ class ArazzoSagaCompensationTest {
             assertThrows(ArazzoRunRefusedException.class,
                   () -> arazzoSessionService.openSession(saga.getId(), COMPENSATION, null, Map.of(stepId, example)))
                         .getMessage());
-      assertEquals(0, arazzoSessionRepository.count());
+      assertEquals(0, workflowSessionRepository.count());
    }
 
    private Optional<Response> injectedFailure(WorkflowSession session, String apiName, String operationName) {

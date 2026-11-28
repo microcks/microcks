@@ -17,8 +17,8 @@ package io.microcks.web.arazzo;
 
 import io.microcks.web.AbstractBaseIT;
 import io.microcks.testsupport.http.ResponseEntity;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,15 +44,15 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
    }
 
    @Test
@@ -69,9 +69,9 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
             document.path("title").asText() + " " + document.path("version").asText() + " ("
                   + document.path("fileName").asText() + ", Arazzo " + document.path("arazzoVersion").asText() + ")");
       assertEquals(
-            arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getImportDate().getTime(),
+            workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getImportDate().getTime(),
             document.path("importDate").asLong());
-      assertEquals(arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId(),
+      assertEquals(workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId(),
             document.path("id").asText());
       JsonNode source = document.path("sources").get(0);
       assertEquals("pastryApi -> REST API Pastry - 2.0 2.0.0: linked",
@@ -109,7 +109,7 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
    @Test
    void anImportedDocumentIsReadAsItWasUploaded() throws Exception {
       uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
-      String id = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId();
+      String id = workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId();
 
       ResponseEntity<String> response = restTemplate.getForEntity("/api/arazzo/documents/" + id + "/source",
             String.class);

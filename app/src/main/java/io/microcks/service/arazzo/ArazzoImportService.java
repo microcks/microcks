@@ -24,8 +24,8 @@ import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.domain.workflow.WorkflowExamples;
 import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.domain.ServiceRef;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -62,26 +62,26 @@ public class ArazzoImportService {
    private final ArazzoDocumentService arazzoDocumentService;
    private final ArazzoSourceMatcher arazzoSourceMatcher;
    private final ServiceRepository serviceRepository;
-   private final ArazzoDocumentRepository arazzoDocumentRepository;
-   private final ArazzoMetadataRepository arazzoMetadataRepository;
+   private final WorkflowDocumentRepository workflowDocumentRepository;
+   private final WorkflowMetadataRepository workflowMetadataRepository;
 
    /**
     * Build a new ArazzoImportService with its required dependencies.
     * @param arazzoDocumentService    The service that imports Arazzo documents and resolves their source descriptions
     * @param arazzoSourceMatcher      The matcher of a source description to the API of its declared contract
     * @param serviceRepository        The repository of the APIs a source can be linked to
-    * @param arazzoDocumentRepository The repository of the imported Arazzo documents
-    * @param arazzoMetadataRepository  The repository of the ArazzoMetadata that link their sources
+    * @param workflowDocumentRepository The repository of the imported Arazzo documents
+    * @param workflowMetadataRepository  The repository of the ArazzoMetadata that link their sources
     */
    @Inject
    public ArazzoImportService(ArazzoDocumentService arazzoDocumentService, ArazzoSourceMatcher arazzoSourceMatcher,
-         ServiceRepository serviceRepository, ArazzoDocumentRepository arazzoDocumentRepository,
-         ArazzoMetadataRepository arazzoMetadataRepository) {
+         ServiceRepository serviceRepository, WorkflowDocumentRepository workflowDocumentRepository,
+         WorkflowMetadataRepository workflowMetadataRepository) {
       this.arazzoDocumentService = arazzoDocumentService;
       this.arazzoSourceMatcher = arazzoSourceMatcher;
       this.serviceRepository = serviceRepository;
-      this.arazzoDocumentRepository = arazzoDocumentRepository;
-      this.arazzoMetadataRepository = arazzoMetadataRepository;
+      this.workflowDocumentRepository = workflowDocumentRepository;
+      this.workflowMetadataRepository = workflowMetadataRepository;
    }
 
    /**
@@ -115,7 +115,7 @@ public class ArazzoImportService {
     */
    public ArazzoImportAnalysis analyseImportedDocument(String documentId, Map<String, ServiceRef> links)
          throws MockRepositoryImportException {
-      WorkflowDocument document = arazzoDocumentRepository.findByIdOptional(documentId).orElse(null);
+      WorkflowDocument document = workflowDocumentRepository.findByIdOptional(documentId).orElse(null);
       if (document == null) {
          return null;
       }
@@ -144,7 +144,7 @@ public class ArazzoImportService {
     */
    public ArazzoDocumentSummary relinkSources(String documentId, Map<String, ServiceRef> links)
          throws MockRepositoryImportException {
-      WorkflowDocument document = arazzoDocumentRepository.findByIdOptional(documentId).orElse(null);
+      WorkflowDocument document = workflowDocumentRepository.findByIdOptional(documentId).orElse(null);
       if (document == null) {
          return null;
       }
@@ -180,7 +180,7 @@ public class ArazzoImportService {
       WorkflowDocument imported = arazzoDocumentService.save(document, fileName);
       Map<String, ServiceRef> matchedLinks = matchedLinks(matches);
       if (!matchedLinks.isEmpty()
-            && arazzoMetadataRepository.findByNameAndVersion(imported.getTitle(), imported.getVersion()) == null) {
+            && workflowMetadataRepository.findByNameAndVersion(imported.getTitle(), imported.getVersion()) == null) {
          arazzoDocumentService.saveSources(imported.getTitle(), imported.getVersion(), matchedLinks);
       }
       return documentRef(imported.getTitle(), imported.getVersion());
@@ -211,7 +211,7 @@ public class ArazzoImportService {
 
    /** The document with this title and version, with its sources linked to no API; no source when not imported. */
    private WorkflowDocumentRef documentRef(String title, String version) {
-      WorkflowDocument document = arazzoDocumentRepository.findByTitleAndVersion(title, version);
+      WorkflowDocument document = workflowDocumentRepository.findByTitleAndVersion(title, version);
       if (document == null) {
          return new WorkflowDocumentRef(null, title, version, List.of());
       }
@@ -221,7 +221,7 @@ public class ArazzoImportService {
    }
 
    private Map<String, ServiceRef> storedLinks(WorkflowDocument document) {
-      WorkflowMetadata metadata = arazzoMetadataRepository.findByNameAndVersion(document.getTitle(),
+      WorkflowMetadata metadata = workflowMetadataRepository.findByNameAndVersion(document.getTitle(),
             document.getVersion());
       return metadata == null ? Map.of() : metadata.getSources();
    }

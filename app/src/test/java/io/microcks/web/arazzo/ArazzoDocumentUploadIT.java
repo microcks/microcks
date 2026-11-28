@@ -21,7 +21,7 @@ import io.restassured.RestAssured;
 import io.microcks.testsupport.http.HttpStatus;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.domain.workflow.WorkflowDocument;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -43,11 +43,11 @@ class ArazzoDocumentUploadIT extends AbstractBaseIT {
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @AfterEach
    void deleteDocuments() {
-      arazzoDocumentRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
    }
 
    @Test
@@ -73,7 +73,7 @@ class ArazzoDocumentUploadIT extends AbstractBaseIT {
       upload("pastry-revision.arazzo.yaml");
 
       assertEquals(List.of("API Pastry scenarios 1.0.0: [readThenReprice, listThenReadFirst, repriceAll]"),
-            arazzoDocumentRepository.listAll().stream().map(ArazzoDocumentUploadIT::describe).toList());
+            workflowDocumentRepository.listAll().stream().map(ArazzoDocumentUploadIT::describe).toList());
    }
 
    private ResponseEntity<String> upload(String fixture) {

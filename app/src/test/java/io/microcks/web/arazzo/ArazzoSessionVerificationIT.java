@@ -15,11 +15,11 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.testsupport.http.HttpMethod;
@@ -70,19 +70,19 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
    private static final ObjectMapper JSON = new ObjectMapper();
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
 
    @TempDir
    private Path uploads;
@@ -98,11 +98,11 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
 
    @AfterEach
    void deleteDocumentsSessionsAndVerifications() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
-      arazzoSessionRepository.deleteAll();
-      arazzoSessionCallRepository.deleteAll();
+      workflowSessionRepository.deleteAll();
+      workflowSessionRecordedCallRepository.deleteAll();
    }
 
    /** Walking skeleton: a call naming the session on the mocks is matched to its step by the verification. */
@@ -221,8 +221,8 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
    /** The sessions and their calls expire through TTL indexes, so that their collections stay bounded. */
    @Test
    void theSessionsAndTheirCallsHaveTtlIndexes() {
-      assertEquals(List.of("expireAt"), ttlIndexesOf(arazzoSessionRepository.mongoCollection()));
-      assertEquals(List.of("expireAt"), ttlIndexesOf(arazzoSessionCallRepository.mongoCollection()));
+      assertEquals(List.of("expireAt"), ttlIndexesOf(workflowSessionRepository.mongoCollection()));
+      assertEquals(List.of("expireAt"), ttlIndexesOf(workflowSessionRecordedCallRepository.mongoCollection()));
    }
 
    /** The fields of the indexes of a collection that make its documents expire. */
@@ -282,7 +282,7 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
       MICROCKS_API.assertResponseConforms("POST", SESSIONS, refused);
       assertEquals(400, refused.getStatusCode().value());
       assertEquals("Invalid input customerId: a string is expected, got 7", refused.getBody());
-      assertEquals(0, arazzoSessionRepository.count());
+      assertEquals(0, workflowSessionRepository.count());
    }
 
    /** A session on an unknown workflow is refused, telling why in plain text. */

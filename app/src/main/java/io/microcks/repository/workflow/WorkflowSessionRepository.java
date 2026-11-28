@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.repository.arazzo;
+package io.microcks.repository.workflow;
 
 import io.microcks.domain.workflow.WorkflowSession;
 import io.microcks.repository.ObjectIdRepository;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoSessionRepository implements ObjectIdRepository<WorkflowSession> {
+public class WorkflowSessionRepository implements ObjectIdRepository<WorkflowSession> {
 
    private static final String ID = "_id";
    private static final String CLOSED_DATE = "closedDate";

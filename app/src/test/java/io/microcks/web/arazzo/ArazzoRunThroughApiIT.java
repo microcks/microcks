@@ -21,9 +21,9 @@ import io.microcks.service.arazzo.ArazzoMinionClient;
 import io.microcks.service.arazzo.HttpArazzoMinionClient;
 import io.quarkus.test.junit.QuarkusMock;
 import jakarta.inject.Inject;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,10 +61,10 @@ class ArazzoRunThroughApiIT extends AbstractBaseIT {
    private static final ObjectMapper JSON = new ObjectMapper();
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -88,8 +88,8 @@ class ArazzoRunThroughApiIT extends AbstractBaseIT {
    @AfterEach
    void deleteDocumentsAndRuns() {
       PASTRY_APP.reset();
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
    }
 

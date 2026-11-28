@@ -24,8 +24,8 @@ import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.domain.ServiceRef;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
@@ -84,10 +84,10 @@ class ArazzoImportDialogTest {
    private ServiceRepository serviceRepository;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @TempDir
    private Path importedContracts;
@@ -113,7 +113,7 @@ class ArazzoImportDialogTest {
 
       assertEquals("Valid Arazzo 1.0.1 · title \"Order fulfilment\" 1.0.0 · 2 workflows · 2 source descriptions",
             validation(analysis));
-      assertEquals(0, arazzoDocumentRepository.count());
+      assertEquals(0, workflowDocumentRepository.count());
    }
 
    @ParameterizedTest
@@ -131,8 +131,8 @@ class ArazzoImportDialogTest {
 
       assertEquals("Refused: " + reason, validation(analysis));
       assertEquals(reason, refusal.getMessage());
-      assertEquals(0, arazzoDocumentRepository.count());
-      assertEquals(0, arazzoMetadataRepository.count());
+      assertEquals(0, workflowDocumentRepository.count());
+      assertEquals(0, workflowMetadataRepository.count());
    }
 
    // AC-02: A source is matched on the title and version of the contract it declares
@@ -258,10 +258,10 @@ class ArazzoImportDialogTest {
       ArazzoDocumentSummary summary = arazzoImportService.importArazzoDocument(document("place-order"),
             "place-order.arazzo.yaml", Map.of("customerApi", api("Customer API", "1.0.0")));
 
-      WorkflowDocument imported = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
+      WorkflowDocument imported = workflowDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
       assertEquals("place-order.arazzo.yaml", imported.getFileName());
       assertEquals(List.of("Order fulfilment 1.0.0: {customerApi=Customer API 1.0.0}"),
-            arazzoMetadataRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
+            workflowMetadataRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
       assertEquals(
             List.of("searchThenRead: runnable", "placeOrder: not runnable [no API name and version for this source]"),
             workflowsOnTheWorkflowsPage());
@@ -277,9 +277,9 @@ class ArazzoImportDialogTest {
                   Map.of("paymentApi", api("Payment API", "1.0.0"))));
 
       assertEquals("Unknown source description: paymentApi", refusal.getMessage());
-      assertNull(arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0"));
+      assertNull(workflowDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0"));
       assertEquals(List.of("Order fulfilment 1.0.0: {customerApi=Customer API 1.0.0, orderApi=Order API 1.0.0}"),
-            arazzoMetadataRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
+            workflowMetadataRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
    }
 
    private static String validation(ArazzoImportAnalysis analysis) {

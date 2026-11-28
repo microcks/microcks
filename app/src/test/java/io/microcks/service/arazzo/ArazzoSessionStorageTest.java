@@ -20,9 +20,9 @@ import io.microcks.domain.workflow.WorkflowSession;
 import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.domain.workflow.WorkflowRunStatus;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
@@ -66,13 +66,13 @@ class ArazzoSessionStorageTest {
    private ArazzoSessionService arazzoSessionService;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
 
    private WorkflowDocument saga;
 
@@ -94,7 +94,7 @@ class ArazzoSessionStorageTest {
               - workflowId: placeOrderSaga
                 steps: []
             """);
-      saga = arazzoDocumentRepository.save(saga);
+      saga = workflowDocumentRepository.save(saga);
    }
 
    @Test
@@ -105,10 +105,10 @@ class ArazzoSessionStorageTest {
       arazzoSessionService.recordCall(session.getId(), new WorkflowSessionRecordedCall());
       Date after = new Date();
 
-      Date received = arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(session.getId()).get(0)
+      Date received = workflowSessionRecordedCallRepository.findBySessionIdOrderByIndexAsc(session.getId()).get(0)
             .getReceivedDate();
       assertTrue(!received.before(before) && !received.after(after), () -> received + " is not when it was received");
-      WorkflowSession stored = arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow();
+      WorkflowSession stored = workflowSessionRepository.findByIdOptional(session.getId()).orElseThrow();
       assertNull(stored.getClosedDate());
       assertEquals(120_000L, stored.getExpireAt().getTime() - stored.getOpenedDate().getTime());
       assertEquals(List.of(stored.getExpireAt()), expiriesOfTheCallsOf(session));
@@ -122,7 +122,7 @@ class ArazzoSessionStorageTest {
 
       arazzoSessionService.closeSession(session.getId());
 
-      WorkflowSession closed = arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow();
+      WorkflowSession closed = workflowSessionRepository.findByIdOptional(session.getId()).orElseThrow();
       assertNotNull(closed.getClosedDate());
       assertEquals(60_000L, closed.getExpireAt().getTime() - closed.getClosedDate().getTime());
       assertEquals(List.of(closed.getExpireAt(), closed.getExpireAt()), expiriesOfTheCallsOf(session));
@@ -132,11 +132,12 @@ class ArazzoSessionStorageTest {
    void closingASessionAgainKeepsWhenItWasClosed() throws Exception {
       WorkflowSession session = arazzoSessionService.openSession(saga.getId(), "placeOrderSaga").orElseThrow();
       arazzoSessionService.closeSession(session.getId());
-      Date closedDate = arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow().getClosedDate();
+      Date closedDate = workflowSessionRepository.findByIdOptional(session.getId()).orElseThrow().getClosedDate();
 
       assertTrue(arazzoSessionService.closeSession(session.getId()));
 
-      assertEquals(closedDate, arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow().getClosedDate());
+      assertEquals(closedDate,
+            workflowSessionRepository.findByIdOptional(session.getId()).orElseThrow().getClosedDate());
    }
 
    @Test
@@ -147,8 +148,8 @@ class ArazzoSessionStorageTest {
          arazzoSessionService.recordCall(session.getId(), new WorkflowSessionRecordedCall());
       }
 
-      assertEquals(List.of(0L, 1L), arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(session.getId()).stream()
-            .map(WorkflowSessionRecordedCall::getIndex).toList());
+      assertEquals(List.of(0L, 1L), workflowSessionRecordedCallRepository
+            .findBySessionIdOrderByIndexAsc(session.getId()).stream().map(WorkflowSessionRecordedCall::getIndex).toList());
    }
 
    /** A session that reached its maximum of calls fails its verification, telling how many calls it did not record. */
@@ -165,13 +166,13 @@ class ArazzoSessionStorageTest {
       }
 
       assertEquals(dropped,
-            arazzoSessionRepository.findByIdOptional(session.getId()).orElseThrow().getDroppedCallCount());
+            workflowSessionRepository.findByIdOptional(session.getId()).orElseThrow().getDroppedCallCount());
       WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
       assertEquals(status + " " + message, verification.getStatus() + " " + verification.getMessage());
    }
 
    private List<Date> expiriesOfTheCallsOf(WorkflowSession session) {
-      return arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(session.getId()).stream()
+      return workflowSessionRecordedCallRepository.findBySessionIdOrderByIndexAsc(session.getId()).stream()
             .map(WorkflowSessionRecordedCall::getExpireAt).toList();
    }
 }

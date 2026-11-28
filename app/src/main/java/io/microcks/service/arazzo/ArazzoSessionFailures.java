@@ -23,7 +23,7 @@ import io.microcks.domain.Response;
 import io.microcks.domain.Service;
 import io.microcks.domain.workflow.WorkflowInjectedFailure;
 import io.microcks.repository.ResponseRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.util.IdBuilder;
 
@@ -44,18 +44,18 @@ import java.util.Optional;
 @ApplicationScoped
 public class ArazzoSessionFailures {
 
-   private final ArazzoSessionRepository arazzoSessionRepository;
+   private final WorkflowSessionRepository workflowSessionRepository;
    private final ResponseRepository responseRepository;
 
    /**
     * Build a new ArazzoSessionFailures with its required dependencies.
-    * @param arazzoSessionRepository The repository of the sessions, which keep their failures
+    * @param workflowSessionRepository The repository of the sessions, which keep their failures
     * @param responseRepository      The repository of the examples of the mocks
     */
    @Inject
-   public ArazzoSessionFailures(ArazzoSessionRepository arazzoSessionRepository,
+   public ArazzoSessionFailures(WorkflowSessionRepository workflowSessionRepository,
          ResponseRepository responseRepository) {
-      this.arazzoSessionRepository = arazzoSessionRepository;
+      this.workflowSessionRepository = workflowSessionRepository;
       this.responseRepository = responseRepository;
    }
 
@@ -101,7 +101,7 @@ public class ArazzoSessionFailures {
       if (sessionId == null) {
          return Optional.empty();
       }
-      return arazzoSessionRepository.findByIdOptional(sessionId).filter(session -> session.getClosedDate() == null)
+      return workflowSessionRepository.findByIdOptional(sessionId).filter(session -> session.getClosedDate() == null)
             .flatMap(session -> exampleToInject(session.getInjectedFailures(), api, operation))
             .flatMap(exampleName -> example(api, operation.getName(), exampleName));
    }

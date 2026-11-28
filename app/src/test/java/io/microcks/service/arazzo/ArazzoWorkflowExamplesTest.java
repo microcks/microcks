@@ -23,8 +23,8 @@ import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.domain.workflow.WorkflowStepExpectation;
 import io.microcks.domain.workflow.WorkflowExample;
 import io.microcks.domain.ServiceRef;
-import io.microcks.repository.arazzo.ArazzoExamplesRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
+import io.microcks.repository.workflow.WorkflowExamplesRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
 import org.junit.jupiter.api.Test;
@@ -72,10 +72,10 @@ class ArazzoWorkflowExamplesTest {
    private ArazzoImportService arazzoImportService;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
-   private ArazzoExamplesRepository arazzoExamplesRepository;
+   private WorkflowExamplesRepository workflowExamplesRepository;
 
    @Test
    void theExamplesAreImportedForTheDocumentWithoutTouchingTheLinksOfItsSources() throws Exception {
@@ -90,7 +90,7 @@ class ArazzoWorkflowExamplesTest {
             "listThenReadFirst/unknown-first-pastry steps [list 200 {first=Baba Rhum}, readFirst 404] stops at readFirst"),
             imported.getExamples().stream().map(ArazzoWorkflowExamplesTest::describe).toList());
       assertEquals(Map.of("pastryApi", "API Pastry - 2.0 2.0.0"),
-            sourcesOf(arazzoMetadataRepository.findByNameAndVersion("API Pastry scenarios", "1.0.0")));
+            sourcesOf(workflowMetadataRepository.findByNameAndVersion("API Pastry scenarios", "1.0.0")));
    }
 
    @Test
@@ -111,7 +111,7 @@ class ArazzoWorkflowExamplesTest {
 
       assertEquals(List.of("tartelette-repriced"), exampleNames(document, "readThenReprice"));
       assertEquals(List.of(), exampleNames(document, "listThenReadFirst"));
-      assertEquals(1, arazzoExamplesRepository.count());
+      assertEquals(1, workflowExamplesRepository.count());
    }
 
    @Test
@@ -146,7 +146,7 @@ class ArazzoWorkflowExamplesTest {
             () -> arazzoDocumentService.importArazzoExamples(content));
 
       assertEquals(reason, refusal.getMessage());
-      assertEquals(0, arazzoExamplesRepository.count());
+      assertEquals(0, workflowExamplesRepository.count());
    }
 
    @Test
@@ -165,7 +165,7 @@ class ArazzoWorkflowExamplesTest {
    void changingTheLinkOfTheSourcesKeepsTheExamples() throws Exception {
       WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
-      String examplesId = arazzoExamplesRepository.listAll().get(0).getId();
+      String examplesId = workflowExamplesRepository.listAll().get(0).getId();
 
       arazzoImportService.relinkSources(document.getId(),
             Map.of("pastryApi", new ServiceRef(null, "API Pastry - 2.0", "2.0.0")));
@@ -173,7 +173,7 @@ class ArazzoWorkflowExamplesTest {
       assertEquals(List.of("eclair-repriced", "millefeuille-repriced"), exampleNames(document, "readThenReprice"));
       assertEquals(List.of("unknown-first-pastry"), exampleNames(document, "listThenReadFirst"));
       assertEquals(List.of(examplesId),
-            arazzoExamplesRepository.listAll().stream().map(WorkflowExamples::getId).toList());
+            workflowExamplesRepository.listAll().stream().map(WorkflowExamples::getId).toList());
    }
 
    private List<String> exampleNames(WorkflowDocument document, String workflowId) {

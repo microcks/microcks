@@ -18,11 +18,11 @@ package io.microcks.web.arazzo;
 import io.microcks.domain.ServiceState;
 import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.ServiceStateRepository;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
-import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.ArazzoMetadataRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowSessionRecordedCallRepository;
+import io.microcks.repository.workflow.WorkflowSessionRepository;
+import io.microcks.repository.workflow.WorkflowMetadataRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.testsupport.http.HttpMethod;
@@ -76,19 +76,19 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
    private static final List<String> STEPS = List.of("createOrder", "reserveStock", "chargePayment", "confirmOrder");
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
-   private ArazzoMetadataRepository arazzoMetadataRepository;
+   private WorkflowMetadataRepository workflowMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
 
    @Inject
-   private ArazzoSessionRepository arazzoSessionRepository;
+   private WorkflowSessionRepository workflowSessionRepository;
 
    @Inject
-   private ArazzoSessionCallRepository arazzoSessionCallRepository;
+   private WorkflowSessionRecordedCallRepository workflowSessionRecordedCallRepository;
 
    @Inject
    private ServiceStateRepository serviceStateRepository;
@@ -107,11 +107,11 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
 
    @AfterEach
    void deleteDocumentsSessionsAndState() {
-      arazzoDocumentRepository.deleteAll();
-      arazzoMetadataRepository.deleteAll();
+      workflowDocumentRepository.deleteAll();
+      workflowMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
-      arazzoSessionRepository.deleteAll();
-      arazzoSessionCallRepository.deleteAll();
+      workflowSessionRepository.deleteAll();
+      workflowSessionRecordedCallRepository.deleteAll();
       serviceStateRepository.deleteAll();
    }
 
@@ -329,7 +329,8 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
    /** The customers of the createOrder requests a session recorded, in their order of receipt. */
    private List<String> customersSentTo(String sessionId) throws IOException {
       List<String> customers = new ArrayList<>();
-      for (WorkflowSessionRecordedCall call : arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(sessionId)) {
+      for (WorkflowSessionRecordedCall call : workflowSessionRecordedCallRepository
+            .findBySessionIdOrderByIndexAsc(sessionId)) {
          if ("/orders".equals(call.getPath())) {
             customers.add(JSON.readTree(call.getRequestBody()).get("customerId").asText());
          }

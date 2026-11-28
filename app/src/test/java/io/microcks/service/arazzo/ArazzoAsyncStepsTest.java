@@ -24,8 +24,8 @@ import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.ServiceRef;
-import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.WorkflowResultRepository;
+import io.microcks.repository.workflow.WorkflowDocumentRepository;
+import io.microcks.repository.workflow.WorkflowResultRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
 import io.quarkus.test.junit.QuarkusMock;
@@ -88,7 +88,7 @@ class ArazzoAsyncStepsTest {
    private ServiceService serviceService;
 
    @Inject
-   private ArazzoDocumentRepository arazzoDocumentRepository;
+   private WorkflowDocumentRepository workflowDocumentRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -196,7 +196,7 @@ class ArazzoAsyncStepsTest {
 
       assertEquals(reason, analysis.refusal());
       assertEquals(reason, refusal.getMessage());
-      assertEquals(0, arazzoDocumentRepository.count());
+      assertEquals(0, workflowDocumentRepository.count());
    }
 
    // AC-04: a run of a workflow with async steps is refused with its reason, and no run is created
@@ -247,7 +247,7 @@ class ArazzoAsyncStepsTest {
       String content = document(example);
       arazzoImportService.importArazzoDocument(content, example + ".arazzo.yaml",
             linksOf(arazzoImportService.analyseArazzoDocument(content, null)));
-      return arazzoDocumentRepository.listAll().get(0);
+      return workflowDocumentRepository.listAll().get(0);
    }
 
    /** Each source linked to the API its declared contract matches. */
