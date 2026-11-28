@@ -24,8 +24,6 @@ import io.microcks.domain.Response;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoSession;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.arazzo.ArazzoStepCall;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.arazzo.WorkflowResult;
 import io.microcks.domain.arazzo.WorkflowRunOrigin;
@@ -323,8 +321,8 @@ public class ArazzoSessionService {
       Map<String, JsonNode> contracts = new HashMap<>();
       List<ExpectedStep> steps = new ArrayList<>();
       for (ArazzoStep step : workflow.steps()) {
-         ArazzoStepOperation operation = ArazzoDocumentService.operationOf(
-               new ArazzoStepCall(step.call().sourceName(), step.call().operationId(), step.call().channel()), sources);
+         WorkflowStepOperation operation = ArazzoDocumentService.operationOf(
+               ArazzoDocumentService.declaredOf(step.call()), sources);
          ResolvedSource source = sources.get(step.call().sourceName());
          steps.add(new ExpectedStep(steps.size(), step, operation, source.link().apiName(), source.link().apiVersion(),
                contracts.computeIfAbsent(source.link().sourceName(), sourceName -> contractOf(source))));
@@ -365,7 +363,7 @@ public class ArazzoSessionService {
     */
    private WorkflowStepResult stepResult(String resultId, StepVerdict verdict) {
       ExpectedStep expected = verdict.expected();
-      ArazzoStepOperation operation = expected.operation();
+      WorkflowStepOperation operation = expected.operation();
       WorkflowStepOperation stepOperation = new WorkflowStepOperation(operation.sourceName(), operation.operationId(),
             operation.method(), operation.path());
       WorkflowStepStatus status = verdict.failures().isEmpty() ? WorkflowStepStatus.PASSED : WorkflowStepStatus.FAILED;

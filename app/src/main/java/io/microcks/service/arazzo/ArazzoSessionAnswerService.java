@@ -15,6 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.artifact.arazzo.ArazzoExpressionEvaluator;
 import io.microcks.artifact.arazzo.ArazzoExpressionException;
 import io.microcks.artifact.arazzo.ArazzoStep;
@@ -24,7 +25,6 @@ import io.microcks.domain.Response;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoSession;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.arazzo.ArazzoStepCall;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceStateRepository;
@@ -171,7 +171,7 @@ public class ArazzoSessionAnswerService {
                for (ArazzoStep step : workflow.steps()) {
                   ResolvedSource source = sources.get(step.call().sourceName());
                   steps.add(new ExpectedStep(steps.size(), step,
-                        ArazzoDocumentService.operationOf(new ArazzoStepCall(step.call().sourceName(),
+                        ArazzoDocumentService.operationOf(WorkflowStepOperation.declared(step.call().sourceName(),
                               step.call().operationId(), step.call().channel()), sources),
                         source.link().apiName(), source.link().apiVersion(), null));
                }

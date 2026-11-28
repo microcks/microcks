@@ -15,12 +15,12 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.artifact.arazzo.ArazzoOperationCall;
 import io.microcks.artifact.arazzo.ArazzoStep;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.domain.Header;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.ExpectedStep;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.LinkedApi;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.StepVerdict;
@@ -53,8 +53,7 @@ class ArazzoSessionVerifierTest {
             new ArazzoOperationCall("orderApi", "printReceipt"), List.of(), null, List.of(), outputs, List.of(),
             List.of(), null, null);
       ExpectedStep expected = new ExpectedStep(0, printReceipt,
-            new ArazzoStepOperation("orderApi", "printReceipt", "POST", "/receipts", null, null), "Order API", "1.0.0",
-            null);
+            new WorkflowStepOperation("orderApi", "printReceipt", "POST", "/receipts"), "Order API", "1.0.0", null);
       ArazzoSessionCall call = new ArazzoSessionCall();
       call.setServiceName("Order API");
       call.setServiceVersion("1.0.0");
@@ -91,7 +90,7 @@ class ArazzoSessionVerifierTest {
       ExpectedStep createOrder = new ExpectedStep(0,
             new ArazzoStep("createOrder", null, new ArazzoOperationCall("orderApi", "createOrder"), List.of(), null,
                   List.of(), Map.of(), List.of(), List.of(), null, null),
-            new ArazzoStepOperation("orderApi", "createOrder", "POST", "/orders", null, null), "Order API", "1.0.0",
+            new WorkflowStepOperation("orderApi", "createOrder", "POST", "/orders", null, null), "Order API", "1.0.0",
             null);
       ArazzoSessionCall placed = call(receivedFirst ? 1 : 0, "Order API", "1.0.0", "POST /orders");
       ArazzoSessionCall other = call(receivedFirst ? 0 : 1, apiName, apiVersion, operationName);

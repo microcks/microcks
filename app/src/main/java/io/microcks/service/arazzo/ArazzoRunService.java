@@ -15,9 +15,9 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.domain.arazzo.ArazzoWorkflowExample;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.Request;
@@ -486,7 +486,7 @@ public class ArazzoRunService {
          String contract = openApiContractOf(source);
          JsonNode parsed = contract == null ? null : parseContract(contract);
          Map<String, ArazzoRunRequest.Operation> operations = new LinkedHashMap<>();
-         for (ArazzoStepOperation operation : source.operations().values()) {
+         for (WorkflowStepOperation operation : source.operations().values()) {
             operations.put(operation.operationId(), new ArazzoRunRequest.Operation(operation.method(),
                   operation.path(), ArazzoRequestMediaTypes.of(parsed, operation.method(), operation.path())));
          }

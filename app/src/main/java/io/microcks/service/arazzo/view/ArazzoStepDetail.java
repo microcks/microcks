@@ -15,6 +15,7 @@
  */
 package io.microcks.service.arazzo.view;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ import java.util.Map;
  *                        those whose outputs it uses, or all the steps listed before it when it declares no dependsOn
  * @author SebastienDegodez
  */
-public record ArazzoStepDetail(String stepId, String description, ArazzoStepOperation operation,
+public record ArazzoStepDetail(String stepId, String description, WorkflowStepOperation operation,
       List<ArazzoStepParameter> parameters, ArazzoStepRequestBody requestBody,
       List<ArazzoStepCriterion> successCriteria, Map<String, String> outputs, List<ArazzoStepAction> onSuccess,
       List<ArazzoStepAction> onFailure, ArazzoStepMessaging messaging, List<String> dependsOn,

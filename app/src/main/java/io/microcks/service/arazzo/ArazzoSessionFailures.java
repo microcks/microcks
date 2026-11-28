@@ -15,14 +15,13 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.artifact.arazzo.ArazzoStep;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.domain.Operation;
 import io.microcks.domain.Response;
 import io.microcks.domain.Service;
 import io.microcks.domain.arazzo.ArazzoInjectedFailure;
-import io.microcks.domain.arazzo.ArazzoStepCall;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
@@ -76,8 +75,8 @@ public class ArazzoSessionFailures {
          String exampleName = failure.getValue();
          ArazzoStep step = workflow.steps().stream().filter(candidate -> candidate.stepId().equals(stepId)).findFirst()
                .orElseThrow(() -> refused(stepId, workflow.workflowId() + " has no such step"));
-         ArazzoStepOperation operation = ArazzoDocumentService.operationOf(
-               new ArazzoStepCall(step.call().sourceName(), step.call().operationId(), step.call().channel()), sources);
+         WorkflowStepOperation operation = ArazzoDocumentService.operationOf(
+               ArazzoDocumentService.declaredOf(step.call()), sources);
          ResolvedSource source = sources.get(step.call().sourceName());
          String operationName = operation.method() + " " + operation.path();
          if (example(source.api(), operationName, exampleName).isEmpty()) {

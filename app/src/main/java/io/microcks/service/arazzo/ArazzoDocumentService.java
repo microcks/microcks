@@ -15,14 +15,13 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.domain.arazzo.ArazzoExamples;
 import io.microcks.service.arazzo.view.ArazzoSourceInfo;
 import io.microcks.domain.arazzo.ArazzoMetadata;
-import io.microcks.domain.arazzo.ArazzoStepCall;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.domain.arazzo.ArazzoWorkflowExample;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
@@ -422,10 +421,10 @@ public class ArazzoDocumentService {
     * A workflow is runnable when each of its steps calls an operation found in a linked API; else these are the
     * reasons, in the order of the steps, each given once.
     */
-   static ArazzoWorkflowStatus status(String workflowId, List<ArazzoStepCall> calls,
+   static ArazzoWorkflowStatus status(String workflowId, List<WorkflowStepOperation> calls,
          Map<String, ResolvedSource> sources) {
       Set<String> reasons = new LinkedHashSet<>();
-      for (ArazzoStepCall call : calls) {
+      for (WorkflowStepOperation call : calls) {
          String reason = operationOf(call, sources).reason();
          if (reason != null) {
             reasons.add(reason);
@@ -439,7 +438,7 @@ public class ArazzoDocumentService {
     * @param sources The source descriptions of the document, resolved
     * @return The operation found in the linked API, or why it is not found
     */
-   static ArazzoStepOperation operationOf(ArazzoStepCall call, Map<String, ResolvedSource> sources) {
+   static WorkflowStepOperation operationOf(WorkflowStepOperation call, Map<String, ResolvedSource> sources) {
       ResolvedSource source = sources.get(call.sourceName());
       ArazzoSourceLink link = source.link();
       String unlinkedReason = unlinkedReason(link);
@@ -449,7 +448,7 @@ public class ArazzoDocumentService {
       if (call.channel() != null) {
          return channelOf(call, source);
       }
-      ArazzoStepOperation operation = source.operations().get(call.operationId());
+      WorkflowStepOperation operation = source.operations().get(call.operationId());
       if (operation == null) {
          return notFound(call,
                "Operation " + call.operationId() + " not found in " + link.apiName() + " " + link.apiVersion());
@@ -458,13 +457,13 @@ public class ArazzoDocumentService {
    }
 
    /** A step on a channel sends or receives on the address of that channel in the AsyncAPI contract of its API. */
-   private static ArazzoStepOperation channelOf(ArazzoStepCall call, ResolvedSource source) {
+   private static WorkflowStepOperation channelOf(WorkflowStepOperation call, ResolvedSource source) {
       String address = source.channels().get(call.channel());
       if (address == null) {
          return notFound(call, "Channel " + call.channel() + " not found in " + source.link().apiName() + " "
                + source.link().apiVersion());
       }
-      return new ArazzoStepOperation(call.sourceName(), null, null, null, null, address);
+      return new WorkflowStepOperation(call.sourceName(), null, null, null, null, address);
    }
 
    /**
@@ -481,8 +480,8 @@ public class ArazzoDocumentService {
       return null;
    }
 
-   private static ArazzoStepOperation notFound(ArazzoStepCall call, String reason) {
-      return new ArazzoStepOperation(call.sourceName(), call.operationId(), null, null, reason, call.channel());
+   private static WorkflowStepOperation notFound(WorkflowStepOperation call, String reason) {
+      return new WorkflowStepOperation(call.sourceName(), call.operationId(), null, null, reason, call.channel());
    }
 
    /** Resolve each source description of a document, in the order of the document. */
@@ -515,7 +514,7 @@ public class ArazzoDocumentService {
          return new ResolvedSource(new ArazzoSourceLink(sourceName, api.getName(), api.getVersion(), false), null,
                Map.of(), Map.of());
       }
-      Map<String, ArazzoStepOperation> operations = new HashMap<>();
+      Map<String, WorkflowStepOperation> operations = new HashMap<>();
       Map<String, String> channels = new HashMap<>();
       for (Resource resource : resourceRepository.findMainByServiceId(service.getId())) {
          if (resource.getType() == ResourceType.OPEN_API_SPEC) {
@@ -548,14 +547,14 @@ public class ArazzoDocumentService {
     * name in AsyncAPI 3, where the name of an operation is its id; by their verb and their channel in AsyncAPI 2, where
     * a channel holds its publish and subscribe operations.
     */
-   private static Map<String, ArazzoStepOperation> asyncApiOperations(String sourceName, JsonNode contract,
+   private static Map<String, WorkflowStepOperation> asyncApiOperations(String sourceName, JsonNode contract,
          Map<String, String> channels) {
-      Map<String, ArazzoStepOperation> operations = new HashMap<>();
+      Map<String, WorkflowStepOperation> operations = new HashMap<>();
       if (contract.path("asyncapi").asText().startsWith("3.")) {
          for (Map.Entry<String, JsonNode> operation : contract.path("operations").properties()) {
             String channelRef = operation.getValue().path("channel").path("$ref").asText();
             operations.put(operation.getKey(),
-                  new ArazzoStepOperation(sourceName, operation.getKey(),
+                  new WorkflowStepOperation(sourceName, operation.getKey(),
                         operation.getValue().path("action").asText().toUpperCase(Locale.ROOT), operation.getKey(), null,
                         channels.get(channelRef.substring(channelRef.lastIndexOf('/') + 1))));
          }
@@ -565,7 +564,7 @@ public class ArazzoDocumentService {
          for (Map.Entry<String, JsonNode> operation : channel.getValue().properties()) {
             if (operation.getValue().has("operationId")) {
                String operationId = operation.getValue().path("operationId").asText();
-               operations.put(operationId, new ArazzoStepOperation(sourceName, operationId,
+               operations.put(operationId, new WorkflowStepOperation(sourceName, operationId,
                      operation.getKey().toUpperCase(Locale.ROOT), channel.getKey(), null, channel.getKey()));
             }
          }
@@ -573,13 +572,13 @@ public class ArazzoDocumentService {
       return operations;
    }
 
-   private static Map<String, ArazzoStepOperation> openApiOperations(String sourceName, String contract) {
-      Map<String, ArazzoStepOperation> operations = new HashMap<>();
+   private static Map<String, WorkflowStepOperation> openApiOperations(String sourceName, String contract) {
+      Map<String, WorkflowStepOperation> operations = new HashMap<>();
       for (Map.Entry<String, JsonNode> pathItem : readContract(contract).path("paths").properties()) {
          for (Map.Entry<String, JsonNode> operation : pathItem.getValue().properties()) {
             if (operation.getValue().has("operationId")) {
                String operationId = operation.getValue().path("operationId").asText();
-               operations.put(operationId, new ArazzoStepOperation(sourceName, operationId,
+               operations.put(operationId, new WorkflowStepOperation(sourceName, operationId,
                      operation.getKey().toUpperCase(Locale.ROOT), pathItem.getKey(), null, null));
             }
          }
@@ -596,18 +595,27 @@ public class ArazzoDocumentService {
       }
    }
 
-   private static Map<String, List<ArazzoStepCall>> stepCalls(Map<String, List<ArazzoOperationCall>> workflowCalls) {
-      Map<String, List<ArazzoStepCall>> stepCalls = new HashMap<>();
-      workflowCalls.forEach((workflowId, calls) -> stepCalls.put(workflowId, calls.stream()
-            .map(call -> new ArazzoStepCall(call.sourceName(), call.operationId(), call.channel())).toList()));
+   private static Map<String, List<WorkflowStepOperation>> stepCalls(
+         Map<String, List<ArazzoOperationCall>> workflowCalls) {
+      Map<String, List<WorkflowStepOperation>> stepCalls = new HashMap<>();
+      workflowCalls.forEach((workflowId, calls) -> stepCalls.put(workflowId,
+            calls.stream().map(ArazzoDocumentService::declaredOf).toList()));
       return stepCalls;
+   }
+
+   /**
+    * @param call The operation or channel a step calls, as the Arazzo document declares it
+    * @return The same, before it is looked up in the contract of the linked API
+    */
+   static WorkflowStepOperation declaredOf(ArazzoOperationCall call) {
+      return WorkflowStepOperation.declared(call.sourceName(), call.operationId(), call.channel());
    }
 
    /**
     * A source description with its link, the linked API (null when not linked), the operations the linked API defines,
     * by operationId, and the channels its AsyncAPI contract defines, by name, with their address.
     */
-   record ResolvedSource(ArazzoSourceLink link, Service api, Map<String, ArazzoStepOperation> operations,
+   record ResolvedSource(ArazzoSourceLink link, Service api, Map<String, WorkflowStepOperation> operations,
          Map<String, String> channels) {
 
       String serviceId() {

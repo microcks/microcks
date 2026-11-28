@@ -15,18 +15,17 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.service.arazzo.view.ArazzoApiUsage;
 import io.microcks.service.arazzo.view.ArazzoDataPassing;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.service.arazzo.view.ArazzoExpressionUse;
 import io.microcks.service.arazzo.view.ArazzoSourceDescription;
-import io.microcks.domain.arazzo.ArazzoStepCall;
 import io.microcks.service.arazzo.view.ArazzoLastResult;
 import io.microcks.service.arazzo.view.ArazzoStepAction;
 import io.microcks.service.arazzo.view.ArazzoStepCriterion;
 import io.microcks.service.arazzo.view.ArazzoStepDetail;
 import io.microcks.service.arazzo.view.ArazzoStepMessaging;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.service.arazzo.view.ArazzoStepParameter;
 import io.microcks.service.arazzo.view.ArazzoStepRequestBody;
 import io.microcks.service.arazzo.view.ArazzoUsingDocument;
@@ -108,7 +107,7 @@ public class ArazzoWorkflowService {
          Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
          List<ArazzoUsingWorkflow> workflows = new ArrayList<>();
          for (String workflowId : document.getWorkflowIds()) {
-            List<ArazzoStepCall> apiCalls = document.getWorkflowCalls().get(workflowId).stream()
+            List<WorkflowStepOperation> apiCalls = document.getWorkflowCalls().get(workflowId).stream()
                   .filter(call -> serviceId.equals(sources.get(call.sourceName()).serviceId())).toList();
             if (!apiCalls.isEmpty()) {
                workflows.add(new ArazzoUsingWorkflow(workflowId, ArazzoLastResult.NEVER_RUN));
@@ -128,10 +127,11 @@ public class ArazzoWorkflowService {
     * A workflow calls each Microcks operation once, however many of its steps call it; an operation the API does not
     * define has no Microcks operation.
     */
-   private static Set<String> calledOperationNames(List<ArazzoStepCall> apiCalls, Map<String, ResolvedSource> sources) {
+   private static Set<String> calledOperationNames(List<WorkflowStepOperation> apiCalls,
+         Map<String, ResolvedSource> sources) {
       Set<String> operationNames = new HashSet<>();
-      for (ArazzoStepCall call : apiCalls) {
-         ArazzoStepOperation operation = call.operationId() == null ? null
+      for (WorkflowStepOperation call : apiCalls) {
+         WorkflowStepOperation operation = call.operationId() == null ? null
                : sources.get(call.sourceName()).operations().get(call.operationId());
          if (operation != null) {
             operationNames.add(operation.method() + " " + operation.path());
@@ -194,7 +194,7 @@ public class ArazzoWorkflowService {
     */
    private static ArazzoStepDetail step(ArazzoStep step, ArazzoWorkflow workflow, Map<String, ResolvedSource> sources) {
       return new ArazzoStepDetail(step.stepId(), step.description(), ArazzoDocumentService.operationOf(
-            new ArazzoStepCall(step.call().sourceName(), step.call().operationId(), step.call().channel()), sources),
+            ArazzoDocumentService.declaredOf(step.call()), sources),
             step.parameters().stream()
                   .map(parameter -> new ArazzoStepParameter(parameter.name(), parameter.in(), parameter.value()))
                   .toList(),

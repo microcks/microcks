@@ -15,6 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.domain.arazzo.ArazzoDocument;
@@ -23,7 +24,6 @@ import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.service.arazzo.view.ArazzoSourceAnalysis;
 import io.microcks.service.arazzo.view.ArazzoStepDetail;
 import io.microcks.service.arazzo.view.ArazzoStepMessaging;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
@@ -269,7 +269,7 @@ class ArazzoAsyncStepsTest {
    }
 
    private static String describe(ArazzoStepDetail step) {
-      ArazzoStepOperation operation = step.operation();
+      WorkflowStepOperation operation = step.operation();
       ArazzoStepMessaging messaging = step.messaging();
       if (messaging == null) {
          return step.stepId() + " calls " + operation.method() + " " + operation.path() + " (" + operation.operationId()

@@ -42,7 +42,7 @@ public class ArazzoDocument {
    private Map<String, String> workflowDescriptions;
    private List<String> workflowIds;
    private List<String> sourceNames;
-   private Map<String, List<ArazzoStepCall>> workflowCalls;
+   private Map<String, List<WorkflowStepOperation>> workflowCalls;
    private String content;
    private Map<String, String> sourceUrls;
 
@@ -118,11 +118,11 @@ public class ArazzoDocument {
       this.sourceNames = sourceNames;
    }
 
-   public Map<String, List<ArazzoStepCall>> getWorkflowCalls() {
+   public Map<String, List<WorkflowStepOperation>> getWorkflowCalls() {
       return workflowCalls;
    }
 
-   public void setWorkflowCalls(Map<String, List<ArazzoStepCall>> workflowCalls) {
+   public void setWorkflowCalls(Map<String, List<WorkflowStepOperation>> workflowCalls) {
       this.workflowCalls = workflowCalls;
    }
 

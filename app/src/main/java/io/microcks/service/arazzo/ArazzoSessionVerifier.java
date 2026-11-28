@@ -15,6 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.artifact.arazzo.ArazzoExpressionContext;
 import io.microcks.artifact.arazzo.ArazzoExpressionEvaluator;
 import io.microcks.artifact.arazzo.ArazzoExpressionException;
@@ -25,7 +26,6 @@ import io.microcks.artifact.arazzo.ArazzoStepOrder;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.domain.Header;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.domain.arazzo.WorkflowParameterValue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -70,7 +70,7 @@ final class ArazzoSessionVerifier {
     * @param contract   The OpenAPI contract of the linked API, which the calls of the step must conform to; null when
     *                   it has none
     */
-   record ExpectedStep(int index, ArazzoStep step, ArazzoStepOperation operation, String apiName, String apiVersion,
+   record ExpectedStep(int index, ArazzoStep step, WorkflowStepOperation operation, String apiName, String apiVersion,
          JsonNode contract) {
    }
 
