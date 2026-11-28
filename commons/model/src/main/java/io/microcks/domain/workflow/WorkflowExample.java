@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,6 @@ import java.util.Map;
  * @param stopsAt    The step the workflow is expected to stop at; null when it is expected to run to its end
  * @author SebastienDegodez
  */
-public record ArazzoWorkflowExample(String workflowId, String name, Map<String, Object> inputs,
-      Map<String, Object> outputs, List<ArazzoStepExpectation> steps, String stopsAt) {
+public record WorkflowExample(String workflowId, String name, Map<String, Object> inputs,
+      Map<String, Object> outputs, List<WorkflowStepExpectation> steps, String stopsAt) {
 }

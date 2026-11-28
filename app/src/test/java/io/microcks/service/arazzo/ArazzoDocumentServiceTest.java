@@ -15,7 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
@@ -51,7 +51,7 @@ class ArazzoDocumentServiceTest {
    void aSupportedDocumentIsImported() throws Exception {
       service.importArazzoDocument(fixture("pastry.arazzo.yaml"));
 
-      ArazzoDocument imported = repository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      WorkflowDocument imported = repository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
       assertNotNull(imported);
       assertEquals(List.of("readThenReprice", "listThenReadFirst"), imported.getWorkflowIds());
    }
@@ -62,7 +62,7 @@ class ArazzoDocumentServiceTest {
 
       service.importArazzoDocument(content);
 
-      ArazzoDocument imported = repository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      WorkflowDocument imported = repository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
       assertNotNull(imported);
       assertEquals(content, imported.getContent());
    }
@@ -74,7 +74,7 @@ class ArazzoDocumentServiceTest {
 
       service.importArazzoDocument(revision);
 
-      ArazzoDocument imported = repository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      WorkflowDocument imported = repository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
       assertNotNull(imported);
       assertEquals(revision, imported.getContent());
    }

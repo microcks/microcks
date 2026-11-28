@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.BsonType;
@@ -30,15 +30,15 @@ import java.util.List;
  * {@code <name>.arazzo-examples.yaml}: Microcks detects it by its kind, not by its extension.
  * @author SebastienDegodez
  */
-@MongoEntity(collection = "arazzoExamples")
-public class ArazzoExamples {
+@MongoEntity(collection = "workflowExamples")
+public class WorkflowExamples {
 
    @BsonId
    @BsonRepresentation(BsonType.OBJECT_ID)
    private String id;
    private String name;
    private String version;
-   private List<ArazzoWorkflowExample> examples = new ArrayList<>();
+   private List<WorkflowExample> examples = new ArrayList<>();
 
    public String getId() {
       return id;
@@ -65,11 +65,11 @@ public class ArazzoExamples {
    }
 
    /** The recorded examples of the workflows of the document, in the order of the artifact. */
-   public List<ArazzoWorkflowExample> getExamples() {
+   public List<WorkflowExample> getExamples() {
       return examples;
    }
 
-   public void setExamples(List<ArazzoWorkflowExample> examples) {
+   public void setExamples(List<WorkflowExample> examples) {
       this.examples = examples;
    }
 }

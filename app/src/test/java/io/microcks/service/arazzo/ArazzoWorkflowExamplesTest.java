@@ -17,11 +17,11 @@ package io.microcks.service.arazzo;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoExamples;
-import io.microcks.domain.arazzo.ArazzoMetadata;
-import io.microcks.domain.arazzo.ArazzoStepExpectation;
-import io.microcks.domain.arazzo.ArazzoWorkflowExample;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowExamples;
+import io.microcks.domain.workflow.WorkflowMetadata;
+import io.microcks.domain.workflow.WorkflowStepExpectation;
+import io.microcks.domain.workflow.WorkflowExample;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoExamplesRepository;
 import io.microcks.repository.arazzo.ArazzoMetadataRepository;
@@ -82,7 +82,7 @@ class ArazzoWorkflowExamplesTest {
       arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
-      ArazzoExamples imported = arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
+      WorkflowExamples imported = arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
       assertEquals(List.of(
             "readThenReprice/eclair-repriced inputs {newPrice=2.6, pastry=Eclair Cafe} outputs {after=2.6, before=2.5}",
@@ -95,7 +95,7 @@ class ArazzoWorkflowExamplesTest {
 
    @Test
    void eachWorkflowOffersItsOwnExamplesToRun() throws Exception {
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
       assertEquals(List.of("eclair-repriced", "millefeuille-repriced"), exampleNames(document, "readThenReprice"));
@@ -104,7 +104,7 @@ class ArazzoWorkflowExamplesTest {
 
    @Test
    void reImportingTheExamplesReplacesThoseOfTheDocument() throws Exception {
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
       arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "numbers"));
@@ -118,7 +118,7 @@ class ArazzoWorkflowExamplesTest {
    void anExpectedStatusIsAnyExactHttpStatusCode() throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
 
-      ArazzoExamples imported = arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "status-bounds"));
+      WorkflowExamples imported = arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "status-bounds"));
 
       assertEquals(List.of("listThenReadFirst/unknown-first-pastry steps [list 100, readFirst 599]"),
             imported.getExamples().stream().map(ArazzoWorkflowExamplesTest::describe).toList());
@@ -151,7 +151,7 @@ class ArazzoWorkflowExamplesTest {
 
    @Test
    void linkingTheSourcesAgainFromTheImportDialogKeepsTheExamples() throws Exception {
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
       arazzoImportService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"), "pastry-scenarios.arazzo.yaml",
@@ -163,7 +163,7 @@ class ArazzoWorkflowExamplesTest {
 
    @Test
    void changingTheLinkOfTheSourcesKeepsTheExamples() throws Exception {
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
       String examplesId = arazzoExamplesRepository.listAll().get(0).getId();
 
@@ -173,21 +173,21 @@ class ArazzoWorkflowExamplesTest {
       assertEquals(List.of("eclair-repriced", "millefeuille-repriced"), exampleNames(document, "readThenReprice"));
       assertEquals(List.of("unknown-first-pastry"), exampleNames(document, "listThenReadFirst"));
       assertEquals(List.of(examplesId),
-            arazzoExamplesRepository.listAll().stream().map(ArazzoExamples::getId).toList());
+            arazzoExamplesRepository.listAll().stream().map(WorkflowExamples::getId).toList());
    }
 
-   private List<String> exampleNames(ArazzoDocument document, String workflowId) {
+   private List<String> exampleNames(WorkflowDocument document, String workflowId) {
       return arazzoWorkflowService.getWorkflowDetail(document.getId(), workflowId).orElseThrow().examples().stream()
-            .map(ArazzoWorkflowExample::name).toList();
+            .map(WorkflowExample::name).toList();
    }
 
-   private static Map<String, String> sourcesOf(ArazzoMetadata metadata) {
+   private static Map<String, String> sourcesOf(WorkflowMetadata metadata) {
       return metadata.getSources().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
             source -> source.getValue().getName() + " " + source.getValue().getVersion()));
    }
 
    /** An example as its workflow, name, then what it gives and expects, each part only when the examples give it. */
-   static String describe(ArazzoWorkflowExample example) {
+   static String describe(WorkflowExample example) {
       StringBuilder description = new StringBuilder(example.workflowId() + "/" + example.name());
       if (!example.inputs().isEmpty()) {
          description.append(" inputs ").append(sorted(example.inputs()));
@@ -205,7 +205,7 @@ class ArazzoWorkflowExamplesTest {
       return description.toString();
    }
 
-   private static String describe(ArazzoStepExpectation step) {
+   private static String describe(WorkflowStepExpectation step) {
       return step.stepId() + (step.status() == null ? "" : " " + step.status())
             + (step.outputs().isEmpty() ? "" : " " + sorted(step.outputs()));
    }

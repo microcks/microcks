@@ -15,7 +15,7 @@
  */
 package io.microcks.repository.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSession;
+import io.microcks.domain.workflow.WorkflowSession;
 import io.microcks.repository.ObjectIdRepository;
 
 import com.mongodb.client.model.Filters;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoSessionRepository implements ObjectIdRepository<ArazzoSession> {
+public class ArazzoSessionRepository implements ObjectIdRepository<WorkflowSession> {
 
    private static final String ID = "_id";
    private static final String CLOSED_DATE = "closedDate";
@@ -58,7 +58,7 @@ public class ArazzoSessionRepository implements ObjectIdRepository<ArazzoSession
     * @return The session with the call counted, its count telling the order index of the call; null when the session
     *         does not exist, is closed, has expired or has recorded its maximum of calls
     */
-   public ArazzoSession countCall(String sessionId, long maxCalls, Date now) {
+   public WorkflowSession countCall(String sessionId, long maxCalls, Date now) {
       // The count is incremented in the database, so that two calls received at once get two indexes.
       Bson filter = Filters.and(idFilter(sessionId), Filters.eq(CLOSED_DATE, null), Filters.gt(EXPIRE_AT, now),
             Filters.lt("callCount", maxCalls));
@@ -105,7 +105,7 @@ public class ArazzoSessionRepository implements ObjectIdRepository<ArazzoSession
     * @param now        The current date: the sessions that expired are not returned, even if not yet purged
     * @return The sessions opened on that workflow, open or closed, the latest opened first
     */
-   public List<ArazzoSession> findLiveByWorkflow(String documentId, String workflowId, Date now) {
+   public List<WorkflowSession> findLiveByWorkflow(String documentId, String workflowId, Date now) {
       return find(new Document("documentId", documentId).append("workflowId", workflowId).append(EXPIRE_AT,
             new Document("$gt", now)), new Document("openedDate", -1).append(ID, -1)).list();
    }

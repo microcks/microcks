@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +28,6 @@ import java.util.Map;
  * @param unmetExpectations Each expectation the run does not meet
  * @author SebastienDegodez
  */
-public record WorkflowExampleCheck(String name, Map<String, Object> outputs, List<ArazzoStepExpectation> steps,
+public record WorkflowExampleCheck(String name, Map<String, Object> outputs, List<WorkflowStepExpectation> steps,
       String stopsAt, WorkflowExampleVerdict verdict, List<String> unmetExpectations) {
 }

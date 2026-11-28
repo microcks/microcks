@@ -15,10 +15,10 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
@@ -152,7 +152,7 @@ class ArazzoAsyncStepsTest {
          "legacy-events; listen; confirmOrder receives on orders/confirmed (SUBSCRIBE orders/confirmed)" })
    void eachStepOfAnAsyncApiSourceShowsWhatItSendsOrReceives(String example, String workflowId, String steps)
          throws Exception {
-      ArazzoDocument document = importedAndLinked(example);
+      WorkflowDocument document = importedAndLinked(example);
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), workflowId)
             .orElseThrow();
@@ -162,7 +162,7 @@ class ArazzoAsyncStepsTest {
 
    @Test
    void theCorrelationIdOfAReceiveStepShowsTheDataItIsGiven() throws Exception {
-      ArazzoDocument document = importedAndLinked("order-events");
+      WorkflowDocument document = importedAndLinked("order-events");
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "placeThenConfirm")
             .orElseThrow();
@@ -203,7 +203,7 @@ class ArazzoAsyncStepsTest {
 
    @Test
    void aRunOfAWorkflowWithAsyncStepsIsRefusedWithoutCreatingARun() throws Exception {
-      ArazzoDocument document = importedAndLinked("order-events");
+      WorkflowDocument document = importedAndLinked("order-events");
 
       ArazzoRunRefusedException refusal = assertThrows(ArazzoRunRefusedException.class, () -> arazzoRunService
             .launchRun(document.getId(), "placeThenConfirm", Map.of("customer", "laurent"), null));
@@ -219,7 +219,7 @@ class ArazzoAsyncStepsTest {
          "listenOnChannels; not runnable [Async steps cannot be run yet: confirmed, cancelled]",
          "placeOnly; runnable []" })
    void theWorkflowPagesTellThatAWorkflowWithAsyncStepsCannotRunYet(String workflowId, String status) throws Exception {
-      ArazzoDocument document = importedAndLinked("order-events");
+      WorkflowDocument document = importedAndLinked("order-events");
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), workflowId)
             .orElseThrow();
@@ -234,7 +234,7 @@ class ArazzoAsyncStepsTest {
 
    @Test
    void aWorkflowOfTheSameDocumentWithHttpStepsOnlyStillRuns() throws Exception {
-      ArazzoDocument document = importedAndLinked("order-events");
+      WorkflowDocument document = importedAndLinked("order-events");
 
       arazzoRunService.launchRun(document.getId(), "placeOnly", Map.of(), null).orElseThrow();
 
@@ -242,7 +242,7 @@ class ArazzoAsyncStepsTest {
       assertEquals(List.of("placeOnly"), minion.requests().stream().map(ArazzoRunRequest::workflowId).toList());
    }
 
-   private ArazzoDocument importedAndLinked(String example) throws Exception {
+   private WorkflowDocument importedAndLinked(String example) throws Exception {
       apisAreImported("order-api", "order-events", "legacy-order-events");
       String content = document(example);
       arazzoImportService.importArazzoDocument(content, example + ".arazzo.yaml",

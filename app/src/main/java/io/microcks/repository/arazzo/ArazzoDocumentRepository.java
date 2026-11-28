@@ -16,7 +16,7 @@
 package io.microcks.repository.arazzo;
 
 import io.microcks.repository.ObjectIdRepository;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,14 +28,14 @@ import java.util.List;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoDocumentRepository implements ObjectIdRepository<ArazzoDocument> {
+public class ArazzoDocumentRepository implements ObjectIdRepository<WorkflowDocument> {
 
-   public ArazzoDocument findByTitleAndVersion(String title, String version) {
+   public WorkflowDocument findByTitleAndVersion(String title, String version) {
       return find("title = ?1 and version = ?2", title, version).firstResult();
    }
 
    /** @return Every stored item, sorted by title then version. */
-   public List<ArazzoDocument> findAllSorted() {
+   public List<WorkflowDocument> findAllSorted() {
       return listAll(Sort.by("title", "version"));
    }
 }

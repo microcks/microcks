@@ -20,12 +20,12 @@ import io.microcks.service.JobService;
 import io.microcks.service.ServiceService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoDocumentRef;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowDocumentRef;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
-import io.microcks.domain.arazzo.ArazzoMetadata;
-import io.microcks.domain.arazzo.ArazzoWorkflowExample;
+import io.microcks.domain.workflow.WorkflowMetadata;
+import io.microcks.domain.workflow.WorkflowExample;
 import io.microcks.domain.ImportJob;
 import io.microcks.domain.Secret;
 import io.microcks.domain.SecretRef;
@@ -150,7 +150,7 @@ class ArazzoImportersTest {
 
       jobService.doImportJob(job);
 
-      ArazzoDocument document = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
+      WorkflowDocument document = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
       assertEquals("Order fulfilment 1.0.0 from place-order.arazzo.yaml: [searchThenRead, placeOrder]",
             describe(document));
       ImportJob imported = jobRepository.findByIdOptional(job.getId()).orElseThrow();
@@ -158,7 +158,7 @@ class ArazzoImportersTest {
       assertNotNull(imported.getLastImportDate());
       assertNull(imported.getServiceRefs());
       assertEquals(
-            new ArazzoDocumentRef(document.getId(), "Order fulfilment", "1.0.0", List.of("customerApi", "orderApi")),
+            new WorkflowDocumentRef(document.getId(), "Order fulfilment", "1.0.0", List.of("customerApi", "orderApi")),
             imported.getArazzoDocumentRef());
    }
 
@@ -187,7 +187,7 @@ class ArazzoImportersTest {
       repository.put(DOCUMENT, "place-order-revised");
       jobService.doImportJob(job);
 
-      ArazzoDocument document = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
+      WorkflowDocument document = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
       assertEquals(documentId, document.getId());
       assertEquals("Order fulfilment 1.0.0 from place-order.arazzo.yaml: [searchThenRead, placeOrder, trackOrder]",
             describe(document));
@@ -222,7 +222,7 @@ class ArazzoImportersTest {
             overlays());
       ImportJob imported = jobRepository.findByIdOptional(overlayJob.getId()).orElseThrow();
       assertNull(imported.getLastImportError());
-      assertEquals(new ArazzoDocumentRef(documentId(), "Order fulfilment", "1.0.0", List.of()),
+      assertEquals(new WorkflowDocumentRef(documentId(), "Order fulfilment", "1.0.0", List.of()),
             imported.getArazzoDocumentRef());
       assertEquals(List.of("searchThenRead: runnable", "placeOrder: runnable"), workflowsOnTheWorkflowsPage());
    }
@@ -236,11 +236,12 @@ class ArazzoImportersTest {
 
       ImportJob imported = jobRepository.findByIdOptional(examplesJob.getId()).orElseThrow();
       assertNull(imported.getLastImportError());
-      assertEquals(new ArazzoDocumentRef(documentId(), "Order fulfilment", "1.0.0", List.of("customerApi", "orderApi")),
+      assertEquals(new WorkflowDocumentRef(documentId(), "Order fulfilment", "1.0.0", List.of("customerApi",
+            "orderApi")),
             imported.getArazzoDocumentRef());
       assertEquals(List.of("ada-found"), arazzoDocumentService
             .getExamples(arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0"), "searchThenRead")
-            .stream().map(ArazzoWorkflowExample::name).toList());
+            .stream().map(WorkflowExample::name).toList());
    }
 
    @Test
@@ -261,7 +262,7 @@ class ArazzoImportersTest {
 
       jobService.doImportJob(overlayJob);
 
-      assertEquals(new ArazzoDocumentRef(null, "Order fulfilment", "1.0.0", List.of()),
+      assertEquals(new WorkflowDocumentRef(null, "Order fulfilment", "1.0.0", List.of()),
             jobRepository.findByIdOptional(overlayJob.getId()).orElseThrow().getArazzoDocumentRef());
       assertEquals(1, arazzoMetadataRepository.count());
    }
@@ -549,7 +550,7 @@ class ArazzoImportersTest {
       return arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0").getId();
    }
 
-   private static String describe(ArazzoDocument document) {
+   private static String describe(WorkflowDocument document) {
       return document.getTitle() + " " + document.getVersion() + " from " + document.getFileName() + ": "
             + document.getWorkflowIds();
    }
@@ -573,7 +574,7 @@ class ArazzoImportersTest {
       return arazzoMetadataRepository.listAll().stream().map(ArazzoImportersTest::describe).toList();
    }
 
-   private static String describe(ArazzoMetadata overlay) {
+   private static String describe(WorkflowMetadata overlay) {
       Map<String, String> sources = new TreeMap<>();
       overlay.getSources().forEach((name, api) -> sources.put(name, api.getName() + " " + api.getVersion()));
       return overlay.getName() + " " + overlay.getVersion() + ": " + sources;

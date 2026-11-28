@@ -17,7 +17,7 @@ package io.microcks.web.arazzo;
 
 import io.microcks.artifact.grpc.GrpcMetadataUtil;
 import io.microcks.domain.Header;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.service.arazzo.ArazzoSessionService;
 import io.microcks.util.http.HttpHeaders;
 import io.microcks.util.tracing.ArazzoSessionCarrier;
@@ -76,7 +76,7 @@ public class ArazzoSessionRecorder {
     */
    public void recordRest(MockInvocationContext ic, HttpServletRequest request, String body, ResponseResult response) {
       MockControllerCommons.getArazzoSessionId(request).ifPresent(sessionId -> {
-         ArazzoSessionCall call = receivedCall(ic, request, body);
+         WorkflowSessionRecordedCall call = receivedCall(ic, request, body);
          call.setResponseStatus(response.status().value());
          call.setResponseHeaders(headersOf(response.headers()));
          call.setResponseBody(
@@ -92,8 +92,8 @@ public class ArazzoSessionRecorder {
     * @param body    The body of the request; null when it has none
     * @return The call, without response
     */
-   static ArazzoSessionCall receivedCall(MockInvocationContext ic, HttpServletRequest request, String body) {
-      ArazzoSessionCall call = new ArazzoSessionCall();
+   static WorkflowSessionRecordedCall receivedCall(MockInvocationContext ic, HttpServletRequest request, String body) {
+      WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
       call.setServiceName(ic.service().getName());
       call.setServiceVersion(ic.service().getVersion());
       call.setOperationName(ic.operation().getName());
@@ -120,7 +120,7 @@ public class ArazzoSessionRecorder {
       }
       ArazzoSessionCarrier.sessionId(metadata.get(SESSION_KEY), listOf(metadata.getAll(BAGGAGE_KEY)))
             .ifPresent(sessionId -> {
-               ArazzoSessionCall call = new ArazzoSessionCall();
+               WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
                call.setServiceName(ic.service().getName());
                call.setServiceVersion(ic.service().getVersion());
                call.setOperationName(ic.operation().getName());

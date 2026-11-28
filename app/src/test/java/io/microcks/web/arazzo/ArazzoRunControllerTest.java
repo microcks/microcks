@@ -21,9 +21,9 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.arazzo.ArazzoRunService;
 import io.microcks.service.ArtifactInfo;
@@ -76,7 +76,7 @@ class ArazzoRunControllerTest {
    @Test
    void aLaunchedRunIsCreatedAtItsUrlThenRecordedAsTheMinionReportsIt() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       Response launched = controller.launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(Map.of("pastry", "Eclair Cafe", "newPrice", 2.6), 10000L));
@@ -97,7 +97,7 @@ class ArazzoRunControllerTest {
    @Test
    void aWorkflowThatCannotRunIsABadRequestWithItsReason() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosAreImported("pastry-delete.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImported("pastry-delete.arazzo.yaml");
 
       Response refused = controller.launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(Map.of(), null));
@@ -111,7 +111,7 @@ class ArazzoRunControllerTest {
    @Test
    void aRunMissingAnInputIsABadRequestNamingIt() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       Response refused = controller.launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(Map.of("pastry", "Eclair Cafe"), null));
@@ -123,7 +123,7 @@ class ArazzoRunControllerTest {
    @Test
    void anUnknownDocumentOrRunIsNotFoundAndAnUnknownWorkflowIsABadRequest() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       assertEquals(404, controller.launchRun("unknown", "readThenReprice", new ArazzoRunLaunchDTO(Map.of(), null))
             .getStatus());
@@ -140,7 +140,7 @@ class ArazzoRunControllerTest {
    @Test
    void aRunIsLaunchedAgainstTheImplementationsGivenForItsSources() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       Response launched = controller.launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(Map.of("pastry", "Eclair Cafe", "newPrice", 2.6), null,
@@ -155,7 +155,7 @@ class ArazzoRunControllerTest {
    @Test
    void aRunWithAnUnknownSecretIsABadRequestWithItsReason() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       Response refused = controller.launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(Map.of("pastry", "Eclair Cafe", "newPrice", 2.6), null,
@@ -170,7 +170,7 @@ class ArazzoRunControllerTest {
       return JSON.treeToValue(ArazzoMinionContractTest.contract().get(part), type);
    }
 
-   private ArazzoDocument pastryScenariosAreImported(String fixture) throws Exception {
+   private WorkflowDocument pastryScenariosAreImported(String fixture) throws Exception {
       File contract = new File(
             ArazzoRunControllerTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));

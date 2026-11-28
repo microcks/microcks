@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import java.util.List;
 
@@ -28,5 +28,5 @@ import java.util.List;
  *                        order of the document
  * @author SebastienDegodez
  */
-public record ArazzoDocumentRef(String documentId, String title, String version, List<String> unlinkedSources) {
+public record WorkflowDocumentRef(String documentId, String title, String version, List<String> unlinkedSources) {
 }

@@ -16,7 +16,7 @@
 package io.microcks.repository.arazzo;
 
 import io.microcks.repository.ObjectIdRepository;
-import io.microcks.domain.arazzo.ArazzoExamples;
+import io.microcks.domain.workflow.WorkflowExamples;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -25,9 +25,9 @@ import jakarta.enterprise.context.ApplicationScoped;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoExamplesRepository implements ObjectIdRepository<ArazzoExamples> {
+public class ArazzoExamplesRepository implements ObjectIdRepository<WorkflowExamples> {
 
-   public ArazzoExamples findByNameAndVersion(String name, String version) {
+   public WorkflowExamples findByNameAndVersion(String name, String version) {
       return find("name = ?1 and version = ?2", name, version).firstResult();
    }
 }

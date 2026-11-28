@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import io.microcks.domain.ServiceRef;
 import io.quarkus.mongodb.panache.common.MongoEntity;
@@ -30,8 +30,8 @@ import java.util.Map;
  * kind, not by its extension.
  * @author SebastienDegodez
  */
-@MongoEntity(collection = "arazzoMetadata")
-public class ArazzoMetadata {
+@MongoEntity(collection = "workflowMetadata")
+public class WorkflowMetadata {
 
    @BsonId
    @BsonRepresentation(BsonType.OBJECT_ID)

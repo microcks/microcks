@@ -18,7 +18,7 @@ package io.microcks.service.arazzo;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
-import io.microcks.domain.arazzo.ArazzoMetadata;
+import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.Resource;
 import io.microcks.repository.arazzo.ArazzoMetadataRepository;
@@ -185,7 +185,7 @@ class ArazzoSourceLinkTest {
    void reImportingAnOverlayWithTheSameNameAndVersionReplacesIt() throws Exception {
       arazzoDocumentService.importArazzoMetadata(fixture("pastry-previous.arazzo-metadata.yaml"));
 
-      ArazzoMetadata imported = arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
+      WorkflowMetadata imported = arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       assertEquals("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}", describe(imported));
       assertEquals(List.of("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}"),
@@ -230,7 +230,7 @@ class ArazzoSourceLinkTest {
       return link.sourceName() + api + ": " + (link.linked() ? "linked" : "not linked");
    }
 
-   private static String describe(ArazzoMetadata overlay) {
+   private static String describe(WorkflowMetadata overlay) {
       Map<String, String> sources = new TreeMap<>();
       overlay.getSources().forEach((name, api) -> sources.put(name, api.getName() + " " + api.getVersion()));
       return overlay.getName() + " " + overlay.getVersion() + ": " + sources;

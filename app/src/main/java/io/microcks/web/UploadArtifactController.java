@@ -15,9 +15,9 @@
  */
 package io.microcks.web;
 
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoExamples;
-import io.microcks.domain.arazzo.ArazzoMetadata;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowExamples;
+import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.domain.Secret;
 import io.microcks.domain.Service;
 import io.microcks.repository.SecretRepository;
@@ -214,15 +214,15 @@ public class UploadArtifactController {
          throws IOException, MockRepositoryImportException {
       String content = new String(Files.readAllBytes(localFile.toPath()), StandardCharsets.UTF_8);
       if (arazzoDocumentService.isArazzoDocument(content)) {
-         ArazzoDocument document = arazzoDocumentService.importArazzoDocument(content, fileName);
+         WorkflowDocument document = arazzoDocumentService.importArazzoDocument(content, fileName);
          return Optional.of(document.getTitle() + ":" + document.getVersion());
       }
       if (arazzoDocumentService.isArazzoMetadata(content)) {
-         ArazzoMetadata metadata = arazzoDocumentService.importArazzoMetadata(content);
+         WorkflowMetadata metadata = arazzoDocumentService.importArazzoMetadata(content);
          return Optional.of(metadata.getName() + ":" + metadata.getVersion());
       }
       if (arazzoDocumentService.isArazzoExamples(content)) {
-         ArazzoExamples examples = arazzoDocumentService.importArazzoExamples(content);
+         WorkflowExamples examples = arazzoDocumentService.importArazzoExamples(content);
          return Optional.of(examples.getName() + ":" + examples.getVersion());
       }
       return Optional.empty();

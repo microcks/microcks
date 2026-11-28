@@ -22,17 +22,17 @@ import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.domain.Request;
 import io.microcks.domain.RequestResponsePair;
 import io.microcks.domain.Response;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.repository.arazzo.WorkflowRunFilter;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -91,7 +91,7 @@ class ArazzoStepActionsTest {
    /** AC-01, AC-06: the demo of the story is imported, and its workflows can run against the stateful mock. */
    @Test
    void aDocumentWhoseStepsRetryOrEndTheWorkflowIsImportedAndCanRun() throws Exception {
-      ArazzoDocument document = orderTrackingIsImportedAndLinked();
+      WorkflowDocument document = orderTrackingIsImportedAndLinked();
 
       assertEquals("Order tracking 1.0.0 [waitUntilReady, giveUpQuickly, readUnlessPreparing]",
             document.getTitle() + " " + document.getVersion() + " " + document.getWorkflowIds());
@@ -110,7 +110,7 @@ class ArazzoStepActionsTest {
          "readUnlessPreparing; checkStatus | onSuccess end stillPreparing when $response.body#/status == 'preparing' "
                + "| onFailure end unknownOrder, readOrder" })
    void eachStepShowsWhatItDoesOnSuccessAndOnFailure(String workflowId, String steps) throws Exception {
-      ArazzoDocument document = orderTrackingIsImportedAndLinked();
+      WorkflowDocument document = orderTrackingIsImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), workflowId)
             .orElseThrow();
@@ -124,7 +124,7 @@ class ArazzoStepActionsTest {
     */
    @Test
    void eachAttemptOfARetriedStepKeepsItsOwnSlotAndExchange() throws Exception {
-      ArazzoDocument document = orderTrackingIsImportedAndLinked();
+      WorkflowDocument document = orderTrackingIsImportedAndLinked();
       WorkflowResult run = arazzoRunService.launchRun(document.getId(), "waitUntilReady", Map.of("orderId", "42"), null)
             .orElseThrow();
 
@@ -153,7 +153,7 @@ class ArazzoStepActionsTest {
     */
    @Test
    void aRetriedStepFailsTheRunOnlyOnceItsRetriesAreExhausted() throws Exception {
-      ArazzoDocument document = orderTrackingIsImportedAndLinked();
+      WorkflowDocument document = orderTrackingIsImportedAndLinked();
       runEnds(document, "waitUntilReady", List.of("preparing", "preparing", "ready", "readOrder"),
             WorkflowRunStatus.SUCCESS);
       runEnds(document, "giveUpQuickly", List.of("preparing", "preparing"), WorkflowRunStatus.FAILURE);
@@ -169,7 +169,7 @@ class ArazzoStepActionsTest {
                   .toList());
    }
 
-   private void runEnds(ArazzoDocument document, String workflowId, List<String> statuses, WorkflowRunStatus outcome)
+   private void runEnds(WorkflowDocument document, String workflowId, List<String> statuses, WorkflowRunStatus outcome)
          throws Exception {
       WorkflowResult run = arazzoRunService.launchRun(document.getId(), workflowId, Map.of("orderId", "42"), null)
             .orElseThrow();
@@ -224,7 +224,7 @@ class ArazzoStepActionsTest {
       return action.type() + " " + action.name() + retry + (criteria.isEmpty() ? "" : " when " + criteria);
    }
 
-   private ArazzoDocument orderTrackingIsImportedAndLinked() throws Exception {
+   private WorkflowDocument orderTrackingIsImportedAndLinked() throws Exception {
       File contract = new File(ArazzoStepActionsTest.class.getResource(FIXTURES + "order-status.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("order-status.openapi.yaml", true));
       arazzoDocumentService.importArazzoMetadata(fixture("order-tracking.arazzo-metadata.yaml"));

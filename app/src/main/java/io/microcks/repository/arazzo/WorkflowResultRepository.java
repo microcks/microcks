@@ -16,7 +16,7 @@
 package io.microcks.repository.arazzo;
 
 import io.microcks.repository.ObjectIdRepository;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowResult;
 
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;

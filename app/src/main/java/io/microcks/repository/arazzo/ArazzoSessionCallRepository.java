@@ -15,7 +15,7 @@
  */
 package io.microcks.repository.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.ObjectIdRepository;
 
 import com.mongodb.client.model.Filters;
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoSessionCallRepository implements ObjectIdRepository<ArazzoSessionCall> {
+public class ArazzoSessionCallRepository implements ObjectIdRepository<WorkflowSessionRecordedCall> {
 
    /** Panache has no declarative index support: create the indexes (idempotent) at startup. */
    void ensureIndexes(@Observes StartupEvent event) {
@@ -50,7 +50,7 @@ public class ArazzoSessionCallRepository implements ObjectIdRepository<ArazzoSes
     * @param sessionId The id of a session
     * @return The calls the session received, in their order of receipt
     */
-   public List<ArazzoSessionCall> findBySessionIdOrderByIndexAsc(String sessionId) {
+   public List<WorkflowSessionRecordedCall> findBySessionIdOrderByIndexAsc(String sessionId) {
       return find("sessionId", Sort.ascending("index"), sessionId).list();
    }
 

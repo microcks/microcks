@@ -19,9 +19,9 @@ import io.microcks.domain.Header;
 import io.microcks.domain.Response;
 import io.microcks.domain.Service;
 import io.microcks.domain.ServiceState;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceRepository;
@@ -100,7 +100,7 @@ class ArazzoSessionAnswerTest {
    /** Walking skeleton, AC-02: the order reserveStock receives flows into the reservation the mock answers. */
    @Test
    void theValuesAStepReceivesFlowIntoItsAnswer() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
 
       Response answer = arazzoSessionAnswerService
             .answer(session.getId(), reserveStock("o-42"), dispatched("Stock API", "POST /reservations")).orElseThrow();
@@ -115,7 +115,7 @@ class ArazzoSessionAnswerTest {
     */
    @Test
    void aLaterStepAnswersWithTheOutputOfAnEarlierStep() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       Response placed = mocksAnswer(session, createOrder(), dispatched("Order API", "POST /orders"));
 
       Response answer = arazzoSessionAnswerService.answer(session.getId(), confirmOrder("o-42"), null).orElseThrow();
@@ -132,7 +132,7 @@ class ArazzoSessionAnswerTest {
    /** A value a step does not send is taken from the outputs of the earlier steps of the session. */
    @Test
    void aValueAStepDoesNotSendIsTakenFromTheSession() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       mocksAnswer(session, createOrder(), dispatched("Order API", "POST /orders"));
 
       Response answer = arazzoSessionAnswerService
@@ -149,8 +149,8 @@ class ArazzoSessionAnswerTest {
     */
    @Test
    void theInputsOfTheSessionFlowIntoTheAnswers() throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
-      ArazzoSession session = arazzoSessionService.openSession(saga.getId(), SAGA, Map.of("customerId", "c-9"))
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
+      WorkflowSession session = arazzoSessionService.openSession(saga.getId(), SAGA, Map.of("customerId", "c-9"))
             .orElseThrow();
 
       Response placed = mocksAnswer(session,
@@ -168,7 +168,7 @@ class ArazzoSessionAnswerTest {
     */
    @Test
    void theValuesTheServiceSendsAreReflectedInTheAnswer() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       mocksAnswer(session, createOrder(), dispatched("Order API", "POST /orders"));
 
       Response answer = arazzoSessionAnswerService
@@ -184,7 +184,7 @@ class ArazzoSessionAnswerTest {
          "an operation no step calls, open, GET /orders/{orderId}" })
    void aCallOutsideTheWorkflowOfAnOpenSessionIsAnsweredAsToday(String what, String session, String operation)
          throws Exception {
-      ArazzoSession opened = sessionOnTheSaga();
+      WorkflowSession opened = sessionOnTheSaga();
       String sessionId = switch (session) {
          case "unknown" -> "s-unknown";
          case "closed" -> {
@@ -204,7 +204,7 @@ class ArazzoSessionAnswerTest {
     */
    @Test
    void anOperationWithoutExampleIsAnsweredAsToday() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       Response example = dispatched("Order API", "POST /orders/{orderId}/confirm");
       responseRepository.deleteAll(responseRepository.findByOperationId(example.getOperationId()));
       Response callback = new Response();
@@ -224,7 +224,7 @@ class ArazzoSessionAnswerTest {
    @ParameterizedTest(name = "{0}")
    @CsvSource({ "a document deleted since the session was opened, deleted", "a session naming no document, none" })
    void aSessionWithoutDocumentRecordsItsCallsAndAnswersAsToday(String what, String document) throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       if ("deleted".equals(document)) {
          arazzoDocumentRepository.deleteById(session.getDocumentId());
       } else {
@@ -241,7 +241,7 @@ class ArazzoSessionAnswerTest {
    /** An example Microcks keeps no request with does not tell where the values go: it answers as it is. */
    @Test
    void anExampleWithoutRequestAnswersAsItIs() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       mocksAnswer(session, createOrder(), dispatched("Order API", "POST /orders"));
       Response example = dispatched("Order API", "POST /orders/{orderId}/confirm");
       requestRepository.deleteAll(requestRepository.findByOperationId(example.getOperationId()));
@@ -257,7 +257,7 @@ class ArazzoSessionAnswerTest {
     */
    @Test
    void eachCallOfAnOperationSeveralStepsCallAnswersTheNextOfThem() throws Exception {
-      ArazzoSession session = arazzoSessionService
+      WorkflowSession session = arazzoSessionService
             .openSession(orderSagaIsImportedAndLinked().getId(), "reserveInTwoParts").orElseThrow();
       Service stockApi = serviceRepository.findByNameAndVersion("Stock API", "1.0.0");
 
@@ -278,7 +278,7 @@ class ArazzoSessionAnswerTest {
    /** A step called again in the session answers again with the values of the session. */
    @Test
    void aStepCalledAgainAnswersTheSameWay() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       mocksAnswer(session, createOrder(), dispatched("Order API", "POST /orders"));
       mocksAnswer(session, confirmOrder("o-42"), null);
 
@@ -290,8 +290,8 @@ class ArazzoSessionAnswerTest {
    /** Each session has its own state: the order another session placed does not flow into this one. */
    @Test
    void theStateOfASessionIsItsOwn() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
-      ArazzoSession another = arazzoSessionService.openSession(session.getDocumentId(), SAGA).orElseThrow();
+      WorkflowSession session = sessionOnTheSaga();
+      WorkflowSession another = arazzoSessionService.openSession(session.getDocumentId(), SAGA).orElseThrow();
       mocksAnswer(another, createOrder(), dispatched("Order API", "POST /orders"));
 
       Response answer = arazzoSessionAnswerService
@@ -308,7 +308,7 @@ class ArazzoSessionAnswerTest {
     */
    @Test
    void theStateOfASessionIsKeptByTheApiThatAnsweredAndExpiresWithTheSession() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       mocksAnswer(session, createOrder(), dispatched("Order API", "POST /orders"));
       Service orderApi = serviceRepository.findByNameAndVersion("Order API", "1.0.0");
       String key = "arazzo-session:" + session.getId() + ":createOrder";
@@ -324,13 +324,13 @@ class ArazzoSessionAnswerTest {
    }
 
    /** The state store keeps a value for a number of seconds: the state expires in the last second of the session. */
-   private static void assertExpiresWith(ArazzoSession session, ServiceState state) {
+   private static void assertExpiresWith(WorkflowSession session, ServiceState state) {
       long before = session.getExpireAt().getTime() - state.getExpireAt().getTime();
       assertTrue(before >= 0 && before <= 1000, () -> "the state expires " + before + " ms before the session");
    }
 
-   private ArazzoSession sessionOnTheSaga() throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+   private WorkflowSession sessionOnTheSaga() throws Exception {
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
       return arazzoSessionService.openSession(saga.getId(), SAGA).orElseThrow();
    }
 
@@ -345,7 +345,7 @@ class ArazzoSessionAnswerTest {
     * The mocks answer a call in a session, then record it there with their answer, as they do for a REST call.
     * @return The answer
     */
-   private Response mocksAnswer(ArazzoSession session, ArazzoSessionCall call, Response dispatched) {
+   private Response mocksAnswer(WorkflowSession session, WorkflowSessionRecordedCall call, Response dispatched) {
       Response answer = arazzoSessionAnswerService.answer(session.getId(), call, dispatched).orElse(dispatched);
       call.setResponseStatus(Integer.parseInt(answer.getStatus()));
       call.setResponseHeaders(Set.of(new Header("Content-Type", Set.of(answer.getMediaType()))));
@@ -355,26 +355,26 @@ class ArazzoSessionAnswerTest {
    }
 
    /** The order saga service places an order for customer c-7. */
-   private static ArazzoSessionCall createOrder() {
+   private static WorkflowSessionRecordedCall createOrder() {
       return received("Order API", "POST /orders", "/orders",
             "{\"customerId\": \"c-7\", \"items\": [{\"sku\": \"ABC-1\", \"quantity\": 2}], \"amount\": 25.0, "
                   + "\"currency\": \"EUR\"}");
    }
 
    /** The order saga service confirms an order. */
-   private static ArazzoSessionCall confirmOrder(String orderId) {
+   private static WorkflowSessionRecordedCall confirmOrder(String orderId) {
       return received("Order API", "POST /orders/{orderId}/confirm", "/orders/" + orderId + "/confirm", null);
    }
 
    /** The order saga service reserves the items of an order. */
-   private static ArazzoSessionCall reserveStock(String orderId) {
+   private static WorkflowSessionRecordedCall reserveStock(String orderId) {
       return received("Stock API", "POST /reservations", "/reservations",
             "{\"orderId\": \"" + orderId + "\", \"items\": [{\"sku\": \"ABC-1\", \"quantity\": 2}]}");
    }
 
    /** A call the mocks of an API 1.0.0 receive in a session, before they answer it. */
-   private static ArazzoSessionCall received(String apiName, String operationName, String path, String body) {
-      ArazzoSessionCall call = new ArazzoSessionCall();
+   private static WorkflowSessionRecordedCall received(String apiName, String operationName, String path, String body) {
+      WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
       call.setServiceName(apiName);
       call.setServiceVersion("1.0.0");
       call.setOperationName(operationName);
@@ -390,7 +390,7 @@ class ArazzoSessionAnswerTest {
       assertEquals(JSON.readTree(expected), JSON.readTree(actual), actual);
    }
 
-   private ArazzoDocument orderSagaIsImportedAndLinked() throws Exception {
+   private WorkflowDocument orderSagaIsImportedAndLinked() throws Exception {
       for (String api : List.of("order-api", "stock-api", "payment-api")) {
          Path contract = Files.createTempFile(api, ".yaml");
          Files.writeString(contract, example("stateful-saga.contracts.yaml", api));

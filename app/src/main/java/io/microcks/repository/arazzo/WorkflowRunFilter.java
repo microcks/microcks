@@ -15,8 +15,8 @@
  */
 package io.microcks.repository.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunTarget;
 
 /**
  * The filters of a runs history; a null filter keeps every run.

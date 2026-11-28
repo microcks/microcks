@@ -15,13 +15,13 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.artifact.arazzo.ArazzoStep;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.domain.Operation;
 import io.microcks.domain.Response;
 import io.microcks.domain.Service;
-import io.microcks.domain.arazzo.ArazzoInjectedFailure;
+import io.microcks.domain.workflow.WorkflowInjectedFailure;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
@@ -67,9 +67,9 @@ public class ArazzoSessionFailures {
     * @return The failures to inject in the session, in the order they were set
     * @throws ArazzoRunRefusedException if a step is not in the workflow, or if its operation has no such example
     */
-   List<ArazzoInjectedFailure> resolve(Map<String, String> failures, ArazzoWorkflow workflow,
+   List<WorkflowInjectedFailure> resolve(Map<String, String> failures, ArazzoWorkflow workflow,
          Map<String, ResolvedSource> sources) throws ArazzoRunRefusedException {
-      List<ArazzoInjectedFailure> injected = new ArrayList<>();
+      List<WorkflowInjectedFailure> injected = new ArrayList<>();
       for (Map.Entry<String, String> failure : failures.entrySet()) {
          String stepId = failure.getKey();
          String exampleName = failure.getValue();
@@ -83,7 +83,7 @@ public class ArazzoSessionFailures {
             throw refused(stepId, operationName + " of " + source.link().apiName() + " " + source.link().apiVersion()
                   + " has no example `" + exampleName + "`");
          }
-         injected.add(new ArazzoInjectedFailure(stepId, source.link().apiName(), source.link().apiVersion(),
+         injected.add(new WorkflowInjectedFailure(stepId, source.link().apiName(), source.link().apiVersion(),
                operationName, exampleName));
       }
       return injected;
@@ -114,11 +114,11 @@ public class ArazzoSessionFailures {
     * @param operation The operation the call was dispatched to
     * @return The name of the example to answer with; empty when no failure names the operation
     */
-   static Optional<String> exampleToInject(List<ArazzoInjectedFailure> failures, Service api, Operation operation) {
+   static Optional<String> exampleToInject(List<WorkflowInjectedFailure> failures, Service api, Operation operation) {
       return failures.stream()
             .filter(failure -> failure.apiName().equals(api.getName()) && failure.apiVersion().equals(api.getVersion())
                   && failure.operationName().equals(operation.getName()))
-            .map(ArazzoInjectedFailure::exampleName).findFirst();
+            .map(WorkflowInjectedFailure::exampleName).findFirst();
    }
 
    /** The example of an operation of an API, by its name; empty when the operation or the example does not exist. */

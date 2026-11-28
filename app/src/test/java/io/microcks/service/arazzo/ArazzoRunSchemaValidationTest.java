@@ -17,16 +17,16 @@ package io.microcks.service.arazzo;
 
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.domain.Resource;
 import io.microcks.domain.ResourceType;
-import io.microcks.domain.arazzo.WorkflowCriterionResult;
-import io.microcks.domain.arazzo.WorkflowExpressionValue;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowCriterionResult;
+import io.microcks.domain.workflow.WorkflowExpressionValue;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
@@ -105,7 +105,7 @@ class ArazzoRunSchemaValidationTest {
    @CsvSource({ "true, api-pastry-2.0.openapi.yaml", "false, " })
    void theMinionGetsTheOpenApiContractOfEachLinkedApiOnlyWhenTheResponsesAreValidated(boolean validateSchema,
          String contract) throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       WorkflowResult run = arazzoRunService
             .launchRun(document.getId(), "readThenReprice", INPUTS, 10000L, validateSchema).orElseThrow();
@@ -122,7 +122,7 @@ class ArazzoRunSchemaValidationTest {
    @CsvSource({ "true", "false" })
    void theMinionGetsTheMediaTypesTheContractDeclaresForTheRequestBodyOfEachOperation(boolean validateSchema)
          throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       arazzoRunService.launchRun(document.getId(), "readThenReprice", INPUTS, 10000L, validateSchema).orElseThrow();
 
@@ -134,7 +134,7 @@ class ArazzoRunSchemaValidationTest {
 
    @Test
    void aRunLaunchedWithoutTheOptionDoesNotValidateTheResponses() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       WorkflowResult run = arazzoRunService.launchRun(document.getId(), "readThenReprice", INPUTS, 10000L)
             .orElseThrow();
@@ -145,7 +145,7 @@ class ArazzoRunSchemaValidationTest {
 
    @Test
    void theOptionOfTheRunDialogReachesTheMinion() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       new ArazzoRunController(arazzoRunService).launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(INPUTS, 10000L, true));
@@ -167,7 +167,7 @@ class ArazzoRunSchemaValidationTest {
          resourceRepository.save(resource);
       }
       arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
 
       arazzoRunService.launchRun(document.getId(), "searchThenRead", Map.of("name", "Jane"), 10000L, true)
             .orElseThrow();
@@ -180,7 +180,7 @@ class ArazzoRunSchemaValidationTest {
 
    @Test
    void aNonConformantResponseFailsTheStepEvenWhenItsCriteriaHold() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       WorkflowResult run = arazzoRunService.launchRun(document.getId(), "readThenReprice", INPUTS, 10000L, true)
             .orElseThrow();
       String reason = "/price does not match the Pastry schema: string found, number expected";
@@ -201,7 +201,7 @@ class ArazzoRunSchemaValidationTest {
             + failed.getSteps().get(0).status() + " " + failed.getSteps().get(0).message());
    }
 
-   private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
+   private WorkflowDocument pastryScenariosAreImportedAndLinked() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));

@@ -17,18 +17,18 @@ package io.microcks.service.arazzo;
 
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.WorkflowCriterionResult;
-import io.microcks.domain.arazzo.WorkflowExpressionValue;
-import io.microcks.domain.arazzo.WorkflowMissingExample;
-import io.microcks.domain.arazzo.WorkflowParameterValue;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
-import io.microcks.domain.arazzo.WorkflowSourceTarget;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowCriterionResult;
+import io.microcks.domain.workflow.WorkflowExpressionValue;
+import io.microcks.domain.workflow.WorkflowMissingExample;
+import io.microcks.domain.workflow.WorkflowParameterValue;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowSourceTarget;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 
@@ -272,7 +272,7 @@ class ArazzoMockCoherenceTest {
    private WorkflowResult launch(String workflowId, Map<String, Object> inputs) throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       return arazzoRunService.launchRun(document.getId(), workflowId, inputs, 10000L).orElseThrow();
    }
 

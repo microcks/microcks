@@ -15,7 +15,7 @@
  */
 package io.microcks.web.arazzo.dto;
 
-import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunStatus;
 
 import java.util.Map;
 

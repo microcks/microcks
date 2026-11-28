@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.BsonType;
@@ -28,8 +28,8 @@ import java.util.Map;
  * An Arazzo document imported into Microcks, identified by the title and version of its info object.
  * @author SebastienDegodez
  */
-@MongoEntity(collection = "arazzoDocument")
-public class ArazzoDocument {
+@MongoEntity(collection = "workflowDocument")
+public class WorkflowDocument {
 
    @BsonId
    @BsonRepresentation(BsonType.OBJECT_ID)

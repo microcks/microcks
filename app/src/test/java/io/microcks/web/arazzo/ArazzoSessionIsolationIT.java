@@ -16,7 +16,7 @@
 package io.microcks.web.arazzo;
 
 import io.microcks.domain.ServiceState;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.ServiceStateRepository;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
@@ -329,7 +329,7 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
    /** The customers of the createOrder requests a session recorded, in their order of receipt. */
    private List<String> customersSentTo(String sessionId) throws IOException {
       List<String> customers = new ArrayList<>();
-      for (ArazzoSessionCall call : arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(sessionId)) {
+      for (WorkflowSessionRecordedCall call : arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(sessionId)) {
          if ("/orders".equals(call.getPath())) {
             customers.add(JSON.readTree(call.getRequestBody()).get("customerId").asText());
          }

@@ -15,9 +15,9 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoStepExpectation;
-import io.microcks.domain.arazzo.ArazzoWorkflowExample;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowStepExpectation;
+import io.microcks.domain.workflow.WorkflowExample;
 import io.microcks.artifact.MockRepositoryImportException;
 import io.microcks.util.ObjectMapperFactory;
 import io.microcks.artifact.arazzo.ArazzoDataFlow;
@@ -55,10 +55,10 @@ final class ArazzoExamplesReader {
     * @return The examples, in the order of the ArazzoExamples
     * @throws MockRepositoryImportException if an example does not fit its workflow
     */
-   static List<ArazzoWorkflowExample> read(JsonNode examples, ArazzoDocument document)
+   static List<WorkflowExample> read(JsonNode examples, WorkflowDocument document)
          throws MockRepositoryImportException {
       JsonNode parsed = ArazzoWorkflowService.parse(document.getContent());
-      List<ArazzoWorkflowExample> read = new ArrayList<>();
+      List<WorkflowExample> read = new ArrayList<>();
       for (Map.Entry<String, JsonNode> workflowExamples : examples.properties()) {
          Optional<ArazzoWorkflow> workflow = ArazzoWorkflowReader.workflow(parsed, workflowExamples.getKey());
          for (Map.Entry<String, JsonNode> example : workflowExamples.getValue().properties()) {
@@ -72,7 +72,7 @@ final class ArazzoExamplesReader {
       return read;
    }
 
-   private static ArazzoWorkflowExample example(ArazzoWorkflow workflow, String name, JsonNode example)
+   private static WorkflowExample example(ArazzoWorkflow workflow, String name, JsonNode example)
          throws MockRepositoryImportException {
       String refusal = INVALID_EXAMPLES + "example " + name + " of " + workflow.workflowId() + " ";
       Set<String> inputNames = new LinkedHashSet<>(ArazzoDataFlow.inputUses(workflow).keySet());
@@ -82,13 +82,13 @@ final class ArazzoExamplesReader {
             refusal + "expects the unknown output ", "");
       Map<String, ArazzoStep> steps = new LinkedHashMap<>();
       workflow.steps().forEach(step -> steps.put(step.stepId(), step));
-      List<ArazzoStepExpectation> expectations = new ArrayList<>();
+      List<WorkflowStepExpectation> expectations = new ArrayList<>();
       for (Map.Entry<String, JsonNode> expectation : example.path("steps").properties()) {
          ArazzoStep step = steps.get(expectation.getKey());
          if (step == null) {
             throw new MockRepositoryImportException(refusal + "expects the unknown step " + expectation.getKey());
          }
-         expectations.add(new ArazzoStepExpectation(step.stepId(),
+         expectations.add(new WorkflowStepExpectation(step.stepId(),
                status(expectation.getValue().path("status"), refusal, step.stepId()),
                values(expectation.getValue().path("outputs"), step.outputs().keySet(),
                      refusal + "expects the unknown output ", " of step " + step.stepId())));
@@ -97,7 +97,7 @@ final class ArazzoExamplesReader {
       if (stopsAt != null && !steps.containsKey(stopsAt)) {
          throw new MockRepositoryImportException(refusal + "stops at the unknown step " + stopsAt);
       }
-      return new ArazzoWorkflowExample(workflow.workflowId(), name, inputs, outputs, expectations, stopsAt);
+      return new WorkflowExample(workflow.workflowId(), name, inputs, outputs, expectations, stopsAt);
    }
 
    /** The values of a map of the example, each name being one of the known names. */

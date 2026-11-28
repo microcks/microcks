@@ -15,8 +15,8 @@
  */
 package io.microcks.service.arazzo.view;
 
-import io.microcks.domain.arazzo.ArazzoWorkflowExample;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowExample;
+import io.microcks.domain.workflow.WorkflowStepOperation;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +47,7 @@ public record ArazzoWorkflowDetail(String documentId, String title, String versi
       String fileName, Date importDate, List<String> workflowIds, List<Source> sources,
       String workflowId, String summary, String description, List<Input> inputs,
       List<Step> steps, Map<String, String> outputs, List<DataPassing> dataPassings,
-      ArazzoWorkflowStatus status, List<ArazzoWorkflowExample> examples) {
+      ArazzoWorkflowStatus status, List<WorkflowExample> examples) {
 
    /**
     * A step of an Arazzo workflow, as the API developer reads it.

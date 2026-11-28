@@ -23,13 +23,13 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.domain.TestResult;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.service.arazzo.view.WorkflowRunCounts;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.service.arazzo.view.WorkflowRunSummary;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowRunTarget;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.TestResultRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
@@ -199,7 +199,7 @@ class ArazzoRunHistoryTest {
 
    @Test
    void runsAreNumberedPerDocumentWhenLaunchedIndependentlyOfTheTestsOfTheirApis() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       runsOfPastryScenariosAre("another document");
       TestResult apiTest = new TestResult();
       apiTest.setServiceId(serviceRepository.findByNameAndVersion("API Pastry - 2.0", "2.0.0").getId());
@@ -219,7 +219,7 @@ class ArazzoRunHistoryTest {
 
    @Test
    void eachWorkflowOfTheWorkflowsListGivesItsLastRun() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       runsOfPastryScenariosAre(document.getId());
 
       List<ArazzoDocumentSummary.Workflow> workflows = arazzoDocumentService.getDocumentSummaries(null).get(0)
@@ -235,7 +235,7 @@ class ArazzoRunHistoryTest {
    @ParameterizedTest(name = "a last run {0} gives the last result {1}")
    @CsvSource({ "SUCCESS, PASSED", "FAILURE, FAILED", "IN_PROGRESS, IN_PROGRESS" })
    void theLastResultOfAWorkflowIsHowItsLastRunWent(WorkflowRunStatus status, String lastResult) throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       WorkflowResult run = new WorkflowResult();
       run.setDocumentId(document.getId());
       run.setWorkflowId("listThenReadFirst");
@@ -272,7 +272,7 @@ class ArazzoRunHistoryTest {
       return runs.stream().map(WorkflowRunSummary::number).toList();
    }
 
-   private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
+   private WorkflowDocument pastryScenariosAreImportedAndLinked() throws Exception {
       File contract = new File(
             ArazzoRunHistoryTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));

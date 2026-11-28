@@ -15,10 +15,10 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
@@ -68,7 +68,7 @@ class ArazzoWorkflowDetailTest {
 
    @Test
    void eachStepShowsItsOperationParametersCriteriaAndOutputs() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice")
             .orElseThrow();
@@ -88,7 +88,7 @@ class ArazzoWorkflowDetailTest {
 
    @Test
    void dataPassedBetweenStepsIsMadeVisible() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice")
             .orElseThrow();
@@ -102,7 +102,7 @@ class ArazzoWorkflowDetailTest {
 
    @Test
    void inputsAndWorkflowOutputsAreListedWithWhereTheyAreUsed() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice")
             .orElseThrow();
@@ -120,7 +120,7 @@ class ArazzoWorkflowDetailTest {
    /** S5, run dialog: each input is asked for with the type the workflow declares, a number for newPrice. */
    @Test
    void eachInputGivesTheTypeTheRunDialogAsksFor() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice")
             .orElseThrow();
@@ -137,7 +137,8 @@ class ArazzoWorkflowDetailTest {
    void eachInputTellsWhetherARunNeedsIt() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-needed-inputs.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService
+            .importArazzoDocument(fixture("pastry-needed-inputs.arazzo.yaml"));
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readAndTell")
             .orElseThrow();
@@ -157,7 +158,7 @@ class ArazzoWorkflowDetailTest {
    void theWorkflowTellsWhetherItCanRun(String fixture, String status) throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice")
             .orElseThrow();
@@ -184,7 +185,7 @@ class ArazzoWorkflowDetailTest {
       if (overlayImported) {
          arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       }
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice")
             .orElseThrow();
@@ -196,7 +197,7 @@ class ArazzoWorkflowDetailTest {
    /** Maintainer decision: one tab per workflow of the document, each reached by the id of the workflow. */
    @Test
    void eachWorkflowOfTheDocumentIsReachedFromItsTab() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "listThenReadFirst")
             .orElseThrow();
@@ -215,7 +216,7 @@ class ArazzoWorkflowDetailTest {
    @Test
    void theHeaderGivesTheArazzoVersionTheFileAndTheDateOfTheImport() throws Exception {
       Date before = new Date();
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"),
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"),
             "pastry.arazzo.yaml");
       Date after = new Date();
 
@@ -249,7 +250,7 @@ class ArazzoWorkflowDetailTest {
       if (overlayImported) {
          arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       }
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
       String serviceId = apiImported ? serviceRepository.findByNameAndVersion("API Pastry - 2.0", "2.0.0").getId()
             : null;
 
@@ -263,7 +264,7 @@ class ArazzoWorkflowDetailTest {
    @ParameterizedTest
    @CsvSource({ "false, readThenReprice", "true, unknown" })
    void anUnknownDocumentOrWorkflowHasNoDetail(boolean knownDocument, String workflowId) throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       assertEquals(Optional.empty(),
             arazzoWorkflowService.getWorkflowDetail(knownDocument ? document.getId() : "unknown", workflowId));
@@ -271,14 +272,14 @@ class ArazzoWorkflowDetailTest {
 
    @Test
    void aStoredDocumentThatCannotBeReadHasNoWorkflow() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       document.setContent("workflows: [ readThenReprice");
       arazzoDocumentRepository.persistOrUpdate(document);
 
       assertEquals(Optional.empty(), arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice"));
    }
 
-   private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
+   private WorkflowDocument pastryScenariosAreImportedAndLinked() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));

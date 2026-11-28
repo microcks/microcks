@@ -22,10 +22,10 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.domain.Secret;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunTarget;
 import io.microcks.repository.SecretRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
@@ -89,7 +89,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void eachSourceRunsWhereItIsSent() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       WorkflowResult run = launch(document, Map.of("customerApi", CUSTOMERS),
             perSource("customerApi", "implementation", "orderApi", "mock"));
@@ -105,7 +105,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void aSourceThePerSourceDoesNotNameRunsOnItsMocks() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       WorkflowResult run = launch(document, Map.of("customerApi", CUSTOMERS), perSource("customerApi", "implementation"));
 
@@ -115,7 +115,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void theSecretIsHandedForTheCallsToTheImplementations() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
       Secret secret = new Secret();
       secret.setName("customers-staging-token");
       secret.setToken("s3cr3t-t0k3n");
@@ -142,7 +142,7 @@ class ArazzoMixedRunTest {
          """)
    void aMixedRunThatDoesNotSayClearlyWhereEachSourceGoesIsRefused(String refused, String perSource, String baseUrls,
          String reason) throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       ArazzoRunRefusedException refusal = assertThrows(ArazzoRunRefusedException.class,
             () -> launch(document, pairs(baseUrls), pairs(perSource)));
@@ -154,7 +154,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void aSourceSentNowhereIsRefused() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
       Map<String, String> perSource = new LinkedHashMap<>();
       perSource.put("customerApi", null);
 
@@ -167,7 +167,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void aMixedRunWithEverySourceOnItsMocksIsRecordedAsLaunched() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       WorkflowResult run = launch(document, Map.of(), Map.of());
 
@@ -178,7 +178,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void theSecretIsNeitherNeededNorRecordedWhenNoSourceGoesToItsImplementation() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       WorkflowResult run = launch(document,
             new ArazzoRunImplementations(Map.of(), "unknown-secret", perSource("customerApi", "mock")));
@@ -189,7 +189,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void anUnknownSecretIsRefusedWhenASourceGoesToItsImplementation() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       ArazzoRunRefusedException refusal = assertThrows(ArazzoRunRefusedException.class,
             () -> launch(document, new ArazzoRunImplementations(Map.of("customerApi", CUSTOMERS), "unknown-secret",
@@ -201,7 +201,7 @@ class ArazzoMixedRunTest {
 
    @Test
    void withoutPerSourceARunOnImplementationsStillNeedsTheBaseUrlOfEverySource() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       ArazzoRunRefusedException refusal = assertThrows(ArazzoRunRefusedException.class,
             () -> launch(document, new ArazzoRunImplementations(Map.of("customerApi", CUSTOMERS), null)));
@@ -210,12 +210,12 @@ class ArazzoMixedRunTest {
             refusal.getMessage());
    }
 
-   private WorkflowResult launch(ArazzoDocument document, Map<String, String> baseUrls, Map<String, String> perSource)
+   private WorkflowResult launch(WorkflowDocument document, Map<String, String> baseUrls, Map<String, String> perSource)
          throws ArazzoRunRefusedException {
       return launch(document, new ArazzoRunImplementations(baseUrls, null, perSource));
    }
 
-   private WorkflowResult launch(ArazzoDocument document, ArazzoRunImplementations implementations)
+   private WorkflowResult launch(WorkflowDocument document, ArazzoRunImplementations implementations)
          throws ArazzoRunRefusedException {
       return arazzoRunService.launchRun(document.getId(), "placeOrder", INPUTS, 10000L, implementations).orElseThrow();
    }
@@ -240,7 +240,7 @@ class ArazzoMixedRunTest {
       return pairs;
    }
 
-   private ArazzoDocument orderFulfilmentIsImportedAndLinked() throws Exception {
+   private WorkflowDocument orderFulfilmentIsImportedAndLinked() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
       apiIsImported("order-api.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));

@@ -17,7 +17,7 @@ package io.microcks.service.arazzo;
 
 import io.microcks.domain.Operation;
 import io.microcks.domain.Service;
-import io.microcks.domain.arazzo.ArazzoInjectedFailure;
+import io.microcks.domain.workflow.WorkflowInjectedFailure;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -34,8 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ArazzoSessionFailuresTest {
 
-   private static final List<ArazzoInjectedFailure> CARD_REFUSED = List
-         .of(new ArazzoInjectedFailure("chargePayment", "Payment API", "1.0.0", "POST /payments", "card refused"));
+   private static final List<WorkflowInjectedFailure> CARD_REFUSED = List
+         .of(new WorkflowInjectedFailure("chargePayment", "Payment API", "1.0.0", "POST /payments", "card refused"));
 
    @ParameterizedTest
    @CsvSource(delimiter = '|', value = { "Payment API | 1.0.0 | POST /payments    | card refused",

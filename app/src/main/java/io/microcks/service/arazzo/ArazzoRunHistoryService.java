@@ -16,12 +16,12 @@
 package io.microcks.service.arazzo;
 
 import io.microcks.service.arazzo.view.ArazzoLastResult;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.service.arazzo.view.WorkflowRunCounts;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.service.arazzo.view.WorkflowRunSummary;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.repository.arazzo.WorkflowRunFilter;
 

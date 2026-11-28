@@ -18,7 +18,7 @@ package io.microcks.service.arazzo;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.service.arazzo.view.ArazzoApiUsage;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.repository.ServiceRepository;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -62,7 +62,7 @@ class ArazzoApiUsageTest {
    /** AC-01: The API page lists the workflows using it with their last result. */
    @Test
    void theApiPageListsTheWorkflowsUsingItWithTheirLastResult() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       orderFulfilmentIsImportedAndLinked();
 
       ArazzoApiUsage usage = arazzoWorkflowService.getApiUsage(serviceId("API Pastry - 2.0", "2.0.0"));
@@ -122,7 +122,7 @@ class ArazzoApiUsageTest {
             new TreeMap<>(usage.operationWorkflowCounts()).toString());
    }
 
-   private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
+   private WorkflowDocument pastryScenariosAreImportedAndLinked() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));

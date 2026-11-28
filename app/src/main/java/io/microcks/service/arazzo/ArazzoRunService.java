@@ -15,10 +15,10 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
-import io.microcks.domain.arazzo.ArazzoWorkflowExample;
+import io.microcks.domain.workflow.WorkflowExample;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.Request;
 import io.microcks.domain.Resource;
@@ -26,13 +26,13 @@ import io.microcks.domain.ResourceType;
 import io.microcks.domain.Response;
 import io.microcks.domain.Secret;
 import io.microcks.domain.SecretRef;
-import io.microcks.domain.arazzo.WorkflowExampleCheck;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunOrigin;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
-import io.microcks.domain.arazzo.WorkflowSourceTarget;
-import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowExampleCheck;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunOrigin;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowSourceTarget;
+import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ResponseRepository;
@@ -182,7 +182,7 @@ public class ArazzoRunService {
    public Optional<WorkflowResult> launchRun(String documentId, String workflowId, Map<String, Object> inputs,
          Long timeout, ArazzoRunImplementations implementations, boolean validateSchema)
          throws ArazzoRunRefusedException {
-      Optional<ArazzoDocument> found = documentWith(documentId, workflowId);
+      Optional<WorkflowDocument> found = documentWith(documentId, workflowId);
       if (found.isEmpty()) {
          return Optional.empty();
       }
@@ -200,7 +200,7 @@ public class ArazzoRunService {
     */
    public Optional<WorkflowResult> launchMockUrlRun(String documentId, String workflowId, Map<String, Object> inputs)
          throws ArazzoRunRefusedException {
-      Optional<ArazzoDocument> found = documentWith(documentId, workflowId);
+      Optional<WorkflowDocument> found = documentWith(documentId, workflowId);
       if (found.isEmpty()) {
          return Optional.empty();
       }
@@ -223,11 +223,11 @@ public class ArazzoRunService {
    public Optional<WorkflowResult> launchExampleRun(String documentId, String workflowId, String exampleName,
          Long timeout, ArazzoRunImplementations implementations, boolean validateSchema)
          throws ArazzoRunRefusedException {
-      Optional<ArazzoDocument> found = documentWith(documentId, workflowId);
+      Optional<WorkflowDocument> found = documentWith(documentId, workflowId);
       if (found.isEmpty()) {
          return Optional.empty();
       }
-      ArazzoWorkflowExample example = arazzoDocumentService.getExamples(found.get(), workflowId).stream()
+      WorkflowExample example = arazzoDocumentService.getExamples(found.get(), workflowId).stream()
             .filter(candidate -> candidate.name().equals(exampleName)).findFirst().orElseThrow(
                   () -> new ArazzoRunRefusedException("Workflow " + workflowId + " has no example " + exampleName));
       return Optional.of(launch(found.get(), workflowId, example.inputs(), timeout, implementations, validateSchema,
@@ -248,12 +248,12 @@ public class ArazzoRunService {
     */
    public Optional<List<ArazzoExampleLaunch>> launchExampleRuns(String documentId, String workflowId, Long timeout,
          ArazzoRunImplementations implementations, boolean validateSchema) throws ArazzoRunRefusedException {
-      Optional<ArazzoDocument> found = documentWith(documentId, workflowId);
+      Optional<WorkflowDocument> found = documentWith(documentId, workflowId);
       if (found.isEmpty()) {
          return Optional.empty();
       }
       List<ArazzoExampleLaunch> launches = new ArrayList<>();
-      for (ArazzoWorkflowExample example : arazzoDocumentService.getExamples(found.get(), workflowId)) {
+      for (WorkflowExample example : arazzoDocumentService.getExamples(found.get(), workflowId)) {
          try {
             WorkflowResult run = launch(found.get(), workflowId, example.inputs(), timeout, implementations,
                   validateSchema, ArazzoExampleJudge.expecting(example));
@@ -266,22 +266,22 @@ public class ArazzoRunService {
    }
 
    /** The Arazzo document, empty if it does not exist; refused when it has no such workflow. */
-   private Optional<ArazzoDocument> documentWith(String documentId, String workflowId)
+   private Optional<WorkflowDocument> documentWith(String documentId, String workflowId)
          throws ArazzoRunRefusedException {
-      Optional<ArazzoDocument> found = arazzoDocumentService.getDocument(documentId);
+      Optional<WorkflowDocument> found = arazzoDocumentService.getDocument(documentId);
       if (found.isPresent() && !found.get().getWorkflowIds().contains(workflowId)) {
          throw new ArazzoRunRefusedException("Unknown workflow: " + workflowId);
       }
       return found;
    }
 
-   private WorkflowResult launch(ArazzoDocument document, String workflowId, Map<String, Object> inputs, Long timeout,
+   private WorkflowResult launch(WorkflowDocument document, String workflowId, Map<String, Object> inputs, Long timeout,
          ArazzoRunImplementations implementations, boolean validateSchema, WorkflowExampleCheck example)
          throws ArazzoRunRefusedException {
       return launch(document, workflowId, inputs, timeout, implementations, validateSchema, example, null);
    }
 
-   private WorkflowResult launch(ArazzoDocument document, String workflowId, Map<String, Object> inputs, Long timeout,
+   private WorkflowResult launch(WorkflowDocument document, String workflowId, Map<String, Object> inputs, Long timeout,
          ArazzoRunImplementations implementations, boolean validateSchema, WorkflowExampleCheck example,
          WorkflowRunOrigin origin) throws ArazzoRunRefusedException {
       List<String> asyncStepIds = workflowOf(document, workflowId).map(ArazzoDocumentService::asyncStepIds)
@@ -344,13 +344,13 @@ public class ArazzoRunService {
    /**
     * The inputs a run of the workflow needs that are not given, or given as null; in the order the kernel gives them.
     */
-   private static List<String> missingInputs(ArazzoDocument document, String workflowId,
+   private static List<String> missingInputs(WorkflowDocument document, String workflowId,
          Map<String, Object> givenInputs) {
       return workflowOf(document, workflowId).map(ArazzoDataFlow::neededInputs).orElse(List.of()).stream()
             .filter(inputName -> givenInputs.get(inputName) == null).toList();
    }
 
-   private static Optional<ArazzoWorkflow> workflowOf(ArazzoDocument document, String workflowId) {
+   private static Optional<ArazzoWorkflow> workflowOf(WorkflowDocument document, String workflowId) {
       return ArazzoWorkflowReader.workflow(ArazzoWorkflowService.parse(document.getContent()), workflowId);
    }
 
@@ -370,7 +370,7 @@ public class ArazzoRunService {
    }
 
    /** Where each linked source is called: its mocks, or the base URL of its implementation. */
-   private static Map<String, String> baseUrlsOf(ArazzoDocument document, String workflowId,
+   private static Map<String, String> baseUrlsOf(WorkflowDocument document, String workflowId,
          List<ResolvedSource> linked, ArazzoRunImplementations implementations) throws ArazzoRunRefusedException {
       if (implementations != null && implementations.mixed()) {
          requireClearTargets(document, workflowId, linked, implementations);
@@ -397,7 +397,7 @@ public class ArazzoRunService {
     * A mixed run must say clearly where each source goes: only linked sources, sent to {@code mock} or
     * {@code implementation}, and no base URL for a source sent to its mocks.
     */
-   private static void requireClearTargets(ArazzoDocument document, String workflowId, List<ResolvedSource> linked,
+   private static void requireClearTargets(WorkflowDocument document, String workflowId, List<ResolvedSource> linked,
          ArazzoRunImplementations implementations) throws ArazzoRunRefusedException {
       String refusal = "Workflow " + workflowId + " cannot run: ";
       List<String> linkedNames = linked.stream().map(source -> source.link().sourceName()).toList();

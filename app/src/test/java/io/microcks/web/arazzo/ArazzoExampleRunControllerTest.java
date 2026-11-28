@@ -19,9 +19,9 @@ import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.arazzo.ArazzoMinionClient;
 import io.microcks.service.arazzo.ArazzoRunService;
@@ -74,7 +74,7 @@ class ArazzoExampleRunControllerTest {
    @Test
    void aRunNamingAnExamplePlaysItWithItsInputs() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
 
       Response launched = controller.launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(Map.of("pastry", "Ignored"), 10000L, null, null, null, null, "eclair-repriced"));
@@ -88,7 +88,7 @@ class ArazzoExampleRunControllerTest {
    @Test
    void aRunNamingAnUnknownExampleIsABadRequestWithItsReason() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
 
       Response refused = controller.launchRun(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(Map.of(), null, null, null, null, null, "eclair-flambe"));
@@ -100,7 +100,7 @@ class ArazzoExampleRunControllerTest {
    @Test
    void runningAllExamplesAnswersHowEachRunWasLaunched() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosWithExamples("missing-input");
+      WorkflowDocument document = pastryScenariosWithExamples("missing-input");
 
       Response launched = controller.launchExampleRuns(document.getId(), "readThenReprice",
             new ArazzoRunLaunchDTO(null, 5000L, Map.of("pastryApi", "http://localhost:8080"), null, null, true, null));
@@ -119,7 +119,7 @@ class ArazzoExampleRunControllerTest {
    @Test
    void runningAllExamplesOfAnUnknownDocumentIsNotFoundAndOfAnUnknownWorkflowIsABadRequest() throws Exception {
       ArazzoRunController controller = new ArazzoRunController(arazzoRunService);
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
 
       assertEquals(404, controller.launchExampleRuns("unknown", "readThenReprice", new ArazzoRunLaunchDTO(null, null))
             .getStatus());
@@ -129,11 +129,11 @@ class ArazzoExampleRunControllerTest {
             refused.getStatus() + " " + refused.getMediaType() + " " + refused.getEntity());
    }
 
-   private ArazzoDocument pastryScenariosWithExamples(String examples) throws Exception {
+   private WorkflowDocument pastryScenariosWithExamples(String examples) throws Exception {
       File contract = new File(
             ArazzoExampleRunControllerTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       arazzoDocumentService.importArazzoExamples(exampleOf(examples));
       return document;

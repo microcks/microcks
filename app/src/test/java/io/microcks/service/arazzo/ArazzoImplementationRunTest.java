@@ -22,11 +22,11 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.domain.Secret;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
-import io.microcks.domain.arazzo.WorkflowSourceTarget;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowSourceTarget;
 import io.microcks.repository.SecretRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
@@ -92,7 +92,7 @@ class ArazzoImplementationRunTest {
 
    @Test
    void eachStepCallsTheBaseUrlSetForItsSource() throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
 
       WorkflowResult run = launch(document, "placeOrder",
             new ArazzoRunImplementations(baseUrls("customerApi", CUSTOMERS, "orderApi", ORDERS), null));
@@ -113,7 +113,7 @@ class ArazzoImplementationRunTest {
 
    @Test
    void aSelectedSecretAuthenticatesEveryCall() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       Secret secret = secretIsDefined("pastry-staging-token", "s3cr3t-t0k3n", "X-Pastry-Token");
 
       WorkflowResult run = launch(document, "readThenReprice",
@@ -128,7 +128,7 @@ class ArazzoImplementationRunTest {
 
    @Test
    void aSecretWithUsernameAndPasswordIsHandedWithThem() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
       Secret secret = new Secret();
       secret.setName("pastry-staging-basic");
       secret.setUsername("baker");
@@ -145,7 +145,7 @@ class ArazzoImplementationRunTest {
 
    @Test
    void theRunRecordsWhichImplementationItTargeted() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       WorkflowResult run = launch(document, "readThenReprice",
             new ArazzoRunImplementations(Map.of("pastryApi", PASTRY_IMPLEMENTATION), null));
@@ -162,7 +162,7 @@ class ArazzoImplementationRunTest {
 
    @Test
    void theTrailingSlashesOfABaseUrlAreLeftOut() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       WorkflowResult run = launch(document, "readThenReprice",
             new ArazzoRunImplementations(Map.of("pastryApi", " http://localhost:8080/api// "), null));
@@ -186,7 +186,7 @@ class ArazzoImplementationRunTest {
                + "Please ensure the secret exists before running the workflow." })
    void aRunAgainstImplementationsThatCannotReachThemIsRefused(String sourceName, String baseUrl, String secretName,
          String reason) throws Exception {
-      ArazzoDocument document = orderFulfilmentIsImportedAndLinked();
+      WorkflowDocument document = orderFulfilmentIsImportedAndLinked();
       Map<String, String> baseUrls = baseUrls(sourceName, baseUrl, "orderApi", ORDERS);
 
       ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class,
@@ -200,7 +200,7 @@ class ArazzoImplementationRunTest {
 
    @Test
    void aRunAgainstImplementationsWithoutBaseUrlsIsRefused() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class,
             () -> launch(document, "readThenReprice", new ArazzoRunImplementations(null, null)));
@@ -211,7 +211,7 @@ class ArazzoImplementationRunTest {
 
    @Test
    void aRunAgainstTheMocksIsLaunchedWithoutImplementations() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked();
 
       WorkflowResult run = launch(document, "readThenReprice", null);
 
@@ -219,7 +219,7 @@ class ArazzoImplementationRunTest {
       assertEquals("/rest/API+Pastry+-+2.0/2.0.0", minion.requests().get(0).sources().get("pastryApi").baseUrl());
    }
 
-   private WorkflowResult launch(ArazzoDocument document, String workflowId, ArazzoRunImplementations implementations)
+   private WorkflowResult launch(WorkflowDocument document, String workflowId, ArazzoRunImplementations implementations)
          throws ArazzoRunRefusedException {
       return arazzoRunService.launchRun(document.getId(), workflowId, INPUTS.get(workflowId), 10000L, implementations)
             .orElseThrow();
@@ -242,14 +242,14 @@ class ArazzoImplementationRunTest {
       return secretRepository.save(secret);
    }
 
-   private ArazzoDocument orderFulfilmentIsImportedAndLinked() throws Exception {
+   private WorkflowDocument orderFulfilmentIsImportedAndLinked() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
       apiIsImported("order-api.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
    }
 
-   private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
+   private WorkflowDocument pastryScenariosAreImportedAndLinked() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));

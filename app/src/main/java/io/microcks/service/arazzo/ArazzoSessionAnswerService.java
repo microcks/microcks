@@ -15,16 +15,16 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.artifact.arazzo.ArazzoExpressionEvaluator;
 import io.microcks.artifact.arazzo.ArazzoExpressionException;
 import io.microcks.artifact.arazzo.ArazzoStep;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
 import io.microcks.domain.Response;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceStateRepository;
@@ -95,7 +95,7 @@ public class ArazzoSessionAnswerService {
     * @return The answer of the session to the call; empty when the session is not open, or when the call matches no
     *         step of its workflow or its operation has no example: the mocks then answer as they do outside a session
     */
-   public Optional<Response> answer(String sessionId, ArazzoSessionCall received, Response dispatched) {
+   public Optional<Response> answer(String sessionId, WorkflowSessionRecordedCall received, Response dispatched) {
       Date now = new Date();
       return arazzoSessionRepository.findByIdOptional(sessionId)
             .filter(session -> session.getClosedDate() == null && session.getExpireAt().after(now))
@@ -110,7 +110,8 @@ public class ArazzoSessionAnswerService {
     * The example the step answers with, filled with the values of the session; as it is when Microcks keeps no request
     * with it.
     */
-   private Response filled(Response example, ExpectedStep step, ArazzoSessionCall received, ReceivedCall session) {
+   private Response filled(Response example, ExpectedStep step, WorkflowSessionRecordedCall received,
+         ReceivedCall session) {
       Map<String, Object> replacements = requestRepository
             .findByOperationIdAndName(example.getOperationId(), example.getName()).stream().findFirst()
             .map(exampleRequest -> ArazzoSessionAnswerFiller.replacements(step.step(), exampleRequest,
@@ -127,7 +128,7 @@ public class ArazzoSessionAnswerService {
     * @param session The session the call was recorded in
     * @param call    The call, as the mocks received and answered it
     */
-   public void remember(ArazzoSession session, ArazzoSessionCall call) {
+   public void remember(WorkflowSession session, WorkflowSessionRecordedCall call) {
       stepsOf(session).ifPresent(steps -> steps.stepOf(call).ifPresent(step -> {
          Map<String, Object> outputs = new LinkedHashMap<>();
          ReceivedCall answered = steps.context(call);
@@ -163,7 +164,7 @@ public class ArazzoSessionAnswerService {
    }
 
    /** The steps of the workflow of a session; empty when it names no document, or its document or workflow is gone. */
-   private Optional<SessionSteps> stepsOf(ArazzoSession session) {
+   private Optional<SessionSteps> stepsOf(WorkflowSession session) {
       return Optional.ofNullable(session.getDocumentId()).flatMap(arazzoDocumentService::getDocument)
             .flatMap(document -> workflowOf(document, session.getWorkflowId()).map(workflow -> {
                Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
@@ -180,7 +181,7 @@ public class ArazzoSessionAnswerService {
             }));
    }
 
-   private static Optional<ArazzoWorkflow> workflowOf(ArazzoDocument document, String workflowId) {
+   private static Optional<ArazzoWorkflow> workflowOf(WorkflowDocument document, String workflowId) {
       return Optional.ofNullable(document.getContent()).map(ArazzoWorkflowService::parse)
             .flatMap(content -> ArazzoWorkflowReader.workflow(content, workflowId));
    }
@@ -189,7 +190,7 @@ public class ArazzoSessionAnswerService {
     * The first success example of the operation a call reached, else its first example; empty when it has none. The
     * responses of its callbacks are not examples of the operation.
     */
-   private Optional<Response> exampleOf(String serviceId, ArazzoSessionCall received) {
+   private Optional<Response> exampleOf(String serviceId, WorkflowSessionRecordedCall received) {
       return responseRepository.findByOperationId(serviceId + "-" + received.getOperationName()).stream()
             .filter(response -> response.getCallbackName() == null).min(Comparator.comparing(Response::isFault));
    }
@@ -236,7 +237,7 @@ public class ArazzoSessionAnswerService {
        * The step a call matches: the first step of its operation the session has not answered yet, else the last one,
        * which answers again.
        */
-      private Optional<ExpectedStep> stepOf(ArazzoSessionCall call) {
+      private Optional<ExpectedStep> stepOf(WorkflowSessionRecordedCall call) {
          List<ExpectedStep> candidates = steps.stream().filter(step -> ArazzoSessionVerifier.calls(call, step))
                .toList();
          return candidates.stream().filter(step -> store(step).get(stateKey(sessionId, step)) == null).findFirst()
@@ -247,7 +248,7 @@ public class ArazzoSessionAnswerService {
        * What the runtime expressions of a step see in the session: its inputs, the outputs of the steps it answered
        * and, once the mocks answered it, the response to the call.
        */
-      private ReceivedCall context(ArazzoSessionCall call) {
+      private ReceivedCall context(WorkflowSessionRecordedCall call) {
          return new ReceivedCall(inputs, outputs(), call);
       }
 

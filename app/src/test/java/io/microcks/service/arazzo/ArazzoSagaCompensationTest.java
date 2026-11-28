@@ -19,12 +19,12 @@ import io.microcks.domain.Header;
 import io.microcks.domain.Operation;
 import io.microcks.domain.Response;
 import io.microcks.domain.Service;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowSessionCall;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowSessionCall;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.service.ArtifactInfo;
@@ -85,7 +85,7 @@ class ArazzoSagaCompensationTest {
    /** AC-01: chargePayment, set to fail in the session, answers with the example card refused of Payment API. */
    @Test
    void anInjectedFailureMakesTheStepAnswerWithTheChosenExample() throws Exception {
-      ArazzoSession session = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession session = sessionOnTheCompensation(CARD_REFUSED);
 
       Response answer = injectedFailure(session, "Payment API", "POST /payments").orElseThrow();
 
@@ -99,7 +99,7 @@ class ArazzoSagaCompensationTest {
    /** Only the step set to fail answers with its example: the other steps of the session answer as usual. */
    @Test
    void theOtherOperationsOfTheSessionAnswerAsUsual() throws Exception {
-      ArazzoSession session = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession session = sessionOnTheCompensation(CARD_REFUSED);
 
       assertEquals(Optional.empty(), injectedFailure(session, "Order API", "POST /orders"));
       assertEquals(Optional.empty(), injectedFailure(session, "Stock API", "DELETE /reservations/{reservationId}"));
@@ -108,7 +108,7 @@ class ArazzoSagaCompensationTest {
    /** AC-02: the service releases reservation r-9 and cancels order o-42 after the refusal: the compensation passes. */
    @Test
    void aCompleteCompensationPassesTheVerification() throws Exception {
-      ArazzoSession session = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession session = sessionOnTheCompensation(CARD_REFUSED);
 
       record(session, createOrder(), reserveStock(), chargePaymentRefused(), releaseStock(), cancelOrder());
 
@@ -121,7 +121,7 @@ class ArazzoSagaCompensationTest {
    /** AC-03: the service cancels the order but never releases the stock: releaseStock is missing. */
    @Test
    void aMissingCompensationStepFailsTheVerification() throws Exception {
-      ArazzoSession session = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession session = sessionOnTheCompensation(CARD_REFUSED);
 
       record(session, createOrder(), reserveStock(), chargePaymentRefused(), cancelOrder());
 
@@ -133,7 +133,7 @@ class ArazzoSagaCompensationTest {
    /** AC-04: the service still confirms the order after the refused payment: that call was not expected. */
    @Test
    void aCallThatShouldNotHappenAfterTheFailureFailsTheVerification() throws Exception {
-      ArazzoSession session = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession session = sessionOnTheCompensation(CARD_REFUSED);
 
       record(session, createOrder(), reserveStock(), chargePaymentRefused(), confirmOrder(), releaseStock(),
             cancelOrder());
@@ -154,7 +154,7 @@ class ArazzoSagaCompensationTest {
     */
    @Test
    void aCallToAnApiNoSourceIsLinkedToIsNotUnexpected() throws Exception {
-      ArazzoSession session = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession session = sessionOnTheCompensation(CARD_REFUSED);
 
       record(session, createOrder(), reserveStock(), chargePaymentRefused(),
             call("Notification API", "POST /notifications", "/notifications", "{\"orderId\": \"o-42\"}", 202, null),
@@ -169,8 +169,8 @@ class ArazzoSagaCompensationTest {
    /** AC-05: of two sessions calling chargePayment, only the one that set it to fail receives card refused. */
    @Test
    void injectionIsLimitedToItsSession() throws Exception {
-      ArazzoSession withFailure = sessionOnTheCompensation(CARD_REFUSED);
-      ArazzoSession withoutFailure = arazzoSessionService
+      WorkflowSession withFailure = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession withoutFailure = arazzoSessionService
             .openSession(withFailure.getDocumentId(), COMPENSATION, null, Map.of()).orElseThrow();
 
       assertEquals("402", injectedFailure(withFailure, "Payment API", "POST /payments").orElseThrow().getStatus());
@@ -180,7 +180,7 @@ class ArazzoSagaCompensationTest {
    /** Once its session is closed, a step set to fail answers as usual again, as the session records no more calls. */
    @Test
    void aClosedSessionInjectsNothingAnyMore() throws Exception {
-      ArazzoSession session = sessionOnTheCompensation(CARD_REFUSED);
+      WorkflowSession session = sessionOnTheCompensation(CARD_REFUSED);
 
       arazzoSessionService.closeSession(session.getId());
 
@@ -210,7 +210,7 @@ class ArazzoSagaCompensationTest {
                + "Order API 1.0.0 has no example `c-7`" })
    void aFailureOnAnUnknownStepOrExampleIsRefusedAndNoSessionIsOpened(String stepId, String example, String reason)
          throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
 
       assertEquals(reason,
             assertThrows(ArazzoRunRefusedException.class,
@@ -219,7 +219,7 @@ class ArazzoSagaCompensationTest {
       assertEquals(0, arazzoSessionRepository.count());
    }
 
-   private Optional<Response> injectedFailure(ArazzoSession session, String apiName, String operationName) {
+   private Optional<Response> injectedFailure(WorkflowSession session, String apiName, String operationName) {
       Service api = serviceRepository.findByNameAndVersion(apiName, "1.0.0");
       Operation operation = api.getOperations().stream().filter(candidate -> candidate.getName().equals(operationName))
             .findFirst().orElseThrow();
@@ -230,13 +230,13 @@ class ArazzoSagaCompensationTest {
       return payment.getOperations().get(0);
    }
 
-   private ArazzoSession sessionOnTheCompensation(Map<String, String> failures) throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+   private WorkflowSession sessionOnTheCompensation(Map<String, String> failures) throws Exception {
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
       return arazzoSessionService.openSession(saga.getId(), COMPENSATION, null, failures).orElseThrow();
    }
 
-   private void record(ArazzoSession session, ArazzoSessionCall... calls) {
-      for (ArazzoSessionCall call : calls) {
+   private void record(WorkflowSession session, WorkflowSessionRecordedCall... calls) {
+      for (WorkflowSessionRecordedCall call : calls) {
          arazzoSessionService.recordCall(session.getId(), call);
       }
    }
@@ -248,46 +248,47 @@ class ArazzoSagaCompensationTest {
    }
 
    /** The order saga service places order o-42 for customer c-7; the mock answers with order o-42. */
-   private static ArazzoSessionCall createOrder() {
+   private static WorkflowSessionRecordedCall createOrder() {
       return call("Order API", "POST /orders", "/orders",
             "{\"customerId\": \"c-7\", \"items\": [{\"sku\": \"ABC-1\", \"quantity\": 2}], \"amount\": 25.0}", 201,
             "{\"id\": \"o-42\", \"customerId\": \"c-7\", \"amount\": 25.0, \"status\": \"PENDING\"}");
    }
 
    /** The service reserves the items of order o-42; the mock answers with reservation r-9. */
-   private static ArazzoSessionCall reserveStock() {
+   private static WorkflowSessionRecordedCall reserveStock() {
       return call("Stock API", "POST /reservations", "/reservations", "{\"orderId\": \"o-42\"}", 201,
             "{\"id\": \"r-9\", \"orderId\": \"o-42\", \"status\": \"RESERVED\"}");
    }
 
    /** The service charges order o-42; the mock answers with the injected example card refused. */
-   private static ArazzoSessionCall chargePaymentRefused() {
+   private static WorkflowSessionRecordedCall chargePaymentRefused() {
       return call("Payment API", "POST /payments", "/payments", "{\"orderId\": \"o-42\", \"amount\": 25.0}", 402,
             "{\"orderId\": \"o-42\", \"status\": \"REFUSED\", \"reason\": \"Card refused\"}");
    }
 
    /** The service releases reservation r-9. */
-   private static ArazzoSessionCall releaseStock() {
+   private static WorkflowSessionRecordedCall releaseStock() {
       return call("Stock API", "DELETE /reservations/{reservationId}", "/reservations/r-9", null, 200,
             "{\"id\": \"r-9\", \"status\": \"RELEASED\"}");
    }
 
    /** The service cancels order o-42. */
-   private static ArazzoSessionCall cancelOrder() {
+   private static WorkflowSessionRecordedCall cancelOrder() {
       return call("Order API", "POST /orders/{orderId}/cancel", "/orders/o-42/cancel", null, 200,
             "{\"id\": \"o-42\", \"status\": \"CANCELLED\"}");
    }
 
    /** The service confirms order o-42, although its payment was refused. */
-   private static ArazzoSessionCall confirmOrder() {
+   private static WorkflowSessionRecordedCall confirmOrder() {
       return call("Order API", "POST /orders/{orderId}/confirm", "/orders/o-42/confirm", null, 200,
             "{\"id\": \"o-42\", \"status\": \"CONFIRMED\"}");
    }
 
    /** A call to the mocks of an API 1.0.0, as the mocks record it in a session. */
-   private static ArazzoSessionCall call(String apiName, String operationName, String path, String body, int status,
+   private static WorkflowSessionRecordedCall call(String apiName, String operationName, String path, String body,
+         int status,
          String responseBody) {
-      ArazzoSessionCall call = new ArazzoSessionCall();
+      WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
       call.setServiceName(apiName);
       call.setServiceVersion("1.0.0");
       call.setOperationName(operationName);
@@ -302,7 +303,7 @@ class ArazzoSagaCompensationTest {
       return call;
    }
 
-   private ArazzoDocument orderSagaIsImportedAndLinked() throws Exception {
+   private WorkflowDocument orderSagaIsImportedAndLinked() throws Exception {
       for (String api : List.of("order-api", "stock-api", "payment-api")) {
          Path contract = Files.createTempFile(api, ".yaml");
          Files.writeString(contract, example("saga-compensation.contracts.yaml", api));

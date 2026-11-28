@@ -15,8 +15,8 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.web.AbstractBaseIT;
@@ -80,14 +80,15 @@ class ArazzoSessionGrpcIT extends AbstractBaseIT {
       greet("baggage", "tenant=bakery,microcks-session=" + second);
 
       for (String sessionId : List.of(first, second)) {
-         List<ArazzoSessionCall> calls = arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(sessionId);
+         List<WorkflowSessionRecordedCall> calls = arazzoSessionCallRepository
+               .findBySessionIdOrderByIndexAsc(sessionId);
          assertEquals(List.of("0 GRPC greeting 0"), calls.stream().map(call -> call.getIndex() + " " + call.getMethod()
                + " " + call.getOperationName() + " " + call.getResponseStatus()).toList());
       }
    }
 
    private String openSession() {
-      ArazzoSession session = new ArazzoSession();
+      WorkflowSession session = new WorkflowSession();
       session.setWorkflowId("greetWorkflow");
       session.setOpenedDate(new Date());
       session.setExpireAt(new Date(System.currentTimeMillis() + 60_000L));

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 /**
  * A step of a workflow set to fail in a verification session: in that session, the mocks answer the operation of the
@@ -25,6 +25,6 @@ package io.microcks.domain.arazzo;
  * @param exampleName   The name of the example of that operation the mocks answer with
  * @author SebastienDegodez
  */
-public record ArazzoInjectedFailure(String stepId, String apiName, String apiVersion, String operationName,
+public record WorkflowInjectedFailure(String stepId, String apiName, String apiVersion, String operationName,
       String exampleName) {
 }

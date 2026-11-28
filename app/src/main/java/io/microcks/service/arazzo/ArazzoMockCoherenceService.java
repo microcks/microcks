@@ -17,12 +17,12 @@ package io.microcks.service.arazzo;
 
 import io.microcks.domain.Operation;
 import io.microcks.domain.Service;
-import io.microcks.domain.arazzo.WorkflowMissingExample;
-import io.microcks.domain.arazzo.WorkflowParameterValue;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowMissingExample;
+import io.microcks.domain.workflow.WorkflowParameterValue;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.util.DispatchCriteriaHelper;

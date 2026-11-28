@@ -20,7 +20,7 @@ import io.microcks.testsupport.http.ResponseEntity;
 import io.restassured.RestAssured;
 import io.microcks.testsupport.http.HttpStatus;
 import io.microcks.testsupport.http.HttpHeaders;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 
@@ -89,7 +89,7 @@ class ArazzoDownloadIT extends AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       assertEquals("{\"name\": \"API Pastry scenarios:1.0.0\"}", response.getBody());
-      ArazzoDocument imported = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      WorkflowDocument imported = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
       assertNotNull(imported);
       assertEquals(List.of("readThenReprice", "listThenReadFirst"), imported.getWorkflowIds());
       assertEquals("pastry scenarios.arazzo.yaml", imported.getFileName());

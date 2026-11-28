@@ -15,9 +15,9 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.service.arazzo.view.ArazzoApiUsage;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoLastResult;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
@@ -91,7 +91,7 @@ public class ArazzoWorkflowService {
    public ArazzoApiUsage getApiUsage(String serviceId) {
       List<ArazzoApiUsage.Document> documents = new ArrayList<>();
       Map<String, Integer> operationWorkflowCounts = new HashMap<>();
-      for (ArazzoDocument document : arazzoDocumentRepository.findAllSorted()) {
+      for (WorkflowDocument document : arazzoDocumentRepository.findAllSorted()) {
          Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
          List<ArazzoApiUsage.Workflow> workflows = new ArrayList<>();
          for (String workflowId : document.getWorkflowIds()) {
@@ -128,7 +128,7 @@ public class ArazzoWorkflowService {
       return operationNames;
    }
 
-   private ArazzoWorkflowDetail detail(ArazzoDocument document, ArazzoWorkflow workflow) {
+   private ArazzoWorkflowDetail detail(WorkflowDocument document, ArazzoWorkflow workflow) {
       Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
       return new ArazzoWorkflowDetail(document.getId(), document.getTitle(), document.getVersion(),
             document.getArazzoVersion(), document.getFileName(), document.getImportDate(), document.getWorkflowIds(),
@@ -165,7 +165,7 @@ public class ArazzoWorkflowService {
    /**
     * A linked source tells how many operations its API defines, and how many of them the steps of the document call.
     */
-   private static ArazzoWorkflowDetail.Source sourceDescription(ResolvedSource source, ArazzoDocument document) {
+   private static ArazzoWorkflowDetail.Source sourceDescription(ResolvedSource source, WorkflowDocument document) {
       Set<String> usedOperationIds = new HashSet<>();
       document.getWorkflowCalls().values()
             .forEach(calls -> calls.stream()

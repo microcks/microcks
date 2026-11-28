@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import io.microcks.domain.SecretRef;
 import io.quarkus.mongodb.panache.common.MongoEntity;

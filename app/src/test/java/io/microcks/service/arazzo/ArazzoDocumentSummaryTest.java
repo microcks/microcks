@@ -17,7 +17,7 @@ package io.microcks.service.arazzo;
 
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
@@ -109,7 +109,7 @@ class ArazzoDocumentSummaryTest {
 
    @Test
    void aDocumentImportedWithoutItsFileHasNoFileName() throws Exception {
-      ArazzoDocument imported = arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"));
+      WorkflowDocument imported = arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"));
 
       assertEquals("API Pastry scenarios 1.0.0 (null)",
             imported.getTitle() + " " + imported.getVersion() + " (" + imported.getFileName() + ")");
@@ -118,7 +118,7 @@ class ArazzoDocumentSummaryTest {
    @Test
    void aDocumentStoredBeforeTheWorkflowsPageIsListedWithoutWhatWasNotStored() throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"), "pastry.arazzo.yaml");
-      ArazzoDocument storedBefore = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      WorkflowDocument storedBefore = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
       storedBefore.setArazzoVersion(null);
       storedBefore.setFileName(null);
       storedBefore.setImportDate(null);

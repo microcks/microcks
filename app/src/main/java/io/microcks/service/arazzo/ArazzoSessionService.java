@@ -21,19 +21,19 @@ import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
 import io.microcks.artifact.openapi.OpenAPISchemaValidator;
 import io.microcks.domain.Request;
 import io.microcks.domain.Response;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunOrigin;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
-import io.microcks.domain.arazzo.WorkflowSessionCall;
-import io.microcks.domain.arazzo.WorkflowSessionCheck;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunOrigin;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowSessionCall;
+import io.microcks.domain.workflow.WorkflowSessionCheck;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
@@ -121,7 +121,7 @@ public class ArazzoSessionService {
     * @throws ArazzoRunRefusedException if the workflow is unknown, or if one of its steps calls no operation of a
     *                                   linked API
     */
-   public Optional<ArazzoSession> openSession(String documentId, String workflowId) throws ArazzoRunRefusedException {
+   public Optional<WorkflowSession> openSession(String documentId, String workflowId) throws ArazzoRunRefusedException {
       return openSession(documentId, workflowId, null);
    }
 
@@ -134,7 +134,7 @@ public class ArazzoSessionService {
     * @throws ArazzoRunRefusedException if the workflow is unknown, if one of its steps calls no operation of a linked
     *                                   API, or if an input is unknown, invalid or missing
     */
-   public Optional<ArazzoSession> openSession(String documentId, String workflowId, Map<String, Object> inputs)
+   public Optional<WorkflowSession> openSession(String documentId, String workflowId, Map<String, Object> inputs)
          throws ArazzoRunRefusedException {
       return openSession(documentId, workflowId, inputs, Map.of());
    }
@@ -152,13 +152,13 @@ public class ArazzoSessionService {
     *                                   API, if an input is unknown, invalid or missing, or if a failure names a step or
     *                                   an example that does not exist
     */
-   public Optional<ArazzoSession> openSession(String documentId, String workflowId, Map<String, Object> inputs,
+   public Optional<WorkflowSession> openSession(String documentId, String workflowId, Map<String, Object> inputs,
          Map<String, String> failures) throws ArazzoRunRefusedException {
-      Optional<ArazzoDocument> found = arazzoDocumentService.getDocument(documentId);
+      Optional<WorkflowDocument> found = arazzoDocumentService.getDocument(documentId);
       if (found.isEmpty()) {
          return Optional.empty();
       }
-      ArazzoDocument document = found.get();
+      WorkflowDocument document = found.get();
       if (!document.getWorkflowIds().contains(workflowId)) {
          throw new ArazzoRunRefusedException("Unknown workflow: " + workflowId);
       }
@@ -176,7 +176,7 @@ public class ArazzoSessionService {
          }
       }
       Date now = new Date();
-      ArazzoSession session = new ArazzoSession();
+      WorkflowSession session = new WorkflowSession();
       session.setDocumentId(document.getId());
       session.setDocumentTitle(document.getTitle());
       session.setDocumentVersion(document.getVersion());
@@ -199,9 +199,9 @@ public class ArazzoSessionService {
     * @param sessionId The id of the session the call names
     * @param call      The call, as the mocks received and answered it
     */
-   public void recordCall(String sessionId, ArazzoSessionCall call) {
+   public void recordCall(String sessionId, WorkflowSessionRecordedCall call) {
       Date now = new Date();
-      ArazzoSession session = arazzoSessionRepository.countCall(sessionId, maxCalls, now);
+      WorkflowSession session = arazzoSessionRepository.countCall(sessionId, maxCalls, now);
       if (session == null) {
          // A session that recorded its maximum of calls counts those it does not record.
          arazzoSessionRepository.countDroppedCall(sessionId, maxCalls, now);
@@ -237,7 +237,7 @@ public class ArazzoSessionService {
     * @param sessionId The id of the session
     * @return The session; empty if it does not exist, or expired
     */
-   public Optional<ArazzoSession> getSession(String sessionId) {
+   public Optional<WorkflowSession> getSession(String sessionId) {
       return arazzoSessionRepository.findByIdOptional(sessionId)
             .filter(session -> session.getExpireAt().after(new Date()));
    }
@@ -248,7 +248,7 @@ public class ArazzoSessionService {
     * @param workflowId The id of the workflow in that document
     * @return The sessions, the latest opened first; none when the document does not exist
     */
-   public List<ArazzoSession> listSessions(String documentId, String workflowId) {
+   public List<WorkflowSession> listSessions(String documentId, String workflowId) {
       return arazzoDocumentService.getDocument(documentId)
             .map(document -> arazzoSessionRepository.findLiveByWorkflow(document.getId(), workflowId, new Date()))
             .orElse(List.of());
@@ -264,9 +264,10 @@ public class ArazzoSessionService {
             .getDocument(session.getDocumentId()).map(document -> verify(session, document)));
    }
 
-   private WorkflowResult verify(ArazzoSession session, ArazzoDocument document) {
+   private WorkflowResult verify(WorkflowSession session, WorkflowDocument document) {
       Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
-      List<ArazzoSessionCall> calls = arazzoSessionCallRepository.findBySessionIdOrderByIndexAsc(session.getId());
+      List<WorkflowSessionRecordedCall> calls = arazzoSessionCallRepository
+            .findBySessionIdOrderByIndexAsc(session.getId());
       Map<String, Object> inputs = session.getInputs() == null ? Map.of() : session.getInputs();
       List<StepVerdict> verdicts = ArazzoSessionVerifier.verify(workflowOf(document, session.getWorkflowId()),
             expectedSteps(document, session, sources), calls, inputs, validationResourceUrl);
@@ -315,7 +316,7 @@ public class ArazzoSessionService {
    }
 
    /** The steps of the workflow of the session, each with its operation in the API its source is linked to. */
-   private List<ExpectedStep> expectedSteps(ArazzoDocument document, ArazzoSession session,
+   private List<ExpectedStep> expectedSteps(WorkflowDocument document, WorkflowSession session,
          Map<String, ResolvedSource> sources) {
       ArazzoWorkflow workflow = workflowOf(document, session.getWorkflowId());
       Map<String, JsonNode> contracts = new HashMap<>();
@@ -352,7 +353,7 @@ public class ArazzoSessionService {
       }
    }
 
-   private static ArazzoWorkflow workflowOf(ArazzoDocument document, String workflowId) {
+   private static ArazzoWorkflow workflowOf(WorkflowDocument document, String workflowId) {
       return ArazzoWorkflowReader.workflow(ArazzoWorkflowService.parse(document.getContent()), workflowId)
             .orElseThrow();
    }
@@ -368,7 +369,7 @@ public class ArazzoSessionService {
             operation.method(), operation.path());
       WorkflowStepStatus status = verdict.failures().isEmpty() ? WorkflowStepStatus.PASSED : WorkflowStepStatus.FAILED;
       String message = verdict.failures().isEmpty() ? null : String.join("; ", verdict.failures());
-      ArazzoSessionCall call = verdict.call();
+      WorkflowSessionRecordedCall call = verdict.call();
       if (call == null) {
          return new WorkflowStepResult(expected.index(), expected.step().stepId(), stepOperation, status, null, 0,
                List.of(), Map.of(), null, message, null, List.of(), Map.of());
@@ -391,7 +392,7 @@ public class ArazzoSessionService {
       return origins;
    }
 
-   private static Request requestOf(ArazzoSessionCall call, ExpectedStep expected) {
+   private static Request requestOf(WorkflowSessionRecordedCall call, ExpectedStep expected) {
       Request request = new Request();
       request.setName(expected.step().stepId());
       request.setContent(call.getRequestBody());
@@ -399,7 +400,7 @@ public class ArazzoSessionService {
       return request;
    }
 
-   private static Response responseOf(ArazzoSessionCall call, ExpectedStep expected) {
+   private static Response responseOf(WorkflowSessionRecordedCall call, ExpectedStep expected) {
       Response response = new Response();
       response.setName(expected.step().stepId());
       response.setStatus(String.valueOf(call.getResponseStatus()));

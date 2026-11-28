@@ -18,16 +18,16 @@ package io.microcks.service.arazzo;
 import io.microcks.domain.Header;
 import io.microcks.domain.Request;
 import io.microcks.domain.Response;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.arazzo.WorkflowParameterValue;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunOrigin;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
+import io.microcks.domain.workflow.WorkflowParameterValue;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunOrigin;
+import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.service.arazzo.view.WorkflowRunSummary;
-import io.microcks.domain.arazzo.WorkflowSessionCall;
-import io.microcks.domain.arazzo.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowSessionCall;
+import io.microcks.domain.workflow.WorkflowStepResult;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
@@ -98,8 +98,8 @@ class ArazzoSessionVerificationTest {
    /** Walking skeleton: a call the saga service makes in its session is matched to its step, in the history. */
    @Test
    void aCallMadeInTheSessionIsMatchedToItsStepAndTheVerificationJoinsTheHistory() throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
-      ArazzoSession session = arazzoSessionService.openSession(saga.getId(), SAGA).orElseThrow();
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
+      WorkflowSession session = arazzoSessionService.openSession(saga.getId(), SAGA).orElseThrow();
 
       arazzoSessionService.recordCall(session.getId(), createOrder());
 
@@ -126,7 +126,7 @@ class ArazzoSessionVerificationTest {
    /** AC-01: the 4 calls of the saga, in the order of the workflow, pass step by step. */
    @Test
    void callsMatchingTheWorkflowPassStepByStep() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
 
       record(session, createOrder(), reserveStock("o-42"), chargePayment("o-42"), confirmOrder("o-42"));
 
@@ -142,7 +142,7 @@ class ArazzoSessionVerificationTest {
    /** AC-02: a call out of order fails the verification, naming the step expected before it. */
    @Test
    void aCallOutOfOrderFailsTheVerification() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
 
       record(session, createOrder(), chargePayment("o-42"), reserveStock("o-42"), confirmOrder("o-42"));
 
@@ -156,7 +156,7 @@ class ArazzoSessionVerificationTest {
    /** AC-03: data not taken from the previous step fails the verification, naming its source and both values. */
    @Test
    void dataNotTakenFromThePreviousStepFailsTheVerification() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
 
       record(session, createOrder(), reserveStock("o-1"), chargePayment("o-42"), confirmOrder("o-42"));
 
@@ -171,8 +171,8 @@ class ArazzoSessionVerificationTest {
    /** A value of a path parameter not taken from the previous step fails its step the same way. */
    @Test
    void aPathParameterNotTakenFromThePreviousStepFailsTheVerification() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
-      ArazzoSessionCall confirmAnotherOrder = confirmOrder("o-1");
+      WorkflowSession session = sessionOnTheSaga();
+      WorkflowSessionRecordedCall confirmAnotherOrder = confirmOrder("o-1");
       confirmAnotherOrder.setResponseStatus(404);
 
       record(session, createOrder(), reserveStock("o-42"), chargePayment("o-42"), confirmAnotherOrder);
@@ -185,7 +185,7 @@ class ArazzoSessionVerificationTest {
    /** The steps show the outputs read from the mock responses, and the values received with their source. */
    @Test
    void theStepsShowTheirOutputsAndTheValuesTheyReceived() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
 
       record(session, createOrder(), reserveStock("o-42"), chargePayment("o-42"), confirmOrder("o-42"));
 
@@ -201,8 +201,8 @@ class ArazzoSessionVerificationTest {
    /** Each call is checked against the contract of the API it called: a request it does not allow fails its step. */
    @Test
    void aRequestTheContractOfItsApiDoesNotAllowFailsItsStep() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
-      ArazzoSessionCall chargeAmountAsText = chargePayment("o-42");
+      WorkflowSession session = sessionOnTheSaga();
+      WorkflowSessionRecordedCall chargeAmountAsText = chargePayment("o-42");
       chargeAmountAsText.setRequestBody("{\"orderId\": \"o-42\", \"amount\": \"25.0\"}");
 
       record(session, createOrder(), reserveStock("o-42"), chargeAmountAsText, confirmOrder("o-42"));
@@ -218,7 +218,7 @@ class ArazzoSessionVerificationTest {
    /** A matched step keeps the exchange of its call, as the step of a run keeps its own, for the run page. */
    @Test
    void aMatchedStepKeepsTheExchangeOfItsCall() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       record(session, createOrder());
 
       WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
@@ -240,8 +240,8 @@ class ArazzoSessionVerificationTest {
          "30.0 | 2 chargePayment FAILED `chargePayment` body `/amount` should come from "
                + "`$steps.createOrder.outputs.amount` (25.0), got 30.0" })
    void aNumberSentFromAnOutputIsComparedByValue(String amount, String verdict) throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
-      ArazzoSessionCall charge = chargePayment("o-42");
+      WorkflowSession session = sessionOnTheSaga();
+      WorkflowSessionRecordedCall charge = chargePayment("o-42");
       charge.setRequestBody("{\"orderId\": \"o-42\", \"amount\": " + amount + "}");
 
       record(session, createOrder(), reserveStock("o-42"), charge, confirmOrder("o-42"));
@@ -260,10 +260,10 @@ class ArazzoSessionVerificationTest {
          "null | c-9 | 0 createOrder PASSED" })
    void theValuesComingFromTheInputsAreCheckedWhenTheSessionHasThem(String given, String sent, String verdict)
          throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
       Map<String, Object> inputs = given == null ? null : Map.of("customerId", given);
-      ArazzoSession session = arazzoSessionService.openSession(saga.getId(), SAGA, inputs).orElseThrow();
-      ArazzoSessionCall placeOrder = createOrder();
+      WorkflowSession session = arazzoSessionService.openSession(saga.getId(), SAGA, inputs).orElseThrow();
+      WorkflowSessionRecordedCall placeOrder = createOrder();
       placeOrder.setRequestBody(placeOrder.getRequestBody().replace("c-7", sent));
 
       record(session, placeOrder, reserveStock("o-42"), chargePayment("o-42"), confirmOrder("o-42"));
@@ -279,7 +279,7 @@ class ArazzoSessionVerificationTest {
          "'{\"customerId\": 7}' | Invalid input customerId: a string is expected, got 7",
          "'{}' | Missing input: customerId" })
    void aSessionWithUnknownInvalidOrMissingInputsIsRefused(String inputs, String reason) throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
       Map<String, Object> given = new ObjectMapper().readValue(inputs, new TypeReference<Map<String, Object>>() {
       });
 
@@ -299,12 +299,13 @@ class ArazzoSessionVerificationTest {
                + "3 confirmOrder FAILED step `reserveStock` expected before `confirmOrder`" })
    void dependsOnRelaxesTheOrderOfTheSteps(String received, WorkflowRunStatus status, String failedStep)
          throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked("order-saga-parallel");
-      ArazzoSession session = arazzoSessionService.openSession(saga.getId(), SAGA).orElseThrow();
-      Map<String, ArazzoSessionCall> calls = Map.of("createOrder", createOrder(), "reserveStock", reserveStock("o-42"),
+      WorkflowDocument saga = orderSagaIsImportedAndLinked("order-saga-parallel");
+      WorkflowSession session = arazzoSessionService.openSession(saga.getId(), SAGA).orElseThrow();
+      Map<String, WorkflowSessionRecordedCall> calls = Map.of("createOrder", createOrder(), "reserveStock",
+            reserveStock("o-42"),
             "chargePayment", chargePayment("o-42"), "confirmOrder", confirmOrder("o-42"));
 
-      record(session, Arrays.stream(received.split(",")).map(calls::get).toArray(ArazzoSessionCall[]::new));
+      record(session, Arrays.stream(received.split(",")).map(calls::get).toArray(WorkflowSessionRecordedCall[]::new));
 
       WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
       assertEquals(status, verification.getStatus());
@@ -315,7 +316,7 @@ class ArazzoSessionVerificationTest {
    /** AC-04: a step the service never calls fails the verification as missing. */
    @Test
    void aMissingStepFailsTheVerification() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
 
       record(session, createOrder(), reserveStock("o-42"), chargePayment("o-42"));
 
@@ -334,7 +335,7 @@ class ArazzoSessionVerificationTest {
     */
    @Test
    void aCallNoStepTakesIsMatchedToNoneAndIsUnexpected() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
 
       record(session, createOrder(), createOrder(), reserveStock("o-42"), chargePayment("o-42"),
             call("Payment API", "GET /payments", "/payments", null, 200, "[]"), confirmOrder("o-42"));
@@ -352,8 +353,8 @@ class ArazzoSessionVerificationTest {
    /** AC-05: two sessions on the saga at the same time; each verification reports only the calls of its session. */
    @Test
    void sessionsAreIsolated() throws Exception {
-      ArazzoSession first = sessionOnTheSaga();
-      ArazzoSession second = arazzoSessionService.openSession(first.getDocumentId(), SAGA).orElseThrow();
+      WorkflowSession first = sessionOnTheSaga();
+      WorkflowSession second = arazzoSessionService.openSession(first.getDocumentId(), SAGA).orElseThrow();
 
       record(first, createOrder());
       record(second, createOrder(), reserveStock("o-42"));
@@ -361,7 +362,7 @@ class ArazzoSessionVerificationTest {
       record(second, chargePayment("o-42"), confirmOrder("o-42"));
       record(first, confirmOrder("o-42"));
 
-      for (ArazzoSession session : List.of(first, second)) {
+      for (WorkflowSession session : List.of(first, second)) {
          WorkflowResult verification = arazzoSessionService.verify(session.getId()).orElseThrow();
          assertEquals(WorkflowRunStatus.SUCCESS, verification.getStatus());
          assertEquals(List.of("0 createOrder", "1 reserveStock", "2 chargePayment", "3 confirmOrder"),
@@ -372,7 +373,7 @@ class ArazzoSessionVerificationTest {
    /** A closed session records no more calls, and can still be verified until it expires. */
    @Test
    void aClosedSessionRecordsNoMoreCallsAndCanStillBeVerified() throws Exception {
-      ArazzoSession session = sessionOnTheSaga();
+      WorkflowSession session = sessionOnTheSaga();
       record(session, createOrder(), reserveStock("o-42"), chargePayment("o-42"));
 
       assertTrue(arazzoSessionService.closeSession(session.getId()));
@@ -397,7 +398,7 @@ class ArazzoSessionVerificationTest {
    /** No session is opened on an unknown document; one on an unknown workflow is refused, naming it. */
    @Test
    void aSessionIsOpenedOnAKnownWorkflowOnly() throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
 
       assertEquals(Optional.empty(), arazzoSessionService.openSession("unknown", SAGA));
       assertEquals("Unknown workflow: cancelSaga", assertThrows(ArazzoRunRefusedException.class,
@@ -407,7 +408,8 @@ class ArazzoSessionVerificationTest {
    /** A workflow whose steps call no operation of a linked API cannot be verified: the session is refused. */
    @Test
    void aSessionOnAWorkflowWhoseSourcesAreNotLinkedIsRefused() throws Exception {
-      ArazzoDocument saga = arazzoDocumentService.importArazzoDocument(example("order-saga.arazzo.yaml", "order-saga"));
+      WorkflowDocument saga = arazzoDocumentService.importArazzoDocument(example("order-saga.arazzo.yaml",
+            "order-saga"));
 
       assertEquals("Workflow placeOrderSaga cannot be verified: no API name and version for this source",
             assertThrows(ArazzoRunRefusedException.class, () -> arazzoSessionService.openSession(saga.getId(), SAGA))
@@ -417,21 +419,21 @@ class ArazzoSessionVerificationTest {
    /** A session is opened on a workflow by the title and version of its document, as the Microcks API names it. */
    @Test
    void aSessionIsOpenedByTheTitleAndVersionOfTheDocument() throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
 
-      ArazzoSession session = arazzoSessionService.openSession("Order saga:1.0.0", SAGA).orElseThrow();
+      WorkflowSession session = arazzoSessionService.openSession("Order saga:1.0.0", SAGA).orElseThrow();
 
       assertEquals(List.of(saga.getId(), "Order saga", "1.0.0", SAGA), List.of(session.getDocumentId(),
             session.getDocumentTitle(), session.getDocumentVersion(), session.getWorkflowId()));
    }
 
-   private ArazzoSession sessionOnTheSaga() throws Exception {
-      ArazzoDocument saga = orderSagaIsImportedAndLinked();
+   private WorkflowSession sessionOnTheSaga() throws Exception {
+      WorkflowDocument saga = orderSagaIsImportedAndLinked();
       return arazzoSessionService.openSession(saga.getId(), SAGA).orElseThrow();
    }
 
-   private void record(ArazzoSession session, ArazzoSessionCall... calls) {
-      for (ArazzoSessionCall call : calls) {
+   private void record(WorkflowSession session, WorkflowSessionRecordedCall... calls) {
+      for (WorkflowSessionRecordedCall call : calls) {
          arazzoSessionService.recordCall(session.getId(), call);
       }
    }
@@ -443,26 +445,26 @@ class ArazzoSessionVerificationTest {
    }
 
    /** The service reserves the items of an order; the mock answers with reservation r-9. */
-   private static ArazzoSessionCall reserveStock(String orderId) {
+   private static WorkflowSessionRecordedCall reserveStock(String orderId) {
       return call("Stock API", "POST /reservations", "/reservations",
             "{\"orderId\": \"" + orderId + "\", \"items\": [{\"sku\": \"ABC-1\", \"quantity\": 2}]}", 201,
             "{\"id\": \"r-9\", \"orderId\": \"o-42\"}");
    }
 
    /** The service charges an order 25.0; the mock answers with payment p-3. */
-   private static ArazzoSessionCall chargePayment(String orderId) {
+   private static WorkflowSessionRecordedCall chargePayment(String orderId) {
       return call("Payment API", "POST /payments", "/payments", "{\"orderId\": \"" + orderId + "\", \"amount\": 25.0}",
             201, "{\"id\": \"p-3\", \"orderId\": \"o-42\", \"status\": \"CHARGED\"}");
    }
 
    /** The service confirms an order; the mock answers with order o-42, confirmed. */
-   private static ArazzoSessionCall confirmOrder(String orderId) {
+   private static WorkflowSessionRecordedCall confirmOrder(String orderId) {
       return call("Order API", "POST /orders/{orderId}/confirm", "/orders/" + orderId + "/confirm", null, 200,
             "{\"id\": \"o-42\", \"status\": \"CONFIRMED\"}");
    }
 
    /** The order saga service places order o-42 for customer c-7; the mock answers with order o-42. */
-   private static ArazzoSessionCall createOrder() {
+   private static WorkflowSessionRecordedCall createOrder() {
       return call("Order API", "POST /orders", "/orders",
             "{\"customerId\": \"c-7\", \"items\": [{\"sku\": \"ABC-1\", \"quantity\": 2}], \"amount\": 25.0, "
                   + "\"currency\": \"EUR\"}",
@@ -470,9 +472,10 @@ class ArazzoSessionVerificationTest {
    }
 
    /** A call to the mocks of an API 1.0.0, as the mocks record it in a session. */
-   private static ArazzoSessionCall call(String apiName, String operationName, String path, String body, int status,
+   private static WorkflowSessionRecordedCall call(String apiName, String operationName, String path, String body,
+         int status,
          String responseBody) {
-      ArazzoSessionCall call = new ArazzoSessionCall();
+      WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
       call.setServiceName(apiName);
       call.setServiceVersion("1.0.0");
       call.setOperationName(operationName);
@@ -487,12 +490,12 @@ class ArazzoSessionVerificationTest {
       return call;
    }
 
-   private ArazzoDocument orderSagaIsImportedAndLinked() throws Exception {
+   private WorkflowDocument orderSagaIsImportedAndLinked() throws Exception {
       return orderSagaIsImportedAndLinked("order-saga");
    }
 
    /** Imports the Order, Stock and Payment APIs, then a saga of the fixture and its overlay, linking them. */
-   private ArazzoDocument orderSagaIsImportedAndLinked(String saga) throws Exception {
+   private WorkflowDocument orderSagaIsImportedAndLinked(String saga) throws Exception {
       for (String api : List.of("order-api", "stock-api", "payment-api")) {
          Path contract = Files.createTempFile(api, ".yaml");
          Files.writeString(contract, example("order-saga.contracts.yaml", api));

@@ -18,7 +18,7 @@ package io.microcks.web.arazzo;
 import io.microcks.web.AbstractBaseIT;
 import jakarta.inject.Inject;
 import io.quarkus.test.junit.QuarkusTest;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.util.ObjectMapperFactory;
 

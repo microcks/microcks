@@ -15,14 +15,14 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.service.ArtifactInfo;
@@ -100,7 +100,7 @@ class ArazzoStepDependenciesTest {
    /** AC-01: an Arazzo 1.1 workflow whose steps declare dependsOn is imported, and can run. */
    @Test
    void aWorkflowWhoseStepsDeclareDependsOnIsImportedAndCanRun() throws Exception {
-      ArazzoDocument document = pastryTastingIsImportedAndLinked();
+      WorkflowDocument document = pastryTastingIsImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), WORKFLOW).orElseThrow();
 
@@ -141,7 +141,7 @@ class ArazzoStepDependenciesTest {
     */
    @Test
    void theWorkflowPageGivesWhatEachStepDependsOnAndMustComeAfter() throws Exception {
-      ArazzoDocument document = pastryTastingIsImportedAndLinked();
+      WorkflowDocument document = pastryTastingIsImportedAndLinked();
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), WORKFLOW).orElseThrow();
 
@@ -160,7 +160,7 @@ class ArazzoStepDependenciesTest {
    @ParameterizedTest
    @CsvSource({ "UI", "CI API", "Mock URL" })
    void aRunPlaysTheStepsInTheOrderOfTheListAndPasses(String origin) throws Exception {
-      ArazzoDocument document = pastryTastingIsImportedAndLinked();
+      WorkflowDocument document = pastryTastingIsImportedAndLinked();
       minion.plays(request -> {
          for (int index = 0; index < STEPS.size(); index++) {
             arazzoRunService.recordStep(request.runId(), passed(index, STEPS.get(index)), null, null);
@@ -204,7 +204,7 @@ class ArazzoStepDependenciesTest {
             WorkflowStepStatus.PASSED, 200, 5, List.of(), Map.of(), null, null, null, List.of(), Map.of());
    }
 
-   private ArazzoDocument pastryTastingIsImportedAndLinked() throws Exception {
+   private WorkflowDocument pastryTastingIsImportedAndLinked() throws Exception {
       File contract = new File(
             ArazzoStepDependenciesTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));

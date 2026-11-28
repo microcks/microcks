@@ -18,7 +18,7 @@ package io.microcks.web.arazzo;
 import io.microcks.domain.Operation;
 import io.microcks.domain.Response;
 import io.microcks.domain.Service;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.service.arazzo.ArazzoSessionAnswerService;
 import io.microcks.web.MockInvocationContext;
 
@@ -54,7 +54,7 @@ class ArazzoSessionResponderTest {
 
       assertSame(answer, responder.respond(confirmOrder(), request("x-microcks-session", "s-1"), null, dispatched));
 
-      ArgumentCaptor<ArazzoSessionCall> received = ArgumentCaptor.forClass(ArazzoSessionCall.class);
+      ArgumentCaptor<WorkflowSessionRecordedCall> received = ArgumentCaptor.forClass(WorkflowSessionRecordedCall.class);
       verify(arazzoSessionAnswerService).answer(eq("s-1"), received.capture(), eq(dispatched));
       assertEquals(List.of("Order API", "POST /orders/{orderId}/confirm", "/orders/o-42/confirm"),
             List.of(received.getValue().getServiceName(), received.getValue().getOperationName(),

@@ -17,8 +17,8 @@ package io.microcks.web.arazzo;
 
 import io.microcks.domain.Header;
 import io.microcks.domain.ServiceState;
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.repository.RequestRepository;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.ServiceStateRepository;
@@ -138,7 +138,7 @@ class ArazzoSessionStateRaceIT extends AbstractBaseIT {
    @Test
    void twoCallsOfOneStepAtTheSameInstantKeepOneStateAndTheSessionGoesOn() throws Exception {
       String sessionId = openSession();
-      ArazzoSession session = arazzoSessionRepository.findByIdOptional(sessionId).orElseThrow();
+      WorkflowSession session = arazzoSessionRepository.findByIdOptional(sessionId).orElseThrow();
       ArazzoSessionAnswerService answers = new ArazzoSessionAnswerService(arazzoDocumentService,
             arazzoSessionRepository, requestRepository, responseRepository, readingInLockstep());
 
@@ -220,8 +220,8 @@ class ArazzoSessionStateRaceIT extends AbstractBaseIT {
    }
 
    /** The createOrder call of the saga, as the mocks of Order API answered it with order o-42. */
-   private static ArazzoSessionCall createOrderAnswered() {
-      ArazzoSessionCall call = new ArazzoSessionCall();
+   private static WorkflowSessionRecordedCall createOrderAnswered() {
+      WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
       call.setServiceName("Order API");
       call.setServiceVersion("1.0.0");
       call.setOperationName("POST /orders");

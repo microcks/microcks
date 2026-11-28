@@ -18,12 +18,12 @@ package io.microcks.web.arazzo.dto;
 import io.microcks.domain.Header;
 import io.microcks.domain.Request;
 import io.microcks.domain.Response;
-import io.microcks.domain.arazzo.WorkflowCriterionResult;
-import io.microcks.domain.arazzo.WorkflowExpressionValue;
-import io.microcks.domain.arazzo.WorkflowParameterValue;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowCriterionResult;
+import io.microcks.domain.workflow.WorkflowExpressionValue;
+import io.microcks.domain.workflow.WorkflowParameterValue;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;

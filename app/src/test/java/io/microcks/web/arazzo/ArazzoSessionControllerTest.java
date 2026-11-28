@@ -15,8 +15,8 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.service.arazzo.ArazzoRunRefusedException;
 import io.microcks.service.arazzo.ArazzoSessionService;
 import io.microcks.web.arazzo.ArazzoSessionController.ArazzoSessionRequest;
@@ -45,7 +45,7 @@ class ArazzoSessionControllerTest {
 
    @Test
    void anOpenedSessionIsCreatedAtItsUrl() throws Exception {
-      ArazzoSession session = new ArazzoSession();
+      WorkflowSession session = new WorkflowSession();
       session.setId("s-1");
       when(arazzoSessionService.openSession("Order saga:1.0.0", "placeOrderSaga", Map.of("customerId", "c-7"),
             Map.of())).thenReturn(Optional.of(session));
@@ -60,7 +60,7 @@ class ArazzoSessionControllerTest {
 
    @Test
    void aSessionIsOpenedWithTheStepsItSetsToFail() throws Exception {
-      ArazzoSession session = new ArazzoSession();
+      WorkflowSession session = new WorkflowSession();
       session.setId("s-2");
       Map<String, String> failures = Map.of("chargePayment", "card refused");
       when(arazzoSessionService.openSession("Order saga:1.0.0", "compensatePaymentRefused", null, failures))

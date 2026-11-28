@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 /**
  * Where a run of a workflow was launched from, when it was not launched from the Microcks UI or API.

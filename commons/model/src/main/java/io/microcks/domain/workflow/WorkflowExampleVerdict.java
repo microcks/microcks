@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 /**
  * Whether a run played its recorded example. This verdict stands apart from the result of the run, as an example may

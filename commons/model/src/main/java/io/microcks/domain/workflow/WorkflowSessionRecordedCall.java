@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import io.microcks.domain.Header;
 
@@ -31,8 +31,8 @@ import java.util.Set;
  * Its order index is given on receipt, from 0: two calls are ordered by their index, never by their date.
  * @author SebastienDegodez
  */
-@MongoEntity(collection = "arazzoSessionCall")
-public class ArazzoSessionCall {
+@MongoEntity(collection = "workflowSessionCall")
+public class WorkflowSessionRecordedCall {
 
    @BsonId
    @BsonRepresentation(BsonType.OBJECT_ID)

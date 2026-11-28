@@ -18,7 +18,7 @@ package io.microcks.web.arazzo;
 import io.microcks.domain.Header;
 import io.microcks.domain.Operation;
 import io.microcks.domain.Service;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.service.arazzo.ArazzoSessionService;
 import io.microcks.util.http.HttpHeaders;
 import io.microcks.util.http.HttpStatusCode;
@@ -69,7 +69,7 @@ class ArazzoSessionRecorderTest {
       recorder.recordRest(placeOrder(), request, "{\"customerId\": \"c-7\"}", new ResponseResult(
             new HttpStatusCode(201), responseHeaders, "{\"id\": \"o-42\"}".getBytes(StandardCharsets.UTF_8)));
 
-      ArazzoSessionCall call = recorded("s-1");
+      WorkflowSessionRecordedCall call = recorded("s-1");
       assertEquals("dryRun=false", call.getQueryString());
       assertEquals(
             List.of("Order API", "1.0.0", "POST /orders", "POST", "/orders",
@@ -90,7 +90,7 @@ class ArazzoSessionRecorderTest {
 
       recorder.recordRest(placeOrder(), request, null, new ResponseResult(new HttpStatusCode(204), null, null));
 
-      ArazzoSessionCall call = recorded("s-1");
+      WorkflowSessionRecordedCall call = recorded("s-1");
       assertEquals("http://localhost/rest/Order+API/1.0.0/orders 204",
             call.getRequestUrl() + " " + call.getResponseStatus());
       assertNull(call.getResponseBody());
@@ -117,7 +117,7 @@ class ArazzoSessionRecorderTest {
       recorder.recordGrpc(reserveStockOverGrpc(), metadata, "{\"orderId\": \"o-42\"}",
             new GrpcResponseResult(Status.OK, "{\"id\": \"r-9\"}", null));
 
-      ArazzoSessionCall call = recorded("s-3");
+      WorkflowSessionRecordedCall call = recorded("s-3");
       assertEquals(
             List.of("Stock Service", "v1", "ReserveStock", "GRPC", "ReserveStock", "{\"orderId\": \"o-42\"}", "0",
                   "{\"id\": \"r-9\"}", "[" + key + "=[" + value + "]]"),
@@ -134,7 +134,7 @@ class ArazzoSessionRecorderTest {
       recorder.recordGrpc(reserveStockOverGrpc(), metadata, "{}",
             new GrpcResponseResult(Status.NOT_FOUND, null, "No response found"));
 
-      ArazzoSessionCall call = recorded("s-3");
+      WorkflowSessionRecordedCall call = recorded("s-3");
       assertEquals("5 No response found", call.getResponseStatus() + " " + call.getResponseBody());
    }
 
@@ -174,8 +174,8 @@ class ArazzoSessionRecorderTest {
             .sorted().toList();
    }
 
-   private ArazzoSessionCall recorded(String sessionId) {
-      ArgumentCaptor<ArazzoSessionCall> call = ArgumentCaptor.forClass(ArazzoSessionCall.class);
+   private WorkflowSessionRecordedCall recorded(String sessionId) {
+      ArgumentCaptor<WorkflowSessionRecordedCall> call = ArgumentCaptor.forClass(WorkflowSessionRecordedCall.class);
       verify(arazzoSessionService).recordCall(eq(sessionId), call.capture());
       return call.getValue();
    }

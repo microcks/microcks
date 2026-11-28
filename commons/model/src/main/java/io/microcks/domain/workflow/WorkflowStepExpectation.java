@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import java.util.Map;
 
@@ -24,5 +24,5 @@ import java.util.Map;
  * @param outputs The outputs the step is expected to produce, by name; only those listed are checked
  * @author SebastienDegodez
  */
-public record ArazzoStepExpectation(String stepId, Integer status, Map<String, Object> outputs) {
+public record WorkflowStepExpectation(String stepId, Integer status, Map<String, Object> outputs) {
 }

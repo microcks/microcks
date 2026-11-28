@@ -20,7 +20,7 @@ import io.microcks.testsupport.http.ResponseEntity;
 import io.restassured.RestAssured;
 import io.microcks.testsupport.http.HttpStatus;
 import io.microcks.testsupport.http.HttpHeaders;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -82,7 +82,7 @@ class ArazzoDocumentUploadIT extends AbstractBaseIT {
       return new ResponseEntity<>(new HttpStatus(response.statusCode()), new HttpHeaders(), response.asString());
    }
 
-   private static String describe(ArazzoDocument document) {
+   private static String describe(WorkflowDocument document) {
       return document.getTitle() + " " + document.getVersion() + ": " + document.getWorkflowIds();
    }
 }

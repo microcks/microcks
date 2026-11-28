@@ -15,8 +15,8 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSession;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowSession;
+import io.microcks.domain.workflow.WorkflowResult;
 import io.microcks.service.arazzo.ArazzoRunRefusedException;
 import io.microcks.service.arazzo.ArazzoSessionService;
 

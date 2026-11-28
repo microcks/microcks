@@ -21,17 +21,17 @@ import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
-import io.microcks.domain.arazzo.WorkflowExampleCheck;
-import io.microcks.domain.arazzo.WorkflowExampleVerdict;
-import io.microcks.domain.arazzo.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowExampleCheck;
+import io.microcks.domain.workflow.WorkflowExampleVerdict;
+import io.microcks.domain.workflow.WorkflowResult;
 
-import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.service.arazzo.view.WorkflowRunSummary;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.arazzo.WorkflowRunFilter;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 
@@ -95,7 +95,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void playingAnExampleRunsTheWorkflowWithItsInputsAndRecordsWhatItExpects() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
 
       WorkflowResult run = play(document, "readThenReprice", "eclair-repriced");
 
@@ -112,7 +112,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void aRunWithoutExampleRecordsNone() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
 
       WorkflowResult run = arazzoRunService
             .launchRun(document.getId(), "readThenReprice", values("pastry", "Eclair Cafe", "newPrice", 2.7), null)
@@ -125,7 +125,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void aRunProducingTheExpectedOutputsMatchesTheExample() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "readThenReprice", "eclair-repriced");
 
       repriced(run, 2.5, 2.6);
@@ -138,7 +138,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void anUnexpectedOutputDoesNotMatchTheExampleWhileTheRunKeepsItsResult() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "readThenReprice", "eclair-repriced");
 
       repriced(run, 2.5, 2.7);
@@ -151,7 +151,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void theOutputsAnExampleDoesNotListAreNotChecked() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "readThenReprice", "millefeuille-repriced");
 
       repriced(run, 4.1, 4.4);
@@ -163,7 +163,7 @@ class ArazzoExampleRunTest {
    /** Outputs are compared as JSON values: a number matches the same number, however it is written. */
    @Test
    void numbersAreComparedByTheirValue() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("numbers");
+      WorkflowDocument document = pastryScenariosWithExamples("numbers");
       WorkflowResult run = play(document, "readThenReprice", "tartelette-repriced");
 
       repriced(run, 2, 3.0);
@@ -175,7 +175,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void aWorkflowStoppingBeforeItsEndDoesNotMatchAnExampleExpectingItsOutputs() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "readThenReprice", "eclair-repriced");
 
       arazzoRunService.recordStep(run.getId(), step(0, "readPastry", GET_PASTRY_BY_NAME, WorkflowStepStatus.PASSED, 200,
@@ -193,7 +193,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void anExampleTheMinionDoesNotReceiveDoesNotMatch() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       minion.failWith(new ArazzoMinionException("The Arazzo minion cannot be reached at http://localhost:8082", null));
 
       WorkflowResult run = play(document, "listThenReadFirst", "unknown-first-pastry");
@@ -209,7 +209,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void aWorkflowFailingExactlyAsTheExampleExpectsMatchesIt() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "listThenReadFirst", "unknown-first-pastry");
 
       listedThenRead(run, "200 Baba Rhum", "404");
@@ -232,7 +232,7 @@ class ArazzoExampleRunTest {
          "500           | -   | Step list: expecting 200 but got 500; Step list output first: expected \"Baba Rhum\" but was absent; "
                + "Step readFirst: expected to run but was not run; Expected to stop at readFirst but stopped at list" })
    void eachUnmetExpectationOfAStepIsGiven(String list, String readFirst, String unmet) throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "listThenReadFirst", "unknown-first-pastry");
 
       listedThenRead(run, list, readFirst);
@@ -244,7 +244,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void aStepCalledTwiceIsJudgedOnItsLastCall() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "listThenReadFirst", "unknown-first-pastry");
 
       arazzoRunService.recordStep(run.getId(),
@@ -261,7 +261,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void aRunStopsAtItsLastFailedStepWhenAnAttemptOfARetriedStepFailedBefore() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult run = play(document, "listThenReadFirst", "unknown-first-pastry");
 
       arazzoRunService.recordStep(run.getId(), step(0, "list", GET_PASTRIES, WorkflowStepStatus.FAILED, 503, Map.of()),
@@ -279,7 +279,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void anExampleTheWorkflowDoesNotRecordIsRefused() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
 
       ArazzoRunRefusedException refusal = assertThrows(ArazzoRunRefusedException.class, () -> arazzoRunService
             .launchExampleRun(document.getId(), "readThenReprice", "eclair-flambe", null, null, false));
@@ -301,7 +301,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void anExampleOfAnUnknownWorkflowIsRefusedNamingIt() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
 
       ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class, () -> arazzoRunService
             .launchExampleRun(document.getId(), "readTwice", "eclair-repriced", null, null, false));
@@ -315,7 +315,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void runningAllExamplesLaunchesOneRunPerExampleAndRefusesAnExampleMissingAnInput() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("missing-input");
+      WorkflowDocument document = pastryScenariosWithExamples("missing-input");
 
       List<ArazzoExampleLaunch> launches = arazzoRunService
             .launchExampleRuns(document.getId(), "readThenReprice", 5000L, null, false).orElseThrow();
@@ -337,7 +337,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void aWorkflowWithoutExampleHasNoExampleToRun() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("numbers");
+      WorkflowDocument document = pastryScenariosWithExamples("numbers");
 
       assertEquals(Optional.of(List.of()),
             arazzoRunService.launchExampleRuns(document.getId(), "listThenReadFirst", null, null, false));
@@ -346,7 +346,7 @@ class ArazzoExampleRunTest {
 
    @Test
    void theRunsHistoryShowsTheExampleEachRunPlayedAndItsVerdict() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("recorded");
+      WorkflowDocument document = pastryScenariosWithExamples("recorded");
       WorkflowResult matching = play(document, "readThenReprice", "eclair-repriced");
       repriced(matching, 2.5, 2.6);
       WorkflowResult notMatching = play(document, "listThenReadFirst", "unknown-first-pastry");
@@ -362,7 +362,7 @@ class ArazzoExampleRunTest {
             runs.stream().map(ArazzoExampleRunTest::describe).toList());
    }
 
-   private WorkflowResult play(ArazzoDocument document, String workflowId, String exampleName)
+   private WorkflowResult play(WorkflowDocument document, String workflowId, String exampleName)
          throws ArazzoRunRefusedException {
       return arazzoRunService.launchExampleRun(document.getId(), workflowId, exampleName, null, null, false)
             .orElseThrow();
@@ -422,11 +422,11 @@ class ArazzoExampleRunTest {
             + (run.example() == null ? "" : " " + run.example() + " " + run.exampleVerdict());
    }
 
-   private ArazzoDocument pastryScenariosWithExamples(String examples) throws Exception {
+   private WorkflowDocument pastryScenariosWithExamples(String examples) throws Exception {
       File contract = new File(
             ArazzoExampleRunTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       arazzoDocumentService.importArazzoExamples(exampleOf(examples));
       return document;

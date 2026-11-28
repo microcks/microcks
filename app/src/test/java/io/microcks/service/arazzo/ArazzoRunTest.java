@@ -23,21 +23,21 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.domain.Header;
 import io.microcks.domain.Request;
 import io.microcks.domain.RequestResponsePair;
 import io.microcks.domain.Response;
-import io.microcks.domain.arazzo.WorkflowCriterionResult;
-import io.microcks.domain.arazzo.WorkflowExpressionValue;
-import io.microcks.domain.arazzo.WorkflowParameterValue;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
-import io.microcks.domain.arazzo.WorkflowSourceTarget;
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowCriterionResult;
+import io.microcks.domain.workflow.WorkflowExpressionValue;
+import io.microcks.domain.workflow.WorkflowParameterValue;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowSourceTarget;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 
@@ -103,7 +103,7 @@ class ArazzoRunTest {
 
    @Test
    void aRunnableWorkflowIsHandedToTheMinionAgainstTheMocksOfItsLinkedApis() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
 
       WorkflowResult run = launch(document, "readThenReprice", pastryInputs(), 5000L);
 
@@ -132,7 +132,7 @@ class ArazzoRunTest {
 
    @Test
    void aJourneyConsistentWithTheMocksPassesAndExposesItsOutputs() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "readThenReprice", pastryInputs(), 10000L);
 
       arazzoRunService.recordStep(run.getId(), step(0, "readPastry", GET_PASTRY_BY_NAME, WorkflowStepStatus.PASSED, 200,
@@ -153,7 +153,7 @@ class ArazzoRunTest {
 
    @Test
    void theRunStopsAtTheFirstFailingStepAndNamesTheUnmetCriterion() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
       List<WorkflowCriterionResult> unmet = List.of(new WorkflowCriterionResult("$statusCode == 200",
             List.of(new WorkflowExpressionValue("$statusCode", 400)), false));
@@ -175,7 +175,7 @@ class ArazzoRunTest {
 
    @Test
    void theFailingStepShowsWhatWasSentAndReceived() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
       Request request = new Request();
       request.setName("readFirst");
@@ -199,7 +199,7 @@ class ArazzoRunTest {
 
    @Test
    void valuesPassedBetweenStepsShowTheirOrigin() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
       List<WorkflowParameterValue> sent = List.of(
             new WorkflowParameterValue("name", "path", "Baba Rhum", "$steps.list.outputs.first"),
@@ -222,7 +222,7 @@ class ArazzoRunTest {
 
    @Test
    void aRunInProgressBecomesFinalWhenTheMinionReportsItsEnd() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "readThenReprice", pastryInputs(), 10000L);
 
       arazzoRunService.recordStep(run.getId(),
@@ -235,7 +235,7 @@ class ArazzoRunTest {
 
    @Test
    void aRunThatFailsWithoutAFailingStepKeepsTheReason() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
 
       arazzoRunService.recordOutcome(run.getId(), WorkflowRunStatus.FAILURE, Map.of(), 8,
@@ -247,7 +247,7 @@ class ArazzoRunTest {
 
    @Test
    void stepsKeepTheOrderTheMinionGivesThemWhateverTheOrderTheirReportsArrive() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
 
       arazzoRunService.recordStep(run.getId(),
@@ -265,7 +265,7 @@ class ArazzoRunTest {
 
    @Test
    void theExchangeOfAStepIsStoredUnderTheRunAndTheIndexOfTheStep() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
       Request request = new Request();
       request.setName("readFirst");
@@ -291,7 +291,7 @@ class ArazzoRunTest {
 
    @Test
    void aStepWithoutResponseKeepsItsRequest() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
       Request request = new Request();
       request.setName("list");
@@ -306,7 +306,7 @@ class ArazzoRunTest {
 
    @Test
    void aStepThatSentNothingHasNoExchange() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), 10000L);
 
       WorkflowResult recorded = arazzoRunService
@@ -319,7 +319,7 @@ class ArazzoRunTest {
 
    @Test
    void aWorkflowThatCannotRunIsRefusedWithItsReasonAndNotHandedToTheMinion() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-delete.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-delete.arazzo.yaml");
 
       ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class,
             () -> arazzoRunService.launchRun(document.getId(), "readThenReprice", Map.of(), 10000L));
@@ -333,7 +333,7 @@ class ArazzoRunTest {
    /** S8 AC-01: a run missing an input is refused, naming the input, and no call is made to the mocks. */
    @Test
    void aRunMissingAnInputIsRefusedNamingItAndNoCallIsMadeToTheMocks() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
 
       ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class, () -> arazzoRunService
             .launchRun(document.getId(), "readThenReprice", Map.of("pastry", "Eclair Cafe"), 10000L));
@@ -356,7 +356,7 @@ class ArazzoRunTest {
          "pastry-needed-inputs.arazzo.yaml; readAndTell; pastry=Eclair Cafe|label=Tasty; Missing input: note" })
    void everyMissingInputIsNamedInAStableOrder(String fixture, String workflowId, String given, String reason)
          throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked(fixture);
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked(fixture);
 
       ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class,
             () -> arazzoRunService.launchRun(document.getId(), workflowId, inputs(given), 10000L));
@@ -369,7 +369,7 @@ class ArazzoRunTest {
    /** S8 AC-02: a workflow that uses no input runs without any. */
    @Test
    void aWorkflowWithoutInputsRunsWithoutInputs() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
 
       WorkflowResult withNoInput = launch(document, "listThenReadFirst", Map.of(), 10000L);
       WorkflowResult withoutInputs = launch(document, "listThenReadFirst", null, 10000L);
@@ -389,7 +389,7 @@ class ArazzoRunTest {
 
    @Test
    void anUnknownWorkflowIsRefusedNamingIt() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
 
       ArazzoRunRefusedException refused = assertThrows(ArazzoRunRefusedException.class,
             () -> arazzoRunService.launchRun(document.getId(), "unknown", Map.of(), 10000L));
@@ -402,7 +402,7 @@ class ArazzoRunTest {
    void onlyTheSourcesLinkedToAnApiAreTargeted() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
+      WorkflowDocument document = arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
 
       WorkflowResult run = launch(document, "searchThenRead", Map.of("name", "Jane"), 10000L);
 
@@ -413,7 +413,7 @@ class ArazzoRunTest {
 
    @Test
    void aRunWithoutTimeoutWaitsTenSecondsPerStep() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
 
       WorkflowResult run = launch(document, "listThenReadFirst", Map.of(), null);
 
@@ -423,7 +423,7 @@ class ArazzoRunTest {
 
    @Test
    void aRunTheMinionDoesNotReceiveFailsWithTheReason() throws Exception {
-      ArazzoDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
+      WorkflowDocument document = pastryScenariosAreImportedAndLinked("pastry-scenarios.arazzo.yaml");
       minion.failWith(new ArazzoMinionException("The Arazzo minion cannot be reached at http://localhost:8082", null));
       Date before = new Date();
 
@@ -444,7 +444,7 @@ class ArazzoRunTest {
       assertEquals(Optional.empty(), arazzoRunService.getRun("unknown"));
    }
 
-   private WorkflowResult launch(ArazzoDocument document, String workflowId, Map<String, Object> inputs, Long timeout)
+   private WorkflowResult launch(WorkflowDocument document, String workflowId, Map<String, Object> inputs, Long timeout)
          throws ArazzoRunRefusedException {
       return arazzoRunService.launchRun(document.getId(), workflowId, inputs, timeout).orElseThrow();
    }
@@ -482,7 +482,7 @@ class ArazzoRunTest {
       return values;
    }
 
-   private ArazzoDocument pastryScenariosAreImportedAndLinked(String fixture) throws Exception {
+   private WorkflowDocument pastryScenariosAreImportedAndLinked(String fixture) throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture(fixture));

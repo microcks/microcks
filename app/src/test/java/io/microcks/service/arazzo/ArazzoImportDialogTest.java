@@ -19,10 +19,10 @@ import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import io.microcks.domain.arazzo.ArazzoDocument;
+import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
-import io.microcks.domain.arazzo.ArazzoMetadata;
+import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoMetadataRepository;
@@ -258,7 +258,7 @@ class ArazzoImportDialogTest {
       ArazzoDocumentSummary summary = arazzoImportService.importArazzoDocument(document("place-order"),
             "place-order.arazzo.yaml", Map.of("customerApi", api("Customer API", "1.0.0")));
 
-      ArazzoDocument imported = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
+      WorkflowDocument imported = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
       assertEquals("place-order.arazzo.yaml", imported.getFileName());
       assertEquals(List.of("Order fulfilment 1.0.0: {customerApi=Customer API 1.0.0}"),
             arazzoMetadataRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
@@ -327,7 +327,7 @@ class ArazzoImportDialogTest {
       return analysis.apis().stream().map(api -> api.getName() + " " + api.getVersion()).toList();
    }
 
-   private static String describe(ArazzoMetadata overlay) {
+   private static String describe(WorkflowMetadata overlay) {
       Map<String, String> sources = new TreeMap<>();
       overlay.getSources().forEach((name, api) -> sources.put(name, api.getName() + " " + api.getVersion()));
       return overlay.getName() + " " + overlay.getVersion() + ": " + sources;

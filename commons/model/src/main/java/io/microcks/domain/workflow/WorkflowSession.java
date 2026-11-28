@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.domain.workflow;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,8 +36,8 @@ import java.util.Map;
  * is open, after a retention delay once it is closed.
  * @author SebastienDegodez
  */
-@MongoEntity(collection = "arazzoSession")
-public class ArazzoSession {
+@MongoEntity(collection = "workflowSession")
+public class WorkflowSession {
 
    @BsonId
    @BsonRepresentation(BsonType.OBJECT_ID)
@@ -54,7 +54,7 @@ public class ArazzoSession {
    private Date expireAt;
    private String verificationRunId;
    private Map<String, String> failures = new LinkedHashMap<>();
-   private List<ArazzoInjectedFailure> injectedFailures = new ArrayList<>();
+   private List<WorkflowInjectedFailure> injectedFailures = new ArrayList<>();
 
    public String getId() {
       return id;
@@ -175,11 +175,11 @@ public class ArazzoSession {
 
    /** The failures of this session, each with the operation of the mocks that answers it; not shown to clients. */
    @JsonIgnore
-   public List<ArazzoInjectedFailure> getInjectedFailures() {
+   public List<WorkflowInjectedFailure> getInjectedFailures() {
       return injectedFailures;
    }
 
-   public void setInjectedFailures(List<ArazzoInjectedFailure> injectedFailures) {
+   public void setInjectedFailures(List<WorkflowInjectedFailure> injectedFailures) {
       this.injectedFailures = injectedFailures;
    }
 }

@@ -15,12 +15,12 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.artifact.arazzo.ArazzoOperationCall;
 import io.microcks.artifact.arazzo.ArazzoStep;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.domain.Header;
-import io.microcks.domain.arazzo.ArazzoSessionCall;
+import io.microcks.domain.workflow.WorkflowSessionRecordedCall;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.ExpectedStep;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.LinkedApi;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.StepVerdict;
@@ -54,7 +54,7 @@ class ArazzoSessionVerifierTest {
             List.of(), null, null);
       ExpectedStep expected = new ExpectedStep(0, printReceipt,
             new WorkflowStepOperation("orderApi", "printReceipt", "POST", "/receipts"), "Order API", "1.0.0", null);
-      ArazzoSessionCall call = new ArazzoSessionCall();
+      WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
       call.setServiceName("Order API");
       call.setServiceVersion("1.0.0");
       call.setOperationName("POST /receipts");
@@ -92,10 +92,10 @@ class ArazzoSessionVerifierTest {
                   List.of(), Map.of(), List.of(), List.of(), null, null),
             new WorkflowStepOperation("orderApi", "createOrder", "POST", "/orders", null, null), "Order API", "1.0.0",
             null);
-      ArazzoSessionCall placed = call(receivedFirst ? 1 : 0, "Order API", "1.0.0", "POST /orders");
-      ArazzoSessionCall other = call(receivedFirst ? 0 : 1, apiName, apiVersion, operationName);
+      WorkflowSessionRecordedCall placed = call(receivedFirst ? 1 : 0, "Order API", "1.0.0", "POST /orders");
+      WorkflowSessionRecordedCall other = call(receivedFirst ? 0 : 1, apiName, apiVersion, operationName);
       List<StepVerdict> verdicts = List.of(new StepVerdict(createOrder, placed, List.of(), Map.of(), List.of()));
-      List<ArazzoSessionCall> calls = receivedFirst ? List.of(other, placed) : List.of(placed, other);
+      List<WorkflowSessionRecordedCall> calls = receivedFirst ? List.of(other, placed) : List.of(placed, other);
 
       Map<Long, String> unexpected = ArazzoSessionVerifier.unexpectedCalls(verdicts, calls,
             List.of(new LinkedApi("Order API", "1.0.0",
@@ -104,8 +104,9 @@ class ArazzoSessionVerifierTest {
       assertEquals(failure == null ? Map.of() : Map.of(other.getIndex(), failure), unexpected);
    }
 
-   private static ArazzoSessionCall call(long index, String apiName, String apiVersion, String operationName) {
-      ArazzoSessionCall call = new ArazzoSessionCall();
+   private static WorkflowSessionRecordedCall call(long index, String apiName, String apiVersion,
+         String operationName) {
+      WorkflowSessionRecordedCall call = new WorkflowSessionRecordedCall();
       call.setIndex(index);
       call.setServiceName(apiName);
       call.setServiceVersion(apiVersion);

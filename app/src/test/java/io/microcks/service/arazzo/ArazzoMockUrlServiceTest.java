@@ -15,9 +15,9 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,7 @@ class ArazzoMockUrlServiceTest {
 
    @BeforeEach
    void readThenRepriceIsLaunchedInProgress() throws Exception {
-      ArazzoDocument document = new ArazzoDocument();
+      WorkflowDocument document = new WorkflowDocument();
       document.setId("doc-1");
       document.setWorkflowIds(List.of("readThenReprice"));
       when(arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0")).thenReturn(document);

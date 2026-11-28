@@ -15,14 +15,14 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoStepExpectation;
-import io.microcks.domain.arazzo.ArazzoWorkflowExample;
-import io.microcks.domain.arazzo.WorkflowExampleCheck;
-import io.microcks.domain.arazzo.WorkflowExampleVerdict;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowStepExpectation;
+import io.microcks.domain.workflow.WorkflowExample;
+import io.microcks.domain.workflow.WorkflowExampleCheck;
+import io.microcks.domain.workflow.WorkflowExampleVerdict;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -62,7 +62,7 @@ final class ArazzoExampleJudge {
     * @param example A recorded example of a workflow
     * @return What a run playing the example expects, not judged yet
     */
-   static WorkflowExampleCheck expecting(ArazzoWorkflowExample example) {
+   static WorkflowExampleCheck expecting(WorkflowExample example) {
       return new WorkflowExampleCheck(example.name(), example.outputs(), example.steps(), example.stopsAt(), null,
             List.of());
    }
@@ -74,7 +74,7 @@ final class ArazzoExampleJudge {
     */
    static WorkflowExampleCheck judge(WorkflowExampleCheck example, WorkflowResult run) {
       List<String> unmet = new ArrayList<>();
-      for (ArazzoStepExpectation expectation : example.steps()) {
+      for (WorkflowStepExpectation expectation : example.steps()) {
          unmet.addAll(unmetBy(expectation, lastCallOf(run, expectation.stepId())));
       }
       String stop = stopOf(run);
@@ -99,7 +99,7 @@ final class ArazzoExampleJudge {
             .reduce((first, second) -> second);
    }
 
-   private static List<String> unmetBy(ArazzoStepExpectation expectation, Optional<WorkflowStepResult> call) {
+   private static List<String> unmetBy(WorkflowStepExpectation expectation, Optional<WorkflowStepResult> call) {
       String prefix = "Step " + expectation.stepId();
       if (call.isEmpty()) {
          return List.of(prefix + ": expected to run but was not run");

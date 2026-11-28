@@ -15,12 +15,12 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.WorkflowCriterionResult;
-import io.microcks.domain.arazzo.WorkflowResult;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowStepResult;
-import io.microcks.domain.arazzo.WorkflowStepStatus;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowCriterionResult;
+import io.microcks.domain.workflow.WorkflowResult;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowStepResult;
+import io.microcks.domain.workflow.WorkflowStepStatus;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -73,7 +73,7 @@ public class ArazzoMockUrlService {
     * @return The outputs of the workflow, or why it did not pass
     */
    public ArazzoMockUrlAnswer play(String documentTitle, String documentVersion, String workflowId, String inputs) {
-      ArazzoDocument document = arazzoDocumentRepository.findByTitleAndVersion(documentTitle, documentVersion);
+      WorkflowDocument document = arazzoDocumentRepository.findByTitleAndVersion(documentTitle, documentVersion);
       if (document == null) {
          return refusal(404, "Unknown Arazzo document: " + documentTitle + " " + documentVersion);
       }

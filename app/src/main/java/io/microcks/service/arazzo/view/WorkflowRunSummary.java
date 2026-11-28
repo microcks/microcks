@@ -15,10 +15,10 @@
  */
 package io.microcks.service.arazzo.view;
 
-import io.microcks.domain.arazzo.WorkflowExampleVerdict;
-import io.microcks.domain.arazzo.WorkflowRunOrigin;
-import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunTarget;
+import io.microcks.domain.workflow.WorkflowExampleVerdict;
+import io.microcks.domain.workflow.WorkflowRunOrigin;
+import io.microcks.domain.workflow.WorkflowRunStatus;
+import io.microcks.domain.workflow.WorkflowRunTarget;
 import java.util.Date;
 
 /**

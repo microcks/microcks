@@ -15,14 +15,14 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.WorkflowStepOperation;
-import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoDocumentRef;
+import io.microcks.domain.workflow.WorkflowStepOperation;
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowDocumentRef;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
-import io.microcks.domain.arazzo.ArazzoExamples;
-import io.microcks.domain.arazzo.ArazzoMetadata;
+import io.microcks.domain.workflow.WorkflowExamples;
+import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoMetadataRepository;
@@ -115,7 +115,7 @@ public class ArazzoImportService {
     */
    public ArazzoImportAnalysis analyseImportedDocument(String documentId, Map<String, ServiceRef> links)
          throws MockRepositoryImportException {
-      ArazzoDocument document = arazzoDocumentRepository.findByIdOptional(documentId).orElse(null);
+      WorkflowDocument document = arazzoDocumentRepository.findByIdOptional(documentId).orElse(null);
       if (document == null) {
          return null;
       }
@@ -144,7 +144,7 @@ public class ArazzoImportService {
     */
    public ArazzoDocumentSummary relinkSources(String documentId, Map<String, ServiceRef> links)
          throws MockRepositoryImportException {
-      ArazzoDocument document = arazzoDocumentRepository.findByIdOptional(documentId).orElse(null);
+      WorkflowDocument document = arazzoDocumentRepository.findByIdOptional(documentId).orElse(null);
       if (document == null) {
          return null;
       }
@@ -162,10 +162,10 @@ public class ArazzoImportService {
     * @return The imported document, with the sources it still has to link
     * @throws MockRepositoryImportException if the document is refused: nothing is stored then
     */
-   public ArazzoDocumentRef importArazzoDocument(String content, String fileName, ReferenceResolver repository)
+   public WorkflowDocumentRef importArazzoDocument(String content, String fileName, ReferenceResolver repository)
          throws MockRepositoryImportException {
       Candidate candidate = read(content);
-      ArazzoDocument document = candidate.document();
+      WorkflowDocument document = candidate.document();
       Map<String, String> sourceUrls = new LinkedHashMap<>();
       Map<String, ArazzoImportAnalysis.Match> matches = new LinkedHashMap<>();
       try {
@@ -177,7 +177,7 @@ public class ArazzoImportService {
          repository.cleanResolvedReferences();
       }
       document.setSourceUrls(sourceUrls);
-      ArazzoDocument imported = arazzoDocumentService.save(document, fileName);
+      WorkflowDocument imported = arazzoDocumentService.save(document, fileName);
       Map<String, ServiceRef> matchedLinks = matchedLinks(matches);
       if (!matchedLinks.isEmpty()
             && arazzoMetadataRepository.findByNameAndVersion(imported.getTitle(), imported.getVersion()) == null) {
@@ -192,8 +192,8 @@ public class ArazzoImportService {
     * @return The document the ArazzoMetadata links the sources of, with the sources it still has to link
     * @throws MockRepositoryImportException if the ArazzoMetadata is refused: nothing is stored then
     */
-   public ArazzoDocumentRef importArazzoMetadata(String content) throws MockRepositoryImportException {
-      ArazzoMetadata metadata = arazzoDocumentService.importArazzoMetadata(content);
+   public WorkflowDocumentRef importArazzoMetadata(String content) throws MockRepositoryImportException {
+      WorkflowMetadata metadata = arazzoDocumentService.importArazzoMetadata(content);
       return documentRef(metadata.getName(), metadata.getVersion());
    }
 
@@ -204,24 +204,24 @@ public class ArazzoImportService {
     * @throws MockRepositoryImportException if the ArazzoExamples is refused, its document not being imported for
     *                                       instance: nothing is stored then
     */
-   public ArazzoDocumentRef importArazzoExamples(String content) throws MockRepositoryImportException {
-      ArazzoExamples examples = arazzoDocumentService.importArazzoExamples(content);
+   public WorkflowDocumentRef importArazzoExamples(String content) throws MockRepositoryImportException {
+      WorkflowExamples examples = arazzoDocumentService.importArazzoExamples(content);
       return documentRef(examples.getName(), examples.getVersion());
    }
 
    /** The document with this title and version, with its sources linked to no API; no source when not imported. */
-   private ArazzoDocumentRef documentRef(String title, String version) {
-      ArazzoDocument document = arazzoDocumentRepository.findByTitleAndVersion(title, version);
+   private WorkflowDocumentRef documentRef(String title, String version) {
+      WorkflowDocument document = arazzoDocumentRepository.findByTitleAndVersion(title, version);
       if (document == null) {
-         return new ArazzoDocumentRef(null, title, version, List.of());
+         return new WorkflowDocumentRef(null, title, version, List.of());
       }
       List<String> unlinkedSources = arazzoDocumentService.getSourceLinks(title, version).stream()
             .filter(link -> !link.linked()).map(ArazzoSourceLink::sourceName).toList();
-      return new ArazzoDocumentRef(document.getId(), title, version, unlinkedSources);
+      return new WorkflowDocumentRef(document.getId(), title, version, unlinkedSources);
    }
 
-   private Map<String, ServiceRef> storedLinks(ArazzoDocument document) {
-      ArazzoMetadata metadata = arazzoMetadataRepository.findByNameAndVersion(document.getTitle(),
+   private Map<String, ServiceRef> storedLinks(WorkflowDocument document) {
+      WorkflowMetadata metadata = arazzoMetadataRepository.findByNameAndVersion(document.getTitle(),
             document.getVersion());
       return metadata == null ? Map.of() : metadata.getSources();
    }
@@ -233,7 +233,7 @@ public class ArazzoImportService {
 
    private ArazzoImportAnalysis analyse(Candidate candidate, Map<String, ArazzoImportAnalysis.Match> matches,
          Map<String, ServiceRef> links) {
-      ArazzoDocument document = candidate.document();
+      WorkflowDocument document = candidate.document();
       Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document.getSourceNames(), links);
       List<WorkflowStepOperation> calls = document.getWorkflowIds().stream()
             .flatMap(workflowId -> document.getWorkflowCalls().get(workflowId).stream()).toList();
@@ -251,7 +251,7 @@ public class ArazzoImportService {
     * Arazzo 1.1 (5.8.5.2) intends dependsOn to coordinate asynchronous steps and recommends the order of the list for
     * synchronous ones, without forbidding it: such a document is imported, with a warning per workflow.
     */
-   private static List<String> warnings(ArazzoDocument document) {
+   private static List<String> warnings(WorkflowDocument document) {
       JsonNode parsed;
       try {
          parsed = ArazzoDocumentService.parse(document.getContent());
@@ -281,15 +281,15 @@ public class ArazzoImportService {
     */
    public ArazzoDocumentSummary importArazzoDocument(String content, String fileName, Map<String, ServiceRef> links)
          throws MockRepositoryImportException {
-      ArazzoDocument document = read(content).document();
+      WorkflowDocument document = read(content).document();
       Map<String, ServiceRef> linkedSources = linkedSources(document, links);
-      ArazzoDocument imported = arazzoDocumentService.save(document, fileName);
+      WorkflowDocument imported = arazzoDocumentService.save(document, fileName);
       arazzoDocumentService.saveSources(imported.getTitle(), imported.getVersion(), linkedSources);
       return arazzoDocumentService.summary(imported);
    }
 
    /** A document read without being stored, with the url each of its source descriptions declares. */
-   private record Candidate(ArazzoDocument document, Map<String, String> declaredUrls) {
+   private record Candidate(WorkflowDocument document, Map<String, String> declaredUrls) {
    }
 
    private static Candidate read(String content) throws MockRepositoryImportException {
@@ -305,7 +305,7 @@ public class ArazzoImportService {
     * The links of the source descriptions of a document that link them to an API, all of them being checked first.
     * @throws MockRepositoryImportException if a link names a source the document does not describe
     */
-   private static Map<String, ServiceRef> linkedSources(ArazzoDocument document, Map<String, ServiceRef> links)
+   private static Map<String, ServiceRef> linkedSources(WorkflowDocument document, Map<String, ServiceRef> links)
          throws MockRepositoryImportException {
       Map<String, ServiceRef> linkedSources = new HashMap<>();
       for (Map.Entry<String, ServiceRef> link : links.entrySet()) {
