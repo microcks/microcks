@@ -26,10 +26,11 @@ Microcks is a Java/Spring Boot backend with an Angular frontend.
 - For detailed architecture and UI instructions, read @CONTRIBUTING.md.
 
 ## 4. Working on Arazzo
-- **Where the code goes.** The stored model stays generic and format-agnostic in `io.microcks.domain.workflow`
+- **Where the code goes.** The stored model stays generic and format-agnostic in `io.microcks.domain.workflow` and
+  `io.microcks.repository.workflow`
   (`Workflow*`, no Arazzo concept, one type per file); views built for the REST API stay in the app
   (`io.microcks.service.arazzo.view`). Arazzo code of the app stays in the `arazzo` subpackages
-  (`io.microcks.{repository,service,web}.arazzo`, tests mirrored). Reading Arazzo belongs to
+  (`io.microcks.{service,web}.arazzo`, tests mirrored). Reading Arazzo belongs to
   `artifacts/artifact-arazzo`, which depends on Jackson only (an ArchUnit test enforces it). Playing a run belongs to
   `minions/arazzo`. See the Arazzo section of @ARCHITECTURE.md.
 - **Follow the Arazzo specification.** Arazzo 1.0.1 and 1.1.0 are the reference. When the specification is ambiguous or

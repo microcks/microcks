@@ -43,7 +43,7 @@ called together, and reuses the APIs it already mocks to run, mock and verify th
 - **Kernel.** `artifacts/artifact-arazzo` reads documents, the step order and the runtime expressions. It depends on
   Jackson only, so both the app and the minion use it.
 - **App.** The stored model is generic, in `io.microcks.domain.workflow` (`WorkflowDocument` carries its `format`,
-  `ARAZZO` today); the Arazzo code lives in `io.microcks.{repository,service,web}.arazzo`, the views of the API in
+  `ARAZZO` today); the Arazzo code lives in `io.microcks.{service,web}.arazzo`, the views of the API in
   `io.microcks.service.arazzo.view`. It exposes the REST API under
   `/api/arazzo` (documents, workflows, runs, history, examples, sessions), described in
   `api/microcks-openapi-v2.0.yaml`, the Mock URL
