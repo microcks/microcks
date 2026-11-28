@@ -27,13 +27,14 @@ test('a feature that is not ported is unavailable on a real document, with a rea
   }
 });
 
-test('AI generation, document edit, Mock URL and sessions are not available yet on real documents', () => {
+test('real documents have the features whose story is ported: Mock URL and sessions, not AI generation and edit', () => {
   for (const feature of ['ai-copilot', 'document-edit', 'mock-url', 'sessions'] as const) assert.equal(isAvailable(feature, REAL), PORTED[feature]);
+  assert.deepEqual(FEATURES.filter((f) => PORTED[f]), ['mock-url', 'sessions']);
 });
 
-test('the Mock URL filter is on for a real document, the Session filter stays off until sessions are served', () => {
+test('the Mock URL and Session filters are on for a real document: Microcks serves both kinds of run', () => {
   assert.equal(isFilterAvailable('mock-url', REAL), true);
-  assert.equal(isFilterAvailable('session', REAL), false);
+  assert.equal(isFilterAvailable('session', REAL), true);
   for (const filter of ['any', 'all', 'mocks', 'implementations']) assert.equal(isFilterAvailable(filter, REAL), true);
   assert.equal(isFilterAvailable('mock-url', 'pastry'), true);
 });

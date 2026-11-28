@@ -37,6 +37,7 @@ import {
 } from './backend';
 import type { Criterion, StepParameter, WorkflowInput } from '#lib/workflows/types.js';
 import { realRunsOf } from './runs-arazzo';
+import { sessionsOf } from './sessions-arazzo';
 import { getService, listServices, refreshServices } from './store';
 
 /*
@@ -402,7 +403,7 @@ export async function getWorkflowDetail(
       const workflow = real.workflows.get(key(docId, workflowId));
       if (!document || !workflow) return undefined;
       const runs = (await realRunsOf([docId], [workflow], token)).filter((r) => r.workflowId === workflowId);
-      return { document, workflow, runs, sessions: [], examples: real.examples.get(key(docId, workflowId)) ?? [], demo: false };
+      return { document, workflow, runs, sessions: sessionsOf(docId, workflowId), examples: real.examples.get(key(docId, workflowId)) ?? [], demo: false };
     }
   }
   const detail = getDetail(docId, workflowId);

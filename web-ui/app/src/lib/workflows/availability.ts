@@ -13,7 +13,7 @@ export type ArazzoFeature =
   | 'document-edit'
   /** Calling a workflow through its Mock URL (story S27). */
   | 'mock-url'
-  /** Verification sessions (story S15). */
+  /** Verification sessions (stories S15, S16, S17). */
   | 'sessions';
 
 /** Whether the backend serves the feature for real documents. */
@@ -21,7 +21,7 @@ export const PORTED: Readonly<Record<ArazzoFeature, boolean>> = {
   'ai-copilot': false,
   'document-edit': false,
   'mock-url': true,
-  sessions: false
+  sessions: true
 };
 
 const REASON: Readonly<Record<ArazzoFeature, string>> = {
