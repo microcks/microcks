@@ -93,7 +93,7 @@
       {:else if col.key === 'criteria'}
         <span class="wf-st-stack">
           {#each step.successCriteria as c (c.condition)}
-            <span class="wf-st-crit">{c.condition}{#if c.type === 'regex'}<span class="wf-st-muted"> (regex on {c.context})</span>{/if}</span>
+            <span class="wf-st-crit">{c.condition}{#if c.type === 'regex'}<span class="wf-st-muted">{' '}(regex on {c.context})</span>{/if}</span>
           {/each}
         </span>
       {:else if col.key === 'actions'}

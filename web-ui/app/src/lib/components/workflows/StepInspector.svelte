@@ -100,7 +100,7 @@
     </div>
 
     <section class="wf-ins-section" aria-labelledby="wf-ins-result">
-      <h3 id="wf-ins-result">Result{#if run}<span class="wf-ins-meta"> · {runNoun(run)} · {originWord(run)}</span>{/if}</h3>
+      <h3 id="wf-ins-result">Result{#if run}<span class="wf-ins-meta">{' '}· {runNoun(run)} · {originWord(run)}</span>{/if}</h3>
       {#if !run}
         <p class="wf-ins-text">No run selected: the loom shows the definition only.</p>
       {:else}
@@ -150,7 +150,7 @@
           {#if p.value.startsWith('$')}
             <button type="button" class="wf-ins-expr" aria-pressed={lens === p.value} onclick={() => ontrace(p.value)} aria-label="Trace {p.value}">{p.value}</button>
           {/if}
-          <span class="wf-ins-value" data-tone={v.tone}>{#if v.lead}<span class="wf-ins-lead">{v.lead} </span>{/if}{v.text}</span>
+          <span class="wf-ins-value" data-tone={v.tone}>{#if v.lead}<span class="wf-ins-lead">{v.lead}{' '}</span>{/if}{v.text}</span>
         </div>
       {/each}
     </section>
@@ -217,7 +217,7 @@
           <span class="wf-ins-oexpr">{o.expression}</span>
           <span class="wf-ins-output-row">
             <span class="wf-ins-value" data-tone={missing ? 'bad' : undefined}>
-              <span class="wf-ins-lead">resolved </span>{!run ? 'no run selected' : missing ? `— ${producedWhy || 'not resolved'}` : formatValue(value)}
+              <span class="wf-ins-lead">resolved{' '}</span>{!run ? 'no run selected' : missing ? `— ${producedWhy || 'not resolved'}` : formatValue(value)}
             </span>
             {#if threads.some((t) => t.expression === expr)}
               <button type="button" class="wf-ins-trace" aria-pressed={lens === expr} onclick={() => ontrace(expr)}>

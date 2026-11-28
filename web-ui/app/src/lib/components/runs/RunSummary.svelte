@@ -79,7 +79,7 @@
               stroke-width={b.status === 'not-run' ? 2 : 2.8}
               stroke-dasharray={b.status === 'not-run' ? '3 3' : undefined}
             />
-            <span class="wfr-mono">{b.id}</span>
+            <span class="wfr-mono" title={b.id}>{b.id}</span>
           </span>
           <span class="wfr-band-word">{b.word}</span>
         </div>
