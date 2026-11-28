@@ -15,9 +15,11 @@
     icon?: IconName;
     items: MenuItem[];
     align?: 'start' | 'end';
+    /** Shows the icon only; the label stays the accessible name. */
+    iconOnly?: boolean;
   }
 
-  let { label, icon, items, align = 'start' }: Props = $props();
+  let { label, icon, items, align = 'start', iconOnly = false }: Props = $props();
   const uid = $props.id();
   const menuId = `${uid}-menu`;
   let menu: HTMLDivElement;
@@ -71,7 +73,11 @@
   };
 </script>
 
-<Button bind:ref={trigger} variant="secondary" {icon} aria-expanded={expanded} aria-controls={menuId} popovertarget={menuId}>{label}</Button>
+{#if iconOnly}
+  <Button bind:ref={trigger} variant="secondary" {icon} iconOnly aria-label={label} title={label} aria-expanded={expanded} aria-controls={menuId} popovertarget={menuId} />
+{:else}
+  <Button bind:ref={trigger} variant="secondary" {icon} aria-expanded={expanded} aria-controls={menuId} popovertarget={menuId}>{label}</Button>
+{/if}
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div bind:this={menu} id={menuId} class="menu" popover="auto" role="group" aria-label={label} {ontoggle} {onkeydown} {onfocusout}>
   {#each items as item (item.id)}

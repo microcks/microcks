@@ -74,7 +74,7 @@
     {:else}
       <Button icon="pencil" disabled title={unavailableReason('document-edit', document)}>Edit in source</Button>
     {/if}
-    <Menu label="More workflow actions" icon="more-vertical" align="end" {items} />
+    <Menu label="More workflow actions" iconOnly icon="more-vertical" align="end" {items} />
   {/snippet}
   {#snippet children()}
     <div class="wf-facts">
