@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.service.arazzo.view;
 
 /**
  * A source description of an Arazzo document, as the API developer reads it: the Microcks API it is linked to, and how

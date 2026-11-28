@@ -22,13 +22,13 @@ import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoExampleLaunch;
+import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
 import io.microcks.domain.arazzo.WorkflowExampleCheck;
 import io.microcks.domain.arazzo.WorkflowExampleVerdict;
 import io.microcks.domain.arazzo.WorkflowResult;
 
 import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunSummary;
+import io.microcks.service.arazzo.view.WorkflowRunSummary;
 import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.domain.arazzo.WorkflowStepResult;
 import io.microcks.domain.arazzo.WorkflowStepStatus;

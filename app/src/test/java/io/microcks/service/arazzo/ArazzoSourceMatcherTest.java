@@ -15,7 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSourceMatch;
+import io.microcks.service.arazzo.view.ArazzoSourceMatch;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

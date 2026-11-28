@@ -16,8 +16,8 @@
 package io.microcks.service.arazzo;
 
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoImportAnalysis;
-import io.microcks.domain.arazzo.ArazzoWorkflowDetail;
+import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
+import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.domain.arazzo.WorkflowResult;
 import io.microcks.domain.arazzo.WorkflowRunStatus;
 import io.microcks.domain.arazzo.WorkflowStepOperation;

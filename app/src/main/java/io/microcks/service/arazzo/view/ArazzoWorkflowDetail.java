@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.service.arazzo.view;
 
+import io.microcks.domain.arazzo.ArazzoWorkflowExample;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;

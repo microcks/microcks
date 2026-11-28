@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.service.arazzo.view;
 
 /**
  * How the last run of an Arazzo workflow went.

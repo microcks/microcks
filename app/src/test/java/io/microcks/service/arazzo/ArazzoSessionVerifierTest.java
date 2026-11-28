@@ -20,7 +20,7 @@ import io.microcks.artifact.arazzo.ArazzoStep;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.domain.Header;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.arazzo.ArazzoStepOperation;
+import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.ExpectedStep;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.LinkedApi;
 import io.microcks.service.arazzo.ArazzoSessionVerifier.StepVerdict;

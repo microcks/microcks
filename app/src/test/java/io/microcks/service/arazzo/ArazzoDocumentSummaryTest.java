@@ -18,11 +18,11 @@ package io.microcks.service.arazzo;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoDocumentSummary;
-import io.microcks.domain.arazzo.ArazzoSourceLink;
-import io.microcks.domain.arazzo.ArazzoSourceInfo;
-import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
-import io.microcks.domain.arazzo.ArazzoWorkflowSummary;
+import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
+import io.microcks.service.arazzo.view.ArazzoSourceLink;
+import io.microcks.service.arazzo.view.ArazzoSourceInfo;
+import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
+import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.ServiceRepository;
 

@@ -15,7 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoSourceMatch;
+import io.microcks.service.arazzo.view.ArazzoSourceMatch;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.util.HTTPDownloader;
 import io.microcks.util.ObjectMapperFactory;

@@ -20,7 +20,7 @@ import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoExampleLaunch;
+import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
 import io.microcks.domain.arazzo.WorkflowResult;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.arazzo.ArazzoMinionClient;

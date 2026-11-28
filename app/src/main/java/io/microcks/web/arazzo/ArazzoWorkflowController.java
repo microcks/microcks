@@ -15,7 +15,7 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoApiUsage;
+import io.microcks.service.arazzo.view.ArazzoApiUsage;
 import io.microcks.service.arazzo.ArazzoWorkflowService;
 
 import io.smallrye.common.annotation.RunOnVirtualThread;

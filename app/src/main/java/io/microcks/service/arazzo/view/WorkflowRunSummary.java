@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.microcks.domain.arazzo;
+package io.microcks.service.arazzo.view;
 
+import io.microcks.domain.arazzo.WorkflowExampleVerdict;
+import io.microcks.domain.arazzo.WorkflowRunOrigin;
+import io.microcks.domain.arazzo.WorkflowRunStatus;
+import io.microcks.domain.arazzo.WorkflowRunTarget;
 import java.util.Date;
 
 /**

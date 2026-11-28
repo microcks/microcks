@@ -15,7 +15,7 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoExampleLaunch;
+import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
 import io.microcks.domain.arazzo.WorkflowResult;
 import io.microcks.service.arazzo.ArazzoRunImplementations;
 import io.microcks.service.arazzo.ArazzoRunRefusedException;

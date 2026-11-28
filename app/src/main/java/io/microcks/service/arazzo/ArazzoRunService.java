@@ -16,10 +16,10 @@
 package io.microcks.service.arazzo;
 
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoExampleLaunch;
-import io.microcks.domain.arazzo.ArazzoStepOperation;
+import io.microcks.service.arazzo.view.ArazzoExampleLaunch;
+import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.domain.arazzo.ArazzoWorkflowExample;
-import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
+import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
 import io.microcks.domain.Request;
 import io.microcks.domain.Resource;
 import io.microcks.domain.ResourceType;

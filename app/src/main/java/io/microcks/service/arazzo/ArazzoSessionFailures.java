@@ -22,7 +22,7 @@ import io.microcks.domain.Response;
 import io.microcks.domain.Service;
 import io.microcks.domain.arazzo.ArazzoInjectedFailure;
 import io.microcks.domain.arazzo.ArazzoStepCall;
-import io.microcks.domain.arazzo.ArazzoStepOperation;
+import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.repository.ResponseRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;

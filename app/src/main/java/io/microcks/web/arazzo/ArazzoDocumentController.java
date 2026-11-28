@@ -15,8 +15,8 @@
  */
 package io.microcks.web.arazzo;
 
-import io.microcks.domain.arazzo.ArazzoDocumentSummary;
-import io.microcks.domain.arazzo.ArazzoImportAnalysis;
+import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
+import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.arazzo.ArazzoImportService;

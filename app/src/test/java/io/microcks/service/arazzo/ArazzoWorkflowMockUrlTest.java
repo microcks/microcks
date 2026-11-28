@@ -20,7 +20,7 @@ import io.microcks.domain.arazzo.WorkflowExpressionValue;
 import io.microcks.domain.arazzo.WorkflowResult;
 import io.microcks.domain.arazzo.WorkflowRunOrigin;
 import io.microcks.domain.arazzo.WorkflowRunStatus;
-import io.microcks.domain.arazzo.WorkflowRunSummary;
+import io.microcks.service.arazzo.view.WorkflowRunSummary;
 import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.domain.arazzo.WorkflowStepResult;
 import io.microcks.domain.arazzo.WorkflowStepStatus;

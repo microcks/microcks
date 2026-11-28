@@ -25,7 +25,7 @@ import io.microcks.artifact.arazzo.ArazzoStepOrder;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.domain.Header;
 import io.microcks.domain.arazzo.ArazzoSessionCall;
-import io.microcks.domain.arazzo.ArazzoStepOperation;
+import io.microcks.service.arazzo.view.ArazzoStepOperation;
 import io.microcks.domain.arazzo.WorkflowParameterValue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
