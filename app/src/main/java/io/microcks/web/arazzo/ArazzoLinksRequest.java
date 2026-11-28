@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * The links the developer chose for the source descriptions of an imported Arazzo document.
  * @param links The API each source description is linked to, by name, a source absent or mapped to null being not
- *              linked; null to analyse the document with the links of its overlay
+ *              linked; null to analyse the document with the links of its ArazzoMetadata
  * @author SebastienDegodez
  */
 public record ArazzoLinksRequest(Map<String, ServiceRef> links) {

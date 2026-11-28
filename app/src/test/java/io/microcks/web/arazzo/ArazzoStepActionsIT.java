@@ -19,7 +19,7 @@ import io.microcks.web.AbstractBaseIT;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,12 +47,12 @@ class ArazzoStepActionsIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    /** AC-05: the workflow endpoint gives what each step does on success and on failure. */
@@ -101,7 +101,7 @@ class ArazzoStepActionsIT extends AbstractBaseIT {
    private String orderTrackingIsUploadedAndLinked() {
       uploadArtifactFile(FIXTURES + "order-status.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "order-tracking.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "order-tracking.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "order-tracking.arazzo-metadata.yaml", false);
       return arazzoDocumentRepository.findByTitleAndVersion("Order tracking", "1.0.0").getId();
    }
 }

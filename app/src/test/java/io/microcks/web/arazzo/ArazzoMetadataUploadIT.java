@@ -24,7 +24,8 @@ import io.microcks.domain.arazzo.ArazzoSourceLink;
 import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
 import io.microcks.domain.Service;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoExamplesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -38,12 +39,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Integration tests of the import of ArazzoSources overlays through the artifact upload endpoint, as secondary
- * artifacts.
+ * Integration tests of the import of ArazzoMetadata and ArazzoExamples through the artifact upload endpoint, as
+ * secondary artifacts.
  * @author SebastienDegodez
  */
 @QuarkusTest
-class ArazzoSourcesUploadIT extends AbstractBaseIT {
+class ArazzoMetadataUploadIT extends AbstractBaseIT {
 
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
 
@@ -54,12 +55,16 @@ class ArazzoSourcesUploadIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
+
+   @Inject
+   private ArazzoExamplesRepository arazzoExamplesRepository;
 
    @AfterEach
-   void deleteDocumentsAndOverlays() {
+   void deleteDocumentsAndMetadata() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
+      arazzoExamplesRepository.deleteAll();
       // Order API is missing at the start of each test.
       Service orderApi = serviceRepository.findByNameAndVersion("Order API", "1.0.0");
       if (orderApi != null) {
@@ -68,32 +73,47 @@ class ArazzoSourcesUploadIT extends AbstractBaseIT {
    }
 
    @Test
-   void uploadingAnOverlayAsASecondaryArtifactLinksTheSourcesOfItsDocument() {
+   void uploadingAnArazzoMetadataAsASecondaryArtifactLinksTheSourcesOfItsDocument() {
       uploadArtifactFile(FIXTURES + "customer-api.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo.yaml", true);
 
-      ResponseEntity<String> response = upload("order-fulfilment.arazzo-sources.yaml");
+      ResponseEntity<String> response = upload("order-fulfilment.arazzo-metadata.yaml");
 
       assertEquals(201, response.getStatusCode().value());
       assertEquals("Order fulfilment:1.0.0", response.getBody());
       assertEquals(List.of("customerApi -> Customer API 1.0.0: linked", "orderApi -> Order API 1.0.0: not linked"),
             arazzoDocumentService.getSourceLinks("Order fulfilment", "1.0.0").stream()
-                  .map(ArazzoSourcesUploadIT::describe).toList());
+                  .map(ArazzoMetadataUploadIT::describe).toList());
       assertEquals(List.of("searchThenRead: runnable", "placeOrder: not runnable [API Order API 1.0.0 not found]"),
             arazzoDocumentService.getWorkflowStatuses("Order fulfilment", "1.0.0").stream()
-                  .map(ArazzoSourcesUploadIT::describe).toList());
+                  .map(ArazzoMetadataUploadIT::describe).toList());
    }
 
    @Test
    void uploadingTheMissingApiLaterMakesItsWorkflowsRunnable() {
       uploadArtifactFile(FIXTURES + "customer-api.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo.yaml", true);
-      upload("order-fulfilment.arazzo-sources.yaml");
+      upload("order-fulfilment.arazzo-metadata.yaml");
 
       uploadArtifactFile(FIXTURES + "order-api.openapi.yaml", true);
 
       assertEquals(List.of("searchThenRead: runnable", "placeOrder: runnable"), arazzoDocumentService
-            .getWorkflowStatuses("Order fulfilment", "1.0.0").stream().map(ArazzoSourcesUploadIT::describe).toList());
+            .getWorkflowStatuses("Order fulfilment", "1.0.0").stream().map(ArazzoMetadataUploadIT::describe).toList());
+   }
+
+   @Test
+   void uploadingExamplesBeforeTheirDocumentIsRefusedAndAfterIsAccepted() {
+      ResponseEntity<String> refused = upload("recorded-examples.arazzo-examples.yaml");
+
+      assertEquals(400, refused.getStatusCode().value());
+      assertEquals(0, arazzoExamplesRepository.count());
+
+      uploadArtifactFile(FIXTURES + "recorded-examples.arazzo.yaml", true);
+      ResponseEntity<String> accepted = upload("recorded-examples.arazzo-examples.yaml");
+
+      assertEquals(201, accepted.getStatusCode().value());
+      assertEquals("Pastry examples:1.0.0", accepted.getBody());
+      assertEquals(1, arazzoExamplesRepository.count());
    }
 
    private ResponseEntity<String> upload(String fixture) {

@@ -62,7 +62,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ArazzoExampleRunTest {
 
    private static final String FIXTURES = "/io/microcks/service/arazzo/";
-   private static final String EXAMPLES = "examples.arazzo-sources.yaml";
+   private static final String EXAMPLES = "examples.arazzo-examples.yaml";
    private static final WorkflowStepOperation GET_PASTRIES = new WorkflowStepOperation("pastryApi", "GetPastries",
          "GET", "/pastry");
    private static final WorkflowStepOperation GET_PASTRY_BY_NAME = new WorkflowStepOperation("pastryApi",
@@ -337,10 +337,10 @@ class ArazzoExampleRunTest {
 
    @Test
    void aWorkflowWithoutExampleHasNoExampleToRun() throws Exception {
-      ArazzoDocument document = pastryScenariosWithExamples("no-example");
+      ArazzoDocument document = pastryScenariosWithExamples("numbers");
 
       assertEquals(Optional.of(List.of()),
-            arazzoRunService.launchExampleRuns(document.getId(), "readThenReprice", null, null, false));
+            arazzoRunService.launchExampleRuns(document.getId(), "listThenReadFirst", null, null, false));
       assertEquals(List.of(), minion.requests());
    }
 
@@ -422,12 +422,13 @@ class ArazzoExampleRunTest {
             + (run.example() == null ? "" : " " + run.example() + " " + run.exampleVerdict());
    }
 
-   private ArazzoDocument pastryScenariosWithExamples(String overlay) throws Exception {
+   private ArazzoDocument pastryScenariosWithExamples(String examples) throws Exception {
       File contract = new File(
             ArazzoExampleRunTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(exampleOf(overlay));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
+      arazzoDocumentService.importArazzoExamples(exampleOf(examples));
       return document;
    }
 

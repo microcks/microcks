@@ -36,13 +36,13 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Reads the examples section of an ArazzoSources overlay, checking each example against the workflow it plays: an
+ * Reads the workflows section of an ArazzoExamples, checking each example against the workflow it plays: an
  * example may only give the inputs the workflow declares, and expect the outputs and steps the workflow has.
  * @author SebastienDegodez
  */
 final class ArazzoExamplesReader {
 
-   private static final String INVALID_OVERLAY = "Invalid ArazzoSources overlay: ";
+   private static final String INVALID_EXAMPLES = "Invalid ArazzoExamples: ";
    private static final int LOWEST_STATUS = 100;
    private static final int HIGHEST_STATUS = 599;
 
@@ -50,29 +50,20 @@ final class ArazzoExamplesReader {
    }
 
    /**
-    * @param examples The examples section of an overlay: examples by name, by workflow id
-    * @param document The Arazzo document the overlay names; null when it is not imported
-    * @param name     The title of the Arazzo document the overlay names
-    * @param version  The version of the Arazzo document the overlay names
-    * @return The examples, in the order of the overlay
-    * @throws MockRepositoryImportException if an example does not fit its workflow, or the document is not imported
+    * @param examples The workflows section of an ArazzoExamples: examples by name, by workflow id
+    * @param document The imported Arazzo document the ArazzoExamples names
+    * @return The examples, in the order of the ArazzoExamples
+    * @throws MockRepositoryImportException if an example does not fit its workflow
     */
-   static List<ArazzoWorkflowExample> read(JsonNode examples, ArazzoDocument document, String name, String version)
+   static List<ArazzoWorkflowExample> read(JsonNode examples, ArazzoDocument document)
          throws MockRepositoryImportException {
-      if (examples.isEmpty()) {
-         return List.of();
-      }
-      if (document == null) {
-         throw new MockRepositoryImportException(INVALID_OVERLAY + "its examples need the Arazzo document " + name + " "
-               + version + ", which is not imported");
-      }
       JsonNode parsed = ArazzoWorkflowService.parse(document.getContent());
       List<ArazzoWorkflowExample> read = new ArrayList<>();
       for (Map.Entry<String, JsonNode> workflowExamples : examples.properties()) {
          Optional<ArazzoWorkflow> workflow = ArazzoWorkflowReader.workflow(parsed, workflowExamples.getKey());
          for (Map.Entry<String, JsonNode> example : workflowExamples.getValue().properties()) {
             if (workflow.isEmpty()) {
-               throw new MockRepositoryImportException(INVALID_OVERLAY + "example " + example.getKey()
+               throw new MockRepositoryImportException(INVALID_EXAMPLES + "example " + example.getKey()
                      + " names the unknown workflow " + workflowExamples.getKey());
             }
             read.add(example(workflow.get(), example.getKey(), example.getValue()));
@@ -83,7 +74,7 @@ final class ArazzoExamplesReader {
 
    private static ArazzoWorkflowExample example(ArazzoWorkflow workflow, String name, JsonNode example)
          throws MockRepositoryImportException {
-      String refusal = INVALID_OVERLAY + "example " + name + " of " + workflow.workflowId() + " ";
+      String refusal = INVALID_EXAMPLES + "example " + name + " of " + workflow.workflowId() + " ";
       Set<String> inputNames = new LinkedHashSet<>(ArazzoDataFlow.inputUses(workflow).keySet());
       inputNames.addAll(ArazzoDataFlow.neededInputs(workflow));
       Map<String, Object> inputs = values(example.path("inputs"), inputNames, refusal + "gives the unknown input ", "");

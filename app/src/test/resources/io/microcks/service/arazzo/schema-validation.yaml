@@ -132,9 +132,9 @@ workflows:
     outputs:
       after: $steps.reprice.outputs.price
 ---
-# example: pastry-journeys-sources - links the pastryApi source of API Pastry journeys to API Pastry - non-conformant
+# example: pastry-journeys-metadata - links the pastryApi source of API Pastry journeys to API Pastry - non-conformant
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   name: API Pastry journeys
   version: 1.0.0

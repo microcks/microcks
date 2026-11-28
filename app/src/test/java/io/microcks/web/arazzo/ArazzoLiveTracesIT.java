@@ -81,7 +81,7 @@ class ArazzoLiveTracesIT extends AbstractBaseIT {
    @Test
    void eachCallOfARunAgainstTheMocksIsStoredWithItsRunWorkflowStepAndAttempt() throws Exception {
       uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
       String documentId = JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody())
             .get(0).get("id").asText();
       HttpHeaders headers = new HttpHeaders();

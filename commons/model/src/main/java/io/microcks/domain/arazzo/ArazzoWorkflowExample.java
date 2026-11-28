@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A recorded example of an Arazzo workflow, as its ArazzoSources overlay gives it: the inputs to run it with and what
+ * A recorded example of an Arazzo workflow, as its ArazzoExamples give it: the inputs to run it with and what
  * the run is expected to show, as API examples record a request and its expected response.
  * @param workflowId The id of the workflow the example plays
  * @param name       The name of the example in that workflow
  * @param inputs     The inputs to run the workflow with, by name
  * @param outputs    The outputs the workflow is expected to produce, by name; only those listed are checked
- * @param steps      What each listed step is expected to show, in the order of the overlay
+ * @param steps      What each listed step is expected to show, in the order of the ArazzoExamples
  * @param stopsAt    The step the workflow is expected to stop at; null when it is expected to run to its end
  * @author SebastienDegodez
  */

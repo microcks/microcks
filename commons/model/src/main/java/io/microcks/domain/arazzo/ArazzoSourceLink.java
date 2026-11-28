@@ -18,8 +18,8 @@ package io.microcks.domain.arazzo;
 /**
  * The link between a source description of an Arazzo document and the Microcks API it describes.
  * @param sourceName The name of the source description in the Arazzo document
- * @param apiName    The name of the API the source is mapped to by the ArazzoSources overlay
- * @param apiVersion The version of the API the source is mapped to by the ArazzoSources overlay
+ * @param apiName    The name of the API the source is mapped to by the ArazzoMetadata
+ * @param apiVersion The version of the API the source is mapped to by the ArazzoMetadata
  * @param linked     Whether an API with that name and version exists in Microcks
  * @author SebastienDegodez
  */

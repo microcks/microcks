@@ -172,7 +172,10 @@ public class ImportJob {
       serviceRefs.add(serviceRef);
    }
 
-   /** @return The Arazzo document the last import imported, or whose overlay it imported; null for an API */
+   /**
+    * @return The Arazzo document the last import imported, or whose ArazzoMetadata or ArazzoExamples it imported; null
+    *         for an API
+    */
    public ArazzoDocumentRef getArazzoDocumentRef() {
       return arazzoDocumentRef;
    }

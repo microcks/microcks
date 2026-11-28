@@ -16,7 +16,8 @@
 package io.microcks.web;
 
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoExamples;
+import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.Secret;
 import io.microcks.domain.Service;
 import io.microcks.repository.SecretRepository;
@@ -200,14 +201,14 @@ public class UploadArtifactController {
    }
 
    /**
-    * Arazzo documents and ArazzoSources overlays describe workflows across APIs rather than an API: they have their own
-    * import, whether they are uploaded or downloaded.
+    * Arazzo documents, ArazzoMetadata and ArazzoExamples describe workflows across APIs rather than an API: they
+    * have their own import, whether they are uploaded or downloaded.
     * @param localFile The artifact, saved to a local file
     * @param fileName  The name of the file the artifact comes from; null when it is not known
-    * @return The name and version of the imported Arazzo document or overlay, as {@code <name>:<version>}; empty when
-    *         the artifact is neither, to import it as an API
+    * @return The name and version of the imported Arazzo document, ArazzoMetadata or ArazzoExamples, as
+    *         {@code <name>:<version>}; empty when the artifact is none of them, to import it as an API
     * @throws IOException                   if the local file cannot be read
-    * @throws MockRepositoryImportException if the Arazzo document or overlay is refused
+    * @throws MockRepositoryImportException if the Arazzo document, ArazzoMetadata or ArazzoExamples is refused
     */
    private Optional<String> importArazzoArtifact(File localFile, String fileName)
          throws IOException, MockRepositoryImportException {
@@ -216,9 +217,13 @@ public class UploadArtifactController {
          ArazzoDocument document = arazzoDocumentService.importArazzoDocument(content, fileName);
          return Optional.of(document.getTitle() + ":" + document.getVersion());
       }
-      if (arazzoDocumentService.isArazzoSources(content)) {
-         ArazzoSources overlay = arazzoDocumentService.importArazzoSources(content);
-         return Optional.of(overlay.getName() + ":" + overlay.getVersion());
+      if (arazzoDocumentService.isArazzoMetadata(content)) {
+         ArazzoMetadata metadata = arazzoDocumentService.importArazzoMetadata(content);
+         return Optional.of(metadata.getName() + ":" + metadata.getVersion());
+      }
+      if (arazzoDocumentService.isArazzoExamples(content)) {
+         ArazzoExamples examples = arazzoDocumentService.importArazzoExamples(content);
+         return Optional.of(examples.getName() + ":" + examples.getVersion());
       }
       return Optional.empty();
    }

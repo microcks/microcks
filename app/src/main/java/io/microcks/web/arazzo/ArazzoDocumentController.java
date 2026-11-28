@@ -124,7 +124,7 @@ public class ArazzoDocumentController {
     * Analyse the links of the source descriptions of an imported Arazzo document, to link them again. Nothing is
     * stored.
     * @param documentId The identifier of the imported document
-    * @param request    The links chosen for its source descriptions; none for the links of its overlay
+    * @param request    The links chosen for its source descriptions; none for the links of its ArazzoMetadata
     * @return The API each source is linked to, and whether each workflow is ready to run; 404 for an unknown document
     * @throws MockRepositoryImportException if the stored document cannot be read anymore
     */
@@ -138,7 +138,7 @@ public class ArazzoDocumentController {
    }
 
    /**
-    * Link the source descriptions of an imported Arazzo document again, replacing the sources of its overlay.
+    * Link the source descriptions of an imported Arazzo document again, replacing the sources of its ArazzoMetadata.
     * @param documentId The identifier of the imported document
     * @param request    The links chosen for its source descriptions
     * @return The summary of the document, why the links are refused, or 404 for an unknown document

@@ -274,7 +274,7 @@ class ArazzoRunHistoryTest {
       File contract = new File(
             ArazzoRunHistoryTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
    }
 

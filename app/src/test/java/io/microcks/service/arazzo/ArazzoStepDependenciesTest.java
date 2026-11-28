@@ -208,7 +208,7 @@ class ArazzoStepDependenciesTest {
       File contract = new File(
             ArazzoStepDependenciesTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));
-      arazzoDocumentService.importArazzoSources(fixture("pastry-tasting.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry-tasting.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-tasting.arazzo.yaml"));
    }
 

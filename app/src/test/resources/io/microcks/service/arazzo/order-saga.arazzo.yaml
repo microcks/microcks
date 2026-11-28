@@ -83,9 +83,9 @@ workflows:
       orderId: $steps.createOrder.outputs.id
       reservationId: $steps.reserveStock.outputs.reservationId
 ---
-# example: order-saga-sources - links the sources of Order saga 1.0.0 to Order, Stock and Payment API 1.0.0
+# example: order-saga-metadata - links the sources of Order saga 1.0.0 to Order, Stock and Payment API 1.0.0
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   name: Order saga
   version: 1.0.0
@@ -189,9 +189,9 @@ workflows:
       orderId: $steps.createOrder.outputs.id
       reservationId: $steps.reserveStock.outputs.reservationId
 ---
-# example: order-saga-parallel-sources - links the sources of Order saga 1.1.0 to Order, Stock and Payment API 1.0.0
+# example: order-saga-parallel-metadata - links the sources of Order saga 1.1.0 to Order, Stock and Payment API 1.0.0
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   name: Order saga
   version: 1.1.0

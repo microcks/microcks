@@ -17,7 +17,7 @@ package io.microcks.web.arazzo;
 
 import io.microcks.web.AbstractBaseIT;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
@@ -55,7 +55,7 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -66,7 +66,7 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
    @AfterEach
    void deleteDocumentsAndOverlays() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    /** AC-02: the workflow endpoint gives the channel, action, correlationId and timeout of each async step. */
@@ -108,7 +108,7 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
       uploadArtifactFile(example("async-steps.contracts.yaml", "order-api"), true);
       uploadArtifactFile(example("async-steps.contracts.yaml", "order-events"), true);
       uploadArtifactFile(example("async-steps.arazzo.yaml", "order-events"), true);
-      uploadArtifactFile(FIXTURES + "async-steps.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "async-steps.arazzo-metadata.yaml", false);
       return arazzoDocumentRepository.findByTitleAndVersion("Order events scenarios", "1.0.0").getId();
    }
 

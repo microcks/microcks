@@ -22,7 +22,7 @@ import io.microcks.testsupport.http.HttpStatus;
 import io.microcks.testsupport.http.HttpHeaders;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Integration tests of the import of Arazzo documents and ArazzoSources overlays through the artifact download
+ * Integration tests of the import of Arazzo documents and ArazzoMetadata overlays through the artifact download
  * endpoint, the one behind the import by URL. The artifacts are served by a local HTTP server, so that these tests do
  * not depend on the internet.
  * @author SebastienDegodez
@@ -61,7 +61,7 @@ class ArazzoDownloadIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    /** Serves the fixture named by the last segment of the requested path, whatever the directories and query. */
    @BeforeAll
@@ -79,7 +79,7 @@ class ArazzoDownloadIT extends AbstractBaseIT {
    @AfterEach
    void deleteDocumentsAndOverlays() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    @Test
@@ -106,11 +106,11 @@ class ArazzoDownloadIT extends AbstractBaseIT {
 
    @Test
    void downloadingAnOverlayAsASecondaryArtifactImportsIt() {
-      ResponseEntity<String> response = download(artifactUrl("/order-fulfilment.arazzo-sources.yaml"), false);
+      ResponseEntity<String> response = download(artifactUrl("/order-fulfilment.arazzo-metadata.yaml"), false);
 
       assertEquals(201, response.getStatusCode().value());
       assertEquals("{\"name\": \"Order fulfilment:1.0.0\"}", response.getBody());
-      assertNotNull(arazzoSourcesRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
+      assertNotNull(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
    }
 
    private ResponseEntity<String> download(String url, boolean mainArtifact) {

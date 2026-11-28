@@ -19,7 +19,7 @@ import io.microcks.web.AbstractBaseIT;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
@@ -71,7 +71,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @TempDir
    private Path importedContracts;
@@ -93,7 +93,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
    void deleteApisDocumentsAndOverlays() {
       serviceRepository.deleteAll();
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    @Test
@@ -143,7 +143,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
       JsonNode summary = new ObjectMapper().readTree(response.getBody());
       assertEquals("place-order.arazzo.yaml true",
             summary.path("fileName").asText() + " " + summary.at("/workflows/0/status/runnable").asText());
-      assertNotNull(arazzoSourcesRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
+      assertNotNull(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0"));
    }
 
    @Test
@@ -153,7 +153,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       assertEquals("{}",
-            arazzoSourcesRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().toString());
+            arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().toString());
    }
 
    @Test
@@ -165,7 +165,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
       assertEquals(400, response.getStatusCode().value());
       assertEquals("Unknown source description: paymentApi", response.getBody());
       assertEquals(0, arazzoDocumentRepository.count());
-      assertEquals(0, arazzoSourcesRepository.count());
+      assertEquals(0, arazzoMetadataRepository.count());
    }
 
    private void apiIsImported(String contractExample) throws Exception {

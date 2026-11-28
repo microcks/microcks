@@ -26,14 +26,15 @@ import io.microcks.domain.arazzo.ArazzoDocumentSummary;
 import io.microcks.domain.arazzo.ArazzoImportAnalysis;
 import io.microcks.domain.arazzo.ArazzoSourceAnalysis;
 import io.microcks.domain.arazzo.ArazzoSourceMatch;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoMetadata;
+import io.microcks.domain.arazzo.ArazzoWorkflowExample;
 import io.microcks.domain.arazzo.ArazzoWorkflowSummary;
 import io.microcks.domain.ImportJob;
 import io.microcks.domain.Secret;
 import io.microcks.domain.SecretRef;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ImportJobRepository;
 import io.microcks.repository.SecretRepository;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -83,7 +84,8 @@ class ArazzoImportersTest {
    private static final String ARAZZO = "importers.arazzo.yaml";
    private static final String CONTRACTS = "importers.openapi.yaml";
    private static final String DOCUMENT = "journeys/place-order.arazzo.yaml";
-   private static final String OVERLAY = "journeys/order-fulfilment.arazzo-sources.yaml";
+   private static final String OVERLAY = "journeys/order-fulfilment.arazzo-metadata.yaml";
+   private static final String EXAMPLES = "journeys/order-fulfilment.arazzo-examples.yaml";
    private static final String PRIVATE = "private/";
    private static final String TOKEN = "repository-token";
 
@@ -116,7 +118,7 @@ class ArazzoImportersTest {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @TempDir
    private Path importedContracts;
@@ -176,7 +178,7 @@ class ArazzoImportersTest {
       assertEquals(reason, imported.getLastImportError());
       assertNull(imported.getArazzoDocumentRef());
       assertEquals(0, arazzoDocumentRepository.count());
-      assertEquals(0, arazzoSourcesRepository.count());
+      assertEquals(0, arazzoMetadataRepository.count());
    }
 
    @Test
@@ -229,6 +231,34 @@ class ArazzoImportersTest {
    }
 
    @Test
+   void anExamplesUrlAsASecondaryArtifactJobImportsTheExamplesOfItsDocument() throws Exception {
+      jobService.doImportJob(job("Order fulfilment journeys", repositoryUrl(DOCUMENT), true));
+      ImportJob examplesJob = job("Order fulfilment examples", repositoryUrl(EXAMPLES), false);
+
+      jobService.doImportJob(examplesJob);
+
+      ImportJob imported = jobRepository.findByIdOptional(examplesJob.getId()).orElseThrow();
+      assertNull(imported.getLastImportError());
+      assertEquals(new ArazzoDocumentRef(documentId(), "Order fulfilment", "1.0.0", List.of("customerApi", "orderApi")),
+            imported.getArazzoDocumentRef());
+      assertEquals(List.of("ada-found"), arazzoDocumentService
+            .getExamples(arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0"), "searchThenRead")
+            .stream().map(ArazzoWorkflowExample::name).toList());
+   }
+
+   @Test
+   void anExamplesJobImportedBeforeItsDocumentFailsAndTellsToImportTheDocumentFirst() throws Exception {
+      ImportJob examplesJob = job("Order fulfilment examples", repositoryUrl(EXAMPLES), false);
+
+      jobService.doImportJob(examplesJob);
+
+      ImportJob refused = jobRepository.findByIdOptional(examplesJob.getId()).orElseThrow();
+      assertEquals("Import the Arazzo document Order fulfilment 1.0.0 before its examples",
+            refused.getLastImportError());
+      assertNull(refused.getArazzoDocumentRef());
+   }
+
+   @Test
    void anOverlayJobImportedBeforeItsDocumentNamesTheDocumentToCome() throws Exception {
       ImportJob overlayJob = job("Order fulfilment links", repositoryUrl(OVERLAY), false);
 
@@ -236,7 +266,7 @@ class ArazzoImportersTest {
 
       assertEquals(new ArazzoDocumentRef(null, "Order fulfilment", "1.0.0", List.of()),
             jobRepository.findByIdOptional(overlayJob.getId()).orElseThrow().getArazzoDocumentRef());
-      assertEquals(1, arazzoSourcesRepository.count());
+      assertEquals(1, arazzoMetadataRepository.count());
    }
 
    @Test
@@ -294,7 +324,7 @@ class ArazzoImportersTest {
    void noOverlayIsWrittenWhenNoSourceIsMatchedSoThatARefreshLinksThemLater() throws Exception {
       ImportJob job = job("Order fulfilment journeys", repositoryUrl(DOCUMENT), true);
       jobService.doImportJob(job);
-      long overlaysBefore = arazzoSourcesRepository.count();
+      long overlaysBefore = arazzoMetadataRepository.count();
 
       apiIsImported("contracts/customers.yaml");
       jobService.doImportJob(job);
@@ -307,7 +337,7 @@ class ArazzoImportersTest {
    void aJobImportNeverOverwritesAnExistingOverlay() throws Exception {
       apiIsImported("contracts/customers.yaml");
       apiIsImported("journeys/order-api.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(exampleOf(ARAZZO, "crossed-links"));
+      arazzoDocumentService.importArazzoMetadata(exampleOf(ARAZZO, "crossed-links"));
       ImportJob job = job("Order fulfilment journeys", repositoryUrl(DOCUMENT), true);
 
       jobService.doImportJob(job);
@@ -349,7 +379,7 @@ class ArazzoImportersTest {
       ImportJob imported = jobRepository.findByIdOptional(job.getId()).orElseThrow();
       assertNull(imported.getLastImportError());
       assertEquals(List.of("customerApi"), imported.getArazzoDocumentRef().unlinkedSources());
-      assertEquals(0, arazzoSourcesRepository.count());
+      assertEquals(0, arazzoMetadataRepository.count());
    }
 
    @Test
@@ -409,7 +439,7 @@ class ArazzoImportersTest {
    void changeLinkIsPrefilledWithTheLinksOfTheOverlay() throws Exception {
       apiIsImported("contracts/customers.yaml");
       apiIsImported("journeys/order-api.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(exampleOf(ARAZZO, "crossed-links"));
+      arazzoDocumentService.importArazzoMetadata(exampleOf(ARAZZO, "crossed-links"));
       jobService.doImportJob(job("Order fulfilment journeys", repositoryUrl(DOCUMENT), true));
 
       ArazzoImportAnalysis analysis = arazzoImportService.analyseImportedDocument(documentId(), null);
@@ -451,8 +481,8 @@ class ArazzoImportersTest {
    void savingTheLinksReplacesTheSourcesOfTheOverlayAndKeepsTheOverlay() throws Exception {
       apiIsImported("contracts/customers.yaml");
       apiIsImported("journeys/order-api.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(exampleOf(ARAZZO, "crossed-links"));
-      String overlayId = arazzoSourcesRepository.listAll().get(0).getId();
+      arazzoDocumentService.importArazzoMetadata(exampleOf(ARAZZO, "crossed-links"));
+      String overlayId = arazzoMetadataRepository.listAll().get(0).getId();
       jobService.doImportJob(job("Order fulfilment journeys", repositoryUrl(DOCUMENT), true));
       Map<String, ServiceRef> links = new HashMap<>();
       links.put("customerApi", null);
@@ -461,7 +491,7 @@ class ArazzoImportersTest {
       ArazzoDocumentSummary summary = arazzoImportService.relinkSources(documentId(), links);
 
       assertEquals(List.of("Order fulfilment 1.0.0: {orderApi=Order API 1.0.0}"), overlays());
-      assertEquals(overlayId, arazzoSourcesRepository.listAll().get(0).getId());
+      assertEquals(overlayId, arazzoMetadataRepository.listAll().get(0).getId());
       assertEquals(
             List.of("searchThenRead: not runnable [no API name and version for this source]", "placeOrder: runnable"),
             workflowsOnTheWorkflowsPage());
@@ -472,7 +502,7 @@ class ArazzoImportersTest {
    void savingTheLinksOfADocumentWithoutOverlayCreatesIt() throws Exception {
       apiIsImported("journeys/order-api.openapi.yaml");
       arazzoImportService.importArazzoDocument(exampleOf(ARAZZO, DOCUMENT), "place-order.arazzo.yaml", Map.of());
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
 
       arazzoImportService.relinkSources(documentId(), Map.of("orderApi", api("Order API", "1.0.0")));
 
@@ -481,7 +511,7 @@ class ArazzoImportersTest {
 
    @Test
    void aLinkToAnUnknownSourceIsRefusedAndKeepsTheOverlay() throws Exception {
-      arazzoDocumentService.importArazzoSources(exampleOf(ARAZZO, "crossed-links"));
+      arazzoDocumentService.importArazzoMetadata(exampleOf(ARAZZO, "crossed-links"));
       jobService.doImportJob(job("Order fulfilment journeys", repositoryUrl(DOCUMENT), true));
       String documentId = documentId();
       Map<String, ServiceRef> links = Map.of("orderApi", api("Order API", "1.0.0"), "paymentApi",
@@ -499,7 +529,7 @@ class ArazzoImportersTest {
    void anUnknownDocumentHasNothingToLink() throws Exception {
       assertNull(arazzoImportService.analyseImportedDocument("unknown", null));
       assertNull(arazzoImportService.relinkSources("unknown", Map.of()));
-      assertEquals(0, arazzoSourcesRepository.count());
+      assertEquals(0, arazzoMetadataRepository.count());
    }
 
    private ImportJob job(String name, String url, boolean mainArtifact) {
@@ -543,10 +573,10 @@ class ArazzoImportersTest {
    }
 
    private List<String> overlays() {
-      return arazzoSourcesRepository.listAll().stream().map(ArazzoImportersTest::describe).toList();
+      return arazzoMetadataRepository.listAll().stream().map(ArazzoImportersTest::describe).toList();
    }
 
-   private static String describe(ArazzoSources overlay) {
+   private static String describe(ArazzoMetadata overlay) {
       Map<String, String> sources = new TreeMap<>();
       overlay.getSources().forEach((name, api) -> sources.put(name, api.getName() + " " + api.getVersion()));
       return overlay.getName() + " " + overlay.getVersion() + ": " + sources;

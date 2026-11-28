@@ -24,12 +24,12 @@ import io.microcks.domain.arazzo.ArazzoDocumentSummary;
 import io.microcks.domain.arazzo.ArazzoImportAnalysis;
 import io.microcks.domain.arazzo.ArazzoSourceAnalysis;
 import io.microcks.domain.arazzo.ArazzoSourceMatch;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.arazzo.ArazzoWorkflowCheck;
 import io.microcks.domain.arazzo.ArazzoWorkflowSummary;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
@@ -91,7 +91,7 @@ class ArazzoImportDialogTest {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @TempDir
    private Path importedContracts;
@@ -136,7 +136,7 @@ class ArazzoImportDialogTest {
       assertEquals("Refused: " + reason, validation(analysis));
       assertEquals(reason, refusal.getMessage());
       assertEquals(0, arazzoDocumentRepository.count());
-      assertEquals(0, arazzoSourcesRepository.count());
+      assertEquals(0, arazzoMetadataRepository.count());
    }
 
    // AC-02: A source is matched on the title and version of the contract it declares
@@ -257,7 +257,7 @@ class ArazzoImportDialogTest {
    @Test
    void importStoresTheDocumentAndItsLinksReplacingAnExistingOverlay() throws Exception {
       apiIsImported("customer-api");
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
 
       ArazzoDocumentSummary summary = arazzoImportService.importArazzoDocument(document("place-order"),
             "place-order.arazzo.yaml", Map.of("customerApi", api("Customer API", "1.0.0")));
@@ -265,7 +265,7 @@ class ArazzoImportDialogTest {
       ArazzoDocument imported = arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0");
       assertEquals("place-order.arazzo.yaml", imported.getFileName());
       assertEquals(List.of("Order fulfilment 1.0.0: {customerApi=Customer API 1.0.0}"),
-            arazzoSourcesRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
+            arazzoMetadataRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
       assertEquals(
             List.of("searchThenRead: runnable", "placeOrder: not runnable [no API name and version for this source]"),
             workflowsOnTheWorkflowsPage());
@@ -274,7 +274,7 @@ class ArazzoImportDialogTest {
 
    @Test
    void anImportRefusedForOneOfItsLinksStoresNothing() throws Exception {
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
 
       MockRepositoryImportException refusal = assertThrows(MockRepositoryImportException.class,
             () -> arazzoImportService.importArazzoDocument(document("place-order"), "place-order.arazzo.yaml",
@@ -283,7 +283,7 @@ class ArazzoImportDialogTest {
       assertEquals("Unknown source description: paymentApi", refusal.getMessage());
       assertNull(arazzoDocumentRepository.findByTitleAndVersion("Order fulfilment", "1.0.0"));
       assertEquals(List.of("Order fulfilment 1.0.0: {customerApi=Customer API 1.0.0, orderApi=Order API 1.0.0}"),
-            arazzoSourcesRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
+            arazzoMetadataRepository.listAll().stream().map(ArazzoImportDialogTest::describe).toList());
    }
 
    private static String validation(ArazzoImportAnalysis analysis) {
@@ -331,7 +331,7 @@ class ArazzoImportDialogTest {
       return analysis.apis().stream().map(api -> api.getName() + " " + api.getVersion()).toList();
    }
 
-   private static String describe(ArazzoSources overlay) {
+   private static String describe(ArazzoMetadata overlay) {
       Map<String, String> sources = new TreeMap<>();
       overlay.getSources().forEach((name, api) -> sources.put(name, api.getName() + " " + api.getVersion()));
       return overlay.getName() + " " + overlay.getVersion() + ": " + sources;

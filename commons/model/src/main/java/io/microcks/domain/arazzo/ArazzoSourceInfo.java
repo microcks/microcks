@@ -24,5 +24,5 @@ import io.microcks.domain.ServiceType;
  * @param apiType The type of the linked API; null when the source is not linked
  * @author SebastienDegodez
  */
-public record ArazzoSourceSummary(ArazzoSourceLink link, String apiId, ServiceType apiType) {
+public record ArazzoSourceInfo(ArazzoSourceLink link, String apiId, ServiceType apiType) {
 }

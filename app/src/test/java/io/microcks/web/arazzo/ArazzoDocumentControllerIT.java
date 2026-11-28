@@ -18,7 +18,7 @@ package io.microcks.web.arazzo;
 import io.microcks.web.AbstractBaseIT;
 import io.microcks.testsupport.http.ResponseEntity;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -47,19 +47,19 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    @Test
    void uploadedDocumentsAreListedWithTheirFileApisAndWorkflows() throws Exception {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
 
       JsonNode documents = get("/api/arazzo/documents");
 
@@ -95,9 +95,9 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
    @Test
    void theListCanBeFilteredByApi() throws Exception {
       uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo-metadata.yaml", false);
       uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
 
       JsonNode documents = get("/api/arazzo/documents?api=API Pastry - 2.0");
 

@@ -20,7 +20,7 @@ import io.microcks.service.ServiceService;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoDocumentSummary;
 import io.microcks.domain.arazzo.ArazzoSourceLink;
-import io.microcks.domain.arazzo.ArazzoSourceSummary;
+import io.microcks.domain.arazzo.ArazzoSourceInfo;
 import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
 import io.microcks.domain.arazzo.ArazzoWorkflowSummary;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
@@ -70,7 +70,7 @@ class ArazzoDocumentSummaryTest {
       Date beforeImport = new Date();
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"), "pastry.arazzo.yaml");
       Date afterImport = new Date();
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       List<ArazzoDocumentSummary> documents = arazzoDocumentService.getDocumentSummaries(null);
 
@@ -93,7 +93,7 @@ class ArazzoDocumentSummaryTest {
    void aDocumentWithAnUnlinkedSourceSaysSo() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
       arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"), "place-order.arazzo.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
 
       List<ArazzoDocumentSummary> documents = arazzoDocumentService.getDocumentSummaries(null);
 
@@ -151,9 +151,9 @@ class ArazzoDocumentSummaryTest {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       apiIsImported("customer-api.openapi.yaml");
       arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       List<ArazzoDocumentSummary> documents = arazzoDocumentService.getDocumentSummaries(apiName);
 
@@ -170,7 +170,7 @@ class ArazzoDocumentSummaryTest {
       return document.sources().stream().map(ArazzoDocumentSummaryTest::describe).toList();
    }
 
-   private static String describe(ArazzoSourceSummary source) {
+   private static String describe(ArazzoSourceInfo source) {
       ArazzoSourceLink link = source.link();
       String type = source.apiType() == null ? "" : source.apiType() + " ";
       String api = link.apiName() == null ? "" : " -> " + type + link.apiName() + " " + link.apiVersion();

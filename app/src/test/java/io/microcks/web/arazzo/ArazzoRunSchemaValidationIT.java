@@ -17,7 +17,7 @@ package io.microcks.web.arazzo;
 
 import io.microcks.web.AbstractBaseIT;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 
 import io.microcks.service.arazzo.ArazzoMinionClient;
@@ -66,7 +66,7 @@ class ArazzoRunSchemaValidationIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -87,7 +87,7 @@ class ArazzoRunSchemaValidationIT extends AbstractBaseIT {
    @AfterEach
    void deleteDocumentsAndRuns() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
    }
 
@@ -105,7 +105,7 @@ class ArazzoRunSchemaValidationIT extends AbstractBaseIT {
          String status, String steps) throws Exception {
       upload("api-pastry-non-conformant", true);
       upload("pastry-journeys", true);
-      upload("pastry-journeys-sources", false);
+      upload("pastry-journeys-metadata", false);
       String documentId = null;
       String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
       for (JsonNode document : JSON.readTree(documents)) {

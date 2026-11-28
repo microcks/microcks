@@ -18,11 +18,13 @@ package io.microcks.service.arazzo;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoExamples;
+import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.arazzo.ArazzoStepExpectation;
 import io.microcks.domain.arazzo.ArazzoWorkflowExample;
 import io.microcks.domain.ServiceRef;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoExamplesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.artifact.MockRepositoryImportException;
 
 import org.junit.jupiter.api.Test;
@@ -42,15 +44,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Acceptance tests of the recorded examples of the workflows of an Arazzo document, given by its ArazzoSources overlay:
+ * Acceptance tests of the recorded examples of the workflows of an Arazzo document, given by an ArazzoExamples:
  * how they are imported, offered to run, and kept when the sources are linked again.
+ *
+ * <pre>
+ * Feature: Examples of the workflows of an Arazzo document
+ *   Scenario: Examples of an imported document are stored apart from the links of its sources
+ *   Scenario: Examples of a document that is not imported are refused
+ *   Scenario: Re-importing the examples replaces those of the document
+ *   Scenario: Linking the sources again leaves the examples as they are
+ * </pre>
  * @author SebastienDegodez
  */
 @QuarkusTest
 class ArazzoWorkflowExamplesTest {
 
    private static final String FIXTURES = "/io/microcks/service/arazzo/";
-   private static final String EXAMPLES = "examples.arazzo-sources.yaml";
+   private static final String EXAMPLES = "examples.arazzo-examples.yaml";
 
    @Inject
    private ArazzoDocumentService arazzoDocumentService;
@@ -62,88 +72,87 @@ class ArazzoWorkflowExamplesTest {
    private ArazzoImportService arazzoImportService;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
+
+   @Inject
+   private ArazzoExamplesRepository arazzoExamplesRepository;
 
    @Test
-   void theExamplesAreImportedWithTheOverlay() throws Exception {
+   void theExamplesAreImportedForTheDocumentWithoutTouchingTheLinksOfItsSources() throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
-      ArazzoSources imported = arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "recorded"));
+      ArazzoExamples imported = arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
       assertEquals(List.of(
             "readThenReprice/eclair-repriced inputs {newPrice=2.6, pastry=Eclair Cafe} outputs {after=2.6, before=2.5}",
             "readThenReprice/millefeuille-repriced inputs {newPrice=4.5, pastry=Millefeuille}",
             "listThenReadFirst/unknown-first-pastry steps [list 200 {first=Baba Rhum}, readFirst 404] stops at readFirst"),
             imported.getExamples().stream().map(ArazzoWorkflowExamplesTest::describe).toList());
-      assertEquals(Map.of("pastryApi", "API Pastry - 2.0 2.0.0"), sourcesOf(imported));
+      assertEquals(Map.of("pastryApi", "API Pastry - 2.0 2.0.0"),
+            sourcesOf(arazzoMetadataRepository.findByNameAndVersion("API Pastry scenarios", "1.0.0")));
    }
 
    @Test
    void eachWorkflowOffersItsOwnExamplesToRun() throws Exception {
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "recorded"));
+      arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
       assertEquals(List.of("eclair-repriced", "millefeuille-repriced"), exampleNames(document, "readThenReprice"));
       assertEquals(List.of("unknown-first-pastry"), exampleNames(document, "listThenReadFirst"));
    }
 
    @Test
-   void aWorkflowWithoutRecordedExampleOffersNone() throws Exception {
+   void reImportingTheExamplesReplacesThoseOfTheDocument() throws Exception {
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "no-example"));
+      arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
-      assertEquals(List.of(), exampleNames(document, "readThenReprice"));
-   }
+      arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "numbers"));
 
-   @Test
-   void reImportingTheOverlayReplacesItsExamples() throws Exception {
-      ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "recorded"));
-
-      arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "no-example"));
-
+      assertEquals(List.of("tartelette-repriced"), exampleNames(document, "readThenReprice"));
       assertEquals(List.of(), exampleNames(document, "listThenReadFirst"));
+      assertEquals(1, arazzoExamplesRepository.count());
    }
 
    @Test
    void anExpectedStatusIsAnyExactHttpStatusCode() throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
 
-      ArazzoSources imported = arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "status-bounds"));
+      ArazzoExamples imported = arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "status-bounds"));
 
       assertEquals(List.of("listThenReadFirst/unknown-first-pastry steps [list 100, readFirst 599]"),
             imported.getExamples().stream().map(ArazzoWorkflowExamplesTest::describe).toList());
    }
 
-   /** An overlay with an example that does not fit its workflow is refused whole: nor its links, nor its examples. */
+   /** Examples with one that does not fit its workflow, or for a document that is not imported, are refused whole. */
    @ParameterizedTest
    @CsvSource(delimiter = '|', value = {
-         "unknown-workflow | Invalid ArazzoSources overlay: example eclair-read-twice names the unknown workflow readTwice",
-         "unknown-input | Invalid ArazzoSources overlay: example eclair-repriced of readThenReprice gives the unknown input price",
-         "unknown-output | Invalid ArazzoSources overlay: example eclair-repriced of readThenReprice expects the unknown output total",
-         "unknown-step | Invalid ArazzoSources overlay: example unknown-first-pastry of listThenReadFirst expects the unknown step readSecond",
-         "unknown-step-output | Invalid ArazzoSources overlay: example unknown-first-pastry of listThenReadFirst expects the unknown output last of step list",
-         "unknown-stop | Invalid ArazzoSources overlay: example unknown-first-pastry of listThenReadFirst stops at the unknown step readSecond",
-         "status-range | Invalid ArazzoSources overlay: example unknown-first-pastry of listThenReadFirst expects status 4XX at step readFirst, not an exact HTTP status code",
-         "status-default | Invalid ArazzoSources overlay: example unknown-first-pastry of listThenReadFirst expects status default at step readFirst, not an exact HTTP status code",
-         "status-below-range | Invalid ArazzoSources overlay: example unknown-first-pastry of listThenReadFirst expects status 99 at step readFirst, not an exact HTTP status code",
-         "status-above-range | Invalid ArazzoSources overlay: example unknown-first-pastry of listThenReadFirst expects status 600 at step readFirst, not an exact HTTP status code",
-         "no-document | Invalid ArazzoSources overlay: its examples need the Arazzo document Unknown scenarios 1.0.0, which is not imported" })
-   void anExampleThatDoesNotFitItsWorkflowRefusesTheWholeOverlay(String example, String reason) throws Exception {
+         "unknown-workflow | Invalid ArazzoExamples: example eclair-read-twice names the unknown workflow readTwice",
+         "unknown-input | Invalid ArazzoExamples: example eclair-repriced of readThenReprice gives the unknown input price",
+         "unknown-output | Invalid ArazzoExamples: example eclair-repriced of readThenReprice expects the unknown output total",
+         "unknown-step | Invalid ArazzoExamples: example unknown-first-pastry of listThenReadFirst expects the unknown step readSecond",
+         "unknown-step-output | Invalid ArazzoExamples: example unknown-first-pastry of listThenReadFirst expects the unknown output last of step list",
+         "unknown-stop | Invalid ArazzoExamples: example unknown-first-pastry of listThenReadFirst stops at the unknown step readSecond",
+         "status-range | Invalid ArazzoExamples: example unknown-first-pastry of listThenReadFirst expects status 4XX at step readFirst, not an exact HTTP status code",
+         "status-default | Invalid ArazzoExamples: example unknown-first-pastry of listThenReadFirst expects status default at step readFirst, not an exact HTTP status code",
+         "status-below-range | Invalid ArazzoExamples: example unknown-first-pastry of listThenReadFirst expects status 99 at step readFirst, not an exact HTTP status code",
+         "status-above-range | Invalid ArazzoExamples: example unknown-first-pastry of listThenReadFirst expects status 600 at step readFirst, not an exact HTTP status code",
+         "no-document | Import the Arazzo document Unknown scenarios 1.0.0 before its examples" })
+   void anExampleThatDoesNotFitItsWorkflowRefusesAllTheExamples(String example, String reason) throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       String content = exampleOf(EXAMPLES, example);
 
       MockRepositoryImportException refusal = assertThrows(MockRepositoryImportException.class,
-            () -> arazzoDocumentService.importArazzoSources(content));
+            () -> arazzoDocumentService.importArazzoExamples(content));
 
       assertEquals(reason, refusal.getMessage());
-      assertEquals(0, arazzoSourcesRepository.count());
+      assertEquals(0, arazzoExamplesRepository.count());
    }
 
    @Test
    void linkingTheSourcesAgainFromTheImportDialogKeepsTheExamples() throws Exception {
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "recorded"));
+      arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
 
       arazzoImportService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"), "pastry-scenarios.arazzo.yaml",
             Map.of("pastryApi", new ServiceRef(null, "API Pastry - 2.0", "2.0.0")));
@@ -153,17 +162,18 @@ class ArazzoWorkflowExamplesTest {
    }
 
    @Test
-   void changingTheLinkOfTheSourcesKeepsTheExamplesAndTheOverlay() throws Exception {
+   void changingTheLinkOfTheSourcesKeepsTheExamples() throws Exception {
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(exampleOf(EXAMPLES, "recorded"));
-      String overlayId = arazzoSourcesRepository.listAll().get(0).getId();
+      arazzoDocumentService.importArazzoExamples(exampleOf(EXAMPLES, "recorded"));
+      String examplesId = arazzoExamplesRepository.listAll().get(0).getId();
 
       arazzoImportService.relinkSources(document.getId(),
             Map.of("pastryApi", new ServiceRef(null, "API Pastry - 2.0", "2.0.0")));
 
       assertEquals(List.of("eclair-repriced", "millefeuille-repriced"), exampleNames(document, "readThenReprice"));
       assertEquals(List.of("unknown-first-pastry"), exampleNames(document, "listThenReadFirst"));
-      assertEquals(List.of(overlayId), arazzoSourcesRepository.listAll().stream().map(ArazzoSources::getId).toList());
+      assertEquals(List.of(examplesId),
+            arazzoExamplesRepository.listAll().stream().map(ArazzoExamples::getId).toList());
    }
 
    private List<String> exampleNames(ArazzoDocument document, String workflowId) {
@@ -171,12 +181,12 @@ class ArazzoWorkflowExamplesTest {
             .map(ArazzoWorkflowExample::name).toList();
    }
 
-   private static Map<String, String> sourcesOf(ArazzoSources overlay) {
-      return overlay.getSources().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+   private static Map<String, String> sourcesOf(ArazzoMetadata metadata) {
+      return metadata.getSources().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
             source -> source.getValue().getName() + " " + source.getValue().getVersion()));
    }
 
-   /** An example as its workflow, name, then what it gives and expects, each part only when the overlay gives it. */
+   /** An example as its workflow, name, then what it gives and expects, each part only when the examples give it. */
    static String describe(ArazzoWorkflowExample example) {
       StringBuilder description = new StringBuilder(example.workflowId() + "/" + example.name());
       if (!example.inputs().isEmpty()) {

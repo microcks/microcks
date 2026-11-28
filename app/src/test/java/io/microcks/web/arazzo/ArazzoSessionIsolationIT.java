@@ -21,7 +21,7 @@ import io.microcks.repository.ServiceStateRepository;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
@@ -79,7 +79,7 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -102,13 +102,13 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
          uploadArtifactFile(example("stateful-saga.contracts.yaml", api), true);
       }
       uploadArtifactFile(example("stateful-saga.arazzo.yaml", "order-saga"), true);
-      uploadArtifactFile(example("stateful-saga.arazzo.yaml", "order-saga-sources"), false);
+      uploadArtifactFile(example("stateful-saga.arazzo.yaml", "order-saga-metadata"), false);
    }
 
    @AfterEach
    void deleteDocumentsSessionsAndState() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
       arazzoSessionRepository.deleteAll();
       arazzoSessionCallRepository.deleteAll();

@@ -16,7 +16,7 @@
 package io.microcks.repository.arazzo;
 
 import io.microcks.repository.ObjectIdRepository;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoMetadata;
 
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -24,18 +24,18 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 
 /**
- * Repository for the ArazzoSources overlays imported into Microcks.
+ * Repository for the ArazzoMetadata imported into Microcks.
  * @author SebastienDegodez
  */
 @ApplicationScoped
-public class ArazzoSourcesRepository implements ObjectIdRepository<ArazzoSources> {
+public class ArazzoMetadataRepository implements ObjectIdRepository<ArazzoMetadata> {
 
-   public ArazzoSources findByNameAndVersion(String name, String version) {
+   public ArazzoMetadata findByNameAndVersion(String name, String version) {
       return find("name = ?1 and version = ?2", name, version).firstResult();
    }
 
    /** @return Every stored item, sorted by name then version. */
-   public List<ArazzoSources> findAllSorted() {
+   public List<ArazzoMetadata> findAllSorted() {
       return listAll(Sort.by("name", "version"));
    }
 }

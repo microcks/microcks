@@ -1,5 +1,5 @@
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   name: Pastry tasting
   version: 1.0.0

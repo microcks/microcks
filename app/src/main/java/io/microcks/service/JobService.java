@@ -63,8 +63,10 @@ public class JobService {
     * @param jobRepository         The job repository to use.
     * @param secretRepository      The secret repository to use.
     * @param serviceService        The service service to use.
-    * @param arazzoDocumentService The service that tells Arazzo documents and ArazzoSources overlays apart from APIs.
-    * @param arazzoImportService   The service that imports Arazzo documents and overlays from a repository.
+    * @param arazzoDocumentService The service that tells Arazzo documents, ArazzoMetadata and ArazzoExamples apart
+    *                              from APIs.
+    * @param arazzoImportService   The service that imports Arazzo documents, ArazzoMetadata and ArazzoExamples from
+    *                              a repository.
     */
    @Inject
    public JobService(ImportJobRepository jobRepository, SecretRepository secretRepository,
@@ -107,8 +109,8 @@ public class JobService {
    }
 
    /**
-    * Import the artifact at the repository url of a job: an Arazzo document or an ArazzoSources overlay has its own
-    * import, any other artifact is imported as services.
+    * Import the artifact at the repository url of a job: an Arazzo document, an ArazzoMetadata or an ArazzoExamples
+    * has its own import, any other artifact is imported as services.
     */
    private void importRepository(ImportJob job, Secret jobSecret) throws MockRepositoryImportException {
       String repositoryUrl = job.getRepositoryUrl();
@@ -138,8 +140,10 @@ public class JobService {
       String content = contentOf(localFile);
       if (arazzoDocumentService.isArazzoDocument(content)) {
          job.setArazzoDocumentRef(arazzoImportService.importArazzoDocument(content, artifactName, referenceResolver));
-      } else if (arazzoDocumentService.isArazzoSources(content)) {
-         job.setArazzoDocumentRef(arazzoImportService.importArazzoSources(content));
+      } else if (arazzoDocumentService.isArazzoMetadata(content)) {
+         job.setArazzoDocumentRef(arazzoImportService.importArazzoMetadata(content));
+      } else if (arazzoDocumentService.isArazzoExamples(content)) {
+         job.setArazzoDocumentRef(arazzoImportService.importArazzoExamples(content));
       } else {
          List<Service> services = serviceService.importServiceDefinition(localFile, referenceResolver,
                new ArtifactInfo(artifactName, job.isMainArtifact()));

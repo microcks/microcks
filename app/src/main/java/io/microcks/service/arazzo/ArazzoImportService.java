@@ -22,12 +22,13 @@ import io.microcks.domain.arazzo.ArazzoImportAnalysis;
 import io.microcks.domain.arazzo.ArazzoSourceAnalysis;
 import io.microcks.domain.arazzo.ArazzoSourceLink;
 import io.microcks.domain.arazzo.ArazzoSourceMatch;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoExamples;
+import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.arazzo.ArazzoStepCall;
 import io.microcks.domain.arazzo.ArazzoWorkflowCheck;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -65,7 +66,7 @@ public class ArazzoImportService {
    private final ArazzoSourceMatcher arazzoSourceMatcher;
    private final ServiceRepository serviceRepository;
    private final ArazzoDocumentRepository arazzoDocumentRepository;
-   private final ArazzoSourcesRepository arazzoSourcesRepository;
+   private final ArazzoMetadataRepository arazzoMetadataRepository;
 
    /**
     * Build a new ArazzoImportService with its required dependencies.
@@ -73,17 +74,17 @@ public class ArazzoImportService {
     * @param arazzoSourceMatcher      The matcher of a source description to the API of its declared contract
     * @param serviceRepository        The repository of the APIs a source can be linked to
     * @param arazzoDocumentRepository The repository of the imported Arazzo documents
-    * @param arazzoSourcesRepository  The repository of the ArazzoSources overlays that link their sources
+    * @param arazzoMetadataRepository  The repository of the ArazzoMetadata that link their sources
     */
    @Inject
    public ArazzoImportService(ArazzoDocumentService arazzoDocumentService, ArazzoSourceMatcher arazzoSourceMatcher,
          ServiceRepository serviceRepository, ArazzoDocumentRepository arazzoDocumentRepository,
-         ArazzoSourcesRepository arazzoSourcesRepository) {
+         ArazzoMetadataRepository arazzoMetadataRepository) {
       this.arazzoDocumentService = arazzoDocumentService;
       this.arazzoSourceMatcher = arazzoSourceMatcher;
       this.serviceRepository = serviceRepository;
       this.arazzoDocumentRepository = arazzoDocumentRepository;
-      this.arazzoSourcesRepository = arazzoSourcesRepository;
+      this.arazzoMetadataRepository = arazzoMetadataRepository;
    }
 
    /**
@@ -111,7 +112,7 @@ public class ArazzoImportService {
     * source is read at its declared url, resolved against the url the document was imported from, if any.
     * @param documentId The identifier of the imported document
     * @param links      The API the developer linked each source description to, by name; null for the links of its
-    *                   overlay, a source the overlay does not link being linked to the API it is matched to
+    *                   ArazzoMetadata, a source it does not link being linked to the API it is matched to
     * @return The analysis of the document; null when no document has this identifier
     * @throws MockRepositoryImportException if the stored document cannot be read anymore
     */
@@ -130,14 +131,14 @@ public class ArazzoImportService {
       Map<String, ServiceRef> chosenLinks = links;
       if (chosenLinks == null) {
          chosenLinks = matchedLinks(matches);
-         chosenLinks.putAll(overlayLinks(document));
+         chosenLinks.putAll(storedLinks(document));
       }
       return analyse(candidate, matches, chosenLinks);
    }
 
    /**
     * Link the source descriptions of an imported Arazzo document again: the links replace the sources of its
-    * ArazzoSources overlay, whatever else the overlay holds being kept.
+    * ArazzoMetadata, nothing else being modified.
     * @param documentId The identifier of the imported document
     * @param links      The API the developer linked each source description to, by name, a source absent or mapped to
     *                   null being not linked
@@ -157,7 +158,7 @@ public class ArazzoImportService {
    /**
     * Import an Arazzo document an import job downloaded from a repository, all or nothing. Its source descriptions are
     * matched to the APIs of Microcks, a relative url being read in the repository. When the document has no
-    * ArazzoSources overlay yet, the matched links are stored as its overlay; an existing overlay is never replaced.
+    * ArazzoMetadata yet, the matched links are stored as its ArazzoMetadata; an existing one is never replaced.
     * @param content    The document as downloaded, in YAML or JSON
     * @param fileName   The name of the file the document was downloaded from
     * @param repository The repository the document was downloaded from
@@ -182,21 +183,33 @@ public class ArazzoImportService {
       ArazzoDocument imported = arazzoDocumentService.save(document, fileName);
       Map<String, ServiceRef> matchedLinks = matchedLinks(matches);
       if (!matchedLinks.isEmpty()
-            && arazzoSourcesRepository.findByNameAndVersion(imported.getTitle(), imported.getVersion()) == null) {
+            && arazzoMetadataRepository.findByNameAndVersion(imported.getTitle(), imported.getVersion()) == null) {
          arazzoDocumentService.saveSources(imported.getTitle(), imported.getVersion(), matchedLinks);
       }
       return documentRef(imported.getTitle(), imported.getVersion());
    }
 
    /**
-    * Import an ArazzoSources overlay an import job downloaded from a repository.
-    * @param content The overlay as downloaded, in YAML or JSON
-    * @return The document the overlay links the sources of, with the sources it still has to link
-    * @throws MockRepositoryImportException if the overlay is refused: nothing is stored then
+    * Import an ArazzoMetadata an import job downloaded from a repository.
+    * @param content The ArazzoMetadata as downloaded, in YAML or JSON
+    * @return The document the ArazzoMetadata links the sources of, with the sources it still has to link
+    * @throws MockRepositoryImportException if the ArazzoMetadata is refused: nothing is stored then
     */
-   public ArazzoDocumentRef importArazzoSources(String content) throws MockRepositoryImportException {
-      ArazzoSources overlay = arazzoDocumentService.importArazzoSources(content);
-      return documentRef(overlay.getName(), overlay.getVersion());
+   public ArazzoDocumentRef importArazzoMetadata(String content) throws MockRepositoryImportException {
+      ArazzoMetadata metadata = arazzoDocumentService.importArazzoMetadata(content);
+      return documentRef(metadata.getName(), metadata.getVersion());
+   }
+
+   /**
+    * Import an ArazzoExamples an import job downloaded from a repository.
+    * @param content The ArazzoExamples as downloaded, in YAML or JSON
+    * @return The document the ArazzoExamples records examples of, with the sources it still has to link
+    * @throws MockRepositoryImportException if the ArazzoExamples is refused, its document not being imported for
+    *                                       instance: nothing is stored then
+    */
+   public ArazzoDocumentRef importArazzoExamples(String content) throws MockRepositoryImportException {
+      ArazzoExamples examples = arazzoDocumentService.importArazzoExamples(content);
+      return documentRef(examples.getName(), examples.getVersion());
    }
 
    /** The document with this title and version, with its sources linked to no API; no source when not imported. */
@@ -210,9 +223,10 @@ public class ArazzoImportService {
       return new ArazzoDocumentRef(document.getId(), title, version, unlinkedSources);
    }
 
-   private Map<String, ServiceRef> overlayLinks(ArazzoDocument document) {
-      ArazzoSources overlay = arazzoSourcesRepository.findByNameAndVersion(document.getTitle(), document.getVersion());
-      return overlay == null ? Map.of() : overlay.getSources();
+   private Map<String, ServiceRef> storedLinks(ArazzoDocument document) {
+      ArazzoMetadata metadata = arazzoMetadataRepository.findByNameAndVersion(document.getTitle(),
+            document.getVersion());
+      return metadata == null ? Map.of() : metadata.getSources();
    }
 
    private List<ServiceRef> apis() {
@@ -259,7 +273,7 @@ public class ArazzoImportService {
    }
 
    /**
-    * Import an Arazzo document with the links of its source descriptions, stored as its ArazzoSources overlay that
+    * Import an Arazzo document with the links of its source descriptions, stored as its ArazzoMetadata that
     * replaces an existing one. Both are imported, or none.
     * @param content  The document as dropped, in YAML or JSON
     * @param fileName The name of the file the document was dropped from; null when it is not known

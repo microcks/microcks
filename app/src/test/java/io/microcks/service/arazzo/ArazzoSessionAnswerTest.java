@@ -396,7 +396,7 @@ class ArazzoSessionAnswerTest {
          Files.writeString(contract, example("stateful-saga.contracts.yaml", api));
          serviceService.importServiceDefinition(contract.toFile(), null, new ArtifactInfo(api + ".yaml", true));
       }
-      arazzoDocumentService.importArazzoSources(example("stateful-saga.arazzo.yaml", "order-saga-sources"));
+      arazzoDocumentService.importArazzoMetadata(example("stateful-saga.arazzo.yaml", "order-saga-metadata"));
       return arazzoDocumentService.importArazzoDocument(example("stateful-saga.arazzo.yaml", "order-saga"));
    }
 

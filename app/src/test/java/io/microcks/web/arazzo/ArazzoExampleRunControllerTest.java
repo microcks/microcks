@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ArazzoExampleRunControllerTest {
 
    private static final String FIXTURES = "/io/microcks/service/arazzo/";
-   private static final String EXAMPLES = "examples.arazzo-sources.yaml";
+   private static final String EXAMPLES = "examples.arazzo-examples.yaml";
 
    @Inject
    private ArazzoRunService arazzoRunService;
@@ -129,12 +129,13 @@ class ArazzoExampleRunControllerTest {
             refused.getStatus() + " " + refused.getMediaType() + " " + refused.getEntity());
    }
 
-   private ArazzoDocument pastryScenariosWithExamples(String overlay) throws Exception {
+   private ArazzoDocument pastryScenariosWithExamples(String examples) throws Exception {
       File contract = new File(
             ArazzoExampleRunControllerTest.class.getResource(FIXTURES + "api-pastry-2.0.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("api-pastry-2.0.openapi.yaml", true));
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(exampleOf(overlay));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
+      arazzoDocumentService.importArazzoExamples(exampleOf(examples));
       return document;
    }
 

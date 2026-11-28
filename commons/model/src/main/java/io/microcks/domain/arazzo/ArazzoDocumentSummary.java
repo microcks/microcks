@@ -32,5 +32,5 @@ import java.util.List;
  * @author SebastienDegodez
  */
 public record ArazzoDocumentSummary(String id, String title, String version, String arazzoVersion, String fileName,
-      Date importDate, List<ArazzoSourceSummary> sources, List<ArazzoWorkflowSummary> workflows) {
+      Date importDate, List<ArazzoSourceInfo> sources, List<ArazzoWorkflowSummary> workflows) {
 }

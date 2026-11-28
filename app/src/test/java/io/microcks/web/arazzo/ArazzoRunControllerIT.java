@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.microcks.domain.Secret;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.SecretRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import org.junit.jupiter.api.AfterAll;
@@ -60,7 +60,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -77,7 +77,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
    @AfterEach
    void deleteDocumentsAndRuns() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
       MINION.runRequests().clear();
    }
@@ -197,7 +197,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "customer-api.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "order-api.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo-metadata.yaml", false);
       String documentId = JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody())
             .get(0).get("id").asText();
 
@@ -256,7 +256,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
    private String pastryScenariosAreImported(String fixture) throws Exception {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + fixture, true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
       return JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody()).get(0).get("id").asText();
    }
 

@@ -271,7 +271,7 @@ class ArazzoMockCoherenceTest {
 
    private WorkflowResult launch(String workflowId, Map<String, Object> inputs) throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
       return arazzoRunService.launchRun(document.getId(), workflowId, inputs, 10000L).orElseThrow();
    }

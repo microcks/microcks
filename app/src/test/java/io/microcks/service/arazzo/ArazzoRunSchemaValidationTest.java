@@ -166,7 +166,7 @@ class ArazzoRunSchemaValidationTest {
          resource.setType(type);
          resourceRepository.save(resource);
       }
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
 
       arazzoRunService.launchRun(document.getId(), "searchThenRead", Map.of("name", "Jane"), 10000L, true)
@@ -203,7 +203,7 @@ class ArazzoRunSchemaValidationTest {
 
    private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
    }
 

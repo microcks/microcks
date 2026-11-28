@@ -18,10 +18,10 @@ package io.microcks.service.arazzo;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.domain.arazzo.ArazzoSourceLink;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.arazzo.ArazzoWorkflowStatus;
 import io.microcks.domain.Resource;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -67,14 +67,14 @@ class ArazzoSourceLinkTest {
    private ResourceRepository resourceRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @Test
    void theOverlayLinksASourceToTheApiWithThatNameAndVersion() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
 
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       assertEquals(List.of("pastryApi -> API Pastry - 2.0 2.0.0: linked"),
             sourceLinks("API Pastry scenarios", "1.0.0"));
@@ -87,7 +87,7 @@ class ArazzoSourceLinkTest {
       apiIsImported("customer-api.openapi.yaml");
 
       arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
 
       assertEquals(List.of("customerApi -> Customer API 1.0.0: linked", "orderApi -> Order API 1.0.0: not linked"),
             sourceLinks("Order fulfilment", "1.0.0"));
@@ -110,7 +110,7 @@ class ArazzoSourceLinkTest {
    @Test
    void aStepCallingAnOperationTheLinkedApiDoesNotDefineIsReported() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       arazzoDocumentService.importArazzoDocument(fixture("pastry-delete.arazzo.yaml"));
 
@@ -125,7 +125,7 @@ class ArazzoSourceLinkTest {
    void importingTheMissingApiLaterLinksTheSource() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
       arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
 
       apiIsImported("order-api.openapi.yaml");
 
@@ -138,7 +138,7 @@ class ArazzoSourceLinkTest {
    @Test
    void everyReasonIsGivenOnceInTheOrderOfTheSteps() throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
 
       assertEquals(
             List.of("searchThenRead: not runnable [API Customer API 1.0.0 not found]",
@@ -150,7 +150,7 @@ class ArazzoSourceLinkTest {
    void anApiImportedFromAnotherFormatDefinesNoOperationAStepCanCall() throws Exception {
       serviceService.createGenericResourceService("API Pastry - 2.0", "2.0.0", "pastry", null);
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       assertEquals(
             List.of(
@@ -170,7 +170,7 @@ class ArazzoSourceLinkTest {
          resourceRepository.persistOrUpdate(contract);
       }
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"));
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       assertEquals(
             List.of(
@@ -183,13 +183,13 @@ class ArazzoSourceLinkTest {
 
    @Test
    void reImportingAnOverlayWithTheSameNameAndVersionReplacesIt() throws Exception {
-      arazzoDocumentService.importArazzoSources(fixture("pastry-previous.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry-previous.arazzo-metadata.yaml"));
 
-      ArazzoSources imported = arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      ArazzoMetadata imported = arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
 
       assertEquals("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}", describe(imported));
       assertEquals(List.of("API Pastry scenarios 1.0.0: {pastryApi=API Pastry - 2.0 2.0.0}"),
-            arazzoSourcesRepository.listAll().stream().map(ArazzoSourceLinkTest::describe).toList());
+            arazzoMetadataRepository.listAll().stream().map(ArazzoSourceLinkTest::describe).toList());
    }
 
    /**
@@ -197,23 +197,23 @@ class ArazzoSourceLinkTest {
     * is refused rather than kept.
     */
    @ParameterizedTest
-   @CsvSource({ "no-metadata, Invalid ArazzoSources overlay: metadata.name is required",
-         "no-metadata-name, Invalid ArazzoSources overlay: metadata.name is required",
-         "no-metadata-version, Invalid ArazzoSources overlay: metadata.version is required" })
+   @CsvSource({ "no-metadata, Invalid ArazzoMetadata: metadata.name is required",
+         "no-metadata-name, Invalid ArazzoMetadata: metadata.name is required",
+         "no-metadata-version, Invalid ArazzoMetadata: metadata.version is required" })
    void anOverlayThatNamesNoDocumentIsRefusedWithItsReason(String example, String reason) throws Exception {
-      String content = exampleOf("invalid.arazzo-sources.yaml", example);
+      String content = exampleOf("invalid.arazzo-metadata.yaml", example);
 
       MockRepositoryImportException refusal = assertThrows(MockRepositoryImportException.class,
-            () -> arazzoDocumentService.importArazzoSources(content));
+            () -> arazzoDocumentService.importArazzoMetadata(content));
 
       assertEquals(reason, refusal.getMessage());
-      assertEquals(0, arazzoSourcesRepository.count());
+      assertEquals(0, arazzoMetadataRepository.count());
    }
 
    @ParameterizedTest
-   @CsvSource({ "pastry.arazzo-sources.yaml, true", "pastry.arazzo.yaml, false", "unparseable.arazzo.yaml, false" })
-   void onlyAnArtifactOfKindArazzoSourcesIsAnOverlay(String fileName, boolean overlay) throws Exception {
-      assertEquals(overlay, arazzoDocumentService.isArazzoSources(fixture(fileName)));
+   @CsvSource({ "pastry.arazzo-metadata.yaml, true", "pastry.arazzo.yaml, false", "unparseable.arazzo.yaml, false" })
+   void onlyAnArtifactOfKindArazzoMetadataIsAMetadata(String fileName, boolean overlay) throws Exception {
+      assertEquals(overlay, arazzoDocumentService.isArazzoMetadata(fixture(fileName)));
    }
 
    private List<String> sourceLinks(String title, String version) {
@@ -230,7 +230,7 @@ class ArazzoSourceLinkTest {
       return link.sourceName() + api + ": " + (link.linked() ? "linked" : "not linked");
    }
 
-   private static String describe(ArazzoSources overlay) {
+   private static String describe(ArazzoMetadata overlay) {
       Map<String, String> sources = new TreeMap<>();
       overlay.getSources().forEach((name, api) -> sources.put(name, api.getName() + " " + api.getVersion()));
       return overlay.getName() + " " + overlay.getVersion() + ": " + sources;

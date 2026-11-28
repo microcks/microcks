@@ -108,9 +108,9 @@ workflows:
       - stepId: search
         operationId: $sourceDescriptions.customerApi.SearchCustomers
 ---
-# example: journeys/order-fulfilment.arazzo-sources.yaml - the ArazzoSources overlay of Order fulfilment, kept next to it
+# example: journeys/order-fulfilment.arazzo-metadata.yaml - the ArazzoMetadata of Order fulfilment, kept next to it
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   name: Order fulfilment
   version: 1.0.0
@@ -121,6 +121,21 @@ sources:
   orderApi:
     name: Order API
     version: 1.0.0
+---
+# example: journeys/order-fulfilment.arazzo-examples.yaml - the ArazzoExamples of Order fulfilment, kept next to it
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoExamples
+metadata:
+  name: Order fulfilment
+  version: 1.0.0
+workflows:
+  searchThenRead:
+    ada-found:
+      steps:
+        search:
+          status: 200
+        read:
+          status: 200
 ---
 # example: one-source - a document with one source description, whose url is DECLARED_URL
 arazzo: 1.0.1
@@ -139,9 +154,9 @@ workflows:
         successCriteria:
           - condition: $statusCode == 200
 ---
-# example: crossed-links - an ArazzoSources overlay of Order fulfilment that links both sources to Customer API
+# example: crossed-links - an ArazzoMetadata of Order fulfilment that links both sources to Customer API
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   name: Order fulfilment
   version: 1.0.0

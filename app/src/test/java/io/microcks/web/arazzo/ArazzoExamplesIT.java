@@ -41,8 +41,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * End-to-end replay of the recorded examples of a workflow: the overlay uploaded with its examples, every example
- * played in one call as a CI does, through the Arazzo minion against mocks answering 404 for an unknown pastry, then
+ * End-to-end replay of the recorded examples of a workflow: the ArazzoMetadata and ArazzoExamples uploaded, every
+ * example played in one call as a CI does, through the Arazzo minion against mocks answering 404 for an unknown pastry, then
  * each run judged on its example. The requests and responses are checked against the published Microcks API.
  * @author SebastienDegodez
  */
@@ -122,7 +122,8 @@ class ArazzoExamplesIT extends AbstractBaseIT {
    private String pastryExamplesAreImported() throws Exception {
       uploadArtifactFile(FIXTURES + "recorded-examples.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "recorded-examples.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "recorded-examples.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "recorded-examples.arazzo-metadata.yaml", false);
+      uploadArtifactFile(FIXTURES + "recorded-examples.arazzo-examples.yaml", false);
       return JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody()).get(0).get("id").asText();
    }
 

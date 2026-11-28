@@ -93,7 +93,7 @@ class ArazzoApiUsageTest {
       apiIsImported("api-pastry-2.0.openapi.yaml");
       helloApiIsImported();
       if (overlayImported) {
-         arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+         arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       }
       arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
 
@@ -110,7 +110,7 @@ class ArazzoApiUsageTest {
    @Test
    void aWorkflowCallingAnOperationTwiceCountsOnceAndOneCallingAnUndefinedOperationStillUsesTheApi() throws Exception {
       pastryScenariosAreImportedAndLinked();
-      arazzoDocumentService.importArazzoSources(example(API_USAGE, "pastry-checks-sources"));
+      arazzoDocumentService.importArazzoMetadata(example(API_USAGE, "pastry-checks-metadata"));
       arazzoDocumentService.importArazzoDocument(example(API_USAGE, "pastry-checks"));
 
       ArazzoApiUsage usage = arazzoWorkflowService.getApiUsage(serviceId("API Pastry - 2.0", "2.0.0"));
@@ -125,14 +125,14 @@ class ArazzoApiUsageTest {
 
    private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
    }
 
    private void orderFulfilmentIsImportedAndLinked() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
       apiIsImported("order-api.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
       arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
    }
 

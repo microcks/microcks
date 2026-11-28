@@ -38,7 +38,7 @@ import java.util.Map;
  * @param outputs       The outputs of the workflow, by name, with their runtime expressions
  * @param dataPassings  The step outputs that later steps use, in the order of the steps that use them
  * @param status        Whether the workflow can run, else why
- * @param examples      The recorded examples of the workflow, in the order of its ArazzoSources overlay
+ * @param examples      The recorded examples of the workflow, in the order of its ArazzoExamples
  * @author SebastienDegodez
  */
 public record ArazzoWorkflowDetail(String documentId, String title, String version, String arazzoVersion,

@@ -18,7 +18,7 @@ package io.microcks.web.arazzo;
 import io.microcks.web.AbstractBaseIT;
 import io.microcks.testsupport.http.ResponseEntity;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ServiceRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -47,7 +47,7 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @Inject
    private ServiceRepository serviceRepository;
@@ -55,7 +55,7 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
    @AfterEach
    void deleteDocumentsAndOverlays() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    @Test
@@ -139,7 +139,7 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
    private String pastryScenariosAreUploadedAndLinked() {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
       return arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId();
    }
 

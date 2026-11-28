@@ -243,7 +243,7 @@ class ArazzoMixedRunTest {
    private ArazzoDocument orderFulfilmentIsImportedAndLinked() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
       apiIsImported("order-api.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
    }
 

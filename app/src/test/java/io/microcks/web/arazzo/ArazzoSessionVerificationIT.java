@@ -18,7 +18,7 @@ package io.microcks.web.arazzo;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoSessionCallRepository;
 import io.microcks.repository.arazzo.ArazzoSessionRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
 import io.microcks.testsupport.http.HttpEntity;
 import io.microcks.testsupport.http.HttpHeaders;
@@ -73,7 +73,7 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @Inject
    private WorkflowResultRepository workflowResultRepository;
@@ -93,13 +93,13 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
          uploadArtifactFile(example("order-saga.contracts.yaml", api), true);
       }
       uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga"), true);
-      uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga-sources"), false);
+      uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga-metadata"), false);
    }
 
    @AfterEach
    void deleteDocumentsSessionsAndVerifications() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
       workflowResultRepository.deleteAll();
       arazzoSessionRepository.deleteAll();
       arazzoSessionCallRepository.deleteAll();
@@ -240,7 +240,7 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
    @Test
    void dependsOnRelaxesTheOrderOfTheSteps() throws Exception {
       uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga-parallel"), true);
-      uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga-parallel-sources"), false);
+      uploadArtifactFile(example("order-saga.arazzo.yaml", "order-saga-parallel-metadata"), false);
       String sessionId = openSession("{\"documentId\": \"Order saga:1.1.0\", \"workflowId\": \"placeOrderSaga\"}");
 
       placeOrder(sessionId);

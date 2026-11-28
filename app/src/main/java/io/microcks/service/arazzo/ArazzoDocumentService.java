@@ -18,8 +18,9 @@ package io.microcks.service.arazzo;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoDocumentSummary;
 import io.microcks.domain.arazzo.ArazzoSourceLink;
-import io.microcks.domain.arazzo.ArazzoSourceSummary;
-import io.microcks.domain.arazzo.ArazzoSources;
+import io.microcks.domain.arazzo.ArazzoExamples;
+import io.microcks.domain.arazzo.ArazzoSourceInfo;
+import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.arazzo.ArazzoStepCall;
 import io.microcks.domain.arazzo.ArazzoStepOperation;
 import io.microcks.domain.arazzo.ArazzoWorkflowExample;
@@ -31,7 +32,8 @@ import io.microcks.domain.Service;
 import io.microcks.domain.ServiceRef;
 import io.microcks.domain.arazzo.WorkflowRunSummary;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoExamplesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.artifact.MockRepositoryImportException;
@@ -69,11 +71,13 @@ import java.util.Set;
 @ApplicationScoped
 public class ArazzoDocumentService {
 
-   private static final String ARAZZO_SOURCES_KIND = "ArazzoSources";
+   private static final String ARAZZO_METADATA_KIND = "ArazzoMetadata";
+   private static final String ARAZZO_EXAMPLES_KIND = "ArazzoExamples";
    private static final String NO_API_NAME_AND_VERSION = "no API name and version for this source";
 
    private final ArazzoDocumentRepository arazzoDocumentRepository;
-   private final ArazzoSourcesRepository arazzoSourcesRepository;
+   private final ArazzoMetadataRepository arazzoMetadataRepository;
+   private final ArazzoExamplesRepository arazzoExamplesRepository;
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
    private final ArazzoRunHistoryService arazzoRunHistoryService;
@@ -81,17 +85,20 @@ public class ArazzoDocumentService {
    /**
     * Build a new ArazzoDocumentService with its required dependencies.
     * @param arazzoDocumentRepository The repository of imported Arazzo documents
-    * @param arazzoSourcesRepository  The repository of imported ArazzoSources overlays
+    * @param arazzoMetadataRepository The repository of imported ArazzoMetadata
+    * @param arazzoExamplesRepository The repository of imported ArazzoExamples
     * @param serviceRepository        The repository of the APIs the source descriptions are linked to
     * @param resourceRepository       The repository of the contracts that define the operations of these APIs
     * @param arazzoRunHistoryService  The service reading the runs history, for the last run of each workflow
     */
    @Inject
    public ArazzoDocumentService(ArazzoDocumentRepository arazzoDocumentRepository,
-         ArazzoSourcesRepository arazzoSourcesRepository, ServiceRepository serviceRepository,
-         ResourceRepository resourceRepository, ArazzoRunHistoryService arazzoRunHistoryService) {
+         ArazzoMetadataRepository arazzoMetadataRepository, ArazzoExamplesRepository arazzoExamplesRepository,
+         ServiceRepository serviceRepository, ResourceRepository resourceRepository,
+         ArazzoRunHistoryService arazzoRunHistoryService) {
       this.arazzoDocumentRepository = arazzoDocumentRepository;
-      this.arazzoSourcesRepository = arazzoSourcesRepository;
+      this.arazzoMetadataRepository = arazzoMetadataRepository;
+      this.arazzoExamplesRepository = arazzoExamplesRepository;
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.arazzoRunHistoryService = arazzoRunHistoryService;
@@ -111,15 +118,26 @@ public class ArazzoDocumentService {
    }
 
    /**
-    * Tell whether an uploaded artifact is an ArazzoSources overlay, to import it with this service rather than as an
-    * API.
+    * Tell whether an uploaded artifact is an ArazzoMetadata, to import it with this service rather than as an API.
     * @param content The artifact as uploaded
-    * @return Whether the artifact is an ArazzoSources overlay
+    * @return Whether the artifact is an ArazzoMetadata
     */
-   public boolean isArazzoSources(String content) {
+   public boolean isArazzoMetadata(String content) {
+      return isOfKind(content, ARAZZO_METADATA_KIND);
+   }
+
+   /**
+    * Tell whether an uploaded artifact is an ArazzoExamples, to import it with this service rather than as an API.
+    * @param content The artifact as uploaded
+    * @return Whether the artifact is an ArazzoExamples
+    */
+   public boolean isArazzoExamples(String content) {
+      return isOfKind(content, ARAZZO_EXAMPLES_KIND);
+   }
+
+   private static boolean isOfKind(String content, String kind) {
       try {
-         return ARAZZO_SOURCES_KIND
-               .equals(ObjectMapperFactory.getYamlObjectMapper().readTree(content).path("kind").asText());
+         return kind.equals(ObjectMapperFactory.getYamlObjectMapper().readTree(content).path("kind").asText());
       } catch (JsonProcessingException jpe) {
          return false;
       }
@@ -224,7 +242,7 @@ public class ArazzoDocumentService {
       return descriptions == null ? null : descriptions.get(workflowId);
    }
 
-   /** A document uses an API when its overlay maps one of its sources to it, whether this API exists or not. */
+   /** A document uses an API when its ArazzoMetadata maps one of its sources to it, whether this API exists or not. */
    private static boolean mapsToApi(Map<String, ResolvedSource> sources, String apiName) {
       return sources.values().stream().anyMatch(source -> apiName.equals(source.link().apiName()));
    }
@@ -238,7 +256,7 @@ public class ArazzoDocumentService {
    }
 
    private ArazzoDocumentSummary summary(ArazzoDocument document, Map<String, ResolvedSource> sources) {
-      List<ArazzoSourceSummary> sourceSummaries = sources.values().stream().map(ResolvedSource::summary).toList();
+      List<ArazzoSourceInfo> sourceSummaries = sources.values().stream().map(ResolvedSource::summary).toList();
       List<ArazzoWorkflowSummary> workflowSummaries = statuses(document, sources).stream().map(status -> {
          WorkflowRunSummary lastRun = arazzoRunHistoryService.getLastRun(document.getId(), status.workflowId());
          return new ArazzoWorkflowSummary(status, description(document, status.workflowId()),
@@ -251,76 +269,96 @@ public class ArazzoDocumentService {
    }
 
    /**
-    * Import an ArazzoSources overlay, that gives the Microcks API name and version of each source description of the
-    * Arazzo document with the same title and version.
-    * @param content The overlay as uploaded, in YAML or JSON
-    * @return The imported overlay
-    * @throws MockRepositoryImportException if the overlay cannot be imported
+    * Import an ArazzoMetadata, that gives the Microcks API name and version of each source description of the Arazzo
+    * document with the same title and version. Re-importing the same name and version replaces the existing one.
+    * @param content The ArazzoMetadata as uploaded, in YAML or JSON
+    * @return The imported ArazzoMetadata
+    * @throws MockRepositoryImportException if the ArazzoMetadata cannot be imported
     */
-   public ArazzoSources importArazzoSources(String content) throws MockRepositoryImportException {
-      JsonNode overlay = parse(content);
+   public ArazzoMetadata importArazzoMetadata(String content) throws MockRepositoryImportException {
+      JsonNode artifact = parse(content);
       Map<String, ServiceRef> sources = new HashMap<>();
-      for (Map.Entry<String, JsonNode> source : overlay.path("sources").properties()) {
+      for (Map.Entry<String, JsonNode> source : artifact.path("sources").properties()) {
          sources.put(source.getKey(), new ServiceRef(null, source.getValue().path("name").asText(),
                source.getValue().path("version").asText()));
       }
-      String name = requiredMetadata(overlay, "name");
-      String version = requiredMetadata(overlay, "version");
-      List<ArazzoWorkflowExample> examples = ArazzoExamplesReader.read(overlay.path("examples"),
-            arazzoDocumentRepository.findByTitleAndVersion(name, version), name, version);
-      ArazzoSources arazzoSources = overlayOf(name, version);
-      arazzoSources.setSources(sources);
-      arazzoSources.setExamples(examples);
-      arazzoSourcesRepository.persistOrUpdate(arazzoSources);
-      return arazzoSources;
+      String name = requiredMetadata(artifact, "name", "ArazzoMetadata");
+      String version = requiredMetadata(artifact, "version", "ArazzoMetadata");
+      saveSources(name, version, sources);
+      return arazzoMetadataRepository.findByNameAndVersion(name, version);
    }
 
    /**
-    * Store the links of the source descriptions of an Arazzo document in its ArazzoSources overlay, replacing the
-    * existing links and keeping the recorded examples of its workflows.
+    * Import an ArazzoExamples, that records examples of the workflows of the Arazzo document with the same title and
+    * version, which must be imported first. Re-importing replaces the examples of that document.
+    * @param content The ArazzoExamples as uploaded, in YAML or JSON
+    * @return The imported ArazzoExamples
+    * @throws MockRepositoryImportException if the ArazzoExamples cannot be imported
+    */
+   public ArazzoExamples importArazzoExamples(String content) throws MockRepositoryImportException {
+      JsonNode artifact = parse(content);
+      String name = requiredMetadata(artifact, "name", "ArazzoExamples");
+      String version = requiredMetadata(artifact, "version", "ArazzoExamples");
+      ArazzoDocument document = arazzoDocumentRepository.findByTitleAndVersion(name, version);
+      if (document == null) {
+         throw new MockRepositoryImportException(
+               "Import the Arazzo document " + name + " " + version + " before its examples");
+      }
+      ArazzoExamples arazzoExamples = arazzoExamplesRepository.findByNameAndVersion(name, version);
+      if (arazzoExamples == null) {
+         arazzoExamples = new ArazzoExamples();
+         arazzoExamples.setName(name);
+         arazzoExamples.setVersion(version);
+      }
+      arazzoExamples.setExamples(ArazzoExamplesReader.read(artifact.path("workflows"), document));
+      arazzoExamplesRepository.persistOrUpdate(arazzoExamples);
+      return arazzoExamples;
+   }
+
+   /**
+    * Store the links of the source descriptions of an Arazzo document in its ArazzoMetadata, replacing the existing
+    * links.
     * @param name    The title of the Arazzo document
     * @param version The version of the Arazzo document
     * @param sources The Microcks API each linked source description is linked to, by name
     */
    void saveSources(String name, String version, Map<String, ServiceRef> sources) {
-      ArazzoSources arazzoSources = overlayOf(name, version);
-      arazzoSources.setSources(sources);
-      arazzoSourcesRepository.persistOrUpdate(arazzoSources);
-   }
-
-   /** Re-importing the same name and version replaces the existing overlay. */
-   private ArazzoSources overlayOf(String name, String version) {
-      ArazzoSources arazzoSources = arazzoSourcesRepository.findByNameAndVersion(name, version);
-      if (arazzoSources == null) {
-         arazzoSources = new ArazzoSources();
-         arazzoSources.setName(name);
-         arazzoSources.setVersion(version);
+      ArazzoMetadata arazzoMetadata = arazzoMetadataRepository.findByNameAndVersion(name, version);
+      if (arazzoMetadata == null) {
+         arazzoMetadata = new ArazzoMetadata();
+         arazzoMetadata.setName(name);
+         arazzoMetadata.setVersion(version);
       }
-      return arazzoSources;
+      arazzoMetadata.setSources(sources);
+      arazzoMetadataRepository.persistOrUpdate(arazzoMetadata);
    }
 
    /**
     * @param document   An imported Arazzo document
     * @param workflowId The id of a workflow of that document
-    * @return The recorded examples of that workflow, in the order of the overlay of the document
+    * @return The recorded examples of that workflow, in the order of the ArazzoExamples of the document
     */
    public List<ArazzoWorkflowExample> getExamples(ArazzoDocument document, String workflowId) {
-      ArazzoSources overlay = arazzoSourcesRepository.findByNameAndVersion(document.getTitle(), document.getVersion());
-      return overlay == null ? List.of()
-            : overlay.getExamples().stream().filter(example -> example.workflowId().equals(workflowId)).toList();
+      ArazzoExamples arazzoExamples = arazzoExamplesRepository.findByNameAndVersion(document.getTitle(),
+            document.getVersion());
+      return arazzoExamples == null ? List.of()
+            : arazzoExamples.getExamples().stream().filter(example -> example.workflowId().equals(workflowId))
+                  .toList();
    }
 
-   /** An overlay is matched to its Arazzo document by its metadata name and version: without them, it links nothing. */
-   private static String requiredMetadata(JsonNode overlay, String field) throws MockRepositoryImportException {
-      String value = overlay.path("metadata").path(field).asText();
+   /** An artifact is matched to its Arazzo document by its metadata name and version: without them, it is refused. */
+   private static String requiredMetadata(JsonNode artifact, String field, String kind)
+         throws MockRepositoryImportException {
+      String value = artifact.path("metadata").path(field).asText();
       if (value.isBlank()) {
-         throw new MockRepositoryImportException("Invalid ArazzoSources overlay: metadata." + field + " is required");
+         throw new MockRepositoryImportException("Invalid " + kind + ": metadata." + field + " is required");
       }
       return value;
    }
 
    /**
-    * Link each source description of an Arazzo document to the Microcks API its overlay gives the name and version of.
+    * Link each source description of an Arazzo document to the Microcks API its ArazzoMetadata gives the name and
+    * version of.
     * @param title   The title of the Arazzo document
     * @param version The version of the Arazzo document
     * @return The link of each source description, in the order of the document
@@ -449,8 +487,9 @@ public class ArazzoDocumentService {
 
    /** Resolve each source description of a document, in the order of the document. */
    Map<String, ResolvedSource> resolveSources(ArazzoDocument document) {
-      ArazzoSources overlay = arazzoSourcesRepository.findByNameAndVersion(document.getTitle(), document.getVersion());
-      return resolveSources(document.getSourceNames(), overlay == null ? Map.of() : overlay.getSources());
+      ArazzoMetadata metadata = arazzoMetadataRepository.findByNameAndVersion(document.getTitle(),
+            document.getVersion());
+      return resolveSources(document.getSourceNames(), metadata == null ? Map.of() : metadata.getSources());
    }
 
    /**
@@ -575,9 +614,9 @@ public class ArazzoDocumentService {
          return api == null ? null : api.getId();
       }
 
-      ArazzoSourceSummary summary() {
-         return api == null ? new ArazzoSourceSummary(link, null, null)
-               : new ArazzoSourceSummary(link, api.getId(), api.getType());
+      ArazzoSourceInfo summary() {
+         return api == null ? new ArazzoSourceInfo(link, null, null)
+               : new ArazzoSourceInfo(link, api.getId(), api.getType());
       }
    }
 

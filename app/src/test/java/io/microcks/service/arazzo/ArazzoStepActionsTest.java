@@ -229,7 +229,7 @@ class ArazzoStepActionsTest {
    private ArazzoDocument orderTrackingIsImportedAndLinked() throws Exception {
       File contract = new File(ArazzoStepActionsTest.class.getResource(FIXTURES + "order-status.openapi.yaml").toURI());
       serviceService.importServiceDefinition(contract, null, new ArtifactInfo("order-status.openapi.yaml", true));
-      arazzoDocumentService.importArazzoSources(fixture("order-tracking.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-tracking.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("order-tracking.arazzo.yaml"));
    }
 

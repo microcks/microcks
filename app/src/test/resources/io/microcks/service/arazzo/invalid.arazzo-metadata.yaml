@@ -1,15 +1,15 @@
-# ArazzoSources overlays that name no Arazzo document. One YAML document per example.
-# example: no-metadata - an overlay without the metadata that names its Arazzo document
+# ArazzoMetadata that name no Arazzo document. One YAML document per example.
+# example: no-metadata - an ArazzoMetadata without the metadata that names its Arazzo document
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 sources:
   pastryApi:
     name: API Pastry - 2.0
     version: 2.0.0
 ---
-# example: no-metadata-name - an overlay whose metadata has a version but no name
+# example: no-metadata-name - an ArazzoMetadata whose metadata has a version but no name
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   version: 1.0.0
 sources:
@@ -17,9 +17,9 @@ sources:
     name: API Pastry - 2.0
     version: 2.0.0
 ---
-# example: no-metadata-version - an overlay whose metadata has a name but no version
+# example: no-metadata-version - an ArazzoMetadata whose metadata has a name but no version
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoMetadata
 metadata:
   name: API Pastry scenarios
 sources:

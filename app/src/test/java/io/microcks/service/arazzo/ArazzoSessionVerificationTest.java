@@ -498,7 +498,7 @@ class ArazzoSessionVerificationTest {
          Files.writeString(contract, example("order-saga.contracts.yaml", api));
          serviceService.importServiceDefinition(contract.toFile(), null, new ArtifactInfo(api + ".yaml", true));
       }
-      arazzoDocumentService.importArazzoSources(example("order-saga.arazzo.yaml", saga + "-sources"));
+      arazzoDocumentService.importArazzoMetadata(example("order-saga.arazzo.yaml", saga + "-metadata"));
       return arazzoDocumentService.importArazzoDocument(example("order-saga.arazzo.yaml", saga));
    }
 

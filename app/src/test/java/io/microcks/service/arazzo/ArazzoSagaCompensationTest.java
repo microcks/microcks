@@ -308,7 +308,7 @@ class ArazzoSagaCompensationTest {
          Files.writeString(contract, example("saga-compensation.contracts.yaml", api));
          serviceService.importServiceDefinition(contract.toFile(), null, new ArtifactInfo(api + ".yaml", true));
       }
-      arazzoDocumentService.importArazzoSources(example("saga-compensation.arazzo.yaml", "order-saga-sources"));
+      arazzoDocumentService.importArazzoMetadata(example("saga-compensation.arazzo.yaml", "order-saga-metadata"));
       return arazzoDocumentService.importArazzoDocument(example("saga-compensation.arazzo.yaml", "order-saga"));
    }
 

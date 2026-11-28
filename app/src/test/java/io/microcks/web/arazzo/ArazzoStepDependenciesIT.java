@@ -16,7 +16,7 @@
 package io.microcks.web.arazzo;
 
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.testsupport.http.ResponseEntity;
 import io.microcks.web.AbstractBaseIT;
 
@@ -46,12 +46,12 @@ class ArazzoStepDependenciesIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @AfterEach
    void deleteDocumentsAndOverlays() {
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    /**
@@ -62,7 +62,7 @@ class ArazzoStepDependenciesIT extends AbstractBaseIT {
    void eachStepGivesWhatItDependsOnAndTheStepsItMustComeAfter() throws Exception {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-tasting.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry-tasting.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry-tasting.arazzo-metadata.yaml", false);
       String documentId = arazzoDocumentRepository.findByTitleAndVersion("Pastry tasting", "1.0.0").getId();
 
       ResponseEntity<String> response = restTemplate

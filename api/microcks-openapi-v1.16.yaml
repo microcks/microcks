@@ -1358,8 +1358,8 @@ paths:
         - user
       operationId: LaunchWorkflowExampleRuns
       summary: Run every recorded example of a workflow of an Arazzo document
-      description: Play every example recorded for the workflow in the ArazzoSources
-        overlay of its document, one run per example, with the inputs of the example.
+      description: Play every example recorded for the workflow in the ArazzoExamples
+        of its document, one run per example, with the inputs of the example.
         The inputs and example of the request are not used. An example that cannot
         run is refused with its reason while the others run. Each run is executed
         asynchronously; read it with GetWorkflowRun until its status is no longer

@@ -138,7 +138,7 @@ class ArazzoWorkflowDetailTest {
    @Test
    void eachInputTellsWhetherARunNeedsIt() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("pastry-needed-inputs.arazzo.yaml"));
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readAndTell")
@@ -158,7 +158,7 @@ class ArazzoWorkflowDetailTest {
                + "2.0 2.0.0]" })
    void theWorkflowTellsWhetherItCanRun(String fixture, String status) throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
 
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), "readThenReprice")
@@ -184,7 +184,7 @@ class ArazzoWorkflowDetailTest {
          apiIsImported("api-pastry-2.0.openapi.yaml");
       }
       if (overlayImported) {
-         arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+         arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       }
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
 
@@ -249,7 +249,7 @@ class ArazzoWorkflowDetailTest {
          apiIsImported("api-pastry-2.0.openapi.yaml");
       }
       if (overlayImported) {
-         arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+         arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       }
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture(fixture));
       String serviceId = apiImported ? serviceRepository.findByNameAndVersion("API Pastry - 2.0", "2.0.0").getId()
@@ -282,7 +282,7 @@ class ArazzoWorkflowDetailTest {
 
    private ArazzoDocument pastryScenariosAreImportedAndLinked() throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
    }
 

@@ -1,13 +1,9 @@
 apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+kind: ArazzoExamples
 metadata:
   name: Pastry examples
   version: 1.0.0
-sources:
-  pastryApi:
-    name: Pastry Examples API
-    version: 1.0.0
-examples:
+workflows:
   listThenReadFirst:
     unknown-first-pastry:
       steps:

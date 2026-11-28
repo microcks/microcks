@@ -19,7 +19,7 @@ import io.microcks.web.AbstractBaseIT;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
-import io.microcks.repository.arazzo.ArazzoSourcesRepository;
+import io.microcks.repository.arazzo.ArazzoMetadataRepository;
 import io.microcks.repository.ImportJobRepository;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
@@ -75,7 +75,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
    private ArazzoDocumentRepository arazzoDocumentRepository;
 
    @Inject
-   private ArazzoSourcesRepository arazzoSourcesRepository;
+   private ArazzoMetadataRepository arazzoMetadataRepository;
 
    @TempDir
    private Path importedContracts;
@@ -98,7 +98,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       jobRepository.deleteAll();
       serviceRepository.deleteAll();
       arazzoDocumentRepository.deleteAll();
-      arazzoSourcesRepository.deleteAll();
+      arazzoMetadataRepository.deleteAll();
    }
 
    @Test
@@ -122,11 +122,11 @@ class ArazzoImportersIT extends AbstractBaseIT {
       apiIsImported("journeys/order-api.openapi.yaml");
 
       JsonNode job = startJob(
-            createJob("Order fulfilment links", "journeys/order-fulfilment.arazzo-sources.yaml", false));
+            createJob("Order fulfilment links", "journeys/order-fulfilment.arazzo-metadata.yaml", false));
 
       assertEquals("Order fulfilment []",
             job.at("/arazzoDocumentRef/title").asText() + " " + job.at("/arazzoDocumentRef/unlinkedSources"));
-      assertEquals(2, arazzoSourcesRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
+      assertEquals(2, arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
    }
 
    @Test
@@ -142,7 +142,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       JsonNode analysis = new ObjectMapper().readTree(response.getBody());
       assertEquals("./order-api.openapi.yaml MATCHED Order API", analysis.at("/sources/1/declaredUrl").asText() + " "
             + analysis.at("/sources/1/match/status").asText() + " " + analysis.at("/sources/1/link/apiName").asText());
-      assertEquals(1, arazzoSourcesRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
+      assertEquals(1, arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().size());
    }
 
    @Test
@@ -177,7 +177,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       assertEquals("false true", summary.at("/workflows/0/status/runnable").asText() + " "
             + summary.at("/workflows/1/status/runnable").asText());
       assertEquals(List.of("orderApi"), List
-            .copyOf(arazzoSourcesRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
+            .copyOf(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
    }
 
    @Test
@@ -191,7 +191,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       assertEquals(400, response.getStatusCode().value());
       assertEquals("Unknown source description: paymentApi", response.getBody());
       assertEquals(List.of("customerApi"), List
-            .copyOf(arazzoSourcesRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
+            .copyOf(arazzoMetadataRepository.findByNameAndVersion("Order fulfilment", "1.0.0").getSources().keySet()));
    }
 
    @Test

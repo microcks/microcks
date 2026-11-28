@@ -70,7 +70,7 @@ class ArazzoRunWalkingSkeletonIT extends AbstractBaseIT {
    void readThenRepricePassesAgainstTheMocksOfApiPastry() throws Exception {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
       String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
       String documentId = JSON.readTree(documents).get(0).get("id").asText();
 
@@ -115,7 +115,7 @@ class ArazzoRunWalkingSkeletonIT extends AbstractBaseIT {
    private JsonNode runRepriceWithoutContentTypeOn(String contract) throws Exception {
       uploadArtifactFile(FIXTURES + contract, true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
       String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
       String documentId = JSON.readTree(documents).get(0).get("id").asText();
 
@@ -134,7 +134,7 @@ class ArazzoRunWalkingSkeletonIT extends AbstractBaseIT {
    void listThenReadFirstFailsOnTheExampleTheMocksOfApiPastryLack() throws Exception {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
-      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
       String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
       String documentId = JSON.readTree(documents).get(0).get("id").asText();
 

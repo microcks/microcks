@@ -18,10 +18,10 @@ package io.microcks.domain.arazzo;
 import java.util.List;
 
 /**
- * The Arazzo document an import job imported, or whose ArazzoSources overlay it imported, as the Importers page shows
- * it.
- * @param documentId      The identifier of the document; null when the job imported the overlay of a document not
- *                        imported yet
+ * The Arazzo document an import job imported, or whose ArazzoMetadata or ArazzoExamples it imported, as the Importers
+ * page shows it.
+ * @param documentId      The identifier of the document; null when the job imported the ArazzoMetadata of a
+ *                        document not imported yet
  * @param title           The title of the document
  * @param version         The version of the document
  * @param unlinkedSources The source descriptions of the document linked to no API of Microcks after the import, in the

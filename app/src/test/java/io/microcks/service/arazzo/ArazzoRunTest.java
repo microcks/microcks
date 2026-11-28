@@ -401,7 +401,7 @@ class ArazzoRunTest {
    @Test
    void onlyTheSourcesLinkedToAnApiAreTargeted() throws Exception {
       apiIsImported("customer-api.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("order-fulfilment.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("order-fulfilment.arazzo-metadata.yaml"));
       ArazzoDocument document = arazzoDocumentService.importArazzoDocument(fixture("order-fulfilment.arazzo.yaml"));
 
       WorkflowResult run = launch(document, "searchThenRead", Map.of("name", "Jane"), 10000L);
@@ -484,7 +484,7 @@ class ArazzoRunTest {
 
    private ArazzoDocument pastryScenariosAreImportedAndLinked(String fixture) throws Exception {
       apiIsImported("api-pastry-2.0.openapi.yaml");
-      arazzoDocumentService.importArazzoSources(fixture("pastry.arazzo-sources.yaml"));
+      arazzoDocumentService.importArazzoMetadata(fixture("pastry.arazzo-metadata.yaml"));
       return arazzoDocumentService.importArazzoDocument(fixture(fixture));
    }
 
