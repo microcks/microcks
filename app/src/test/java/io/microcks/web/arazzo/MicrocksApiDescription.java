@@ -49,7 +49,7 @@ final class MicrocksApiDescription {
    }
 
    /**
-    * @param version The version of the description, such as 1.16
+    * @param version The version of the description, such as 2.0
     * @return The published description of this version
     */
    static MicrocksApiDescription version(String version) {

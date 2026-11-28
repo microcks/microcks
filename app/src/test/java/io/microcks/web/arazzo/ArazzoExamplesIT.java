@@ -52,7 +52,7 @@ class ArazzoExamplesIT extends AbstractBaseIT {
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
    private static final ArazzoMinionProcess MINION = new ArazzoMinionProcess();
    private static final ObjectMapper JSON = new ObjectMapper();
-   private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("1.16");
+   private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("2.0");
    private static final String LAUNCH = "/arazzo/documents/{documentId}/workflows/{workflowId}/runs";
    private static final String LAUNCH_EXAMPLES = "/arazzo/documents/{documentId}/workflows/{workflowId}/examples/runs";
    private static final String RUN = "/arazzo/runs/{runId}";

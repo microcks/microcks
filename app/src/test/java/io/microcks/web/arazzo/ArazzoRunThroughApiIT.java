@@ -55,7 +55,7 @@ class ArazzoRunThroughApiIT extends AbstractBaseIT {
    private static final String LAUNCH = "/arazzo/documents/{documentId}/workflows/{workflowId}/runs";
    private static final String RUN = "/arazzo/runs/{runId}";
    private static final String PASTRY_SCENARIOS = "API Pastry scenarios:1.0.0";
-   private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("1.16");
+   private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("2.0");
    private static final ArazzoMinionProcess MINION = new ArazzoMinionProcess();
    private static final PastryApp PASTRY_APP = new PastryApp();
    private static final ObjectMapper JSON = new ObjectMapper();

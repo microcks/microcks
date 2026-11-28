@@ -60,7 +60,7 @@ class ArazzoSagaCompensationIT extends AbstractBaseIT {
    private static final String SESSIONS = "/arazzo/sessions";
    private static final String VERIFICATION = "/arazzo/sessions/{sessionId}/verification";
    private static final String CARD_REFUSED = "{\"chargePayment\": \"card refused\"}";
-   private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("1.16");
+   private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("2.0");
    private static final ObjectMapper JSON = new ObjectMapper();
 
    @Inject
