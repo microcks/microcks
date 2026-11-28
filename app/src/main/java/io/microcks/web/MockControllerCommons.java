@@ -28,7 +28,10 @@ import io.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.microcks.util.el.EvaluableRequest;
 import io.microcks.util.el.TemplateEngine;
 import io.microcks.util.el.TemplateEngineFactory;
+import io.microcks.util.tracing.ArazzoSessionCarrier;
+import io.microcks.util.tracing.ArazzoTraceAttributes;
 import io.microcks.util.tracing.TraceUtil;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 
 import org.slf4j.Logger;
@@ -41,6 +44,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -414,5 +418,30 @@ public class MockControllerCommons {
          resourcePath = resourcePath.replace("+", "%20");
       }
       return resourcePath;
+   }
+
+   /**
+    * The span and event attributes telling Live Traces that a mock invocation comes from an Arazzo workflow, as the W3C
+    * baggage of its request names it. Read here, as the mock controllers record an invocation, so that other ways an
+    * Arazzo workflow reaches the mocks can be told the same way.
+    * @param request The request of the mock invocation
+    * @return The attributes, empty when the invocation does not come from an Arazzo workflow
+    */
+   public static Attributes getArazzoAttributes(HttpServletRequest request) {
+      Enumeration<String> baggage = request.getHeaders(ArazzoTraceAttributes.BAGGAGE_HEADER);
+      return ArazzoTraceAttributes.fromBaggage(baggage == null ? List.of() : Collections.list(baggage))
+            .orElse(Attributes.empty());
+   }
+
+   /**
+    * The Arazzo verification session a mock invocation names, in which the mocks record it: its x-microcks-session
+    * header, else the microcks-session entry of its W3C baggage.
+    * @param request The request of the mock invocation
+    * @return The id of the session, empty when the invocation names none
+    */
+   public static Optional<String> getArazzoSessionId(HttpServletRequest request) {
+      Enumeration<String> baggage = request.getHeaders(ArazzoTraceAttributes.BAGGAGE_HEADER);
+      return ArazzoSessionCarrier.sessionId(request.getHeader(ArazzoSessionCarrier.SESSION_HEADER),
+            baggage == null ? List.of() : Collections.list(baggage));
    }
 }

@@ -179,3 +179,8 @@
 .recent-note { font: 400 12px/16px var(--font-ui); color: var(--text-muted); }
 .recent-foot { margin: 0; padding: 12px 16px; font: 400 12px/16px var(--font-ui); color: var(--text-muted); }
 .recent-foot a { font-weight: 500; }
+.sources-table .select { min-width: 150px; max-width: 260px; }
+.ops-found[data-tone='warning'] > .icon { color: var(--warning); }
+
+/* A workflow verdict chip: the icon sits apart from its word. */
+.chip.import-wf-chip .chip-value { display: inline-flex; align-items: center; gap: 5px; }

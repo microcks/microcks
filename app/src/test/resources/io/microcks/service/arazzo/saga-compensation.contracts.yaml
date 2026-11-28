@@ -1,0 +1,268 @@
+# example: order-api - Order API 1.0.0: places order o-42 for customer c-7, then confirms or cancels it
+openapi: 3.0.2
+info:
+  title: Order API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customerId
+              properties:
+                customerId:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                amount:
+                  type: number
+                currency:
+                  type: string
+            examples:
+              c-7:
+                value:
+                  customerId: c-7
+                  items:
+                    - sku: ABC-1
+                      quantity: 2
+                  amount: 25.0
+                  currency: EUR
+      responses:
+        "201":
+          description: The order placed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                c-7:
+                  value:
+                    id: o-42
+                    customerId: c-7
+                    amount: 25.0
+                    status: PENDING
+  /orders/{orderId}/confirm:
+    post:
+      operationId: confirmOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            o-42:
+              value: o-42
+      responses:
+        "200":
+          description: The order confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                o-42:
+                  value:
+                    id: o-42
+                    status: CONFIRMED
+  /orders/{orderId}/cancel:
+    post:
+      operationId: cancelOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            o-42:
+              value: o-42
+      responses:
+        "200":
+          description: The order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                o-42:
+                  value:
+                    id: o-42
+                    status: CANCELLED
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+---
+# example: stock-api - Stock API 1.0.0: reserves the items of order o-42 as reservation r-9, then releases r-9
+openapi: 3.0.2
+info:
+  title: Stock API
+  version: 1.0.0
+paths:
+  /reservations:
+    post:
+      operationId: reserveStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+              properties:
+                orderId:
+                  type: string
+            examples:
+              o-42:
+                value:
+                  orderId: o-42
+      responses:
+        "201":
+          description: The reservation made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+              examples:
+                o-42:
+                  value:
+                    id: r-9
+                    orderId: o-42
+                    status: RESERVED
+  /reservations/{reservationId}:
+    delete:
+      operationId: releaseStock
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            r-9:
+              value: r-9
+      responses:
+        "200":
+          description: The reservation released
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+              examples:
+                r-9:
+                  value:
+                    id: r-9
+                    orderId: o-42
+                    status: RELEASED
+components:
+  schemas:
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        status:
+          type: string
+---
+# example: payment-api - Payment API 1.0.0: charges order o-42; its example card refused (402) is never dispatched to, only injected
+openapi: 3.0.2
+info:
+  title: Payment API
+  version: 1.0.0
+paths:
+  /payments:
+    post:
+      operationId: chargePayment
+      x-microcks-operation:
+        dispatcher: JSON_BODY
+        dispatcherRules: |
+          {"exp": "/orderId", "operator": "equals", "cases": {"o-42": "o-42", "default": "o-42"}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+                - amount
+              properties:
+                orderId:
+                  type: string
+                amount:
+                  type: number
+            examples:
+              o-42:
+                value:
+                  orderId: o-42
+                  amount: 25.0
+              card refused:
+                value:
+                  orderId: o-42
+                  amount: 25.0
+      responses:
+        "201":
+          description: The payment charged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+              examples:
+                o-42:
+                  value:
+                    id: p-3
+                    orderId: o-42
+                    status: CHARGED
+        "402":
+          description: The payment refused
+          headers:
+            X-Decline-Reason:
+              schema:
+                type: string
+              examples:
+                card refused:
+                  value: insufficient-funds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+              examples:
+                card refused:
+                  value:
+                    orderId: o-42
+                    status: REFUSED
+                    reason: Card refused
+components:
+  schemas:
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        status:
+          type: string
+        reason:
+          type: string

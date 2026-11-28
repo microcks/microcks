@@ -6,7 +6,7 @@
 .wf-ex-intro { display: flex; flex-direction: column; gap: 6px; flex: 1 1 480px; min-width: 0; }
 .wf-ex-lead { margin: 0; max-width: 80ch; font-size: 14px; line-height: 1.55; color: var(--text-secondary); }
 .wf-ex-mono { font-family: var(--font-mono); }
-.wf-ex-overlay { margin: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text-secondary); font: 400 12px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.wf-ex-yaml { margin: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text-secondary); font: 400 12px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 .wf-ex-list { display: flex; flex-direction: column; gap: 10px; }
 .wf-ex-card { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .wf-ex-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }

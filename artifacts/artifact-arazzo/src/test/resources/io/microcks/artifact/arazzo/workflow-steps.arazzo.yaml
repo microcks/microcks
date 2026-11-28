@@ -1,0 +1,147 @@
+# example: read-then-reprice - the workflow of the domain examples of the story
+arazzo: 1.0.1
+info:
+  title: API Pastry scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readThenReprice
+    summary: Reads a pastry, then changes its price using the name returned by the first call.
+    description: The price is changed on the pastry the first call returns.
+    inputs:
+      type: object
+      properties:
+        pastry:
+          type: string
+        newPrice:
+          type: number
+    steps:
+      - stepId: readPastry
+        operationId: GetPastryByName
+        parameters:
+          - name: name
+            in: path
+            value: $inputs.pastry
+          - name: Accept
+            in: header
+            value: application/json
+        successCriteria:
+          - condition: $statusCode == 200 && $response.body#/status == 'available'
+        outputs:
+          name: $response.body#/name
+          price: $response.body#/price
+      - stepId: reprice
+        operationId: $sourceDescriptions.pastryApi.PatchPastry
+        parameters:
+          - name: name
+            in: path
+            value: $steps.readPastry.outputs.name
+        requestBody:
+          contentType: application/json
+          payload:
+            price: 0
+          replacements:
+            - target: /price
+              value: $inputs.newPrice
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body#/price == $inputs.newPrice
+        outputs:
+          price: $response.body#/price
+    outputs:
+      before: $steps.readPastry.outputs.price
+      after: $steps.reprice.outputs.price
+  - workflowId: listThenReadFirst
+    steps:
+      - stepId: list
+        operationId: GetPastries
+---
+# example: bare-step - a step with nothing but its operation, in a workflow with nothing but its steps
+arazzo: 1.0.1
+info:
+  title: Bare
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: bare
+    steps:
+      - stepId: list
+        operationId: GetPastries
+---
+# example: described-step - a step with a description
+arazzo: 1.0.1
+info:
+  title: Described
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: described
+    steps:
+      - stepId: list
+        description: Lists the pastries.
+        operationId: GetPastries
+---
+# example: regex-criterion - a criterion with a context and a type
+arazzo: 1.0.1
+info:
+  title: Regex
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: regex
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+        successCriteria:
+          - context: $response.body#/name
+            condition: ^[A-Z].*
+            type: regex
+---
+# example: text-payload - a body whose payload is written as text, without content type nor replacement
+arazzo: 1.0.1
+info:
+  title: Text payload
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: textPayload
+    steps:
+      - stepId: reprice
+        operationId: PatchPastry
+        requestBody:
+          payload: <pastry><price>2.6</price></pastry>
+---
+# example: non-text-values - a parameter and a replacement whose values are numbers
+arazzo: 1.0.1
+info:
+  title: Non text values
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: nonTextValues
+    steps:
+      - stepId: reprice
+        operationId: PatchPastry
+        parameters:
+          - name: page
+            in: query
+            value: 2
+        requestBody:
+          payload:
+            price: 0
+          replacements:
+            - target: /price
+              value: 2.6

@@ -1,0 +1,76 @@
+---
+openapi: 3.0.2
+info:
+  title: Pastry Examples API
+  version: 1.0.0
+  description: A pastry API whose mocks answer 404 for a pastry they do not know, to replay recorded workflow examples
+paths:
+  /pastry:
+    get:
+      operationId: GetPastries
+      summary: Get list of pastries
+      responses:
+        "200":
+          description: Get list of pastries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pastry'
+              examples:
+                pastries:
+                  value:
+                  - name: Baba Rhum
+                    price: 3.2
+                  - name: Eclair Cafe
+                    price: 2.5
+  /pastry/{name}:
+    get:
+      operationId: GetPastryByName
+      summary: Get a pastry by its name
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        examples:
+          Eclair Cafe:
+            value: Eclair Cafe
+          Baba Rhum:
+            value: Baba Rhum
+      responses:
+        "200":
+          description: The pastry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                Eclair Cafe:
+                  value:
+                    name: Eclair Cafe
+                    price: 2.5
+        "404":
+          description: No pastry with that name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Baba Rhum:
+                  value:
+                    message: Baba Rhum is no longer baked
+components:
+  schemas:
+    Pastry:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number

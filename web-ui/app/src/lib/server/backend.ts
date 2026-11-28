@@ -317,6 +317,8 @@ export interface BackendJob {
   metadata?: { labels?: Record<string, string>; annotations?: Record<string, string> };
   secretRef?: { secretId: string; name: string };
   serviceRefs?: { serviceId: string; name: string; version: string }[];
+  /** The Arazzo document the job imported, with the source descriptions it could not link. */
+  arazzoDocumentRef?: { documentId?: string | null; title: string; version: string; unlinkedSources?: string[] } | null;
 }
 
 const JSON_HEADERS = { 'content-type': 'application/json', accept: 'application/json' };
@@ -517,4 +519,321 @@ export async function secretHeaders(secretName: string, token?: string): Promise
     else headers.authorization = `Bearer ${secret.token}`;
   }
   return headers;
+}
+
+/* ---- Arazzo (`/api/workflows`, ported from feature/arazzo S1–S4) ---- */
+
+export interface BackendArazzoSourceLink {
+  sourceName: string;
+  apiName?: string | null;
+  apiVersion?: string | null;
+  linked: boolean;
+}
+
+export interface BackendArazzoDocumentSummary {
+  id: string;
+  title: string;
+  version: string;
+  format: string;
+  formatVersion: string;
+  fileName?: string | null;
+  importDate?: number | string;
+  sources: { link: BackendArazzoSourceLink; apiId?: string | null; apiType?: string | null }[];
+  workflows: {
+    status: { workflowId: string; runnable: boolean; reasons: string[] };
+    description?: string | null;
+    stepCount: number;
+    lastResult: 'NEVER_RUN' | 'SUCCESS' | 'FAILURE' | string;
+  }[];
+}
+
+export interface BackendArazzoStep {
+  stepId: string;
+  description?: string | null;
+  operation: { sourceName: string; operationId: string; method?: string | null; path?: string | null; channel?: string | null; reason?: string | null };
+  /** S28: only for a step that sends or waits for a message. */
+  messaging?: { action: string; correlationId?: string | null; timeout?: number | null } | null;
+  /** S30 */
+  dependsOn?: string[] | null;
+  prerequisites?: string[] | null;
+  parameters: { name: string; in: string; value: string }[];
+  requestBody?: { contentType?: string | null; payload?: string | null; replacements?: Record<string, string> | null } | null;
+  successCriteria: { condition: string; context?: string | null; type?: string | null }[];
+  outputs: Record<string, string>;
+  onSuccess?: BackendArazzoAction[] | null;
+  onFailure?: BackendArazzoAction[] | null;
+}
+
+export interface BackendArazzoAction {
+  name: string;
+  type: string;
+  retryAfter?: number | null;
+  retryLimit?: number | null;
+  criteria?: { condition: string; context?: string | null; type?: string | null }[] | null;
+}
+
+export interface BackendArazzoWorkflowDetail {
+  documentId: string;
+  title: string;
+  version: string;
+  format: string;
+  formatVersion: string;
+  fileName?: string | null;
+  importDate?: number | string;
+  workflowIds: string[];
+  sources: { link: BackendArazzoSourceLink; serviceId?: string | null; reason?: string | null; operations: number; usedOperations: number }[];
+  workflowId: string;
+  summary?: string | null;
+  description?: string | null;
+  inputs: { name: string; usedBy: { stepId: string; place: string; target: string }[]; type?: string | null; required?: boolean }[];
+  steps: BackendArazzoStep[];
+  outputs: Record<string, string>;
+  dataPassings: { fromStepId: string; outputName: string; to: { stepId: string; place: string; target: string } }[];
+  /** The examples recorded for this workflow by the ArazzoExamples of its document. */
+  examples?: BackendExample[] | null;
+}
+
+export async function fetchArazzoDocuments(token?: string): Promise<BackendArazzoDocumentSummary[]> {
+  const res = await call('/api/workflows/documents', token, { headers: { accept: 'application/json' } });
+  return (await res.json()) as BackendArazzoDocumentSummary[];
+}
+
+export async function fetchArazzoWorkflow(docId: string, workflowId: string, token?: string): Promise<BackendArazzoWorkflowDetail | undefined> {
+  try {
+    const path = `/api/workflows/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}`;
+    const res = await call(path, token, { headers: { accept: 'application/json' } });
+    return (await res.json()) as BackendArazzoWorkflowDetail;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+export async function fetchArazzoSource(docId: string, token?: string): Promise<string | undefined> {
+  try {
+    const res = await call(`/api/workflows/documents/${encodeURIComponent(docId)}/source`, token);
+    return await res.text();
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+/* ---- Arazzo import dialog and relink (`/api/workflows/documents/analysis`, stories S14 and S19) ---- */
+
+import type { ApiRef, ImportAnalysis } from '#lib/workflows/import-analysis.js';
+import type { BackendExample } from '#lib/workflows/examples.js';
+
+/** The links chosen per source description; absent or null = not linked, undefined `links` = the proposed ones. */
+export type BackendLinks = Record<string, ApiRef | null>;
+
+const jsonCall = (path: string, token: string | undefined, method: string, body: unknown) =>
+  call(path, token, { method, headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(body) });
+
+/** What Microcks says about a document before importing it; nothing is stored. */
+export async function analyseArazzoDocument(content: string, links: BackendLinks | undefined, token?: string): Promise<ImportAnalysis> {
+  return (await (await jsonCall('/api/workflows/documents/analysis', token, 'POST', { content, links: links ?? null })).json()) as ImportAnalysis;
+}
+
+/** Imports a document with the links chosen for its sources, all or nothing; answers its summary. */
+export async function importArazzoDocument(
+  content: string,
+  fileName: string,
+  links: BackendLinks,
+  token?: string
+): Promise<BackendArazzoDocumentSummary> {
+  return (await (await jsonCall('/api/workflows/documents', token, 'POST', { content, fileName, links })).json()) as BackendArazzoDocumentSummary;
+}
+
+/** The same analysis for an imported document; `links` undefined = the links of its ArazzoMetadata. Undefined when unknown. */
+export async function analyseImportedArazzoDocument(docId: string, links: BackendLinks | undefined, token?: string): Promise<ImportAnalysis | undefined> {
+  try {
+    const res = await jsonCall(`/api/workflows/documents/${encodeURIComponent(docId)}/analysis`, token, 'POST', { links: links ?? null });
+    return (await res.json()) as ImportAnalysis;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+/** Links the sources of an imported document again (replaces the sources of its ArazzoMetadata). Undefined when unknown. */
+export async function relinkArazzoDocumentSources(docId: string, links: BackendLinks, token?: string): Promise<BackendArazzoDocumentSummary | undefined> {
+  try {
+    const res = await jsonCall(`/api/workflows/documents/${encodeURIComponent(docId)}/sources`, token, 'PUT', { links });
+    return (await res.json()) as BackendArazzoDocumentSummary;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+/* ---- Arazzo runs (`/api/workflows`, ported from feature/arazzo S5–S11) ---- */
+
+export interface BackendWorkflowRunSummary {
+  id: string;
+  number: number;
+  workflowId: string;
+  target: 'MOCKS' | 'IMPLEMENTATIONS' | 'MIXED';
+  status: 'IN_PROGRESS' | 'SUCCESS' | 'FAILURE';
+  failedStepId?: string | null;
+  startedDate?: number | string;
+  elapsedTime: number;
+  /** Name of the recorded example the run played, and the verdict once it ended. */
+  example?: string | null;
+  exampleVerdict?: 'MATCHES' | 'DOES_NOT_MATCH' | null;
+  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27), `SESSION` for a verification (S15). */
+  origin?: 'MOCK_URL' | 'SESSION' | null;
+}
+
+import type { BackendMissingExample } from './runs-arazzo-schema';
+import type { BackendSession, BackendSessionCall } from '#lib/workflows/sessions.js';
+
+export interface BackendWorkflowStepResult {
+  index: number;
+  stepId: string;
+  operation?: { sourceName: string; operationId: string; method?: string | null; path?: string | null } | null;
+  status: string;
+  statusCode?: number | null;
+  elapsedTime: number;
+  criteria?: { condition: string; values?: { expression: string; value: unknown }[]; held: boolean }[] | null;
+  outputs?: Record<string, unknown> | null;
+  testCaseId?: string | null;
+  message?: string | null;
+  requestUrl?: string | null;
+  parameters?: { name: string; in: string; value: unknown; expression?: string | null }[] | null;
+}
+
+export interface BackendWorkflowResult {
+  id: string;
+  documentId: string;
+  workflowId: string;
+  target: 'MOCKS' | 'IMPLEMENTATIONS' | 'MIXED';
+  sources?: { sourceName: string; serviceId?: string | null; baseUrl?: string | null }[];
+  inputs?: Record<string, unknown> | null;
+  outputs?: Record<string, unknown> | null;
+  status: 'IN_PROGRESS' | 'SUCCESS' | 'FAILURE';
+  startedDate?: number | string;
+  elapsedTime: number;
+  timeout?: number | null;
+  secretRef?: { secretId?: string; name?: string } | null;
+  steps?: BackendWorkflowStepResult[];
+  message?: string | null;
+  number?: number | null;
+  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27), `SESSION` for a verification (S15). */
+  origin?: 'MOCK_URL' | 'SESSION' | null;
+  /** The session a verification checked, with the calls it received (S15). */
+  session?: { sessionId: string; calls: BackendSessionCall[] } | null;
+  /** S9: each response was validated against the OpenAPI contract. */
+  validateSchema?: boolean;
+  /** S10: the mock example the failed step needed and did not find (run on the mocks). */
+  missingExample?: BackendMissingExample | null;
+  /** The recorded example the run played, judged when the run is over. */
+  example?: (BackendExample & { verdict?: 'MATCHES' | 'DOES_NOT_MATCH' | null; unmetExpectations?: string[] | null }) | null;
+}
+
+export interface BackendArazzoRunLaunch {
+  inputs: Record<string, unknown>;
+  timeout?: number;
+  implementations?: Record<string, string>;
+  secretName?: string;
+  /** S9: validate each response against the OpenAPI contract (absent = no validation). */
+  validateSchema?: boolean;
+  /** S31: where each source goes in a mixed run, as the Deep Ink mockup launches it. */
+  target?: { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'> };
+  /** Name of a recorded example to play: its inputs are used and the run is judged on it. */
+  example?: string;
+}
+
+export async function launchArazzoRun(docId: string, workflowId: string, launch: BackendArazzoRunLaunch, token?: string): Promise<BackendWorkflowResult> {
+  const path = `/api/workflows/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/runs`;
+  const res = await call(path, token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(launch) });
+  return (await res.json()) as BackendWorkflowResult;
+}
+
+export async function fetchArazzoRun(runId: string, token?: string): Promise<BackendWorkflowResult | undefined> {
+  try {
+    const res = await call(`/api/workflows/runs/${encodeURIComponent(runId)}`, token, { headers: { accept: 'application/json' } });
+    return (await res.json()) as BackendWorkflowResult;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+export async function fetchArazzoRuns(docId: string, size: number, token?: string): Promise<BackendWorkflowRunSummary[]> {
+  const res = await call(`/api/workflows/documents/${encodeURIComponent(docId)}/runs?page=0&size=${size}`, token, { headers: { accept: 'application/json' } });
+  return (await res.json()) as BackendWorkflowRunSummary[];
+}
+
+/** One run launched for an example of `POST …/examples/runs`: its run, or why it was refused. */
+export interface BackendExampleLaunch {
+  example: string;
+  runId?: string | null;
+  number?: number | null;
+  refusal?: string | null;
+}
+
+/** Plays every recorded example of a workflow, one run each (what a CI does in one call). Undefined when unknown. */
+export async function launchArazzoExampleRuns(
+  docId: string,
+  workflowId: string,
+  launch: Pick<BackendArazzoRunLaunch, 'timeout' | 'validateSchema' | 'implementations' | 'secretName' | 'target'>,
+  token?: string
+): Promise<BackendExampleLaunch[] | undefined> {
+  try {
+    const path = `/api/workflows/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/examples/runs`;
+    return (await (await call(path, token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(launch) })).json()) as BackendExampleLaunch[];
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+/* ---- Arazzo verification sessions (`/api/workflows/sessions`, stories S15, S16, S17) ---- */
+
+/** A session of Microcks, as `POST`, `GET /api/workflows/sessions` and `GET /api/workflows/sessions/{id}` give it. */
+export type BackendArazzoSession = BackendSession;
+
+/** The sessions of a workflow still kept by Microcks, the latest first. */
+export async function listArazzoSessions(documentId: string, workflowId: string, token?: string): Promise<BackendArazzoSession[]> {
+  const query = `documentId=${encodeURIComponent(documentId)}&workflowId=${encodeURIComponent(workflowId)}`;
+  return (await (await call(`/api/workflows/sessions?${query}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession[];
+}
+
+/** A session read now, with the calls counted so far; undefined when Microcks does not know it (or it expired). */
+export async function fetchArazzoSession(sessionId: string, token?: string): Promise<BackendArazzoSession | undefined> {
+  try {
+    return (await (await call(`/api/workflows/sessions/${encodeURIComponent(sessionId)}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+export async function openArazzoSession(
+  request: { documentId: string; workflowId: string; inputs?: Record<string, unknown>; failures?: Record<string, string> },
+  token?: string
+): Promise<BackendArazzoSession> {
+  return (await (await jsonCall('/api/workflows/sessions', token, 'POST', request)).json()) as BackendArazzoSession;
+}
+
+/** Closes a session; false when Microcks does not know it. */
+export async function closeArazzoSession(sessionId: string, token?: string): Promise<boolean> {
+  try {
+    await call(`/api/workflows/sessions/${encodeURIComponent(sessionId)}`, token, { method: 'DELETE' });
+    return true;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return false;
+    throw e;
+  }
+}
+
+/** The verification of a session: a run of origin `SESSION`; undefined when Microcks does not know the session. */
+export async function verifyArazzoSession(sessionId: string, token?: string): Promise<BackendWorkflowResult | undefined> {
+  try {
+    return (await (await call(`/api/workflows/sessions/${encodeURIComponent(sessionId)}/verification`, token, { method: 'POST', headers: { accept: 'application/json' } })).json()) as BackendWorkflowResult;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
 }

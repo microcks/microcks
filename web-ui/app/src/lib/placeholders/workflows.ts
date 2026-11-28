@@ -5,7 +5,7 @@
  * no /api/workflows or /api/workflow-runs endpoint). Everything below is demo data ported from the Deep Ink
  * prototype and is flagged "demo data" in the UI. To be replaced by Microcks APIs: Arazzo document import
  * (as artifacts), workflow listing, workflow runs (start / list / get / watch), run sessions and the
- * ArazzoSources overlay (examples).
+ * ArazzoMetadata and ArazzoExamples.
  *
  * Source links (`link.serviceId`) are LOGICAL keys of the prototype (`pastry2`, `pastry1`, `orders`), resolved
  * against the real store services by `#lib/server/workflows.js`.
@@ -137,8 +137,8 @@ export const CHECK_MENU_STEPS: Step[] = [
 
 const mockUrl = (doc: 'pastry' | 'beer', workflowId: string) =>
   doc === 'pastry'
-    ? `${MICROCKS_BASE}/arazzo/Pastry%20workflows/1.2.0/${workflowId}`
-    : `${MICROCKS_BASE}/arazzo/Beer%20checkout/0.3.0/${workflowId}`;
+    ? `${MICROCKS_BASE}/workflow/Pastry%20workflows/1.2.0/${workflowId}`
+    : `${MICROCKS_BASE}/workflow/Beer%20checkout/0.3.0/${workflowId}`;
 
 const RUNNABLE = { runnable: true } as const;
 
@@ -206,8 +206,8 @@ export const WORKFLOWS: Workflow[] = [
 
 export const DOCUMENTS: ArazzoDocument[] = [
   {
-    id: 'pastry', apiId: '6728f1c2a4e1b93d5c0e7a14', file: 'pastry-workflows.arazzo.yaml', arazzoVersion: '1.1.0', version: '1.2.0',
-    overlay: 'pastry-workflows.arazzo-sources.yaml',
+    id: 'pastry', apiId: '6728f1c2a4e1b93d5c0e7a14', file: 'pastry-workflows.arazzo.yaml', format: 'ARAZZO', formatVersion: '1.1.0', version: '1.2.0',
+    metadata: 'pastry-workflows.arazzo-metadata.yaml',
     title: 'Pastry workflows',
     origin: 'Synced 12 min ago from GitHub',
     sources: [
@@ -219,7 +219,7 @@ export const DOCUMENTS: ArazzoDocument[] = [
     importIssues: []
   },
   {
-    id: 'beer', apiId: '6728f1c2a4e1b93d5c0e7a15', file: 'beer-checkout.arazzo.yaml', arazzoVersion: '1.0.1', version: '0.3.0',
+    id: 'beer', apiId: '6728f1c2a4e1b93d5c0e7a15', file: 'beer-checkout.arazzo.yaml', format: 'ARAZZO', formatVersion: '1.0.1', version: '0.3.0',
     title: 'Beer checkout',
     origin: 'Uploaded from a file 6 d ago by MA',
     sources: [
@@ -662,8 +662,8 @@ workflows:
   # order-pastry, compare-prices, check-menu: 3 more workflows (lines 103-222)
 `;
 
-export const PASTRY_OVERLAY_YAML = `apiVersion: mocks.microcks.io/v1alpha1
-kind: ArazzoSources
+export const PASTRY_METADATA_YAML = `apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoMetadata
 metadata:
   name: Pastry workflows
   version: 1.2.0
@@ -677,7 +677,14 @@ sources:
   pastryOrders:
     name: Pastry orders API
     version: 0.1.0
-examples:
+`;
+
+export const PASTRY_EXAMPLES_YAML = `apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoExamples
+metadata:
+  name: Pastry workflows
+  version: 1.2.0
+workflows:
   restock-pastry:
     restock-eclair:
       inputs:

@@ -12,7 +12,9 @@
 
   let { run, example, pending }: Props = $props();
 
-  const judged = $derived(judgeExample(run, example));
+  // The verdict is Microcks's when it judged the run; the rows only show the expectations side by side.
+  const judgedRows = $derived(judgeExample(run, example));
+  const judged = $derived(run.exampleCheck ? { ...judgedRows, matches: run.exampleCheck.matches, unmet: run.exampleCheck.unmet } : judgedRows);
   // While the run plays, the expectations wait for its end.
   const rows = $derived(pending ? judged.rows.map((r) => ({ ...r, got: '…' })) : judged.rows);
   const unmet = $derived(pending ? [] : judged.unmet);

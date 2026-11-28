@@ -54,6 +54,7 @@ import io.microcks.util.tracing.CommonAttributes;
 import io.microcks.util.tracing.CommonEvents;
 import io.microcks.service.OpenTelemetryResolverService;
 import io.microcks.util.tracing.TraceUtil;
+import io.microcks.web.arazzo.ArazzoSessionResponder;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -105,6 +106,7 @@ public class RestInvocationProcessor {
    private final Event<CallbackTriggerEvent> callbackTriggerEvents;
    private final Event<AsyncAPITriggerEvent> asyncTriggerEvents;
    private final ProxyService proxyService;
+   private final ArazzoSessionResponder arazzoSessionResponder;
 
    private final ScriptEngine scriptEngine;
    private final OpenTelemetryResolverService opentelemetryResolverService;
@@ -127,12 +129,13 @@ public class RestInvocationProcessor {
     * @param asyncTriggerEvents           The publisher of AsyncAPI trigger events
     * @param proxyService                 The proxy to external URLs or services
     * @param opentelemetryResolverService The opentelemetry resolver
+    * @param arazzoSessionResponder       The responder of the invocations naming an Arazzo verification session
     */
    @Inject
    public RestInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
          Event<MockInvocationEvent> mockInvocationEvents, Event<CallbackTriggerEvent> callbackTriggerEvents,
          Event<AsyncAPITriggerEvent> asyncTriggerEvents, ProxyService proxyService,
-         OpenTelemetryResolverService opentelemetryResolverService) {
+         OpenTelemetryResolverService opentelemetryResolverService, ArazzoSessionResponder arazzoSessionResponder) {
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
       this.mockInvocationEvents = mockInvocationEvents;
@@ -141,6 +144,7 @@ public class RestInvocationProcessor {
       this.proxyService = proxyService;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
       this.opentelemetryResolverService = opentelemetryResolverService;
+      this.arazzoSessionResponder = arazzoSessionResponder;
    }
 
    /**
@@ -194,6 +198,9 @@ public class RestInvocationProcessor {
                IdBuilder.buildOperationId(ic.service(), ic.operation()), fallback.getFallback());
          response = getResponseByMediaType(responses, request);
       }
+
+      // Inside an Arazzo verification session, the session decides the answer of the step the invocation matches.
+      response = arazzoSessionResponder.respond(ic, request, body, response);
 
       // Setting delay to default one if not set.
       if (delay == null && ic.operation().getDefaultDelay() != null) {
@@ -274,6 +281,30 @@ public class RestInvocationProcessor {
    /** Percent-decode a path without interpreting '+' as a space. */
    private static String decodePath(String path) {
       return URLDecoder.decode(path.replace("+", "%2B"), StandardCharsets.UTF_8);
+   }
+
+   /**
+    * Answer a REST invocation with an example chosen in advance instead of dispatching it, as when the verification
+    * session the invocation names set its operation to fail. The example is rendered and delayed like a dispatched one.
+    * @param ic        The invocation context containing information about the service and operation being invoked
+    * @param startTime The start time of the invocation
+    * @param delay     The delay to apply before returning the response
+    * @param body      The request body
+    * @param request   The HTTP servlet request
+    * @param example   The example to answer with
+    * @return A ResponseResult containing the status, headers, and body of the example
+    */
+   public ResponseResult processInjectedFailure(MockInvocationContext ic, long startTime, DelaySpec delay, String body,
+         HttpServletRequest request, Response example) {
+      TraceUtil.enableExplainTracing();
+      Span.current().addEvent(CommonEvents.RESPONSE_SELECTED.getEventName(),
+            TraceUtil.explainSpanEventBuilder("Answered with the failure the Arazzo verification session injects")
+                  .put(CommonAttributes.RESPONSE_NAME, example.getName()).build());
+      DispatchContext notDispatched = new DispatchContext(null, null);
+      HttpHeaders responseHeaders = getResponseHeaders(ic, body, request, notDispatched, example);
+      byte[] responseContent = getResponseContent(ic, startTime, delay, body, request, notDispatched, example);
+      return new ResponseResult(new HttpStatusCode(Integer.parseInt(example.getStatus())), responseHeaders,
+            responseContent);
    }
 
    /** Get the root dispatcher for the invocation context. */

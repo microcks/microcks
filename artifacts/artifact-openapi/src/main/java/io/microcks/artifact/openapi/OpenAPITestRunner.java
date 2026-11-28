@@ -22,6 +22,7 @@ import io.microcks.domain.ResourceType;
 import io.microcks.domain.Response;
 import io.microcks.domain.Service;
 import io.microcks.domain.TestReturn;
+import io.microcks.artifact.jsonschema.JsonSchemaViolation;
 import io.microcks.test.ResourceReader;
 import io.microcks.test.ResponseReader;
 import io.microcks.test.HttpTestRunner;
@@ -47,7 +48,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
    private static final Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
 
    /** Content-types for JSON that are valid response types validated using JSON Schemas. */
-   public static final Pattern APPLICATION_JSON_TYPES_PATTERN = Pattern.compile("application/.*json");
+   public static final Pattern APPLICATION_JSON_TYPES_PATTERN = OpenAPIResponseValidator.APPLICATION_JSON_TYPES_PATTERN;
 
    private final ResourceReader resourceReader;
    private final ResponseReader responseReader;
@@ -145,11 +146,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Do not try to validate response content if no content provided ;-)
       // Also do not try to schema validate something that is not application/.*json for now...
       // Alternatives schemes are on their way for OpenAPI but not yet ready (see https://github.com/OAI/OpenAPI-Specification/pull/1736)
-      String shortContentType = getShortContentType(contentType);
-      if (responseCode != 204 && shortContentType != null
-            && APPLICATION_JSON_TYPES_PATTERN.matcher(shortContentType).matches()) {
-
-         boolean isOpenAPIv3 = true;
+      if (OpenAPIResponseValidator.isValidated(responseCode, contentType)) {
 
          // Retrieve the resource corresponding to OpenAPI specification if any.
          Resource openapiSpecResource = findResourceCandidate(service);
@@ -157,11 +154,6 @@ public class OpenAPITestRunner extends HttpTestRunner {
             log.debug("Found no OpenAPI specification resource for service {} - {}, so failing validating",
                   service.getId(), service.getName());
             return TestReturn.FAILURE_CODE;
-         }
-
-         // Check the type so guess the kind of validation.
-         if (ResourceType.SWAGGER.equals(openapiSpecResource.getType())) {
-            isOpenAPIv3 = false;
          }
 
          JsonNode openApiSpec = null;
@@ -172,26 +164,20 @@ public class OpenAPITestRunner extends HttpTestRunner {
             return TestReturn.FAILURE_CODE;
          }
 
+         // Check the type so guess the kind of validation.
+         OpenAPIResponseValidator validator = new OpenAPIResponseValidator(openApiSpec,
+               ResourceType.SWAGGER.equals(openapiSpecResource.getType()), resourceUrl);
+
          // Extract JsonNode corresponding to response.
          String verb = operation.getName().split(" ")[0].toLowerCase();
          String path = operation.getName().split(" ")[1].trim();
 
-         // Get body content as a string.
-         JsonNode contentNode = null;
          try {
-            contentNode = OpenAPISchemaValidator.getJsonNode(responseContent);
+            lastValidationErrors = validator.validate(verb, path, responseCode, contentType, responseContent).stream()
+                  .map(JsonSchemaViolation::message).toList();
          } catch (IOException ioe) {
             log.debug("Response body cannot be accessed or transformed as Json, returning failure");
             return TestReturn.FAILURE_CODE;
-         }
-         String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb + "/responses/" + responseCode;
-
-         if (isOpenAPIv3) {
-            lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer,
-                  contentType, resourceUrl);
-         } else {
-            lastValidationErrors = SwaggerSchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer,
-                  resourceUrl);
          }
 
          if (!lastValidationErrors.isEmpty()) {

@@ -28,6 +28,8 @@
 
   const { workflow, document, defaults } = untrack(() => setup);
   const sources = [...new Set(workflow.steps.map((s) => s.sourceName))];
+  /** The mockup's `size` input is a choice of S, M or L; an imported workflow's own `size` input is free text. */
+  const sized = (name: string) => name === 'size' && setup.demo !== false;
   const rawInputs = (id: string) => {
     const ex = setup.examples.find((e) => e.id === id);
     return ex ? Object.fromEntries(Object.entries(ex.inputs).map(([k, v]) => [k, String(v)])) : undefined;
@@ -139,7 +141,9 @@
     ...(target !== 'mocks'
       ? { implementations: target === 'implementations' ? baseUrls : Object.fromEntries(Object.entries(baseUrls).filter(([k]) => effectivePer(k) === 'implementation')) }
       : {}),
-    ...(request.secret ? { secretName: request.secret } : {}),
+    ...(target === 'mixed' ? { target: { kind: 'mixed' as const, perSource: Object.fromEntries(sources.map((name) => [name, effectivePer(name)])) } } : {}),
+    // As the BFF sends it: the secret is for the implementations, so a mixed run with none of them leaves it out.
+    ...(request.secret && (target !== 'mixed' || usesImplementation) ? { secretName: request.secret } : {}),
     validateSchema: validate,
     ...(example ? { example } : {})
   });
@@ -160,7 +164,7 @@
     <RunBadges workflowId={workflow.workflowId} {documentLabel} href={workflowTo}>
       {#snippet chip()}<ApiBadge label="status" value="not started" icon="circle" />{/snippet}
     </RunBadges>
-    <DemoFlag />
+    {#if setup.demo !== false}<DemoFlag />{/if}
   {/snippet}
   <RunMeta
     class="wfr-run-meta"
@@ -169,7 +173,7 @@
       { term: 'Run against', value: targetLabel },
       { term: 'Started', value: 'not yet' },
       { term: 'Elapsed', value: '—' },
-      { term: 'Launched by', value: 'MA' }
+      ...(setup.demo === false ? [] : [{ term: 'Launched by', value: 'MA' }])
     ]}
   />
 </PageHeader>
@@ -190,14 +194,19 @@
             <Select
               {...c}
               class="wfr-mono-control"
-              value={workflow.workflowId}
+              value={`${document.id}/${workflow.workflowId}`}
               onchange={(e) => {
-                const w = setup.workflows.find((x) => x.workflowId === e.currentTarget.value);
+                const w = setup.workflows.find((x) => `${x.documentId}/${x.workflowId}` === e.currentTarget.value);
                 if (w) goto(runSetupPath(w.documentId, w.workflowId));
               }}
             >
-              {#each setup.workflows as w (`${w.documentId}/${w.workflowId}`)}
-                <option value={w.workflowId}>{w.workflowId} · {w.steps.length} steps{w.runnability.runnable ? '' : ' · not runnable'}</option>
+              <!-- Two documents can both define placeOrder: the options are grouped by document and keyed by both ids. -->
+              {#each setup.documents.filter((d) => setup.workflows.some((w) => w.documentId === d.id)) as d (d.id)}
+                <optgroup label="{d.title} {d.version}">
+                  {#each setup.workflows.filter((w) => w.documentId === d.id) as w (w.workflowId)}
+                    <option value={`${d.id}/${w.workflowId}`}>{w.workflowId} · {w.steps.length} step{w.steps.length === 1 ? "" : "s"}{w.runnability.runnable ? '' : ' · not runnable'}</option>
+                  {/each}
+                </optgroup>
               {/each}
             </Select>
           {/snippet}
@@ -214,13 +223,17 @@
             <Choice kind="radio" variant="card" name="run-target" value={t.value} bind:group={targetValue}>
               {#snippet label()}
                 {t.label}
-                {#if t.proposed}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
+                {#if t.proposed && setup.demo !== false}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
               {/snippet}
               {#snippet description()}{t.description}{/snippet}
             </Choice>
           {/each}
         </div>
-        {#if target === 'mixed'}
+        {#if target === 'mixed' && setup.demo === false}
+          <p class="wfr-muted">
+            Each source goes to its mocks or to its implementation: a workflow spanning several APIs hits one real service while Microcks mocks the others. The secret, if any, is sent to the implementations only.
+          </p>
+        {:else if target === 'mixed'}
           <p class="wfr-muted">
             Proposal beyond the POC: the POC sends every source to its mocks or every source to its implementation. Mixed lets a workflow spanning several APIs hit one real service while
             Microcks mocks the others, e.g. <span class="wfr-mono">compare-prices</span> with apiPastry on staging and apiPastryV1 on its mocks.
@@ -273,7 +286,7 @@
             {/if}
             {#if usesImplementation}
               <div class="wfr-source-secret">
-                <Field label="Secret" help="Every call carries the authorization this secret defines, as in contract tests." class="wfr-field wfr-w-320">
+                <Field label="Secret" help={target === 'mixed' ? 'Every call to an implementation carries the authorization this secret defines, as in contract tests; the calls to the mocks never do.' : 'Every call carries the authorization this secret defines, as in contract tests.'} class="wfr-field wfr-w-320">
                   {#snippet children(c)}
                     <Select {...c} class="wfr-mono-control" bind:value={secret}>
                       <option value="">No secret</option>
@@ -292,7 +305,9 @@
         <Field
           label="Example"
           class="wfr-field wfr-w-420"
-          help={`Recorded in ${document.file.replace(/\.arazzo\.yaml$/, '.arazzo-sources.yaml')}. Picking one fills the inputs; the run is then judged on it.`}
+          help={setup.examples.length === 0 && setup.demo === false
+            ? 'No example is recorded for this workflow: enter the inputs.'
+            : `Recorded in the ArazzoExamples of ${document.title} ${document.version}. Picking one fills the inputs; the run is then judged on it.`}
         >
           {#snippet children(c)}
             <Select {...c} value={example} onchange={(e) => pickExample(e.currentTarget.value)}>
@@ -305,9 +320,9 @@
           <div class="wfr-inputs">
             {#each workflow.inputs as input (input.name)}
               <Field class="wfr-field wfr-input-field" error={errorOf(`input.${input.name}`)} help={helpOf(input.name)}>
-                {#snippet label()}<span class="wfr-mono wfr-strong">{input.name}</span> <span class="wfr-label-type">{input.name === 'size' ? 'string · S | M | L' : input.type}</span>{/snippet}
+                {#snippet label()}<span class="wfr-mono wfr-strong">{input.name}</span> <span class="wfr-label-type">{sized(input.name) ? 'string · S | M | L' : input.type}</span>{/snippet}
                 {#snippet children(c)}
-                  {#if input.name === 'size'}
+                  {#if sized(input.name)}
                     <Select {...c} class="wfr-mono-control" value={inputs[input.name] ?? 'M'} onchange={(e) => setInput(input.name, e.currentTarget.value)}>
                       {#each ['S', 'M', 'L'] as s (s)}<option>{s}</option>{/each}
                     </Select>
@@ -414,11 +429,14 @@
     <RunApiPanel
       hint="Launches the same run as the form above."
       documentApiId={document.apiId}
+        documentTitle={document.title}
+        documentVersion={document.version}
       {documentLabel}
       workflowId={workflow.workflowId}
       mockUrl={workflow.mockUrl}
       mixed={target === 'mixed'}
       body={apiBody}
+      proposed={setup.demo !== false}
     />
   </aside>
 </div>

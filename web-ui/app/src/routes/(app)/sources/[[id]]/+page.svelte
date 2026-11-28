@@ -123,7 +123,11 @@
         term: 'Artifact',
         value: `${ROLE_WORD[s.role]} · ${s.artifact}`,
         mono: true,
-        sub: s.role === 'PRIMARY' ? 'Creates or updates Services from this contract' : 'Merges examples into existing Services only'
+        sub: s.arazzo
+          ? 'Imports the Arazzo document and links its source descriptions to the APIs it matches'
+          : s.role === 'PRIMARY'
+            ? 'Creates or updates Services from this contract'
+            : 'Merges examples into existing Services only'
       },
       { term: 'Secret', value: up ? 'None, uploaded file' : (s.secret ?? 'None, public resource'), mono: Boolean(s.secret) },
       { term: 'TLS validation', value: up ? 'Not applicable' : s.tlsValidation ? 'Enabled' : 'Disabled for this source' },
@@ -149,6 +153,9 @@
 
 {#snippet serviceLinks(s: Source, cls: string)}
   <span class={cls}>
+    {#if s.arazzo}
+      <a href={`/workflows/${s.arazzo.documentId}`}><ApiBadge arazzo name={s.arazzo.title} version={s.arazzo.version} size="sm" /></a>
+    {/if}
     {#each s.serviceIds as id (id)}
       {@const svc = servicesById.get(id)}
       {#if svc}
@@ -343,7 +350,7 @@
               {/if}
             </span>
           </FactRow>
-          <FactRow term="Services produced">{@render serviceLinks(selected, 'source-detail-services')}</FactRow>
+          <FactRow term={selected.arazzo ? 'Arazzo document produced' : 'Services produced'}>{@render serviceLinks(selected, 'source-detail-services')}</FactRow>
         </Facts>
 
         <div class="source-detail-block">

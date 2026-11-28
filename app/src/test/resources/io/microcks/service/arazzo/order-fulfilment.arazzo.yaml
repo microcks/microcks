@@ -1,0 +1,56 @@
+arazzo: 1.0.1
+info:
+  title: Order fulfilment
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: searchThenRead
+    summary: Searches customers by name, then reads the first one found.
+    steps:
+      - stepId: search
+        operationId: $sourceDescriptions.customerApi.SearchCustomers
+        parameters:
+          - name: name
+            in: query
+            value: $inputs.name
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          customerId: $response.body#/0/id
+      - stepId: read
+        operationId: $sourceDescriptions.customerApi.GetCustomer
+        parameters:
+          - name: id
+            in: path
+            value: $steps.search.outputs.customerId
+        successCriteria:
+          - condition: $statusCode == 200
+  - workflowId: placeOrder
+    summary: Reads a customer, then places an order for this customer.
+    steps:
+      - stepId: readCustomer
+        operationId: $sourceDescriptions.customerApi.GetCustomer
+        parameters:
+          - name: id
+            in: path
+            value: $inputs.customerId
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          customerId: $response.body#/id
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+        requestBody:
+          payload:
+            customerId: ""
+          replacements:
+            - target: /customerId
+              value: $steps.readCustomer.outputs.customerId
+        successCriteria:
+          - condition: $statusCode == 201

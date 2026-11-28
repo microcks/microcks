@@ -1,0 +1,17 @@
+# Source descriptions of a type the workflow runner does not call yet. One YAML document per example.
+# example: arazzo - another Arazzo document next to an OpenAPI description, whose workflows the steps would run
+arazzo: 1.1.0
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+  - name: payments
+    url: ./payments.arazzo.yaml
+    type: arazzo
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder

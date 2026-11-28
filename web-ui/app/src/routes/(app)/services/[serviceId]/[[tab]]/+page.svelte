@@ -20,7 +20,11 @@
   let { data } = $props();
 
   const TABS = ['operations', 'properties', 'tests'];
-  const SHOW_WORKFLOW_USAGE = false;
+  /** Workflows calling this API, read from the Arazzo documents; undefined when only placeholder data is available. */
+  const usages = $derived(data.usages);
+  const callsOp = (s: { method: string; path: string; calls: boolean }) =>
+    s.calls && !!currentOp && s.method.toUpperCase() === currentOp.method.toUpperCase() && s.path === currentOp.path;
+  const opSteps = $derived((usages ?? []).flatMap((u) => u.steps.filter(callsOp).map((s) => ({ ref: `${u.workflowId}.${s.stepId}`, operationId: s.operationId }))));
   const detail = $derived(data.detail);
   const svc = $derived(detail?.service);
   const tab = $derived(TABS.includes(page.params.tab ?? '') ? (page.params.tab as string) : 'operations');
@@ -216,11 +220,43 @@
           <Button size="sm" variant="secondary" icon="pencil" class="dispatch-strip-edit" href={`/services/${svc!.id}/operations/${currentOp.id}`}>Edit behavior</Button>
         </div>
 
-        <!-- Hidden for now (see IDEAS.md M2-009): re-enable by setting SHOW_WORKFLOW_USAGE to true. -->
-        {#if SHOW_WORKFLOW_USAGE}
+        <!-- Workflows of the imported Arazzo documents that call this API (feature/arazzo S12). Hidden on placeholder data. -->
+        {#if usages}
         <div role="group" aria-labelledby="wf-used-title" class="wf-usage">
-          <div class="wf-usage-head"><h3 id="wf-used-title"><Icon name="dispatcher" size={15} />Used in 0 workflows</h3></div>
-          <span class="wf-usage-line"><span class="wf-usage-op">{currentOp.method} {currentOp.path}</span> is not called by any workflow step. Workflows are not part of this preview.</span>
+          <div class="wf-usage-head">
+            <h3 id="wf-used-title"><Icon name="dispatcher" size={15} />Used in {pluralize(usages.length, 'workflow')}</h3>
+            <a href="/workflows">All workflows</a>
+          </div>
+          <span class="wf-usage-line">
+            <span class="wf-usage-op">{currentOp.method} {currentOp.path}</span>
+            {opSteps.length === 0
+              ? 'is not called by any workflow step.'
+              : `is called by ${pluralize(opSteps.length, 'workflow step')}: ${opSteps.map((s) => s.ref).join(', ')} (operationId ${opSteps[0].operationId}).`}
+          </span>
+          <ul class="wf-usage-list">
+            {#each usages as u (u.documentId + '/' + u.workflowId)}
+              <li>
+                <a href={`/workflows/${u.documentId}/${u.workflowId}`} class="wf-usage-name">{u.summary}</a>
+                <span class="wf-usage-steps">
+                  {#each u.steps as s (s.stepId)}
+                    {@const on = callsOp(s)}
+                    <span class="wf-usage-step" data-on={on ? '' : undefined} title={`operationId: ${s.operationId}${on ? ' · calls this operation' : ''}`}>
+                      {s.stepId}<span class="sr-only"> (operationId {s.operationId}{on ? ', calls this operation' : ''})</span>
+                    </span>
+                  {/each}
+                </span>
+                {#if u.lastRun}
+                  <span class="wf-usage-result" data-tone={u.lastRun.status === 'SUCCESS' ? 'passed' : u.lastRun.status === 'FAILURE' ? 'failed' : undefined}>
+                    <Icon name={u.lastRun.status === 'SUCCESS' ? 'check-circle' : u.lastRun.status === 'FAILURE' ? 'x-circle' : 'running'} size={13} />
+                    Run #{u.lastRun.number} · {formatRelative(u.lastRun.startedAt)}
+                  </span>
+                {:else}
+                  <span class="wf-usage-result"><Icon name="never-tested" size={13} />Never run</span>
+                {/if}
+              </li>
+            {/each}
+            {#if usages.length === 0}<li class="wf-usage-empty">No workflow calls this service.</li>{/if}
+          </ul>
         </div>
         {/if}
 

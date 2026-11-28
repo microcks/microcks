@@ -1,5 +1,6 @@
 <script module lang="ts">
   import type { Phase } from '#lib/runs-workflow.js';
+  import { isHttpOk, statusLabel } from '#lib/workflows/http-status.js';
   import type { StepResult } from '#lib/workflows/types.js';
 
   export type Look = 'pass' | 'fail' | 'run' | 'pend' | 'notrun';
@@ -12,11 +13,15 @@
 </script>
 
 <script lang="ts">
+  import { traceAttributes } from '#lib/workflows/baggage.js';
+  import { isAvailable, isDemo, unavailableReason } from '#lib/workflows/availability.js';
   import { Chip, CodeBlock, Icon, MethodTag, StatusBadge } from '@microcks/deep-ink';
   import RunVerdict from './RunVerdict.svelte';
   import { J, badFieldText } from '#lib/runs-workflow.js';
+  import { criteriaState } from '#lib/workflows/criteria-state.js';
   import { formatDuration } from '#lib/workflows/time.js';
-  import type { Step, WorkflowRun } from '#lib/workflows/types.js';
+  import type { ArazzoDocument, Step, WorkflowRun } from '#lib/workflows/types.js';
+  import { operationHref } from '#lib/workflows/operation-link.js';
 
   interface Props {
     index: number;
@@ -26,9 +31,10 @@
     run: WorkflowRun;
     offset: number;
     stop: string;
+    document?: ArazzoDocument;
   }
 
-  let { index, step, def, look, run, offset, stop }: Props = $props();
+  let { index, step, def, look, run, offset, stop, document }: Props = $props();
 
   const bodyId = $props.id();
   const WORD: Record<Look, string> = { pass: 'Passed', fail: 'Failed', run: 'Running', pend: 'Queued', notrun: 'Not run' };
@@ -63,7 +69,7 @@
     finished && lastAttempt
       ? step.attempts.length > 1
         ? `${step.attempts.length} attempts · ${ms(lastAttempt.ms)}`
-        : `${lastAttempt.httpStatus} · ${ms(lastAttempt.ms)}`
+        : `${statusLabel(lastAttempt.httpStatus)} · ${ms(lastAttempt.ms)}`
       : running
         ? '…'
         : '—'
@@ -75,7 +81,9 @@
   );
 
   const onMocks = $derived(run.target.kind === 'mocks');
+  const demo = $derived(isDemo(run.documentId));
   const criteriaOk = $derived(step.criteria.every((c) => c.held));
+  const criteriaNotEvaluated = $derived(criteriaState(step) === 'not-evaluated');
   const schema = $derived(step.schema);
   const coherence = $derived(run.coherence.find((c) => c.stepId === step.stepId));
   const listName = $derived(coherence ? String(run.steps[0]?.outputs['firstName'] ?? '') : '');
@@ -160,11 +168,17 @@
               <div><dt>sent</dt><dd class="wfr-strong">{step.request.body}</dd></div>
             </dl>
           {/if}
-          {#if onMocks && step.baggage}
+          {#if step.baggage && (onMocks || !demo)}
             <p class="wfr-baggage-line">
               <span class="wfr-faint">Baggage</span>
               <code class="wfr-baggage" title="Marks this call in the Live Traces of the API">{step.baggage}</code>
-              <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+              {#if demo}
+                <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+              {:else}
+                <span class="wfr-note" title="Live traces do not read the traces of Microcks yet: filter them with these attributes where you collect them">
+                  Span attributes {#each traceAttributes(run.id, run.workflowId, step.stepId, step.attempts.length || 1) as a, i (a.name)}{i ? ' · ' : ''}<code class="wfr-baggage">{a.name}={a.value}</code>{/each}
+                </span>
+              {/if}
             </p>
           {/if}
         </div>
@@ -176,7 +190,7 @@
           <ol class="wfr-attempts">
             {#each step.attempts as a, k (a.n)}
               {@const isLast = k === step.attempts.length - 1}
-              {@const outcome = `${criteriaOk ? 'Success criteria held' : 'Success criteria did not hold'}${schema.state === 'fail' ? ` · schema validation failed: ${badFieldText(step)}` : ''}`}
+              {@const outcome = `${criteriaNotEvaluated ? 'Success criteria not evaluated' : criteriaOk ? 'Success criteria held' : 'Success criteria did not hold'}${schema.state === 'fail' ? ` · schema validation failed: ${badFieldText(step)}` : ''}`}
               {@const next = isLast
                 ? step.status === 'passed'
                   ? 'the step passes'
@@ -185,7 +199,7 @@
               {@const failedAttempt = !(isLast && step.status === 'passed')}
               <li>
                 <span class="wfr-attempt-no">Attempt {a.n}</span>
-                <span class="wfr-code-chip">{a.httpStatus}</span>
+                <span class="wfr-code-chip">{statusLabel(a.httpStatus)}</span>
                 <span class="wfr-attempt-ms">{ms(a.ms)}</span>
                 <span class="wfr-attempt-note">
                   <Icon name={failedAttempt ? 'cross' : 'check'} size={12} stroke-width={2.4} />
@@ -201,7 +215,7 @@
         <div class="wfr-response-head">
           <h4 class="wfr-h4">Response</h4>
           {#if !running && lastAttempt}
-            <span class="wfr-code-chip" data-tone={lastAttempt.httpStatus < 300 ? 'success' : 'danger'}>{lastAttempt.httpStatus}</span>
+            <span class="wfr-code-chip" data-tone={isHttpOk(lastAttempt.httpStatus) ? 'success' : 'danger'}>{statusLabel(lastAttempt.httpStatus)}</span>
             <span class="wfr-mono wfr-secondary">
               {step.response?.meta} · {ms(lastAttempt.ms)}{step.attempts.length > 1 ? ` · attempt ${step.attempts.length}` : ''}
             </span>
@@ -239,7 +253,9 @@
           <div class="wfr-block">
             <div class="wfr-check-head">
               <h4 class="wfr-h4" data-size="13">Success criteria</h4>
-              {#if criteriaOk}
+              {#if criteriaNotEvaluated}
+                <RunVerdict tone="muted" icon="dash">Not evaluated</RunVerdict>
+              {:else if criteriaOk}
                 <RunVerdict tone="success" icon="check">Held {step.criteria.length}/{step.criteria.length}</RunVerdict>
               {:else}
                 <RunVerdict tone="danger" icon="cross">Did not hold</RunVerdict>
@@ -286,12 +302,22 @@
             <Icon name="info" size={16} />
             <div class="wfr-coherence-body">
               <p>
-                <strong>The mocks do not form a coherent scenario.</strong> GetPastries returns “{listName}”, but <span class="wfr-mono">{coherence.operationId}</span> has no example for
-                <span class="wfr-code-inline">name</span> = {listName}. Add that example to the OpenAPI document, or let the workflow send a value that has one.
+                <strong>The mocks do not form a coherent scenario.</strong>
+                {#if listName}
+                  GetPastries returns “{listName}”, but <span class="wfr-mono">{coherence.operationId}</span> has no example for
+                  <span class="wfr-code-inline">name</span> = {listName}.
+                {:else}
+                  The mocks lack <span class="wfr-mono">{coherence.missing}</span>.
+                {/if}
+                Add that example to the OpenAPI document, or let the workflow send a value that has one.
               </p>
               <div class="wfr-coherence-links">
-                <a href="/services" class="wfr-link" title="GET /pastries/{'{name}'} on API Pastry 2.0">Open {coherence.operationId}</a>
-                <a href={`/services?hint=${encodeURIComponent(coherence.copilotHint)}`} class="wfr-link">Generate the example with the AI Copilot</a>
+                <a href={def ? operationHref(document, def) : '/services'} class="wfr-link" title={def ? `${def.method} ${def.path}` : undefined}>Open {coherence.operationId}</a>
+                {#if isAvailable('ai-copilot', run.documentId)}
+                  <a href={`/services?hint=${encodeURIComponent(coherence.copilotHint)}`} class="wfr-link">Generate the example with the AI Copilot</a>
+                {:else}
+                  <button type="button" class="wfr-link" disabled title={unavailableReason('ai-copilot', run.documentId)}>Generate the example with the AI Copilot</button>
+                {/if}
               </div>
             </div>
           </div>

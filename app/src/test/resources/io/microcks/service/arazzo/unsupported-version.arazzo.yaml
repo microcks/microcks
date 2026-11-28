@@ -1,0 +1,12 @@
+arazzo: 2.0.0
+info:
+  title: API Pastry scenarios
+  version: 2.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+workflows:
+  - workflowId: listPastries
+    steps:
+      - stepId: list
+        operationId: GetPastries

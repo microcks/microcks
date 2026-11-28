@@ -8,6 +8,7 @@
     "dev": "vite dev --host 127.0.0.1 --port 5173",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test": "node --test --experimental-strip-types src/lib/workflows/*.test.ts",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "screenshots": "node scripts/screenshots.mjs"
   },

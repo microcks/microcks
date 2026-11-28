@@ -204,7 +204,70 @@ mock-controller classes are refactored. Moved unit tests keep their fixtures und
 - All remaining demo screens (Cockpit, Service, Behavior, Copilot, Workflows, Runs, Agent test, Tests, Usage, Traces, Hub, Map, 404) are ported; see `web-ui/README.md` for the placeholder status.
 - The *Administration* page (`/admin`) is new: groups and memberships (`/api/groups`), secrets, snapshots and configuration are real; the Users tab shows the accounts created at first OIDC sign-in (`/api/users`) joined with memberships; see `v2/demo/keycloak/`.
 - The *Run a test* page (`/tests/create`) is also new: runners are derived from imported artifact kinds; launch records a request only.
-- Service detail: the "Used in N workflows" block is hidden (`SHOW_WORKFLOW_USAGE = false` in the service page) until workflows are wired to the backend. To re-enable (see IDEAS.md M2-009).
+- Service detail: the "Used in N workflows" block lists the workflows of the imported Arazzo documents whose linked sources point at the service (hidden on placeholder data).
+
+## Arazzo (fork `SebastienDegodez/microcks`, branch `v2/arazzo`)
+
+Port of the Arazzo POC of `feature/arazzo` (1.x, Spring Boot + Angular, kept untouched as the reference), story by
+story. The Angular screens are not ported: the SvelteKit Workflows screens of the Deep Ink mockup are wired to the API.
+Architecture: see the Arazzo section of `ARCHITECTURE.md` and `minions/arazzo/README.md`.
+
+| 1.x (`feature/arazzo`) | 2.0 |
+|---|---|
+| `commons/util` `io.github.microcks.util.arazzo` (reader, expressions) | `artifacts/artifact-arazzo` (`io.microcks.artifact.arazzo`), Jackson only (ArchUnit test); the minion's expression evaluator and JSON Pointer moved there too |
+| Flat `domain`, `repository`, `service`, `web` | stored model generic in `io.microcks.domain.workflow` (`Workflow*`, `WorkflowDocument.format` = `ARAZZO`, collections `workflow*`); API views in `io.microcks.service.arazzo.view`; `io.microcks.{repository,service,web}.arazzo` (+ `web.arazzo.dto`), tests mirrored; moved by pure-rename commits |
+| Spring Data entities and `Custom*Repository` + `MongoTemplate` | `@MongoEntity` + Panache `ObjectIdRepository` (same collection names); `ObjectIdRepository.save` added; `Object` values need `config.AnyValueCodecProvider`; TTL and unique indexes created at startup by the repositories (no `MongoConfiguration`) |
+| `@Service`, `@Value`, Spring MVC controllers | CDI `@ApplicationScoped`, `@ConfigProperty`, JAX-RS `@RunOnVirtualThread` under the same paths; an unknown enum filter still answers 400 |
+| `SecurityConfiguration` matchers | `AccessRule`s of `security.AuthenticationFilter` (MANAGER to import and relink documents) |
+| `HttpArazzoMinionClient` (`RestClient`) | JDK `HttpClient` produced as `ArazzoMinionClient` (`ArazzoMinionClientProducer`), swapped with `QuarkusMock` in tests |
+| `minions/arazzo` (standalone BOM, `io.github.microcks`) | parent `microcks-parent`, `io.microcks.minion.arazzo`, depends on `microcks-artifact-arazzo` and `microcks-artifact-openapi` |
+| `commons/util` `JsonSchemaValidator` pointers, OpenAPI response validation | `artifacts/artifact-jsonschema` (`JsonSchemaViolation`), `artifacts/artifact-openapi` (`OpenAPIResponseValidator`, used by `OpenAPITestRunner` too) |
+| `ServiceStateStore.put` read-then-save | `ServiceStateRepository.upsert` + unique `(serviceId, key)` index (race fix) |
+| `kind: ArazzoSources` overlay (links + examples) | two kinds, like `APIMetadata` / `APIExamples`: `ArazzoMetadata` (links) and `ArazzoExamples` (`workflows.<id>.<example>`), schemas in `api/` |
+| Tests `@SpringJUnitConfig`, Mockito on controllers | `@QuarkusTest` (database emptied by `MongoCleanupCallback`), RestAssured; the app's Arazzo ITs start the packaged minion |
+
+New or different in 2.0:
+- **Mixed runs (S31).** `target: {kind: "mixed", perSource: {<source>: "mock" | "implementation"}}` with
+  `implementations` for the sources sent to an implementation; recorded as `MIXED`. The secret goes to
+  implementations only.
+- **Import.** The import analysis warns about a `dependsOn` between synchronous steps (Arazzo 1.1 §5.8.5.2) and imports
+  the document anyway. `ArazzoExamples` are refused until their document is imported.
+- **Request content type.** A request body without `contentType` takes the single request media type of its
+  operation (the app sends `requestMediaTypes` per operation to the minion); with several or none the step fails
+  without a call, the specification being silent.
+- **Robustness.** An unexpected minion error ends the run as `FAILURE` ("Unexpected error in the Arazzo minion: …").
+- **Sessions.** `GET /api/workflows/sessions?documentId=&workflowId=` and `GET /api/workflows/sessions/{id}` (live call
+  count, `state`, `verificationRunId`) were added for the Sessions tab.
+- **Other endpoints.** `GET /api/workflows/documents/{id}/source` (the document as uploaded); a document is named by id
+  or `<title>:<version>`.
+- **API description.** The 1.x POC's `microcks-openapi-v1.16.yaml` became `api/microcks-openapi-v2.0.yaml`; the
+  `v1.*` descriptions are untouched. It describes the whole 2.0 API (`/keycloak/config` became `/auth/config`, token
+  at `/auth/token`, OIDC login at `/auth/login/oidc` and `/auth/callback/oidc`); `MicrocksApiDescriptionCoverageTest`
+  fails when an endpoint under `/api` is missing from it, or described but gone.
+
+Web UI:
+- `lib/server/workflows.ts`, `runs-arazzo.ts` and `sessions-arazzo.ts` map `/api/workflows` to the Deep Ink types;
+  placeholder (demo) data is used only when the backend is unreachable.
+- Features not served are disabled, not hidden, through `lib/workflows/availability.ts` (today: AI Copilot generation
+  and document edit).
+- BFF routes `/api/workflows/documents/{id}/metadata` and `/examples` give the ArazzoMetadata and ArazzoExamples files.
+- Import analyses the document first (refusals and warnings before import); relink shows the effect of the chosen API;
+  examples, retries, Mock URL, AsyncAPI steps, `dependsOn` branches, Live Traces attributes and sessions are wired.
+
+Known gaps:
+- AsyncAPI steps are read and shown, not runnable (launch refused).
+- The minion plays steps in list order; `dependsOn` only relaxes the order checked by session verification.
+- Live Traces does not filter by Arazzo run yet (attributes are shown on the run step).
+- With authentication enabled, the minion reports without a token.
+- The minion is not in `install/` (docker-compose, Kubernetes) yet.
+
+| Story | Status |
+|---|---|
+| S1–S12: import, links, browse, steps and diagram, runs on mocks and implementations, missing inputs, failures, history, coherence, schema validation | ported |
+| S14 import dialog and relink, S19 importers, S21 retries and early ends, run through the API, recorded examples (S16/S20) | ported |
+| S27 Mock URL, S28 AsyncAPI steps (shown), S29 Live Traces, S30 `dependsOn` | ported |
+| Session verification, S15, S16, S17 (saga compensation), race fix | ported |
+| S31 mixed run (new in 2.0) | done |
 
 ## Known divergences and TODO
 

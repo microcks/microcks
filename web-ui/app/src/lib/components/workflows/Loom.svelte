@@ -311,7 +311,7 @@
                 {#if end && end.type === 'end'}
                   {@const taken = end.taken === true}
                   {@const state = end.taken === undefined ? '' : `${taken ? 'taken' : 'not taken'}${end.runLabel ? ` in ${end.runLabel}` : ''}`}
-                  <span class="end-label" style="left:calc({grid.pct(c)} + 6px)">end if {end.label ?? end.criteria}{#if state}<span class="note"> · {state}</span>{/if}</span>
+                  <span class="end-label" style="left:calc({grid.pct(c)} + 6px)">end if {end.label ?? end.criteria}{#if state}<span class="note">{' '}· {state}</span>{/if}</span>
                   <span class="end-v" class:on={taken} style="left:{grid.pct(c)}"></span>
                   <span class="end-h" class:on={taken} style="left:{grid.pct(c)};width:{grid.pct(0.3)}"></span>
                   <span class="end-pill" class:on={taken} style="left:{grid.pct(c + 0.3)}"><Icon name="end" size={11} />end</span>
@@ -323,7 +323,7 @@
                     <path d="M5 32V15a9 9 0 0 1 18 0v13" />
                     <path d="M19 25l4 5 4-5" />
                   </svg>
-                  <span class="retry-label" style="left:calc({x} + 32px)">retry ×{retry.retryLimit} · {seconds(retry.retryAfter)}{#if applied && s.attempts}<span class="bad"> · {plural(s.attempts, 'attempt')}{retry.runLabel ? ` in ${retry.runLabel}` : ''}</span>{/if}</span>
+                  <span class="retry-label" style="left:calc({x} + 32px)">retry ×{retry.retryLimit} · {seconds(retry.retryAfter)}{#if applied && s.attempts}<span class="bad">{' '}· {plural(s.attempts, 'attempt')}{retry.runLabel ? ` in ${retry.runLabel}` : ''}</span>{/if}</span>
                 {/if}
               {/if}
             {/each}
@@ -488,7 +488,7 @@
   .io-v { color: var(--text-secondary); overflow-wrap: anywhere; }
   .io-v.none { color: var(--text-muted); }
   .io-note { max-width: 100%; font: 400 11px/1.4 var(--font-ui); color: var(--text-muted); text-align: right; }
-  .cell { position: relative; z-index: 1; display: flex; justify-content: center; min-width: 0; padding: 0 12px; }
+  .cell { position: relative; z-index: 1; display: flex; justify-content: center; min-width: 0; padding: 0 5px; }
   .node { position: relative; width: 100%; max-width: 190px; display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 8px; text-align: left; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; cursor: pointer; font: inherit; }
   .node[data-status="failed"] { border-color: var(--danger); }
   .node[data-status="not-run"] { background: var(--canvas); border-style: dashed; }

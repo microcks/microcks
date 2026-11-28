@@ -33,8 +33,8 @@ The UI server asks the backend (`MICROCKS_API_URL`, default `http://localhost:80
 | Route | Page | Data |
 |---|---|---|
 | `/` | Cockpit | real counts from the store; tests, conformance, traffic = placeholders |
-| `/services/:id/:tab?`, `/services/:id/operations/:op`, `/services/:id/copilot` | Service, operation behavior, AI Copilot | real services, operations and contract examples; Copilot generation = placeholder |
-| `/workflows`, `/workflows/:doc/:wf/:tab?`, `.../run`, `/workflows/runs/:id` | Workflows, Loom, run setup, run | placeholders (Arazzo is not parsed yet); runs are simulated |
+| `/services/:id/:tab?`, `/services/:id/operations/:op`, `/services/:id/copilot` | Service, operation behavior, AI Copilot | real services, operations and contract examples, "Used in N workflows" from the imported Arazzo documents; Copilot generation = placeholder |
+| `/workflows`, `/workflows/:doc/:wf/:tab?`, `.../run`, `/workflows/runs/:id` | Workflows, Loom, run setup, run | real Arazzo documents, workflows, steps, data threads, source and links from `/api/workflows` (placeholder only when the backend is unreachable); runs are launched on Microcks and executed by the Arazzo minion (mocks or implementations), read back with their exchanges and history; sessions and examples are simulated (later stories) |
 | `/tests` (redirect), `/tests/service/:id`, `/tests/runner/:id`, `/tests/agent/:id?` | Test history, test run, Agent test | demo history + simulated runs |
 | `/metrics/:id?` | Usage & conformance | generated placeholder series |
 | `/traces` | Live traces (SSE) | placeholders |

@@ -71,8 +71,8 @@ button.chip.wf-src-unlinked[aria-pressed="true"] .icon { color: var(--on-proto);
 .wf-doc-title .wf-tag { padding: 1px 6px; }
 .wf-doc-name { font: 400 14px var(--font-ui); color: var(--text-secondary); }
 .wf-doc-origin { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 400 13px var(--font-ui); color: var(--text-muted); }
-.wf-overlay { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font: 400 13px var(--font-ui); color: var(--text-secondary); }
-.wf-overlay code { font: 400 12px var(--font-mono); color: var(--text); overflow-wrap: anywhere; }
+.wf-metadata { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font: 400 13px var(--font-ui); color: var(--text-secondary); }
+.wf-metadata code { font: 400 12px var(--font-mono); color: var(--text); overflow-wrap: anywhere; }
 .wf-linked-count { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 .wf-linked-count[data-tone="success"] { color: var(--success); }
 .wf-linked-count[data-tone="warning"] { color: var(--warning); }
@@ -125,7 +125,7 @@ button.chip.wf-src-unlinked[aria-pressed="true"] .icon { color: var(--on-proto);
 .wf-cell-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .wf-cell-run { display: flex; justify-content: flex-end; }
 .api-badge.wf-name-badge { max-width: 100%; white-space: nowrap; }
-.api-badge.wf-name-badge > .api-badge-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.api-badge.wf-name-badge > .api-badge-name { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .wf-id { font: 400 12px var(--font-mono); color: var(--text-secondary); }
 .wf-block { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 1px solid var(--border-strong); border-radius: 4px; font: 600 11px var(--font-ui); color: var(--text-secondary); }
 .wf-note { font: 400 12px var(--font-ui); color: var(--text-muted); }

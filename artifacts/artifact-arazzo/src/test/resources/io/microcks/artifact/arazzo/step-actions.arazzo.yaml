@@ -1,0 +1,89 @@
+# Steps telling what to do when they succeed or fail: retry or end the workflow. One YAML document per example.
+# example: retry-until-ready - the step pollStatus is called again every second, up to 5 times, until the order is ready
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: waitUntilReady
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        successCriteria:
+          - condition: $statusCode == 200
+          - condition: $response.body#/status == 'ready'
+        onFailure:
+          - name: notReadyYet
+            type: retry
+            retryAfter: 1
+            retryLimit: 5
+---
+# example: retry-defaults - a retry without delay nor limit is attempted once, at once, as Arazzo says
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: retryOnce
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        onFailure:
+          - name: again
+            type: retry
+---
+# example: end-with-criteria - the step checkStatus ends the workflow when the order is still preparing, or on failure
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: stopWhilePreparing
+    steps:
+      - stepId: checkStatus
+        operationId: getOrderStatus
+        onSuccess:
+          - name: stillPreparing
+            type: end
+            criteria:
+              - condition: $response.body#/status == 'preparing'
+              - context: $response.header.Content-Type
+                condition: ^application/json
+                type: regex
+        onFailure:
+          - name: giveUp
+            type: end
+      - stepId: readOrder
+        operationId: getOrder
+---
+# example: several-actions - the first action whose criteria hold applies, so the actions keep the order of the document
+arazzo: 1.0.1
+info:
+  title: Order tracking
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderStatusApi
+    url: ./order-status.openapi.yaml
+workflows:
+  - workflowId: retryUnlessUnknown
+    steps:
+      - stepId: pollStatus
+        operationId: getOrderStatus
+        onFailure:
+          - name: unknownOrder
+            type: end
+            criteria:
+              - condition: $statusCode == 404
+          - name: notReadyYet
+            type: retry
+            retryAfter: 0.5
+            retryLimit: 3

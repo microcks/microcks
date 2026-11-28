@@ -1,0 +1,47 @@
+openapi: 3.0.2
+info:
+  title: Customer API
+  version: 1.0.0
+paths:
+  /customers:
+    get:
+      operationId: SearchCustomers
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The customers with that name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+  /customers/{id}:
+    get:
+      operationId: GetCustomer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The customer with that id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+components:
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string

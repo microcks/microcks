@@ -1,6 +1,8 @@
+import { criteriaState } from './criteria-state.js';
 import { stoppedStep } from './describe.js';
 import type { Session, Step, StepResult, Workflow, WorkflowRun } from './types.js';
 import { formatDuration } from './time.js';
+import { statusLabel } from './http-status.js';
 import { valueIn, wrongValue } from './loom-model.js';
 
 /** Where a run's results come from, in words: "Implementations", "Session", "Microcks mocks", "Mock URL". */
@@ -40,7 +42,7 @@ export function runSummary(run: WorkflowRun, workflow: Workflow, when: string, s
     const judged = run.options.example ? ` · example ${run.options.example}${run.status === 'SUCCESS' ? ' · Matches the example' : ''}` : '';
     text = `Microcks mocks${judged} · ${when}`;
   }
-  const unexpected = session?.calls.filter((c) => c.stepId === 'unexpected').length ?? 0;
+  const unexpected = (run.sessionCalls ?? session?.calls ?? []).filter((c) => c.stepId === 'unexpected').length;
   const end =
     run.status === 'RUNNING'
       ? 'Running'
@@ -80,9 +82,9 @@ export function httpLine(step: Step, result: StepResult | undefined, run: Workfl
   const url = calledUrl(step, result, run, override) ?? step.path;
   const last = result.attempts[result.attempts.length - 1];
   if (!last) return `${step.method} ${url}`;
-  if (last.when.startsWith('call #')) return `${last.when} · ${step.method} ${url} → ${last.httpStatus}`;
-  if (result.attempts.length > 1) return `${step.method} ${url} → ${last.httpStatus}, on each of the ${result.attempts.length} attempts`;
-  return `${step.method} ${url} → ${last.httpStatus} · ${formatDuration(last.ms)}`;
+  if (last.when.startsWith('call #')) return `${last.when} · ${step.method} ${url} → ${statusLabel(last.httpStatus)}`;
+  if (result.attempts.length > 1) return `${step.method} ${url} → ${statusLabel(last.httpStatus)}, on each of the ${result.attempts.length} attempts`;
+  return `${step.method} ${url} → ${statusLabel(last.httpStatus)} · ${formatDuration(last.ms)}`;
 }
 
 export type Tone = 'pass' | 'fail' | 'off';
@@ -108,10 +110,14 @@ export function stepChecksOf(result: StepResult | undefined, run: WorkflowRun): 
       { label: 'Contract', tone: 'pass', word: 'conforms' },
     ];
   }
-  const held = result.criteria.every((c) => c.held);
+  const criteria = criteriaState(result);
   const sc = result.schema.state;
   return [
-    { label: 'Success criteria', tone: notRun ? 'off' : held ? 'pass' : 'fail', word: notRun ? 'not evaluated' : held ? 'held' : 'did not hold' },
+    {
+      label: 'Success criteria',
+      tone: criteria === 'held' ? 'pass' : criteria === 'failed' ? 'fail' : 'off',
+      word: criteria === 'held' ? 'held' : criteria === 'failed' ? 'did not hold' : 'not evaluated'
+    },
     {
       label: 'Schema validation',
       tone: notRun || sc === 'off' || sc === 'na' ? 'off' : sc === 'pass' ? 'pass' : 'fail',

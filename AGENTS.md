@@ -24,3 +24,26 @@ mvn spotless:apply
 Microcks is a Java/Spring Boot backend with an Angular frontend. 
 - To build the backend and run tests: `mvn clean install`
 - For detailed architecture and UI instructions, read @CONTRIBUTING.md.
+
+## 4. Working on Arazzo
+- **Where the code goes.** The stored model stays generic and format-agnostic in `io.microcks.domain.workflow` and
+  `io.microcks.repository.workflow`
+  (`Workflow*`, no Arazzo concept, one type per file); views built for the REST API stay in the app
+  (`io.microcks.service.arazzo.view`). Arazzo code of the app stays in the `arazzo` subpackages
+  (`io.microcks.{service,web}.arazzo`, tests mirrored). Reading Arazzo belongs to
+  `artifacts/artifact-arazzo`, which depends on Jackson only (an ArchUnit test enforces it). Playing a run belongs to
+  `minions/arazzo`. See the Arazzo section of @ARCHITECTURE.md.
+- **Follow the Arazzo specification.** Arazzo 1.0.1 and 1.1.0 are the reference. When the specification is ambiguous or
+  silent, do not pick a behaviour: ask the maintainers. Anything outside the supported subset is refused at import with
+  its reason, never ignored.
+- **URLs say workflow, not Arazzo.** The REST API is `/api/workflows/**`, the Mock URL
+  `POST /workflow/{title}/{version}/{workflowId}` (header `X-Microcks-Workflow-Run-Id`, property `workflow.mock-url.timeout`). The views of the API tell the format with
+  `format` and `formatVersion`, never `arazzoVersion`. No `arazzo` in a URL.
+- **App ↔ minion contract.** A change to the run request or to the reports changes `arazzo-minion-contract.json` and
+  `ArazzoMinionContractTest` on both sides, in the same commit.
+- **Artifacts.** `ArazzoMetadata` (source links) and `ArazzoExamples` (expected runs) are Microcks kinds detected by
+  their `kind`, like `APIMetadata` and `APIExamples`; keep their JSON Schemas in `api/` in sync.
+- **Web UI.** A feature whose backend is not there yet is shown disabled, not hidden, through
+  `lib/workflows/availability.ts`; flip `PORTED[feature]` when it lands. Demo (placeholder) data keeps its behaviour.
+- **Tests.** One test per observable behaviour. The minion's integration tests (`*IT`) need Docker (`-Pit`); the app's
+  Arazzo integration tests start the packaged minion: run `mvn -pl minions/arazzo package -DskipTests` first.

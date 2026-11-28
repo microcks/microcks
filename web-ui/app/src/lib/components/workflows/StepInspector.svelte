@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Button, Icon, MethodTag } from '@microcks/deep-ink';
+  import { statusLabel } from '#lib/workflows/http-status.js';
   import { bodyPointer, expressionsOf, formatValue, stepResultLine, threadsOf, valueIn, wrongValue } from '#lib/workflows/loom-model.js';
   import { actionRows, failureBox, notRunText, prettyJson } from '#lib/workflows/inspector.js';
   import { httpLine, originWord, runNoun, stepChecksOf, stepStatusOf, type Tone } from '#lib/workflows/run-facts.js';
@@ -90,10 +91,16 @@
         </span>
       {/if}
       <span class="wf-ins-opref">operationId: $sourceDescriptions.{step.sourceName}.{step.operationId}</span>
+      {#if step.messaging}
+        <span class="wf-ins-opref">action: {step.messaging.action}{step.messaging.action === 'send' ? ' (publishes the message)' : ' (waits for the message)'}</span>
+        {#if step.messaging.correlationId}<span class="wf-ins-opref">correlationId: {step.messaging.correlationId}</span>{/if}
+        {#if step.messaging.timeoutMs !== undefined}<span class="wf-ins-opref">timeout: {formatDuration(step.messaging.timeoutMs)}</span>{/if}
+      {/if}
+      {#if step.prerequisites?.length}<span class="wf-ins-opref">runs after: {step.prerequisites.join(', ')}</span>{/if}
     </div>
 
     <section class="wf-ins-section" aria-labelledby="wf-ins-result">
-      <h3 id="wf-ins-result">Result{#if run}<span class="wf-ins-meta"> · {runNoun(run)} · {originWord(run)}</span>{/if}</h3>
+      <h3 id="wf-ins-result">Result{#if run}<span class="wf-ins-meta">{' '}· {runNoun(run)} · {originWord(run)}</span>{/if}</h3>
       {#if !run}
         <p class="wf-ins-text">No run selected: the loom shows the definition only.</p>
       {:else}
@@ -121,7 +128,7 @@
               <li>
                 <span class="wf-ins-attempt-n">attempt {a.n} of {attempts.length}</span>
                 <span class="wf-ins-attempt-when">{a.when}</span>
-                <span class="wf-ins-attempt-http">{a.httpStatus} · {formatDuration(a.ms)}</span>
+                <span class="wf-ins-attempt-http">{statusLabel(a.httpStatus)} · {formatDuration(a.ms)}</span>
                 {#if result?.status === 'failed' && result.schema.state === 'fail'}
                   <span class="wf-ins-attempt-verdict">{@render verdict('fail', 'criteria held · schema failed', 12)}</span>
                 {/if}
@@ -143,7 +150,7 @@
           {#if p.value.startsWith('$')}
             <button type="button" class="wf-ins-expr" aria-pressed={lens === p.value} onclick={() => ontrace(p.value)} aria-label="Trace {p.value}">{p.value}</button>
           {/if}
-          <span class="wf-ins-value" data-tone={v.tone}>{#if v.lead}<span class="wf-ins-lead">{v.lead} </span>{/if}{v.text}</span>
+          <span class="wf-ins-value" data-tone={v.tone}>{#if v.lead}<span class="wf-ins-lead">{v.lead}{' '}</span>{/if}{v.text}</span>
         </div>
       {/each}
     </section>
@@ -210,7 +217,7 @@
           <span class="wf-ins-oexpr">{o.expression}</span>
           <span class="wf-ins-output-row">
             <span class="wf-ins-value" data-tone={missing ? 'bad' : undefined}>
-              <span class="wf-ins-lead">resolved </span>{!run ? 'no run selected' : missing ? `— ${producedWhy || 'not resolved'}` : formatValue(value)}
+              <span class="wf-ins-lead">resolved{' '}</span>{!run ? 'no run selected' : missing ? `— ${producedWhy || 'not resolved'}` : formatValue(value)}
             </span>
             {#if threads.some((t) => t.expression === expr)}
               <button type="button" class="wf-ins-trace" aria-pressed={lens === expr} onclick={() => ontrace(expr)}>

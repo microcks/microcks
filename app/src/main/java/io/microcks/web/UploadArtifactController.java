@@ -15,9 +15,13 @@
  */
 package io.microcks.web;
 
+import io.microcks.domain.workflow.WorkflowDocument;
+import io.microcks.domain.workflow.WorkflowExamples;
+import io.microcks.domain.workflow.WorkflowMetadata;
 import io.microcks.domain.Secret;
 import io.microcks.domain.Service;
 import io.microcks.repository.SecretRepository;
+import io.microcks.service.arazzo.ArazzoDocumentService;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.util.HTTPDownloader;
@@ -44,6 +48,8 @@ import jakarta.ws.rs.core.Response;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Paths;
@@ -64,19 +70,23 @@ public class UploadArtifactController {
 
    private final ServiceService serviceService;
    private final SecretRepository secretRepository;
+   private final ArazzoDocumentService arazzoDocumentService;
 
    @ConfigProperty(name = "default-artifacts-repository.url")
    Optional<String> defaultArtifactsRepositoryUrl;
 
    /**
     * Build a new UploadArtifactController with its dependencies.
-    * @param serviceService   to perform business logic on Services
-    * @param secretRepository to retrieve requested Secrets
+    * @param serviceService        to perform business logic on Services
+    * @param secretRepository      to retrieve requested Secrets
+    * @param arazzoDocumentService to import Arazzo documents
     */
    @Inject
-   public UploadArtifactController(ServiceService serviceService, SecretRepository secretRepository) {
+   public UploadArtifactController(ServiceService serviceService, SecretRepository secretRepository,
+         ArazzoDocumentService arazzoDocumentService) {
       this.serviceService = serviceService;
       this.secretRepository = secretRepository;
+      this.arazzoDocumentService = arazzoDocumentService;
    }
 
    @POST
@@ -100,6 +110,12 @@ public class UploadArtifactController {
             HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(url,
                   secret, true);
             localFile = fileAndHeaders.getLocalFile();
+
+            Optional<String> arazzoArtifact = importArazzoArtifact(localFile, fileNameOf(url));
+            if (arazzoArtifact.isPresent()) {
+               return Response.status(Response.Status.CREATED)
+                     .entity("{\"name\": \"" + arazzoArtifact.get() + "\"}").build();
+            }
 
             // Now try importing services.
             services = serviceService.importServiceDefinition(localFile,
@@ -150,6 +166,11 @@ public class UploadArtifactController {
 
             Files.copy(file.uploadedFile(), Paths.get(localFile), StandardCopyOption.REPLACE_EXISTING);
 
+            Optional<String> arazzoArtifact = importArazzoArtifact(new File(localFile), file.fileName());
+            if (arazzoArtifact.isPresent()) {
+               return Response.status(Response.Status.CREATED).entity(arazzoArtifact.get()).build();
+            }
+
             // Now try importing services.
             ReferenceResolver referenceResolver = getDefaultReferenceResolver(file.fileName());
             services = serviceService.importServiceDefinition(new File(localFile), referenceResolver,
@@ -177,6 +198,43 @@ public class UploadArtifactController {
          }
       }
       return Response.status(Response.Status.NO_CONTENT).build();
+   }
+
+   /**
+    * Arazzo documents, ArazzoMetadata and ArazzoExamples describe workflows across APIs rather than an API: they
+    * have their own import, whether they are uploaded or downloaded.
+    * @param localFile The artifact, saved to a local file
+    * @param fileName  The name of the file the artifact comes from; null when it is not known
+    * @return The name and version of the imported Arazzo document, ArazzoMetadata or ArazzoExamples, as
+    *         {@code <name>:<version>}; empty when the artifact is none of them, to import it as an API
+    * @throws IOException                   if the local file cannot be read
+    * @throws MockRepositoryImportException if the Arazzo document, ArazzoMetadata or ArazzoExamples is refused
+    */
+   private Optional<String> importArazzoArtifact(File localFile, String fileName)
+         throws IOException, MockRepositoryImportException {
+      String content = new String(Files.readAllBytes(localFile.toPath()), StandardCharsets.UTF_8);
+      if (arazzoDocumentService.isArazzoDocument(content)) {
+         WorkflowDocument document = arazzoDocumentService.importArazzoDocument(content, fileName);
+         return Optional.of(document.getTitle() + ":" + document.getVersion());
+      }
+      if (arazzoDocumentService.isArazzoMetadata(content)) {
+         WorkflowMetadata metadata = arazzoDocumentService.importArazzoMetadata(content);
+         return Optional.of(metadata.getName() + ":" + metadata.getVersion());
+      }
+      if (arazzoDocumentService.isArazzoExamples(content)) {
+         WorkflowExamples examples = arazzoDocumentService.importArazzoExamples(content);
+         return Optional.of(examples.getName() + ":" + examples.getVersion());
+      }
+      return Optional.empty();
+   }
+
+   /**
+    * @param url The URL an artifact is downloaded from
+    * @return The name of the downloaded file: the last segment of the path of the URL, decoded, without the query
+    */
+   static String fileNameOf(String url) {
+      String path = URI.create(url).getPath();
+      return path.substring(path.lastIndexOf('/') + 1);
    }
 
    private ReferenceResolver getDefaultReferenceResolver(String fileName) {

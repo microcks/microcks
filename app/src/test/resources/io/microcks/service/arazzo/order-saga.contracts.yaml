@@ -1,0 +1,196 @@
+# example: order-api - Order API 1.0.0: places order o-42 for customer c-7, then confirms it
+openapi: 3.0.2
+info:
+  title: Order API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+            examples:
+              c-7:
+                value:
+                  customerId: c-7
+                  items:
+                    - sku: ABC-1
+                      quantity: 2
+                  amount: 25.0
+                  currency: EUR
+      responses:
+        "201":
+          description: The order placed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                c-7:
+                  value:
+                    id: o-42
+                    customerId: c-7
+                    amount: 25.0
+                    status: PENDING
+  /orders/{orderId}/confirm:
+    post:
+      operationId: confirmOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          examples:
+            o-42:
+              value: o-42
+      responses:
+        "200":
+          description: The order confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                o-42:
+                  value:
+                    id: o-42
+                    customerId: c-7
+                    amount: 25.0
+                    status: CONFIRMED
+components:
+  schemas:
+    OrderRequest:
+      type: object
+      required:
+        - customerId
+        - items
+      properties:
+        customerId:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              sku:
+                type: string
+              quantity:
+                type: integer
+        amount:
+          type: number
+        currency:
+          type: string
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+---
+# example: stock-api - Stock API 1.0.0: reserves the items of order o-42 as reservation r-9
+openapi: 3.0.2
+info:
+  title: Stock API
+  version: 1.0.0
+paths:
+  /reservations:
+    post:
+      operationId: reserveStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+              properties:
+                orderId:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+            examples:
+              o-42:
+                value:
+                  orderId: o-42
+                  items:
+                    - sku: ABC-1
+                      quantity: 2
+      responses:
+        "201":
+          description: The reservation made
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  orderId:
+                    type: string
+              examples:
+                o-42:
+                  value:
+                    id: r-9
+                    orderId: o-42
+---
+# example: payment-api - Payment API 1.0.0: charges 25.0 for order o-42
+openapi: 3.0.2
+info:
+  title: Payment API
+  version: 1.0.0
+paths:
+  /payments:
+    post:
+      operationId: chargePayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderId
+                - amount
+              properties:
+                orderId:
+                  type: string
+                amount:
+                  type: number
+            examples:
+              o-42:
+                value:
+                  orderId: o-42
+                  amount: 25.0
+      responses:
+        "201":
+          description: The payment charged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  orderId:
+                    type: string
+                  status:
+                    type: string
+              examples:
+                o-42:
+                  value:
+                    id: p-3
+                    orderId: o-42
+                    status: CHARGED

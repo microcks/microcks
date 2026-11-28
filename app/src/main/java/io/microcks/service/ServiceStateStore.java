@@ -62,13 +62,8 @@ public class ServiceStateStore implements StateStore {
    }
 
    public void put(String key, String value, int secondsTTL) {
-      ServiceState state = repository.findByServiceIdAndKey(serviceId, key);
-      if (state == null) {
-         state = new ServiceState(serviceId, key);
-      }
-      state.setValue(value);
-      state.setExpireAt(new Date(System.currentTimeMillis() + (secondsTTL * 1000L)));
-      repository.persistOrUpdate(state);
+      // Written in one atomic upsert, so that two puts of one key at the same instant keep one state.
+      repository.upsert(serviceId, key, value, new Date(System.currentTimeMillis() + (secondsTTL * 1000L)));
    }
 
    @Nullable

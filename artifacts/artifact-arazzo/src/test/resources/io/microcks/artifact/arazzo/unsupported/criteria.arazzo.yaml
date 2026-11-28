@@ -1,0 +1,36 @@
+# Success criteria the workflow runner cannot evaluate yet. One YAML document per example.
+# example: jsonpath - the step createOrder checks its response with a JSONPath expression
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        successCriteria:
+          - context: $response.body
+            condition: $[?(@.status == 'placed')]
+            type: jsonpath
+---
+# example: xpath - the step createOrder checks its response with an XPath expression
+arazzo: 1.0.1
+info:
+  title: Order scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        successCriteria:
+          - context: $response.body
+            condition: /order/status
+            type: xpath

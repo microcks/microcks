@@ -21,6 +21,7 @@ import io.microcks.domain.ResourceType;
 import io.microcks.domain.Service;
 import io.microcks.repository.ResourceRepository;
 import io.microcks.repository.ServiceRepository;
+import io.microcks.web.arazzo.ArazzoSessionRecorder;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
@@ -67,6 +68,7 @@ public class GrpcServerCallHandler {
 
    private final GrpcInvocationProcessor invocationProcessor;
    private final OpenTelemetryResolverService opentelemetryResolverService;
+   private final ArazzoSessionRecorder arazzoSessionRecorder;
 
    /**
     * Build a new GrpcServerCallHandler with all the repositories it needs and application context.
@@ -74,14 +76,17 @@ public class GrpcServerCallHandler {
     * @param resourceRepository           Repository for getting service resources definitions
     * @param invocationProcessor          The invocation processor to apply gRPC mocks dispatching logic
     * @param opentelemetryResolverService The opentelemetry resolver
+    * @param arazzoSessionRecorder        The recorder of the invocations naming an Arazzo verification session
     */
    @Inject
    public GrpcServerCallHandler(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         GrpcInvocationProcessor invocationProcessor, OpenTelemetryResolverService opentelemetryResolverService) {
+         GrpcInvocationProcessor invocationProcessor, OpenTelemetryResolverService opentelemetryResolverService,
+         ArazzoSessionRecorder arazzoSessionRecorder) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.invocationProcessor = invocationProcessor;
       this.opentelemetryResolverService = opentelemetryResolverService;
+      this.arazzoSessionRecorder = arazzoSessionRecorder;
    }
 
    /**
@@ -219,6 +224,8 @@ public class GrpcServerCallHandler {
 
                MockInvocationContext ic = new MockInvocationContext(service, grpcOperation, null);
                GrpcResponseResult response = invocationProcessor.processInvocation(ic, startTime, jsonBody);
+               // Record the invocation in the Arazzo verification session its metadata names, if any.
+               arazzoSessionRecorder.recordGrpc(ic, metadata, jsonBody, response);
 
                if (!response.isError()) {
                   // Use a builder for out type with a Json parser to merge content and build outMsg.

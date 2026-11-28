@@ -1,0 +1,213 @@
+# Steps sending or receiving messages in a way Arazzo 1.1 forbids, or that Microcks cannot read. One YAML document
+# per example.
+# example: action-on-http-step - the HTTP step createOrder tells an action, that only applies to an AsyncAPI step
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        action: send
+---
+# example: correlation-id-on-http-step - the HTTP step createOrder has a correlationId, that only applies to an AsyncAPI step
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        operationId: CreateOrder
+        correlationId: $inputs.orderId
+---
+# example: channel-path-to-openapi - the channelPath of the step createOrder points into an OpenAPI source
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderApi
+    url: ./order-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: placeOrder
+    steps:
+      - stepId: createOrder
+        channelPath: '{$sourceDescriptions.orderApi.url}#/channels/orders'
+        action: send
+---
+# example: unknown-action - the step confirmOrder tells an action that is neither send nor receive
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: subscribe
+---
+# example: correlation-id-on-send - the step requestShipping sends a message and has a correlationId, that only a receive step has
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: ship
+    steps:
+      - stepId: requestShipping
+        operationId: sendShippingRequest
+        action: send
+        correlationId: $inputs.orderId
+---
+# example: negative-timeout - the step confirmOrder waits a negative number of milliseconds
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+        timeout: -1
+---
+# example: text-timeout - the step confirmOrder waits a text rather than a number of milliseconds
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+        timeout: 6s
+---
+# example: decimal-timeout - the step confirmOrder waits a fraction of a millisecond
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        action: receive
+        timeout: 1.5
+---
+# example: operation-and-channel - the step confirmOrder names both an operation and a channel
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        operationId: receiveOrderConfirmed
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orderConfirmed'
+        action: receive
+---
+# example: not-a-channel - the channelPath of the step confirmOrder points to an operation rather than a channel
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/operations/receiveOrderConfirmed'
+        action: receive
+---
+# example: nested-channel-pointer - the channelPath of the step confirmOrder points inside a channel rather than to it
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orderConfirmed/messages'
+        action: receive
+---
+# example: channel-of-unknown-source - the channelPath of the step confirmOrder names a source the document does not declare
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        channelPath: '{$sourceDescriptions.unknown.url}#/channels/orderConfirmed'
+        action: receive
+---
+# example: channel-without-action - the step confirmOrder names a channel without telling whether it sends or receives
+arazzo: 1.1.0
+info:
+  title: Order events scenarios
+  version: 1.0.0
+sourceDescriptions:
+  - name: orderEvents
+    url: ./order-events.asyncapi.yaml
+    type: asyncapi
+workflows:
+  - workflowId: listen
+    steps:
+      - stepId: confirmOrder
+        channelPath: '{$sourceDescriptions.orderEvents.url}#/channels/orderConfirmed'

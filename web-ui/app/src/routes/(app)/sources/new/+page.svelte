@@ -18,6 +18,8 @@
     Textarea
   } from '@microcks/deep-ink';
   import PageHeader from '#lib/components/PageHeader.svelte';
+  import ImportLinks from '#lib/components/workflows/ImportLinks.svelte';
+  import { initialLinks, type ApiRef, type ImportAnalysis, type LinkChoices } from '#lib/workflows/import-analysis.js';
   import { api } from '#lib/api.js';
   import { formatRelative, pluralize } from '#lib/format.js';
   import { originLabel, sourceStatus } from '#lib/sources.js';
@@ -45,6 +47,16 @@
     service: Service;
     direct?: DirectKind;
   }
+  /** An Arazzo document, ArazzoMetadata or ArazzoExamples: imported as workflows, not as an API. */
+  interface WorkflowResult {
+    kind: 'arazzo' | 'arazzo-metadata' | 'arazzo-examples';
+    name: string;
+    version: string;
+    /** Imported document: where to open its first workflow, and how many of its workflows can run. */
+    open?: { docId: string; workflowId: string };
+    runnable?: number;
+    total?: number;
+  }
 
   let { data } = $props();
 
@@ -63,6 +75,12 @@
   let insecure = $state(false);
   let secret = $state('');
   let result = $state<Result>();
+  let workflowResult = $state<WorkflowResult>();
+  const workflowKindLabel = { arazzo: 'Arazzo document', 'arazzo-metadata': 'ArazzoMetadata', 'arazzo-examples': 'ArazzoExamples' } as const;
+  /** What Microcks says about the Arazzo document in the preview, with the links chosen for its sources. */
+  let analysis = $state<ImportAnalysis>();
+  let choices = $state<LinkChoices>({});
+  let analysing = $state(false);
   let role = $state<'primary' | 'secondary'>('primary');
   let error = $state<string>();
   let touched = $state(false);
@@ -90,6 +108,15 @@
   const recent = $derived(data.sources.slice(0, 3));
 
   const secondaryOnly = $derived(preview?.artifact.role === 'SECONDARY');
+  const workflowArtifact = $derived(
+    preview?.artifact.kind === 'arazzo' || preview?.artifact.kind === 'arazzo-metadata' || preview?.artifact.kind === 'arazzo-examples'
+  );
+  const arazzoExamples = $derived(preview?.artifact.kind === 'arazzo-examples');
+  const arazzoDocument = $derived(preview?.artifact.kind === 'arazzo');
+  const stepCounts = $derived(Object.fromEntries((preview?.artifact.operations ?? []).map((o) => [o.name, o.resource ?? ''])));
+  /** Microcks refuses the document: nothing to import. */
+  const refused = $derived(arazzoDocument && analysis?.refusal != null);
+  const waitingAnalysis = $derived(arazzoDocument && (analysis === undefined || analysing));
 
   async function analyze(origin: SourceOrigin, body: { url: string } | { fileName: string; content: string }, name?: string) {
     const withSecret = 'url' in body && secret ? { secret } : {};
@@ -102,12 +129,36 @@
       preview = p;
       gitName = name ?? '';
       role = p.artifact.role === 'SECONDARY' ? 'secondary' : 'primary';
+      analysis = undefined;
+      choices = {};
       step = 'detected';
       announcement = 'Preview ready. Nothing has been created yet.';
+      if (p.artifact.kind === 'arazzo') await analyseDocument(undefined);
     } catch (e) {
       step = 'idle';
       error = e instanceof Error ? e.message : 'The artifact could not be analyzed.';
     }
+  }
+
+  /** Asks Microcks what it makes of the document, with the proposed links or the ones chosen. */
+  async function analyseDocument(links: LinkChoices | undefined) {
+    if (!preview) return;
+    analysing = true;
+    try {
+      const result = await api<ImportAnalysis>('/api/workflows/analysis', { method: 'POST', json: { content: preview.content, links } });
+      analysis = result;
+      if (links === undefined) choices = initialLinks(result);
+      announcement = result.refusal ? `Microcks refuses this document: ${result.refusal}` : 'Links checked by Microcks.';
+    } catch (e) {
+      error = e instanceof Error ? e.message : 'Microcks could not analyse the document.';
+    } finally {
+      analysing = false;
+    }
+  }
+
+  async function choose(sourceName: string, linked: ApiRef | null) {
+    choices = { ...choices, [sourceName]: linked };
+    await analyseDocument(choices);
   }
 
   async function onFiles(files: File[]) {
@@ -138,7 +189,26 @@
     step = 'importing';
     announcement = 'Importing…';
     try {
-      const res = await api<{ source?: Source; service?: Service }>('/api/sources', {
+      if (arazzoDocument && analysis) {
+        const doc = await api<{ id: string; title: string; version: string; workflowIds: string[] }>('/api/workflows/documents', {
+          method: 'POST',
+          json: { content: preview.content, fileName: preview.artifact.fileName, links: choices }
+        });
+        const first = analysis.checks[0];
+        workflowResult = {
+          kind: 'arazzo',
+          name: doc.title,
+          version: doc.version,
+          open: first ? { docId: doc.id, workflowId: first.workflowId } : undefined,
+          runnable: analysis.checks.filter((c) => c.runnable).length,
+          total: analysis.checks.length
+        };
+        step = 'done';
+        announcement = 'Arazzo document imported.';
+        await invalidate('app:workflows');
+        return;
+      }
+      const res = await api<{ source?: Source; service?: Service; workflows?: WorkflowResult }>('/api/sources', {
         method: 'POST',
         json: {
           origin: preview.origin,
@@ -151,6 +221,13 @@
           tlsValidation: !insecure
         }
       });
+      if (res.workflows) {
+        workflowResult = res.workflows;
+        step = 'done';
+        announcement = `${workflowKindLabel[res.workflows.kind]} imported.`;
+        await invalidate('app:workflows');
+        return;
+      }
       if (!res.service) throw new Error(res.source?.error ?? 'No matching API: a secondary artifact only enriches an existing Service.');
       result = { source: res.source, service: res.service };
       step = 'done';
@@ -185,6 +262,9 @@
     step = 'idle';
     preview = undefined;
     result = undefined;
+    workflowResult = undefined;
+    analysis = undefined;
+    choices = {};
     role = 'primary';
     error = undefined;
     touched = false;
@@ -400,13 +480,42 @@
               </div>
               <div class="artifact-card-badges">
                 <Chip><Icon name="check" size={12} /> {p.artifact.format}</Chip>
-                <ApiBadge protocol={svc.protocol} name={svc.name} version={svc.version} />
+                {#if workflowArtifact}
+                  <ApiBadge arazzo name={svc.name} version={svc.version} />
+                {:else}
+                  <ApiBadge protocol={svc.protocol} name={svc.name} version={svc.version} />
+                {/if}
               </div>
             </div>
             {#each p.artifact.warnings as w (w)}
               <div role="note" class="note-box" data-tone="warning"><Icon name="alert-circle" size={16} /><span>{w}</span></div>
             {/each}
             <div class="step-section">
+              {#if arazzoDocument}
+                {#if analysis}
+                  {#if analysis.refusal}
+                    <Callout tone="danger" title="Microcks will refuse this document">{analysis.refusal}. Nothing is imported: fix the document and drop it again.</Callout>
+                  {:else}
+                    {#each analysis.warnings ?? [] as w (w)}
+                      <div role="note" class="note-box" data-tone="warning"><Icon name="alert-circle" size={16} /><span>{w}. Microcks imports it and plays the steps in the order of the list.</span></div>
+                    {/each}
+                    <ImportLinks {analysis} {choices} {stepCounts} busy={analysing} onchoose={choose} />
+                  {/if}
+                {:else}
+                  <p class="source-help" role="status">Asking Microcks what it makes of this document…</p>
+                {/if}
+              {:else if workflowArtifact}
+                <h3>{arazzoExamples ? `Examples of ${pluralize(p.artifact.operations.length, 'workflow')}` : pluralize(p.artifact.operations.length, 'source description') + ' linked'}</h3>
+                <ul class="boxed-list">
+                  {#each p.artifact.operations as o (o.name)}
+                    <li>
+                      <Icon name={arazzoExamples ? 'list' : 'link'} size={14} />
+                      <span class="boxed-list-path">{o.name}</span>
+                      <span class="boxed-list-meta">{o.resource}</span>
+                    </li>
+                  {/each}
+                </ul>
+              {:else}
               <h3>{pluralize(p.artifact.operations.length, 'Operation')} discovered{svc.exists ? ` · updates the existing ${svc.name} ${svc.version}` : ''}</h3>
               {#if p.artifact.operations.length}
                 <ul class="boxed-list">
@@ -421,9 +530,20 @@
               {:else}
                 <p class="source-help">This artifact carries no operation: it only enriches Services that already exist.</p>
               {/if}
+              {/if}
             </div>
           </div>
 
+          {#if workflowArtifact}
+            <div role="note" class="note-box" data-tone="info">
+              <Icon name="info" size={16} />
+              <span>{p.artifact.kind === 'arazzo'
+                ? 'An Arazzo document describes workflows across APIs: it is imported once, without creating a Service. Documents outside the supported subset (goto actions, jsonpath criteria, workflowId steps) are refused. You can link the sources again later from the Workflows page.'
+                : p.artifact.kind === 'arazzo-examples'
+                  ? 'An ArazzoExamples records examples of the workflows of an Arazzo document (same title and version): import the document first, a run can then play and be judged on them. Importing it again replaces the examples of the document.'
+                  : 'An ArazzoMetadata links the source descriptions of an imported Arazzo document (same title and version) to Microcks APIs.'}</span>
+            </div>
+          {:else}
           <div class="step-section">
             <h3 id="role-title">Artifact role</h3>
             <Segmented
@@ -447,24 +567,56 @@
             </p>
           </div>
 
-          {#if p.origin === 'git'}
+          {/if}
+          {#if p.origin === 'git' && !workflowArtifact}
             <div class="note-box">
               <Icon name="clock" size={16} />
               <span>The source “{gitName}” will be created, scanned and imported immediately, then re-scanned on the global schedule. <a href="/sources">Manage sources</a></span>
             </div>
           {/if}
-          {#if secondaryOnly && role === 'primary'}
+          {#if secondaryOnly && role === 'primary' && !workflowArtifact}
             <div role="note" class="note-box" data-tone="info"><Icon name="info" size={16} /><span>This file is normally a secondary artifact. Keep it Primary only if it should create its own Service.</span></div>
           {/if}
 
           <div class="step-actions">
-            <Button variant="primary" icon="download" loading={step === 'importing'} onclick={doImport}>{p.origin === 'upload' ? 'Import' : 'Create source'}</Button>
+            <Button variant="primary" icon="download" loading={step === 'importing'} disabled={refused || waitingAnalysis} onclick={doImport}>{p.origin === 'upload' ? 'Import' : 'Create source'}</Button>
             <Button variant="secondary" onclick={reset}>Cancel</Button>
           </div>
         </div>
       {/if}
 
       {#if step === 'importing' && !preview}<p role="status">Creating the mock…</p>{/if}
+
+      {#if step === 'done' && workflowResult}
+        {@const w = workflowResult}
+        <div class="step-card" data-step="done">
+          <div role="status" class="step-head">
+            <Icon name="check-circle" size={32} />
+            <div class="step-head-text">
+              <h2>{workflowKindLabel[w.kind]} imported</h2>
+              <p>{w.kind === 'arazzo'
+                ? w.runnable === w.total
+                  ? `${w.name} ${w.version} is imported: ${pluralize(w.total ?? 0, 'workflow')} can run.`
+                  : `${w.name} ${w.version} is imported: ${w.runnable} of ${pluralize(w.total ?? 0, 'workflow')} can run. The others wait for their source descriptions to be linked.`
+                : w.kind === 'arazzo-examples'
+                  ? `The examples of ${w.name} ${w.version} are recorded: the Examples tab of its workflows lists them.`
+                  : `The source descriptions of ${w.name} ${w.version} are linked to the APIs the ArazzoMetadata names.`}</p>
+            </div>
+          </div>
+          {#if w.kind === 'arazzo'}
+            <div class="done-badges">
+              <ApiBadge arazzo name={w.name} version={w.version} />
+              <ApiBadge label="workflows" value={String(w.total ?? 0)} status="success" />
+            </div>
+          {/if}
+          <div class="step-actions">
+            <Button variant="primary" href={w.open ? `/workflows/${w.open.docId}/${w.open.workflowId}` : '/workflows'}>{w.open ? `Open ${w.open.workflowId}` : 'Open workflows'}<Icon name="arrow-right" size={16} /></Button>
+            {#if w.open}<Button variant="secondary" href="/workflows">All workflows</Button>{/if}
+            <Button variant="secondary" href="/sources">Back to Sources</Button>
+            <Button variant="ghost" onclick={reset}>Add another source</Button>
+          </div>
+        </div>
+      {/if}
 
       {#if step === 'done' && result}
         {@const r = result}

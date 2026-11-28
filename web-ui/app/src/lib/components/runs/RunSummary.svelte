@@ -1,18 +1,22 @@
 <script lang="ts">
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { DataTable, FactRow, Facts, Icon } from '@microcks/deep-ink';
+  import { criteriaState } from '#lib/workflows/criteria-state.js';
   import { endLabel, stepsTally, stoppedStep, verdictExplanation } from '#lib/workflows/describe.js';
   import { formatDuration } from '#lib/workflows/time.js';
   import { workflowPath } from '#lib/workflows/paths.js';
-  import type { Workflow, WorkflowRun } from '#lib/workflows/types.js';
+  import type { ArazzoDocument, Workflow, WorkflowRun } from '#lib/workflows/types.js';
+  import { operationHref } from '#lib/workflows/operation-link.js';
   import { J } from '#lib/runs-workflow.js';
 
   interface Props {
     run: WorkflowRun;
     totals: { calls: number; ms: number };
     workflow?: Workflow;
+    document?: ArazzoDocument;
   }
 
-  let { run, totals, workflow }: Props = $props();
+  let { run, totals, workflow, document }: Props = $props();
 
   const passed = $derived(run.status === 'SUCCESS');
   const stopped = $derived(stoppedStep(run));
@@ -33,12 +37,12 @@
   const band = $derived(
     run.steps.map((s) => {
       const notRun = s.status === 'not-run';
-      const criteriaOk = s.criteria.every((c) => c.held);
+      const criteria = criteriaState(s);
       const schema = s.schema.state;
       const word = notRun
         ? 'not run'
-        : `${criteriaOk ? 'criteria held' : 'criteria failed'} · ${schema === 'pass' ? 'schema passed' : schema === 'fail' ? 'schema failed' : schema === 'na' ? 'schema n/a' : 'schema off'}`;
-      return { id: s.stepId, status: s.status, word, criteria: notRun ? 'none' : criteriaOk ? 'pass' : 'fail', schema: notRun ? 'none' : schema };
+        : `${criteria === 'held' ? 'criteria held' : criteria === 'failed' ? 'criteria failed' : 'criteria not evaluated'} · ${schema === 'pass' ? 'schema passed' : schema === 'fail' ? 'schema failed' : schema === 'na' ? 'schema n/a' : 'schema off'}`;
+      return { id: s.stepId, status: s.status, word, criteria: criteria === 'held' ? 'pass' : criteria === 'failed' ? 'fail' : 'none', schema: notRun ? 'none' : schema };
     })
   );
   type Out = [string, unknown];
@@ -75,7 +79,7 @@
               stroke-width={b.status === 'not-run' ? 2 : 2.8}
               stroke-dasharray={b.status === 'not-run' ? '3 3' : undefined}
             />
-            <span class="wfr-mono">{b.id}</span>
+            <span class="wfr-mono" title={b.id}>{b.id}</span>
           </span>
           <span class="wfr-band-word">{b.word}</span>
         </div>
@@ -119,13 +123,20 @@
       </a>
     {/if}
     {#if run.coherence[0]}
-      <a href={`/services?hint=${encodeURIComponent(run.coherence[0].copilotHint)}`} class="wfr-action" data-tone="action">
-        <Icon name="sparkles" size={14} />
-        Generate the example with the AI Copilot
-      </a>
+      {#if isAvailable('ai-copilot', run.documentId)}
+        <a href={`/services?hint=${encodeURIComponent(run.coherence[0].copilotHint)}`} class="wfr-action" data-tone="action">
+          <Icon name="sparkles" size={14} />
+          Generate the example with the AI Copilot
+        </a>
+      {:else}
+        <button type="button" class="wfr-action" data-tone="action" disabled title={unavailableReason('ai-copilot', run.documentId)}>
+          <Icon name="sparkles" size={14} />
+          Generate the example with the AI Copilot
+        </button>
+      {/if}
     {/if}
     {#if opDef}
-      <a href="/services" class="wfr-action">Open operation<span class="wfr-action-op">{opDef.method} {opDef.path}</span></a>
+      <a href={operationHref(document, opDef)} class="wfr-action">Open operation<span class="wfr-action-op">{opDef.method} {opDef.path}</span></a>
     {/if}
     <a href={workflowPath(run.documentId, run.workflowId, 'loom', { run: String(run.number), step: stopped?.stepId })} class="wfr-action">Back to workflow</a>
   </div>

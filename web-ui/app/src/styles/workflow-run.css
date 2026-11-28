@@ -83,7 +83,8 @@
 .wfr-band-bar:is([data-state="pass"]) { background: var(--success); }
 .wfr-band-bar:is([data-state="fail"]) { background: var(--danger); }
 .wfr-band-bar[data-state="none"] { background: transparent; border-color: var(--border-strong); }
-.wfr-band-id { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 12px; color: var(--text-muted); }
+.wfr-band-id { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 3px; font-size: 12px; color: var(--text-muted); }
+.wfr-band-id > .wfr-mono { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wfr-band-step[data-status="passed"] .wfr-band-id { color: var(--success); }
 .wfr-band-step[data-status="failed"] .wfr-band-id { color: var(--danger); }
 .wfr-band-word { font: 400 12px/1.4 var(--font-ui); color: var(--text-secondary); }
@@ -95,6 +96,9 @@
   font: 500 14px/1 var(--font-ui); text-decoration: none;
 }
 .wfr-action:hover { filter: brightness(1.08); }
+.wfr-action:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
+.wfr-link:disabled { background: none; border: 0; padding: 0; font: inherit; opacity: 0.55; cursor: not-allowed; text-decoration: none; }
+.wfr-link:disabled:hover { text-decoration: none; }
 .wfr-action[data-tone="danger"] { border-color: var(--danger); }
 .wfr-action[data-tone="danger"] .icon { color: var(--danger); }
 .wfr-action[data-tone="action"] { border-color: var(--action); }

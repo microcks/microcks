@@ -1,0 +1,131 @@
+# Workflows whose steps declare the steps they depend on in a way Microcks refuses. One YAML document per example.
+# example: unknown-step - tasteEclair depends on a step the workflow does not have
+arazzo: 1.1.0
+info:
+  title: Pastry tasting
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+workflows:
+  - workflowId: taste
+    steps:
+      - stepId: readMenu
+        operationId: GetPastries
+      - stepId: tasteEclair
+        operationId: GetPastryByName
+        dependsOn:
+          - readMenus
+---
+# example: itself - tasteEclair depends on itself
+arazzo: 1.1.0
+info:
+  title: Pastry tasting
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+workflows:
+  - workflowId: taste
+    steps:
+      - stepId: tasteEclair
+        operationId: GetPastryByName
+        dependsOn:
+          - tasteEclair
+---
+# example: cycle - readMenu and tasteEclair depend on each other
+arazzo: 1.1.0
+info:
+  title: Pastry tasting
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+workflows:
+  - workflowId: taste
+    steps:
+      - stepId: readMenu
+        operationId: GetPastries
+        dependsOn:
+          - tasteEclair
+      - stepId: tasteEclair
+        operationId: GetPastryByName
+        dependsOn:
+          - readMenu
+---
+# example: later - tasteEclair depends on readMenu, listed after it
+arazzo: 1.1.0
+info:
+  title: Pastry tasting
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+workflows:
+  - workflowId: taste
+    steps:
+      - stepId: tasteEclair
+        operationId: GetPastryByName
+        dependsOn:
+          - readMenu
+      - stepId: readMenu
+        operationId: GetPastries
+        dependsOn: []
+---
+# example: arazzo-1-0 - an Arazzo 1.0.1 step declares dependsOn
+arazzo: 1.0.1
+info:
+  title: Pastry tasting
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+workflows:
+  - workflowId: taste
+    steps:
+      - stepId: readMenu
+        operationId: GetPastries
+      - stepId: tasteEclair
+        operationId: GetPastryByName
+        dependsOn:
+          - readMenu
+---
+# example: other-workflow - tasteEclair depends on a step of another workflow
+arazzo: 1.1.0
+info:
+  title: Pastry tasting
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+workflows:
+  - workflowId: readMenu
+    steps:
+      - stepId: readMenu
+        operationId: GetPastries
+  - workflowId: taste
+    steps:
+      - stepId: tasteEclair
+        operationId: GetPastryByName
+        dependsOn:
+          - $workflows.readMenu.steps.readMenu
+---
+# example: workflow-depends-on - the workflow taste depends on the workflow readMenu, refused as before
+arazzo: 1.1.0
+info:
+  title: Pastry tasting
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./api-pastry-2.0.openapi.yaml
+workflows:
+  - workflowId: readMenu
+    steps:
+      - stepId: readMenu
+        operationId: GetPastries
+  - workflowId: taste
+    dependsOn:
+      - readMenu
+    steps:
+      - stepId: tasteEclair
+        operationId: GetPastryByName

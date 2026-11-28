@@ -1,0 +1,42 @@
+/*
+ * Copyright The Microcks Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.microcks.artifact.arazzo;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * A step of an Arazzo workflow.
+ * @param stepId          The id of the step
+ * @param description     The description of the step, null if it has none
+ * @param call            The operation the step calls
+ * @param parameters      The parameters the step sends, in the order of the document
+ * @param requestBody     The request body the step sends, null if it sends none
+ * @param successCriteria The criteria the response must meet, in the order of the document
+ * @param outputs         The outputs of the step, by name in the order of the document, with their runtime expressions
+ * @param onSuccess       What the step does when it succeeds, in the order of the document; empty to go on
+ * @param onFailure       What the step does when it fails, in the order of the document; empty to end the workflow
+ * @param messaging       What the step tells of the messages it sends or receives when it belongs to an AsyncAPI
+ *                        source; null for a step calling an HTTP operation
+ * @param dependsOn       The ids of the steps the step declares it depends on, as Arazzo 1.1 allows, in the order of
+ *                        the document; null when it declares no dependsOn. {@link ArazzoStepOrder} tells the steps it
+ *                        must come after
+ * @author SebastienDegodez
+ */
+public record ArazzoStep(String stepId, String description, ArazzoOperationCall call, List<ArazzoParameter> parameters,
+      ArazzoRequestBody requestBody, List<ArazzoCriterion> successCriteria, Map<String, String> outputs,
+      List<ArazzoAction> onSuccess, List<ArazzoAction> onFailure, ArazzoMessaging messaging, List<String> dependsOn) {
+}

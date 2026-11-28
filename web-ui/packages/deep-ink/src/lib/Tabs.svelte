@@ -11,6 +11,8 @@
     icon?: IconName;
     hint?: string;
     disabled?: boolean;
+    /** Native tooltip, e.g. why the tab is disabled. */
+    title?: string;
   }
 </script>
 
@@ -68,6 +70,7 @@
         aria-controls={panelId(t.id)}
         tabindex={i === tabStop ? 0 : -1}
         disabled={t.disabled}
+        title={t.title}
         onclick={() => onchange(t.id)}
         onkeydown={(e) => onKeydown(e, i)}
       >

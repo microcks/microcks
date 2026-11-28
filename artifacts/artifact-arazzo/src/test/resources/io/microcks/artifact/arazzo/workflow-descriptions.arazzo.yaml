@@ -1,0 +1,63 @@
+# example: summary - a workflow with a summary is described by it
+arazzo: 1.0.1
+info:
+  title: Described workflows
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readOne
+    summary: Reads a pastry.
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+---
+# example: description - a workflow without summary is described by its description
+arazzo: 1.0.1
+info:
+  title: Described workflows
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readOne
+    description: Reads a pastry by its name.
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+---
+# example: summary-and-description - a workflow with both is described by its shorter summary
+arazzo: 1.0.1
+info:
+  title: Described workflows
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readOne
+    summary: Reads a pastry.
+    description: Reads a pastry by its name.
+    steps:
+      - stepId: read
+        operationId: GetPastryByName
+---
+# example: none - a workflow without summary nor description has no description
+arazzo: 1.0.1
+info:
+  title: Described workflows
+  version: 1.0.0
+sourceDescriptions:
+  - name: pastryApi
+    url: ./APIPastry-openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: readOne
+    steps:
+      - stepId: read
+        operationId: GetPastryByName

@@ -45,12 +45,16 @@ export interface ArazzoDocument {
   apiId: string;
   file: string;
   title: string;
-  arazzoVersion: string;
+  /** The format of the document, as the backend names it (`ARAZZO`). */
+  format: string;
+  formatVersion: string;
   version: string;
   /** Where the document comes from, e.g. "Synced 12 min ago from GitHub". */
   origin: string;
-  /** Name of the ArazzoSources overlay file, when there is one. */
-  overlay?: string;
+  /** The importer (source job) that keeps the document in sync, when one does. */
+  job?: { id: string; name: string };
+  /** Name of the ArazzoMetadata file (`<name>.arazzo-metadata.yaml`), when there is one. */
+  metadata?: string;
   sources: SourceDescription[];
   workflowIds: string[];
   /** Features refused at import (empty for a clean document). */
@@ -94,6 +98,20 @@ export interface Step {
   outputs: NamedExpression[];
   /** Step-level dependsOn (Arazzo 1.1): parallel branches that join. */
   dependsOn?: string[];
+  /** Every step Microcks makes this one wait for (S30): dependsOn and the steps whose outputs it uses, else those listed before. */
+  prerequisites?: string[];
+  /** Only for a step that sends or waits for a message on an AsyncAPI channel (S28, Arazzo 1.1). */
+  messaging?: StepMessaging;
+}
+
+/** The messaging side of an AsyncAPI step. */
+export interface StepMessaging {
+  action: 'send' | 'receive';
+  channel?: string;
+  /** Expression matching a received message with the message sent before. */
+  correlationId?: string;
+  /** How long a receive waits, in ms. */
+  timeoutMs?: number;
 }
 
 export interface WorkflowInput {
@@ -120,7 +138,7 @@ export interface Workflow {
   runnability: Runnability;
 }
 
-/** A recorded example from the ArazzoSources overlay. */
+/** A recorded example from the ArazzoExamples of a document. */
 export interface WorkflowExample {
   id: string;
   workflowId: string;
@@ -134,11 +152,21 @@ export interface WorkflowExample {
   lastJudged?: { runNumber: number; at: string; matched: boolean };
 }
 
+/** What Microcks decided about a run of a recorded example (absent for runs of the demo data and while running). */
+export interface RunExampleCheck {
+  matches: boolean;
+  /** The expectations the run did not meet, in words. */
+  unmet: string[];
+}
+
 export type RunTarget =
   | { kind: 'mocks' }
   | { kind: 'implementations'; baseUrls: Record<string, string> }
-  /** Proposed, beyond the POC. */
-  | { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'>; proposed: true };
+  /**
+   * Some sources on their mocks, the others on their implementation (S31). `baseUrls` holds the implementations of a
+   * run Microcks executed; `proposed` marks the placeholder runs of the mockup, where Mixed was beyond the POC.
+   */
+  | { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'>; baseUrls?: Record<string, string>; proposed?: true };
 
 export type RunOrigin =
   | { kind: 'ui' }
@@ -210,7 +238,11 @@ export interface WorkflowRun {
   steps: StepResult[];
   outputs: Record<string, unknown>;
   coherence: MockCoherenceIssue[];
+  /** The backend verdict on the example the run played, once the run is over. */
+  exampleCheck?: RunExampleCheck;
   relatedTestRunId?: string;
+  /** The calls a verification checked (runs of origin `session` of imported documents). */
+  sessionCalls?: SessionCall[];
   /** Only on the intermediate frames of a RUNNING run: the step being called and its attempt number. */
   current?: { stepId: string; attempt: number };
 }
@@ -222,8 +254,10 @@ export interface SessionCall {
   httpStatus: number;
   /** Matching step id, or `unexpected`. */
   stepId: string;
-  contract: { state: 'pass' | 'fail'; text: string };
+  contract: { state: 'pass' | 'fail' | 'off'; text: string };
   dataPassing: { state: 'pass' | 'fail' | 'off'; text: string };
+  /** Why Microcks counts the call unexpected (imported documents). */
+  failure?: string;
 }
 
 /** A verification session (`x-microcks-session` header). */
@@ -241,7 +275,18 @@ export interface Session {
   failureInjection?: { stepId: string; example: string };
   calls: SessionCall[];
   verification?: { result: 'SUCCESS' | 'FAILURE'; runNumber: number; problems: { lead: string; text: string }[] };
+  /**
+   * Sessions Microcks holds (imported documents): the number of calls it recorded so far (live), the calls themselves
+   * once verified; every step set to fail, by step id, with its example; the calls it dropped; when it expires and the
+   * run of its latest verification.
+   */
+  real?: { failures: Record<string, string>; droppedCallCount: number; callCount: number; expiresAt?: string; verificationRunId?: string };
 }
 
 /** Filter of the Workflows screen: "Any target / Mocks / Implementations / Mock URL / Session". */
 export type RunKindFilter = 'any' | 'mocks' | 'implementations' | 'mock-url' | 'session';
+
+/** How a document format reads in the interface: `ARAZZO` is Arazzo. */
+export function formatName(format: string): string {
+  return format.charAt(0).toUpperCase() + format.slice(1).toLowerCase();
+}

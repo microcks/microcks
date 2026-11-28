@@ -1,0 +1,30 @@
+openapi: 3.0.2
+info:
+  title: Order API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      operationId: CreateOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        "201":
+          description: The order placed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string

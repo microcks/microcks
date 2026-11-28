@@ -38,4 +38,7 @@ export interface SegmentedOption {
   dot?: 'neutral' | 'success' | 'danger' | 'warning' | 'muted' | 'ring';
   icon?: import('./icon-paths.js').IconName;
   iconTone?: 'success' | 'warning' | 'danger' | 'muted';
+  /** Not selectable (the feature behind it is not available); `title` says why. */
+  disabled?: boolean;
+  title?: string;
 }

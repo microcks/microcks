@@ -2,6 +2,7 @@
   import { Button, Chip, Icon, MethodTag, type IconName } from '@microcks/deep-ink';
   import { formatRelative, formatShortClock } from '#lib/format.js';
   import { callTotals, stoppedStep, verdictExplanation } from '#lib/workflows/describe.js';
+  import { filterFeature, isFilterAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { matchesRunKind, runPath, runSetupPath } from '#lib/workflows/paths.js';
   import { originWord } from '#lib/workflows/run-facts.js';
   import { formatDuration } from '#lib/workflows/time.js';
@@ -33,7 +34,7 @@
   let { workflow, document, runs, sessions = [], initialFilter }: Props = $props();
 
   const initial = initialFilter === 'impl' ? 'implementations' : initialFilter === 'mockurl' ? 'mock-url' : initialFilter;
-  let filter = $state<Filter>(FILTERS.some((f) => f.id === initial) ? (initial as Filter) : 'all');
+  let filter = $state<Filter>(FILTERS.some((f) => f.id === initial && isFilterAvailable(f.id, document)) ? (initial as Filter) : 'all');
   let copied = $state(false);
 
   const match = (r: WorkflowRun, f: Filter) => f === 'all' || matchesRunKind(r, f);
@@ -41,11 +42,11 @@
   const label = $derived(FILTERS.find((f) => f.id === filter)?.label ?? '');
   const total = $derived(runs[0]?.number ?? runs.length);
   const n = $derived(workflow.steps.length);
-  const api = $derived(`/api/arazzo/documents/{documentId}/workflows/${workflow.workflowId}/runs`);
+  const api = $derived(`/api/workflows/documents/{documentId}/workflows/${workflow.workflowId}/runs`);
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   function originSub(run: WorkflowRun): string {
-    if (run.origin.kind === 'session') return `${run.origin.sessionId} · ${run.origin.app}`;
+    if (run.origin.kind === 'session') return run.origin.sessionId ? `${run.origin.sessionId} · ${run.origin.app}` : run.origin.app;
     if (run.origin.kind === 'mock-url') return 'POST on the Mock URL';
     if (run.target.kind === 'implementations') {
       const url = Object.values(run.target.baseUrls)[0] ?? '';
@@ -81,7 +82,7 @@
       if (run.origin.kind === 'session') {
         const sessionId = run.origin.sessionId;
         const session = sessions.find((x) => x.id === sessionId);
-        const unexpected = session?.calls.filter((c) => c.stepId === 'unexpected').length ?? 0;
+        const unexpected = (run.sessionCalls ?? session?.calls ?? []).filter((c) => c.stepId === 'unexpected').length;
         const parts = [
           s ? `${s.flow.title.charAt(0).toLowerCase()}${s.flow.title.slice(1)} on ${s.stepId}` : undefined,
           unexpected ? `${unexpected} unexpected ${unexpected === 1 ? 'call' : 'calls'}` : undefined
@@ -123,7 +124,15 @@
       <span class="wf-runs-count">Last {runs.length} of {total} {total === 1 ? 'run' : 'runs'}</span>
       <div role="group" aria-label="Filter runs by origin" class="wf-runs-filters">
         {#each FILTERS as f (f.id)}
-          <Chip size="lg" pressed={f.id === filter} count={runs.filter((r) => match(r, f.id)).length} onclick={() => (filter = f.id)}>{f.label}</Chip>
+          {@const feature = filterFeature(f.id)}
+          <Chip
+            size="lg"
+            pressed={f.id === filter}
+            count={runs.filter((r) => match(r, f.id)).length}
+            disabled={!isFilterAvailable(f.id, document)}
+            title={feature ? unavailableReason(feature, document) : undefined}
+            onclick={() => (filter = f.id)}>{f.label}</Chip
+          >
         {/each}
       </div>
     </div>

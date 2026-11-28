@@ -15,6 +15,7 @@
  */
 package io.microcks.domain;
 
+import io.microcks.domain.workflow.WorkflowDocumentRef;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.BsonType;
 import org.bson.codecs.pojo.annotations.BsonId;
@@ -50,6 +51,7 @@ public class ImportJob {
    private Metadata metadata;
    private SecretRef secretRef;
    private Set<ServiceRef> serviceRefs;
+   private WorkflowDocumentRef arazzoDocumentRef;
 
    public String getId() {
       return id;
@@ -168,5 +170,17 @@ public class ImportJob {
          this.serviceRefs = new HashSet<>();
       }
       serviceRefs.add(serviceRef);
+   }
+
+   /**
+    * @return The Arazzo document the last import imported, or whose ArazzoMetadata or ArazzoExamples it imported; null
+    *         for an API
+    */
+   public WorkflowDocumentRef getArazzoDocumentRef() {
+      return arazzoDocumentRef;
+   }
+
+   public void setArazzoDocumentRef(WorkflowDocumentRef arazzoDocumentRef) {
+      this.arazzoDocumentRef = arazzoDocumentRef;
    }
 }

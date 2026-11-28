@@ -2,11 +2,12 @@
   import { ApiBadge, Button, Icon } from '@microcks/deep-ink';
   import type { Service } from '#lib/types.js';
   import { formatRelative } from '#lib/format.js';
+  import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { runHeadline, runOutcome, stoppedStep } from '#lib/workflows/describe.js';
   import type { WorkflowListItem } from '#lib/workflows/list.js';
   import { runPath, runSetupPath, workflowPath } from '#lib/workflows/paths.js';
   import { sourceColor } from '#lib/workflows/source-color.js';
-  import type { ArazzoDocument, RunKindFilter, SourceDescription, WorkflowRun } from '#lib/workflows/types.js';
+  import { formatName, type ArazzoDocument, type RunKindFilter, type SourceDescription, type WorkflowRun } from '#lib/workflows/types.js';
   import LoomThumb from './LoomThumb.svelte';
 
   interface Props {
@@ -20,6 +21,7 @@
     onlink: (source: SourceDescription) => void;
   }
   let { document: doc, rows, docWorkflows, total, services, runKind, onlink }: Props = $props();
+  const mockUrlOn = $derived(isAvailable('mock-url', doc));
 
   const TARGET_LABEL: Record<Exclude<RunKindFilter, 'any'>, string> = {
     mocks: 'Microcks mocks',
@@ -73,7 +75,7 @@
         <Icon name="file-text" size={18} class="wf-text2" />
         <h2>{doc.file}</h2>
         <span class="wf-doc-name">{doc.title}</span>
-        <span class="wf-tag">arazzo {doc.arazzoVersion}</span>
+        <span class="wf-tag">{formatName(doc.format).toLowerCase()} {doc.formatVersion}</span>
         <span class="wf-tag">version {doc.version}</span>
       </div>
       <span class="wf-doc-origin">
@@ -87,16 +89,16 @@
       </span>
     </div>
 
-    <p class="wf-overlay">
-      {#if doc.overlay}
+    <p class="wf-metadata">
+      {#if doc.metadata}
         <Icon name="layers" size={15} />
-        <span>ArazzoSources overlay</span>
-        <code>{doc.overlay}</code>
+        <span>ArazzoMetadata</span>
+        <code>{doc.metadata}</code>
         <span class="wf-tag" data-tone="success">imported</span>
-        <span class="wf-muted-text">links the sources, carries the recorded examples</span>
+        <span class="wf-muted-text">links the sources</span>
       {:else}
         <Icon name="layers-missing" size={15} class="wf-muted-text" />
-        <span class="wf-muted-text">No ArazzoSources overlay · sources linked in the import dialog</span>
+        <span class="wf-muted-text">No ArazzoMetadata · sources linked in the import dialog</span>
       {/if}
       <span class="wf-linked-count" data-tone={unlinked.length ? 'warning' : 'success'}>
         <Icon name={unlinked.length ? 'warning' : 'check-circle'} size={15} />
@@ -133,7 +135,7 @@
             </span>
             <span role="cell" class="wf-src-ops" data-tone={s.link.status === 'linked' ? undefined : 'warning'}>
               <Icon name={s.link.status === 'linked' ? 'check-circle' : 'warning'} size={12} />
-              {s.link.status === 'linked' ? s.link.operationsFound : `${stepsOn(s.name)} steps unresolved`}
+              {s.link.status === 'linked' ? s.link.operationsFound : `${stepsOn(s.name)} step${stepsOn(s.name) === 1 ? '' : 's'} unresolved`}
             </span>
           </div>
         {/each}
@@ -183,7 +185,7 @@
         <div role="row" class="wf-wrow">
           <div role="cell" class="wf-cell wf-cell-workflow">
             <a href={workflowPath(doc.id, workflow.workflowId)} class="wf-badge-link wf-name-link">
-              <ApiBadge arazzo name={workflow.summary} version={doc.version} class="wf-name-badge" />
+              <ApiBadge arazzo name={workflow.summary} version={doc.version} class="wf-name-badge" title={workflow.summary} />
             </a>
             <div class="wf-cell-line">
               <code class="wf-id">{workflow.workflowId}</code>
@@ -197,7 +199,7 @@
 
           <div role="cell" class="wf-cell wf-cell-steps">
             <LoomThumb {workflow} document={doc} run={lastRun} />
-            <span class="wf-steps-text">{workflow.steps.length} steps{workflow.steps.some((s) => s.dependsOn?.length) ? ' · dependsOn' : ''}</span>
+            <span class="wf-steps-text">{workflow.steps.length} step{workflow.steps.length === 1 ? "" : "s"}{workflow.steps.some((s) => s.dependsOn?.length) ? ' · dependsOn' : ''}</span>
           </div>
 
           <div role="cell" class="wf-cell wf-cell-sources">
@@ -239,16 +241,18 @@
           </div>
 
           <div role="cell" class="wf-cell wf-cell-mock">
-            <span class="wf-mock-state" data-ready={runnable ? '' : undefined}>
-              <Icon name={runnable ? 'link' : 'never-tested'} size={15} />
-              {runnable ? 'Ready' : 'Not available'}
+            <span class="wf-mock-state" data-ready={runnable && mockUrlOn ? '' : undefined} title={mockUrlOn ? undefined : unavailableReason('mock-url', doc)}>
+              <Icon name={runnable && mockUrlOn ? 'link' : 'never-tested'} size={15} />
+              {runnable && mockUrlOn ? 'Ready' : 'Not available'}
             </span>
-            {#if runnable}
+            {#if runnable && mockUrlOn}
               <a href={workflowPath(doc.id, workflow.workflowId, 'mock-url')} title="POST {workflow.mockUrl}" class="wf-mono-link wf-mock-path">POST …/{doc.version}/{workflow.workflowId}</a>
             {/if}
             <span class="wf-note">
               {#if !runnable}
                 {reason === 'asyncapi-steps' ? 'AsyncAPI steps cannot be played yet' : `Link ${unlinkedNames.join(', ') || 'its sources'} first`}
+              {:else if !mockUrlOn}
+                Not available yet
               {:else if row.lastMockUrlRun}
                 Last call {formatRelative(row.lastMockUrlRun.startedAt)} (run #{row.lastMockUrlRun.number})
               {:else}

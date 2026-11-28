@@ -1,7 +1,11 @@
 <script lang="ts">
   import { Button, Callout, Choice, DataTable, Field, Icon, Input, MethodTag, Select, type DataTableColumn } from '@microcks/deep-ink';
+  import { invalidate } from '$app/navigation';
+  import { onMount } from 'svelte';
   import { formatRelative, formatShortClock } from '#lib/format.js';
+  import { isDemo } from '#lib/workflows/availability.js';
   import { runPath } from '#lib/workflows/paths.js';
+  import { compensationStepsOf, sessionCurl } from '#lib/workflows/sessions.js';
   import { STATUS_ICON } from '#lib/workflows/status.js';
   import type { ArazzoDocument, Session, SessionCall, Workflow, WorkflowRun } from '#lib/workflows/types.js';
 
@@ -25,13 +29,26 @@
     ],
     PatchPastry: [{ value: 'Eclair Cafe · out of stock', code: 409 }, { value: 'Eclair Chocolat · price', code: 200 }]
   };
-  const MICROCKS = 'http://microcks.local:8080';
   const SESSION_TTL_S = 3600;
+  /** How often the call count of an open session is read again, as the other screens read what is in progress. */
+  const POLL_MS = 2000;
   const isNumber = (t: string) => t === 'number' || t === 'integer';
 
   let { workflow, document, sessions, runs }: Props = $props();
 
-  const failDefault = $derived(workflow.steps.find((s) => s.onFailure.length > 0) ?? workflow.steps[0]);
+  // Imported documents: sessions are opened, closed and verified on Microcks; the demo documents only show the request.
+  const real = $derived(!isDemo(document));
+  type StepSetup = { mockPath?: string; examples: { value: string; code: number }[] };
+  let setup = $state<Record<string, StepSetup>>({});
+  let setupLoaded = $state(false);
+  let busy = $state<string>();
+  let problem = $state<string>();
+
+  const failDefault = $derived(
+    real
+      ? (workflow.steps.find((s) => (setup[s.stepId]?.examples ?? []).some((e) => e.code >= 400)) ?? workflow.steps[0])
+      : (workflow.steps.find((s) => s.onFailure.length > 0) ?? workflow.steps[0])
+  );
   let selectedId = $state<string | undefined>();
   let values = $state<Record<string, string>>({});
   let fail = $state(true);
@@ -41,13 +58,36 @@
 
   $effect.pre(() => {
     selectedId ??= sessions[0]?.id;
-    failStep ||= failDefault?.stepId ?? '';
-    for (const i of workflow.inputs) values[i.name] ??= String(i.example ?? (i.name === 'size' ? 'M' : ''));
+    for (const i of workflow.inputs) values[i.name] ??= String(i.example ?? (!real && i.name === 'size' ? 'M' : ''));
   });
 
+  $effect(() => {
+    if (!real) {
+      failStep ||= failDefault?.stepId ?? '';
+      return;
+    }
+    const url = `/api/workflows/${encodeURIComponent(document.id)}/${encodeURIComponent(workflow.workflowId)}/sessions/setup`;
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((s: Record<string, StepSetup>) => {
+        setup = s;
+        setupLoaded = true;
+      })
+      .catch(() => (setupLoaded = true));
+  });
+
+  // Once what the mocks can answer is known, the builder starts on a step with a refusal to inject, if any.
+  $effect(() => {
+    if (!real || !setupLoaded || failStep) return;
+    failStep = failDefault?.stepId ?? '';
+    fail = (setup[failStep]?.examples ?? []).some((e) => e.code >= 400);
+  });
+
+  const MICROCKS = $derived(real ? new URL(workflow.mockUrl).origin : 'http://microcks.local:8080');
   const step = $derived(workflow.steps.find((s) => s.stepId === failStep));
-  const exampleList = $derived(FAILURE_EXAMPLES[step?.operationId ?? ''] ?? []);
+  const exampleList = $derived(real ? (setup[failStep]?.examples ?? []) : (FAILURE_EXAMPLES[step?.operationId ?? ''] ?? []));
   const example = $derived(exampleList.some((e) => e.value === failExample) ? failExample : (exampleList[0]?.value ?? ''));
+  const nextSteps = $derived(compensationStepsOf(workflow.steps.map((s) => s.stepId), fail && example ? failStep : undefined));
   const errors = $derived(
     Object.fromEntries(
       workflow.inputs
@@ -71,16 +111,17 @@
     inputs,
     ...(fail && example ? { failures: { [failStep]: example } } : {})
   });
-  const curl = $derived(`curl -X POST '${MICROCKS}/api/arazzo/sessions' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body)}'`);
+  const curl = $derived(`curl -X POST '${MICROCKS}/api/workflows/sessions' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body)}'`);
   const selected = $derived(sessions.find((s) => s.id === selectedId) ?? sessions[0]);
-  const sessionId = $derived(sessions[0]?.id ?? 's-7f3a2c91');
+  const sessionId = $derived(real ? (selected?.id ?? '{sessionId}') : (sessions[0]?.id ?? 's-7f3a2c91'));
   const services = $derived([...new Set(workflow.steps.map((s) => s.sourceName))]);
   const serviceName = $derived(services.length === 1 && services[0] === 'apiPastry' ? 'API Pastry 2.0' : 'its API');
   const selectedRun = $derived(
     selected?.verification
-      ? runs.find((r) => r.origin.kind === 'session' && r.origin.sessionId === selected.id && r.number === selected.verification?.runNumber)
+      ? runs.find((r) => (selected.real?.verificationRunId ? r.id === selected.real.verificationRunId : r.origin.kind === 'session' && r.origin.sessionId === selected.id && r.number === selected.verification?.runNumber))
       : undefined
   );
+  const watching = $derived(real && sessions.some((s) => s.state === 'open'));
   const columns = $derived<DataTableColumn<SessionCall>[]>([
     { key: 'n', header: 'Call', mono: true },
     { key: 'req', header: 'Request' },
@@ -89,7 +130,7 @@
     { key: 'data', header: 'Data passing' }
   ]);
   const API_STEPS = $derived([
-    { title: 'Open a session', method: 'POST', path: '/api/arazzo/sessions', text: 'Your test sends the workflow, its inputs and the steps to fail. Microcks answers 201 with the session id.' },
+    { title: 'Open a session', method: 'POST', path: '/api/workflows/sessions', text: 'Your test sends the workflow, its inputs and the steps to fail. Microcks answers 201 with the session id.' },
     {
       title: 'The application calls the mocks',
       method: undefined,
@@ -99,10 +140,10 @@
     {
       title: 'Verify the calls',
       method: 'POST',
-      path: '/api/arazzo/sessions/{id}/verification',
+      path: '/api/workflows/sessions/{id}/verification',
       text: 'Checks each call against the steps: order (relaxed by dependsOn), data passing, inputs, the contract of its API, and unexpected calls. Creates a run with the origin Session.'
     },
-    { title: 'Close the session', method: 'DELETE', path: '/api/arazzo/sessions/{id}', text: '204 No Content. The calls stay with the verification run.' }
+    { title: 'Close the session', method: 'DELETE', path: '/api/workflows/sessions/{id}', text: '204 No Content. The calls stay with the verification run.' }
   ]);
 
   const verdictOf = (s: Session): { tone: Tone; text: string } =>
@@ -112,12 +153,63 @@
 
   function metaOf(s: Session) {
     if (s.state === 'open') {
-      const left = Math.max(0, Math.round((new Date(s.openedAt).getTime() + SESSION_TTL_S * 1000 - Date.now()) / 60_000));
+      const ends = s.real?.expiresAt ? new Date(s.real.expiresAt).getTime() : new Date(s.openedAt).getTime() + SESSION_TTL_S * 1000;
+      const left = Math.max(0, Math.round((ends - Date.now()) / 60_000));
       return `Opened ${formatRelative(s.openedAt)} · closes by itself in ${left} min`;
     }
     const secs = s.closedAt ? Math.round((new Date(s.closedAt).getTime() - new Date(s.openedAt).getTime()) / 1000) : undefined;
     return `Opened ${formatRelative(s.openedAt)} · ${formatShortClock(s.openedAt)}${secs !== undefined ? ` · closed by the test after ${secs} s` : ''}`;
   }
+
+  async function act(what: string, url: string, init: RequestInit): Promise<{ id: string } | undefined> {
+    busy = what;
+    problem = undefined;
+    try {
+      const res = await fetch(url, init);
+      const text = await res.text();
+      if (!res.ok) {
+        problem = (JSON.parse(text || '{}') as { message?: string }).message ?? `Microcks answered ${res.status}`;
+        return undefined;
+      }
+      await invalidate('app:workflows');
+      return JSON.parse(text) as { id: string };
+    } catch {
+      problem = 'Microcks could not be reached.';
+      return undefined;
+    } finally {
+      busy = undefined;
+    }
+  }
+
+  const base = $derived(`/api/workflows/${encodeURIComponent(document.id)}/${encodeURIComponent(workflow.workflowId)}/sessions`);
+
+  async function openSession() {
+    const opened = await act('open', base, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ inputs, ...(fail && example ? { failures: { [failStep]: example } } : {}) })
+    });
+    if (opened) selectedId = opened.id;
+  }
+
+  const closeSession = (id: string) => act('close', `${base}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  const verifySession = (id: string) => act('verify', `${base}/${encodeURIComponent(id)}/verification`, { method: 'POST' });
+
+  /** The mock a real session can be called on: the first step whose API is a REST one served by Microcks. */
+  const probe = $derived(workflow.steps.map((s) => ({ step: s, path: setup[s.stepId]?.mockPath })).find((p) => p.path));
+  const countOf = (n: number) => `${n} ${n === 1 ? 'call' : 'calls'} received`;
+  const callsOf = (s: Session) => countOf(s.real?.callCount ?? s.calls.length);
+  const emptyOf = (s: Session) =>
+    s.real && !s.verification && s.real.callCount > 0 ? `${countOf(s.real.callCount)}. Verify the session to see the step each one matches.` : 'No call received yet.';
+
+  // While a session is open, the mocks keep recording its calls: read the sessions again until none is open.
+  onMount(() => {
+    const timer = setInterval(() => {
+      if (watching && !busy && !globalThis.document.hidden) void invalidate('app:workflows');
+    }, POLL_MS);
+    return () => clearInterval(timer);
+  });
+  const injectedOf = (s: Session) => s.real?.failures ?? (s.failureInjection ? { [s.failureInjection.stepId]: s.failureInjection.example } : {});
 
   async function copy(id: string, text: string) {
     if (!valid) return;
@@ -206,6 +298,10 @@
             <span class="wf-se-note">
               In the session, the mocks answer <span class="wf-se-mono">{failStep}</span> with this existing example of {serviceName}, so your application meets
               the failure and runs its compensation.
+              {#if real && nextSteps.length > 0}
+                The steps that follow, <span class="wf-se-mono">{nextSteps.join(', ')}</span>, are what the verification expects it to call next.
+              {/if}
+              {#if real && setupLoaded && exampleList.length === 0}No example of this step can be injected: its API has none.{/if}
             </span>
           {/if}
         </div>
@@ -213,15 +309,16 @@
 
       <section aria-labelledby="wf-req-title" class="wf-se-panel" data-size="half" data-gap="tight">
         <div class="wf-se-req-head">
-          <h2 id="wf-req-title"><MethodTag size="xs" method="POST" /><span class="wf-se-mono wf-se-req-path">/api/arazzo/sessions</span></h2>
+          <h2 id="wf-req-title"><MethodTag size="xs" method="POST" /><span class="wf-se-mono wf-se-req-path">/api/workflows/sessions</span></h2>
           <div class="wf-se-req-actions">
             <Button size="sm" disabled={!valid} onclick={() => copy('body', JSON.stringify(body, null, 2))}>{copied === 'body' ? 'Copied' : 'Copy body'}</Button>
             <Button size="sm" disabled={!valid} onclick={() => copy('curl', curl)}>{copied === 'curl' ? 'Copied' : 'Copy curl'}</Button>
+            {#if real}<Button size="sm" variant="primary" disabled={!valid || busy !== undefined || (fail && !example)} onclick={openSession}>{busy === 'open' ? 'Opening…' : 'Open session'}</Button>{/if}
           </div>
         </div>
         <pre aria-label="Request body" aria-live="polite" class="wf-se-pre">{JSON.stringify(body, null, 2)}</pre>
         <div class="wf-se-answer">
-          <span class="wf-se-answer-line"><span class="wf-se-code">201</span><span class="wf-se-mono wf-se-sub">Location: /api/arazzo/sessions/{sessionId}</span></span>
+          <span class="wf-se-answer-line"><span class="wf-se-code">201</span><span class="wf-se-mono wf-se-sub">Location: /api/workflows/sessions/{sessionId}</span></span>
           <span class="wf-se-note">400 with the reason in plain text when Microcks refuses the session, for an unknown step or example.</span>
         </div>
       </section>
@@ -229,6 +326,8 @@
   {:else}
     <Callout tone="warning" title="Sessions are not available">{workflow.runnability.message}.</Callout>
   {/if}
+
+  {#if problem}<Callout tone="danger" title="Microcks did not do it">{problem}</Callout>{/if}
 
   <section aria-labelledby="wf-recent-title" class="wf-se-panel wf-se-recent">
     <div class="wf-se-list">
@@ -245,9 +344,9 @@
                   <span class="wf-se-mono wf-se-strong">{s.id}</span>
                   <span class="wf-se-state" data-state={s.state}><span aria-hidden="true" class="wf-se-dot"></span>{s.state}</span>
                 </span>
-                <span class="wf-se-sub">{s.app}</span>
+                <span class="wf-se-sub">{s.real ? (Object.keys(injectedOf(s)).length > 0 ? `${Object.keys(injectedOf(s)).join(', ')} set to fail` : 'no step set to fail') : s.app}</span>
                 <span class="wf-se-item-foot">
-                  <span class="wf-se-muted">{s.calls.length} {s.calls.length === 1 ? 'call' : 'calls'} received</span>
+                  <span class="wf-se-muted">{callsOf(s)}</span>
                   {@render mark(v.tone, v.text)}
                 </span>
               </button>
@@ -267,7 +366,7 @@
           <div><dt>Inputs</dt><dd class="wf-se-mono">{Object.entries(selected.inputs).map(([k, v]) => `${k}=${String(v)}`).join(' · ') || 'none'}</dd></div>
           <div>
             <dt>Steps set to fail</dt>
-            <dd class="wf-se-mono">{selected.failureInjection ? `${selected.failureInjection.stepId} → ${selected.failureInjection.example}` : 'none'}</dd>
+            <dd class="wf-se-mono">{Object.entries(injectedOf(selected)).map(([k, v]) => `${k} → ${v}`).join(' · ') || 'none'}</dd>
           </div>
           <div>
             <dt>Verification</dt>
@@ -280,6 +379,21 @@
             </dd>
           </div>
         </dl>
+        {#if selected.real && selected.state === 'open'}
+          <div class="wf-se-use">
+            <span class="wf-se-caption-line">Set this header on every call of your application to the mocks, or <span class="wf-se-mono">microcks-session={selected.id}</span> in its W3C baggage:</span>
+            <pre aria-label="Session header" class="wf-se-pre"><span class="wf-se-hdr">x-microcks-session: {selected.id}</span>{#if probe}
+
+{sessionCurl(MICROCKS, probe.step.method, probe.path ?? '', selected.id)}{/if}</pre>
+            <div class="wf-se-req-actions">
+              <Button size="sm" onclick={() => copy('header', `x-microcks-session: ${selected.id}`)}>{copied === 'header' ? 'Copied' : 'Copy header'}</Button>
+              {#if probe}<Button size="sm" onclick={() => copy('probe', sessionCurl(MICROCKS, probe.step.method, probe.path ?? '', selected.id))}>{copied === 'probe' ? 'Copied' : 'Copy curl'}</Button>{/if}
+            </div>
+            <span class="wf-se-note">
+              Microcks records the calls the mocks answer in the session, up to 1000{#if selected.real.droppedCallCount > 0} ({selected.real.droppedCallCount} dropped){/if}. The count follows the calls as they arrive.
+            </span>
+          </div>
+        {/if}
         {#if selected.verification?.result === 'FAILURE'}
           <div class="wf-se-alert">
             <span class="wf-se-alert-title"><Icon name="x-circle" size={15} />The calls of the session do not follow the workflow</span>
@@ -298,18 +412,20 @@
             {columns}
             rows={selected.calls}
             rowKey={(c) => String(c.n)}
-            emptyText="No call received yet."
+            emptyText={emptyOf(selected)}
           >
             {#snippet cell(c, col)}
               {#if col.key === 'n'}
                 <span class="wf-se-strong">#{c.n}</span>
               {:else if col.key === 'req'}
-                <span class="wf-se-stack"><span class="wf-se-req"><MethodTag size="xs" method={c.method} />{c.path}</span><span class="wf-se-status">→ {c.httpStatus}</span></span>
+                <span class="wf-se-stack"><span class="wf-se-req"><MethodTag size="xs" method={c.method} />{c.path}</span>{#if c.httpStatus > 0}<span class="wf-se-status">→ {c.httpStatus}</span>{/if}</span>
               {:else if col.key === 'step'}
                 {#if c.stepId === 'unexpected'}
                   <span class="wf-se-step" data-tone="fail"><Icon name="x-circle" size={12} />unexpected</span>
                 {:else}
                   <span class="wf-se-step">{c.stepId}</span>
+                  {#if injectedOf(selected)[c.stepId]}<span class="wf-se-tag" data-tone="fail">failure injected · {injectedOf(selected)[c.stepId]}</span>{/if}
+                  {#if selected.real && Object.keys(injectedOf(selected)).some((k) => compensationStepsOf(workflow.steps.map((x) => x.stepId), k).includes(c.stepId))}<span class="wf-se-tag">compensation</span>{/if}
                 {/if}
               {:else if col.key === 'contract'}
                 {@render mark(c.contract.state, c.contract.text)}
@@ -321,9 +437,18 @@
         </div>
         <div class="wf-se-foot">
           {#if selectedRun}<Button size="sm" href={runPath(selectedRun.id)}>Open verification #{selectedRun.number}</Button>{/if}
-          {#if selected.state === 'open'}<span class="wf-se-mono wf-se-sub">POST /api/arazzo/sessions/{selected.id}/verification</span>{/if}
+          {#if selected.real}
+            <Button size="sm" variant={selected.verification ? undefined : 'primary'} disabled={busy !== undefined} onclick={() => verifySession(selected.id)}>
+              {busy === 'verify' ? 'Verifying…' : selected.verification ? 'Verify again' : 'Verify the calls'}
+            </Button>
+            {#if selected.state === 'open'}<Button size="sm" disabled={busy !== undefined} onclick={() => closeSession(selected.id)}>{busy === 'close' ? 'Closing…' : 'Close session'}</Button>{/if}
+          {:else if selected.state === 'open'}
+            <span class="wf-se-mono wf-se-sub">POST /api/workflows/sessions/{selected.id}/verification</span>
+          {/if}
           <span class="wf-se-muted">
-            {selected.verification
+            {selected.real && !selected.verification
+              ? `Not verified yet · ${selected.real.callCount} of 1000 calls recorded so far.`
+              : selected.verification
               ? `Verified ${formatRelative(selectedRun?.startedAt ?? selected.closedAt ?? selected.openedAt)} against the Microcks mocks.`
               : `Not verified yet · ${selected.calls.length} of 1000 calls recorded.`}
           </span>

@@ -16,16 +16,18 @@ import type { RunOptions, RunTarget, Workflow, WorkflowRun } from '#lib/workflow
 import { cachedSecrets } from './admin';
 import { simulateRun } from './runs-sim';
 import { getService } from './store';
-import { addRun, getDetail, getDocument, getRun, listAll, nextRunNumber } from './workflows';
+import { addRun, getDetail, getDocument, getRun, getWorkflowDetail, isPlaceholderDocument, listAll, listWorkflowsPayload, nextRunNumber } from './workflows';
+import { getRealRunPayload, startRealRun } from './runs-arazzo';
 
 /*
  * Workflow runs BFF. PLACEHOLDER: Microcks has no Arazzo engine or API, so a run is simulated by ./runs-sim against the
  * demo world of lib/placeholders/runs-world.ts and kept in the workflows store. Real counterparts (proposed, not in
- * Microcks): POST /api/arazzo/documents/{id}/workflows/{wf}/runs and GET /api/arazzo/runs/{id}.
+ * Microcks): POST /api/workflows/documents/{id}/workflows/{wf}/runs and GET /api/workflows/runs/{id}.
  */
 
-export function getRunSetup(docId: string, workflowId: string, scenario: string | null): RunSetupPayload | undefined {
-  const detail = getDetail(docId, workflowId);
+export async function getRunSetup(docId: string, workflowId: string, scenario: string | null, token?: string): Promise<RunSetupPayload | undefined> {
+  const real = !isPlaceholderDocument(docId);
+  const detail = real ? await getWorkflowDetail(docId, workflowId, token) : getDetail(docId, workflowId);
   if (!detail) return undefined;
   const { workflow, document, examples } = detail;
   const services: Record<string, LinkedService> = {};
@@ -36,15 +38,18 @@ export function getRunSetup(docId: string, workflowId: string, scenario: string 
   }
   const secrets = cachedSecrets().map((s) => ({ id: s.id, name: s.name }));
   // The restock-pastry scenario selects this secret by name; the demo secret is offered even when the store has none.
-  if (!secrets.some((s) => s.name === SECRET_STAGING)) secrets.push({ id: 'demo-secret', name: SECRET_STAGING });
+  if (!real && !secrets.some((s) => s.name === SECRET_STAGING)) secrets.push({ id: 'demo-secret', name: SECRET_STAGING });
+  const all = real ? await listWorkflowsPayload(token) : listAll();
   return {
     document,
     workflow,
-    workflows: listAll().workflows,
+    workflows: all.workflows,
+    documents: all.documents,
     examples,
     secrets,
-    defaults: defaultsFor(workflow, isRunScenario(scenario) ? scenario : undefined),
-    services
+    defaults: defaultsFor(workflow, isRunScenario(scenario) ? scenario : undefined, real),
+    services,
+    demo: !real
   };
 }
 
@@ -62,7 +67,12 @@ const newRunId = () => Array.from({ length: 24 }, () => Math.floor(Math.random()
 
 export type StartResult = { runId: string } | { status: 404 | 422; error: string; errors?: FieldError[] };
 
-export function startWorkflowRun(input: StartRunInput): StartResult {
+export async function startWorkflowRun(input: StartRunInput, token?: string): Promise<StartResult> {
+  if (!isPlaceholderDocument(input.documentId)) {
+    const real = await getWorkflowDetail(input.documentId, input.workflowId, token);
+    if (!real) return { status: 404, error: `Workflow "${input.workflowId}" does not exist in document "${input.documentId}".` };
+    return startRealRun(input, real.workflow, token);
+  }
   const detail = getDetail(input.documentId, input.workflowId);
   if (!detail) return { status: 404, error: `Workflow "${input.workflowId}" does not exist in document "${input.documentId}".` };
   const { workflow } = detail;
@@ -118,9 +128,9 @@ export function startWorkflowRun(input: StartRunInput): StartResult {
   return { runId };
 }
 
-export function getWorkflowRunPayload(runId: string): WorkflowRunPayload | undefined {
+export async function getWorkflowRunPayload(runId: string, token?: string): Promise<WorkflowRunPayload | undefined> {
   const run: WorkflowRun | undefined = getRun(runId) ?? scenarioRun(runId);
-  if (!run) return undefined;
+  if (!run) return getRealRunPayload(runId, (docId, workflowId) => getWorkflowDetail(docId, workflowId, token), token);
   const detail = getDetail(run.documentId, run.workflowId);
   return {
     run,

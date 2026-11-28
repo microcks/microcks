@@ -16,7 +16,9 @@
   import PageHeader from '#lib/components/PageHeader.svelte';
   import DemoFlag from '#lib/components/workflows/DemoFlag.svelte';
   import DocumentGroup from '#lib/components/workflows/DocumentGroup.svelte';
+  import { callsOneOf, distinctSources, sourceKey } from '#lib/workflows/source-key.js';
   import LinkSourceDialog from '#lib/components/workflows/LinkSourceDialog.svelte';
+  import { filterFeature, isAvailable, isFilterAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { listWorkflows, type ResultFilter } from '#lib/workflows/list.js';
   import type { ArazzoDocument, RunKindFilter, SourceDescription } from '#lib/workflows/types.js';
 
@@ -62,7 +64,7 @@ workflows:
           firstName: $response.body#/0/name`;
 
   const ONBOARDING = [
-    { title: 'Import an Arazzo document', text: 'Upload a file or import it from a URL in Importers. Link each source description to a Microcks API, in the dialog or with an ArazzoSources overlay.' },
+    { title: 'Import an Arazzo document', text: 'Upload a file or import it from a URL in Importers. Link each source description to a Microcks API, in the dialog or with an ArazzoMetadata overlay.' },
     { title: 'Play it on the mocks', text: 'Run it on the Microcks mocks, call its Mock URL, or open a verification session for the application under test.' },
     { title: 'Run it on your implementations', text: 'Give a base URL per source; each step is checked on its successCriteria and, optionally, against its OpenAPI schema.' }
   ];
@@ -75,6 +77,7 @@ workflows:
   let linking = $state<{ document: ArazzoDocument; source: SourceDescription } | null>(null);
   let linked = $state<string | null>(null);
 
+  const mockUrlOn = $derived(isAvailable('mock-url', data.demo));
   const documents = $derived<ArazzoDocument[]>(data.documents);
   const run = (f: Parameters<typeof listWorkflows>[3]) => listWorkflows(data.documents, data.workflows, data.runs, f);
 
@@ -86,15 +89,16 @@ workflows:
   );
   const bySource = $derived(run({ query: q, runKind, result }));
   const allWorkflows = $derived(run({}));
-  const allSources = $derived(documents.flatMap((d) => d.sources));
-  const unlinkedTotal = $derived(allSources.filter((s) => s.link.status === 'not-linked').length);
+  const allSources = $derived(distinctSources(documents));
+  const sourceCount = $derived(documents.reduce((n, d) => n + d.sources.length, 0));
+  const unlinkedTotal = $derived(documents.flatMap((d) => d.sources).filter((s) => s.link.status === 'not-linked').length);
   const totalWorkflows = $derived(documents.reduce((n, d) => n + d.workflowIds.length, 0));
 
   const activeDesc = $derived([
     ...(q.trim() ? [`“${q.trim()}”`] : []),
     ...(result !== 'all' ? [RESULT_LABEL[result]] : []),
     ...(runKind !== 'any' ? [TARGET_LABEL[runKind]] : []),
-    ...sources
+    ...sources.map((k) => k.split('|')[0] ?? k)
   ]);
   const showOnboarding = $derived(demo === 'empty' || documents.length === 0);
   const loading = $derived(demo === 'loading');
@@ -108,10 +112,10 @@ workflows:
       ? '0 workflows · 0 Arazzo documents'
       : loading
         ? 'Loading…'
-        : `${totalWorkflows} workflows · ${documents.length} Arazzo documents · ${allSources.length} source descriptions (${unlinkedTotal} not linked)`
+        : `${totalWorkflows} workflows · ${documents.length} Arazzo documents · ${sourceCount} source descriptions (${unlinkedTotal} not linked)`
   );
   const serviceOf = (id: string) => data.services.find((s) => s.id === id);
-  const usesSource = (w: (typeof items)[number], name: string) => w.workflow.steps.some((s) => s.sourceName === name);
+  const usesSource = (w: (typeof items)[number], key: string) => callsOneOf(w.workflow, w.document, [key]);
 
   function reset() {
     q = '';
@@ -126,9 +130,9 @@ workflows:
   <PageHeader
     title="Workflows"
     size="lg"
-    description="Multi-step API journeys described with Arazzo. Each step calls an operation of an API already in Microcks; play them against the mocks or against your implementations, or call them through their Mock URL."
+    description={`Multi-step API journeys described with Arazzo. Each step calls an operation of an API already in Microcks; play them against the mocks or against your implementations${mockUrlOn ? ', or call them through their Mock URL' : ''}.`}
   >
-    {#snippet meta()}{countLine} <DemoFlag />{/snippet}
+    {#snippet meta()}{countLine}{#if data.demo} <DemoFlag />{/if}{/snippet}
     {#snippet actions()}
       <Button href="/sources" icon="git-branch">Sources</Button>
       <Button href="/sources/new" variant="primary" icon="download">Import Arazzo document</Button>
@@ -151,21 +155,22 @@ workflows:
         />
         <Segmented
           label="Run target"
-          options={TARGETS.map((t) => ({ ...t, count: targetCounts[t.id] }))}
+          options={TARGETS.map((t) => ({ ...t, count: targetCounts[t.id], ...(isFilterAvailable(t.id, data.demo) ? {} : { disabled: true, title: unavailableReason(filterFeature(t.id)!, data.demo) }) }))}
           value={runKind}
           onchange={(id) => (runKind = id as RunKindFilter)}
         />
       </FilterRow>
       <FilterRow title="Sources">
-        {#each allSources as source (source.name)}
+        {#each allSources as source (sourceKey(source))}
           {@const svc = source.link.status === 'linked' ? serviceOf(source.link.serviceId) : undefined}
-          {@const count = bySource.filter((w) => usesSource(w, source.name)).length}
+          {@const key = sourceKey(source)}
+          {@const count = bySource.filter((w) => usesSource(w, key)).length}
           {#if source.link.status === 'not-linked'}
-            <Chip class="wf-src-unlinked" pressed={sources.includes(source.name)} {count} onclick={() => toggleSource(source.name)}>
+            <Chip class="wf-src-unlinked" pressed={sources.includes(key)} {count} onclick={() => toggleSource(key)}>
               <Icon name="warning" size={13} />{source.name} · not linked
             </Chip>
           {:else}
-            <Chip protocol={source.link.protocol} pressed={sources.includes(source.name)} {count} onclick={() => toggleSource(source.name)}>
+            <Chip protocol={source.link.protocol} pressed={sources.includes(key)} {count} onclick={() => toggleSource(key)}>
               {svc ? `${svc.name} ${svc.version}` : source.name}
             </Chip>
           {/if}
@@ -283,9 +288,11 @@ workflows:
     />
   {/if}
 
+  {#if data.demo}
   <section aria-label="Prototype states" class="wf-demo">
     <span>Prototype states</span>
     <button type="button" class="wf-demo-btn" aria-pressed={demo === 'loading'} onclick={() => (demo = demo === 'loading' ? null : 'loading')}>Show loading</button>
     <button type="button" class="wf-demo-btn" aria-pressed={demo === 'empty'} onclick={() => (demo = demo === 'empty' ? null : 'empty')}>Show empty state</button>
   </section>
+  {/if}
 </div>

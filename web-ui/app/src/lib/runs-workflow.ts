@@ -189,19 +189,23 @@ const SAMPLE_INPUTS: Record<string, string> = { name: 'Eclair Cafe', quantity: '
 
 const baseUrlOf = (source: string) => (source === 'apiPastry' ? EXAMPLE_BASE_URL : source === 'apiPastryV1' ? EXAMPLE_BASE_URL.replace(/\/v2$/, '/v1') : '');
 
-/** Initial values of the form: restock-pastry follows its scenario; any other workflow starts on the mocks. */
-export function defaultsFor(workflow: Pick<Workflow, 'workflowId' | 'steps' | 'inputs'>, scenario?: RunScenario): RunFormDefaults {
-  if (workflow.workflowId === 'restock-pastry') return RUN_SCENARIOS[scenario ?? 'impl14'].defaults;
+/**
+ * Initial values of the form: restock-pastry follows its scenario; any other workflow starts on the mocks. A real
+ * document has no demo scenario nor demo sample values, and schema validation is off, as the form says ("Off by
+ * default"; the backend does not validate a response unless `validateSchema` is true).
+ */
+export function defaultsFor(workflow: Pick<Workflow, 'workflowId' | 'steps' | 'inputs'>, scenario?: RunScenario, real = false): RunFormDefaults {
+  if (!real && workflow.workflowId === 'restock-pastry') return RUN_SCENARIOS[scenario ?? 'impl14'].defaults;
   const sources = [...new Set(workflow.steps.map((s) => s.sourceName))];
   return {
     target: 'mocks',
-    baseUrls: Object.fromEntries(sources.map((s) => [s, baseUrlOf(s)])),
+    baseUrls: Object.fromEntries(sources.map((s) => [s, real ? '' : baseUrlOf(s)])),
     perSource: Object.fromEntries(sources.map((s) => [s, 'mock' as const])),
     secret: '',
     example: '',
     detached: true,
-    inputs: Object.fromEntries(workflow.inputs.map((i) => [i.name, i.example ?? SAMPLE_INPUTS[i.name] ?? ''])),
-    validateSchemas: true,
+    inputs: Object.fromEntries(workflow.inputs.map((i) => [i.name, i.example ?? (real ? undefined : SAMPLE_INPUTS[i.name]) ?? ''])),
+    validateSchemas: !real,
     timeoutMs: String(DEFAULT_RUN_TIMEOUT_MS)
   };
 }
@@ -220,15 +224,21 @@ export interface RunSetupPayload {
   document: ArazzoDocument;
   workflow: Workflow;
   workflows: Workflow[];
+  /** The documents of those workflows, to say which one each belongs to. */
+  documents: Pick<ArazzoDocument, 'id' | 'title' | 'version'>[];
   examples: WorkflowExample[];
   secrets: { id: string; name: string }[];
   defaults: RunFormDefaults;
   /** Real services of the store, by source description name. */
   services: Record<string, LinkedService>;
+  /** False for a workflow of an imported document (Microcks API); placeholder data otherwise. */
+  demo?: boolean;
 }
 
 /** GET /api/runs/workflow-runs/:id */
 export interface WorkflowRunPayload {
+  /** False for a run executed by Microcks (Arazzo minion); simulated run of placeholder data otherwise. */
+  demo?: boolean;
   run: WorkflowRun;
   document?: ArazzoDocument;
   workflow?: Workflow;
@@ -300,6 +310,8 @@ export interface RunApiBody {
   inputs: Record<string, unknown>;
   timeout: number;
   implementations?: Record<string, string>;
+  /** Mixed run: where each source goes; `implementations` then holds the sources sent to their implementation. */
+  target?: { kind: 'mixed'; perSource: Record<string, 'mock' | 'implementation'> };
   secretName?: string;
   validateSchema: boolean;
   example?: string;
@@ -310,6 +322,9 @@ export function apiBodyOf(run: WorkflowRun): RunApiBody {
     inputs: run.options.inputs,
     timeout: run.options.timeoutMs,
     ...(run.target.kind === 'implementations' ? { implementations: run.target.baseUrls } : {}),
+    ...(run.target.kind === 'mixed'
+      ? { implementations: run.target.baseUrls ?? {}, target: { kind: 'mixed' as const, perSource: run.target.perSource } }
+      : {}),
     ...(run.target.kind !== 'mocks' && run.options.secret ? { secretName: run.options.secret } : {}),
     validateSchema: run.options.validateSchemas,
     ...(run.options.example ? { example: run.options.example } : {})
@@ -326,7 +341,16 @@ export function launchedBy(run: WorkflowRun): string {
 export function targetLine(run: WorkflowRun): string {
   if (run.target.kind === 'mocks') return 'Microcks mocks';
   if (run.target.kind === 'implementations') return `Implementations · ${implementationsText(run.target.baseUrls)}`;
-  return 'Mixed · proposed, beyond POC';
+  if (run.target.proposed) return 'Mixed · proposed, beyond POC';
+  const where = mixedText(run.target.perSource, run.target.baseUrls ?? {});
+  return where ? `Mixed · ${where}` : 'Mixed';
+}
+
+/** Where each source of a mixed run goes: `customerApi → https://…, orderApi → its mocks`. */
+export function mixedText(perSource: Record<string, 'mock' | 'implementation'>, baseUrls: Record<string, string>): string {
+  return Object.entries(perSource)
+    .map(([name, where]) => `${name} → ${where === 'implementation' ? (baseUrls[name] ?? 'its implementation') : 'its mocks'}`)
+    .join(', ');
 }
 
 export function originText(run: WorkflowRun): string {
@@ -336,13 +360,16 @@ export function originText(run: WorkflowRun): string {
   return 'Mock URL';
 }
 
-/** "apiPastry · /rest/API+Pastry/2.0": the mock endpoint of each source a mocks run calls. */
-export function mockSources(run: WorkflowRun): string {
-  return [...new Set(run.steps.flatMap((s) => (s.request ? [s.request.url] : [])))]
-    .map((u) => u.match(/^https?:\/\/[^/]+(\/rest\/[^/]+\/[^/]+)/)?.[1])
-    .filter((x, i, all): x is string => !!x && all.indexOf(x) === i)
-    .map((p) => `apiPastry · ${p}`)
-    .join(' · ');
+/**
+ * "quoteApi · /rest/Insurance+Quote+API/1.0.0": the mock endpoint each source of a mocks run calls, named by the source
+ * of the step that called it (`sourceOf`), in the order of the calls.
+ */
+export function mockSources(run: WorkflowRun, sourceOf: (stepId: string) => string | undefined): string {
+  const lines = run.steps.flatMap((s) => {
+    const path = s.request?.url.match(/^https?:\/\/[^/]+(\/rest\/[^/]+\/[^/]+)/)?.[1];
+    return path ? [`${sourceOf(s.stepId) ?? 'source'} · ${path}`] : [];
+  });
+  return [...new Set(lines)].join(' · ');
 }
 
 /** JSON-ish value as the prototype prints it. */

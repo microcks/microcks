@@ -1,0 +1,9 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: ArazzoMetadata
+metadata:
+  name: Pastry examples
+  version: 1.0.0
+sources:
+  pastryApi:
+    name: Pastry Examples API
+    version: 1.0.0

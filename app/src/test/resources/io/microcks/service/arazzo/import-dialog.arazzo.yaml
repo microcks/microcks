@@ -1,0 +1,108 @@
+# example: place-order - Order fulfilment, whose sources declare the absolute URL of their contracts
+arazzo: 1.0.1
+info:
+  title: Order fulfilment
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: CONTRACTS/specs/customer-api.openapi.yaml?example=customer-api
+    type: openapi
+  - name: orderApi
+    url: CONTRACTS/specs/order-api.openapi.yaml?example=order-api
+    type: openapi
+workflows:
+  - workflowId: searchThenRead
+    summary: Searches customers by name, then reads the first one found.
+    steps:
+      - stepId: search
+        operationId: $sourceDescriptions.customerApi.SearchCustomers
+        successCriteria:
+          - condition: $statusCode == 200
+        outputs:
+          customerId: $response.body#/0/id
+      - stepId: read
+        operationId: $sourceDescriptions.customerApi.GetCustomer
+        parameters:
+          - name: id
+            in: path
+            value: $steps.search.outputs.customerId
+        successCriteria:
+          - condition: $statusCode == 200
+  - workflowId: placeOrder
+    summary: Places an order, then reads it back.
+    steps:
+      - stepId: createOrder
+        operationId: $sourceDescriptions.orderApi.CreateOrder
+        successCriteria:
+          - condition: $statusCode == 201
+        outputs:
+          orderId: $response.body#/id
+      - stepId: readOrder
+        operationId: $sourceDescriptions.orderApi.GetOrder
+        parameters:
+          - name: id
+            in: path
+            value: $steps.createOrder.outputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200
+---
+# example: one-source - a document with one source description, whose url is DECLARED_URL
+arazzo: 1.0.1
+info:
+  title: Customer lookup
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: DECLARED_URL
+    type: openapi
+workflows:
+  - workflowId: searchThenRead
+    steps:
+      - stepId: search
+        operationId: SearchCustomers
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: read
+        operationId: GetCustomer
+        successCriteria:
+          - condition: $statusCode == 200
+---
+# example: no-info - a document without info
+arazzo: 1.0.1
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: searchThenRead
+    steps:
+      - stepId: search
+        operationId: SearchCustomers
+---
+# example: unsupported-field - a document whose workflow uses successActions, outside of the supported subset
+arazzo: 1.0.1
+info:
+  title: Customer lookup
+  version: 1.0.0
+sourceDescriptions:
+  - name: customerApi
+    url: ./customer-api.openapi.yaml
+    type: openapi
+workflows:
+  - workflowId: searchThenRead
+    successActions:
+      - name: done
+        type: end
+    steps:
+      - stepId: search
+        operationId: SearchCustomers
+---
+# example: not-arazzo - an OpenAPI contract, that declares no Arazzo version
+openapi: 3.0.2
+info:
+  title: Customer API
+  version: 1.0.0
+paths: {}
+---
+# example: unparseable - a document that is neither YAML nor JSON
+arazzo: [ 1.0.1

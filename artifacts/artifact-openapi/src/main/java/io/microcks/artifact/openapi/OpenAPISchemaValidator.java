@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.microcks.artifact.jsonschema.JsonSchemaDialect;
 import io.microcks.artifact.jsonschema.JsonSchemaValidator;
+import io.microcks.artifact.jsonschema.JsonSchemaViolation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -54,6 +55,16 @@ public class OpenAPISchemaValidator {
 
    private static final String[] NOT_SUPPORTED_ATTRIBUTES = { NULLABLE, "discriminator", "readOnly", "writeOnly", "xml",
          "externalDocs", "example", "deprecated" };
+
+   /** The violation of a message the specification does not describe, such as a response of an unknown status. */
+   public static final String MESSAGE_NOT_FOUND = "messagePathPointer does not represent a valid JSON Pointer in "
+         + "OpenAPI specification";
+   /** The violation of a message whose content the specification does not describe for its content type. */
+   public static final String CONTENT_NOT_FOUND = "messagePathPointer does not represent an existing JSON Pointer in "
+         + "OpenAPI specification";
+   /** The violation of a message the specification describes without schema. */
+   public static final String SCHEMA_NOT_FOUND = "schemaPathPointer does not represent an existing JSON Pointer in "
+         + "OpenAPI specification";
 
 
    /** Private constructor to hide the implicit one. */
@@ -150,6 +161,20 @@ public class OpenAPISchemaValidator {
    }
 
    /**
+    * Validate a Json object against an OpenAPI schema, like {@link #validateJson(JsonNode, JsonNode, String)} does,
+    * telling for each violation the JSON pointer of the part of the object that violates the schema.
+    * @param schemaNode The OpenAPI schema specification as a Jackson node
+    * @param jsonNode   The Json object as a Jackson node
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
+    * @return The violations, in the order the validator found them. If empty, json object is valid !
+    */
+   public static List<JsonSchemaViolation> validateJsonWithPointers(JsonNode schemaNode, JsonNode jsonNode,
+         String namespace) {
+      return JsonSchemaValidator.validateJsonWithPointers(convertOpenAPISchemaToJsonSchema(schemaNode), jsonNode,
+            namespace, JsonSchemaDialect.DRAFT_2020_12);
+   }
+
+   /**
     * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
     * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of OpenAPI schema
     * spec semantics regarding additional or unknown attributes: schema must explicitly set
@@ -203,11 +228,46 @@ public class OpenAPISchemaValidator {
     */
    public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode,
          String messagePathPointer, String contentType, String namespace) {
+      return validateJsonMessageWithPointers(specificationNode, jsonNode, messagePathPointer, contentType, namespace)
+            .stream().map(JsonSchemaViolation::message).toList();
+   }
+
+   /**
+    * Validate a Json object representing an OpenAPI message (response or request) against a node representing a full
+    * OpenAPI specification, like {@link #validateJsonMessage(JsonNode, JsonNode, String, String)} does, telling for
+    * each violation the JSON pointer of the part of the message that violates its schema.
+    * @param specificationNode  The OpenAPI full specification as a Jackson node
+    * @param jsonNode           The Json object representing actual message as a Jackson node
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param contentType        The Content-Type of the message to valid
+    * @return The violations; a violation without pointer when the message has no schema in the specification. If empty,
+    *         json object is valid !
+    */
+   public static List<JsonSchemaViolation> validateJsonMessageWithPointers(JsonNode specificationNode,
+         JsonNode jsonNode, String messagePathPointer, String contentType) {
+      return validateJsonMessageWithPointers(specificationNode, jsonNode, messagePathPointer, contentType, null);
+   }
+
+   /**
+    * Validate a Json object representing an OpenAPI message (response or request) against a node representing a full
+    * OpenAPI specification, like {@link #validateJsonMessage(JsonNode, JsonNode, String, String, String)} does, telling
+    * for each violation the JSON pointer of the part of the message that violates its schema.
+    * @param specificationNode  The OpenAPI full specification as a Jackson node
+    * @param jsonNode           The Json object representing actual message as a Jackson node
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param contentType        The Content-Type of the message to valid
+    * @param namespace          Namespace definition to resolve relative dependencies in OpenAPI schema
+    * @return The violations; a violation without pointer, whose message is {@link #MESSAGE_NOT_FOUND},
+    *         {@link #CONTENT_NOT_FOUND} or {@link #SCHEMA_NOT_FOUND}, when the specification does not describe the
+    *         message or its schema. If empty, json object is valid !
+    */
+   public static List<JsonSchemaViolation> validateJsonMessageWithPointers(JsonNode specificationNode,
+         JsonNode jsonNode, String messagePathPointer, String contentType, String namespace) {
       // Extract specific content type node for message node.
       JsonNode messageNode = specificationNode.at(messagePathPointer);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
-         return List.of("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
+         return List.of(specificationViolation(MESSAGE_NOT_FOUND));
       }
       // Message node can be just a reference.
       if (messageNode.has("$ref")) {
@@ -218,7 +278,7 @@ public class OpenAPISchemaValidator {
       messageNode = getMessageContentNode(messageNode, contentType);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("content for {} cannot be found into OpenAPI specification", contentType);
-         return List.of("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+         return List.of(specificationViolation(CONTENT_NOT_FOUND));
       }
 
       // Build a schema object with responseNode schema as root and by importing
@@ -226,12 +286,18 @@ public class OpenAPISchemaValidator {
       JsonNode schemaNode = messageNode.path("schema").deepCopy();
       if (schemaNode == null || schemaNode.isMissingNode()) {
          log.debug("schema for {} cannot be found into OpenAPI specification", messageNode);
-         return List.of("schemaPathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+         return List.of(specificationViolation(SCHEMA_NOT_FOUND));
       }
       ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT,
             specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
-      return validateJson(schemaNode, jsonNode, namespace, resolveDialect(specificationNode));
+      return JsonSchemaValidator.validateJsonWithPointers(convertOpenAPISchemaToJsonSchema(schemaNode), jsonNode,
+            namespace, resolveDialect(specificationNode));
+   }
+
+   /** A violation that is not about a part of the message, but about the specification it is validated against. */
+   static JsonSchemaViolation specificationViolation(String message) {
+      return new JsonSchemaViolation(null, message);
    }
 
    /**

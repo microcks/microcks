@@ -153,7 +153,7 @@
         {/if}
       {/snippet}
     </RunBadges>
-    <DemoFlag />
+    {#if payload.demo !== false}<DemoFlag />{/if}
   {/snippet}
   {#snippet actions()}
     {#if running}
@@ -171,7 +171,7 @@
       { term: 'Run against', value: targetLine(run) },
       { term: 'Started', value: formatRelative(run.startedAt), detail: formatClock(run.startedAt) },
       { term: running ? 'Elapsed' : 'Duration', kind: 'mono' as const, value: formatDuration(totals.ms) },
-      { term: 'Launched by', value: launchedBy(run) }
+      ...(payload.demo === false ? [] : [{ term: 'Launched by', value: launchedBy(run) }])
     ]}
   />
 </PageHeader>
@@ -210,22 +210,25 @@
         note={progressNote}
       />
     {:else}
-      <RunSummary {run} {totals} {workflow} />
+      <RunSummary {run} {totals} {workflow} {document} />
     {/if}
     {#if example}<RunExampleJudging {run} {example} pending={running} />{/if}
-    <RunSteps {run} {workflow} />
+    <RunSteps {run} {workflow} {document} />
   </div>
 
   <aside aria-label="Run side panels" class="wfr-aside">
-    <RunProperties {run} {documentLabel} {example} />
+    <RunProperties {run} {documentLabel} {example} sourceOf={(stepId) => workflow?.steps.find((s) => s.stepId === stepId)?.sourceName} />
     {#if document && workflow}
       <RunApiPanel
         hint={`Launches the same run as run #${run.number}.`}
         documentApiId={document.apiId}
+        documentTitle={document.title}
+        documentVersion={document.version}
         documentLabel={documentLabel ?? ''}
         workflowId={run.workflowId}
         mockUrl={workflow.mockUrl}
         mixed={run.target.kind === 'mixed'}
+        proposed={payload.demo !== false}
         body={apiBodyOf(run)}
       />
     {/if}

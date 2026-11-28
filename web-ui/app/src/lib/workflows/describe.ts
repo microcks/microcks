@@ -197,7 +197,7 @@ export function judgeExample(
     const code = ran ? step.attempts[step.attempts.length - 1]?.httpStatus : undefined;
     let met = ran && code === e.status;
     if (!ran) unmet.push(`Step ${e.stepId}: expected to run but was not run`);
-    else if (code !== e.status) unmet.push(`Step ${e.stepId}: expecting ${e.status} but got ${code}`);
+    else if (code !== e.status) unmet.push(`Step ${e.stepId}: expecting ${e.status} but got ${code ? code : 'no response'}`);
     const outs = Object.entries(e.outputs ?? {});
     const seen: string[] = [];
     if (ran) {

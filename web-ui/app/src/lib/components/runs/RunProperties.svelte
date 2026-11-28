@@ -1,17 +1,20 @@
 <script lang="ts">
   import { Chip, FactRow, Facts } from '@microcks/deep-ink';
+  import { isDemo } from '#lib/workflows/availability.js';
   import { judgeExample } from '#lib/workflows/describe.js';
   import { workflowPath } from '#lib/workflows/paths.js';
   import type { WorkflowExample, WorkflowRun } from '#lib/workflows/types.js';
-  import { J, implementationsText, mockSources, originText } from '#lib/runs-workflow.js';
+  import { J, implementationsText, mockSources, originText, mixedText } from '#lib/runs-workflow.js';
 
   interface Props {
     run: WorkflowRun;
     documentLabel?: string;
     example?: WorkflowExample;
+    /** The source description each step calls, by step id; the steps of the workflow. */
+    sourceOf?: (stepId: string) => string | undefined;
   }
 
-  let { run, documentLabel, example }: Props = $props();
+  let { run, documentLabel, example, sourceOf = () => undefined }: Props = $props();
 
   const onMocks = $derived(run.target.kind === 'mocks');
   const firstBaggage = $derived(run.steps.find((s) => s.status !== 'not-run')?.baggage);
@@ -39,8 +42,9 @@
         <span class="wfr-target">
           <strong>{run.target.kind === 'mocks' ? 'Microcks mocks' : run.target.kind === 'implementations' ? 'Implementations' : 'Mixed'}</strong>
           {#if run.target.kind === 'implementations'}<span class="wfr-target-url">{implementationsText(run.target.baseUrls)}</span>{/if}
-          {#if run.target.kind === 'mocks'}<span class="wfr-target-url">{mockSources(run)}</span>{/if}
-          {#if run.target.kind === 'mixed'}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
+          {#if run.target.kind === 'mocks'}<span class="wfr-target-url">{mockSources(run, sourceOf)}</span>{/if}
+          {#if run.target.kind === 'mixed' && !run.target.proposed}<span class="wfr-target-url">{mixedText(run.target.perSource, run.target.baseUrls ?? {})}</span>{/if}
+          {#if run.target.kind === 'mixed' && run.target.proposed}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
         </span>
       {/snippet}
     </FactRow>
@@ -53,8 +57,12 @@
         {#snippet children()}
           <span class="wfr-baggage-block">
             <code class="wfr-baggage">{firstBaggage}</code>
-            <span class="wfr-note">Carried by each call to the mocks: Live traces show which run, step and attempt a mock call comes from.</span>
-            <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+            {#if isDemo(run.documentId)}
+              <span class="wfr-note">Carried by each call to the mocks: Live traces show which run, step and attempt a mock call comes from.</span>
+              <a href={`/traces?run=${run.id}`} class="wfr-link">See in Live traces</a>
+            {:else}
+              <span class="wfr-note">Carried by each call to the mocks: their spans carry <code class="wfr-baggage">arazzo.run.id={run.id}</code>, with the workflow, step and attempt.</span>
+            {/if}
           </span>
         {/snippet}
       </FactRow>

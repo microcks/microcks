@@ -1,0 +1,53 @@
+# example: contracts/customers.yaml - Customer API 1.0.0, in a file whose name is not its title
+openapi: 3.0.2
+info:
+  title: Customer API
+  version: 1.0.0
+paths:
+  /customers:
+    get:
+      operationId: SearchCustomers
+      responses:
+        "200":
+          description: The customers with that name
+  /customers/{id}:
+    get:
+      operationId: GetCustomer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The customer with that id
+---
+# example: journeys/no-info.yaml - a contract that gives no title and no version
+openapi: 3.0.2
+paths: {}
+---
+# example: journeys/order-api.openapi.yaml - Order API 1.0.0, next to the Arazzo document
+openapi: 3.0.2
+info:
+  title: Order API
+  version: 1.0.0
+paths:
+  /orders:
+    post:
+      operationId: CreateOrder
+      responses:
+        "201":
+          description: The order placed
+  /orders/{id}:
+    get:
+      operationId: GetOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The order with that id
