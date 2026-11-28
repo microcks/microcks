@@ -23,9 +23,9 @@ called together, and reuses the APIs it already mocks to run, mock and verify th
 
 ```
                       ┌──────────────────── Microcks app ─────────────────────┐
- Arazzo document ───▶ │ import ─▶ arazzoDocument          runs ─▶ workflowResult│
- ArazzoMetadata  ───▶ │ links  ─▶ arazzoMetadata (source → API)               │
- ArazzoExamples  ───▶ │ examples ▶ arazzoExamples                             │
+ Arazzo document ───▶ │ import ─▶ workflowDocument        runs ─▶ workflowResult│
+ ArazzoMetadata  ───▶ │ links  ─▶ workflowMetadata (source → API)             │
+ ArazzoExamples  ───▶ │ examples ▶ workflowExamples                           │
                       │  /api/arazzo/**   Mock URL /arazzo/**   sessions      │
                       └───────┬──────────────────────▲────────────────────────┘
                      run request│                      │ step reports, outcome
@@ -42,7 +42,9 @@ called together, and reuses the APIs it already mocks to run, mock and verify th
   Documents outside the supported subset are refused at import with their reason.
 - **Kernel.** `artifacts/artifact-arazzo` reads documents, the step order and the runtime expressions. It depends on
   Jackson only, so both the app and the minion use it.
-- **App.** Arazzo code lives in `io.microcks.{domain,repository,service,web}.arazzo`. It exposes the REST API under
+- **App.** The stored model is generic, in `io.microcks.domain.workflow` (`WorkflowDocument` carries its `format`,
+  `ARAZZO` today); the Arazzo code lives in `io.microcks.{repository,service,web}.arazzo`, the views of the API in
+  `io.microcks.service.arazzo.view`. It exposes the REST API under
   `/api/arazzo` (documents, workflows, runs, history, examples, sessions), described in
   `api/microcks-openapi-v2.0.yaml`, the Mock URL
   `POST /arazzo/{title}/{version}/{workflowId}` that plays a workflow on the mocks and answers its outputs, and

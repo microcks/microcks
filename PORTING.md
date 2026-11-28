@@ -215,7 +215,7 @@ Architecture: see the Arazzo section of `ARCHITECTURE.md` and `minions/arazzo/RE
 | 1.x (`feature/arazzo`) | 2.0 |
 |---|---|
 | `commons/util` `io.github.microcks.util.arazzo` (reader, expressions) | `artifacts/artifact-arazzo` (`io.microcks.artifact.arazzo`), Jackson only (ArchUnit test); the minion's expression evaluator and JSON Pointer moved there too |
-| Flat `domain`, `repository`, `service`, `web` | `io.microcks.{domain,repository,service,web}.arazzo` (+ `web.arazzo.dto`), tests mirrored; moved by a pure-rename commit |
+| Flat `domain`, `repository`, `service`, `web` | stored model generic in `io.microcks.domain.workflow` (`Workflow*`, `WorkflowDocument.format` = `ARAZZO`, collections `workflow*`); API views in `io.microcks.service.arazzo.view`; `io.microcks.{repository,service,web}.arazzo` (+ `web.arazzo.dto`), tests mirrored; moved by pure-rename commits |
 | Spring Data entities and `Custom*Repository` + `MongoTemplate` | `@MongoEntity` + Panache `ObjectIdRepository` (same collection names); `ObjectIdRepository.save` added; `Object` values need `config.AnyValueCodecProvider`; TTL and unique indexes created at startup by the repositories (no `MongoConfiguration`) |
 | `@Service`, `@Value`, Spring MVC controllers | CDI `@ApplicationScoped`, `@ConfigProperty`, JAX-RS `@RunOnVirtualThread` under the same paths; an unknown enum filter still answers 400 |
 | `SecurityConfiguration` matchers | `AccessRule`s of `security.AuthenticationFilter` (MANAGER to import and relink documents) |
