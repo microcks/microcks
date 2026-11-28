@@ -236,9 +236,9 @@ New or different in 2.0:
   operation (the app sends `requestMediaTypes` per operation to the minion); with several or none the step fails
   without a call, the specification being silent.
 - **Robustness.** An unexpected minion error ends the run as `FAILURE` ("Unexpected error in the Arazzo minion: …").
-- **Sessions.** `GET /api/arazzo/sessions?documentId=&workflowId=` and `GET /api/arazzo/sessions/{id}` (live call
+- **Sessions.** `GET /api/workflows/sessions?documentId=&workflowId=` and `GET /api/workflows/sessions/{id}` (live call
   count, `state`, `verificationRunId`) were added for the Sessions tab.
-- **Other endpoints.** `GET /api/arazzo/documents/{id}/source` (the document as uploaded); a document is named by id
+- **Other endpoints.** `GET /api/workflows/documents/{id}/source` (the document as uploaded); a document is named by id
   or `<title>:<version>`.
 - **API description.** The 1.x POC's `microcks-openapi-v1.16.yaml` became `api/microcks-openapi-v2.0.yaml`; the
   `v1.*` descriptions are untouched. It describes the whole 2.0 API (`/keycloak/config` became `/auth/config`, token
@@ -246,7 +246,7 @@ New or different in 2.0:
   fails when an endpoint under `/api` is missing from it, or described but gone.
 
 Web UI:
-- `lib/server/workflows.ts`, `runs-arazzo.ts` and `sessions-arazzo.ts` map `/api/arazzo` to the Deep Ink types;
+- `lib/server/workflows.ts`, `runs-arazzo.ts` and `sessions-arazzo.ts` map `/api/workflows` to the Deep Ink types;
   placeholder (demo) data is used only when the backend is unreachable.
 - Features not served are disabled, not hidden, through `lib/workflows/availability.ts` (today: AI Copilot generation
   and document edit).
