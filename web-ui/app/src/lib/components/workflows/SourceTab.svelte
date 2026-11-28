@@ -156,7 +156,7 @@
           </span>
           <span class="wf-src-refs">
             {ops.map((o, k) => (k === 0 ? `$sourceDescriptions.${o}` : ` · .${o.split('.').pop()}`)).join('')}
-            → {linkedTo.map((l) => `${l.name} ${l.label ? `linked to ${l.label}` : 'not linked'}`).join(', ')}{document.overlay ? ` by ${document.overlay}` : ''}
+            → {linkedTo.map((l) => `${l.name} ${l.label ? `linked to ${l.label}` : 'not linked'}`).join(', ')}{document.metadata ? ` by ${document.metadata}` : ''}
           </span>
         {:else}
           <span class="wf-src-invalid"><Icon name="x-circle" size={15} />{#if analysed}{issues.length} problem{issues.length === 1 ? '' : 's'} found by Microcks{:else}{issues.length} feature{issues.length === 1 ? '' : 's'} outside the subset Microcks runs{/if}</span>

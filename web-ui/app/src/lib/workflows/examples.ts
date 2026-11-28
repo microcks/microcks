@@ -1,7 +1,7 @@
 import type { RunStatus, WorkflowExample } from './types.js';
 
 /*
- * Recorded examples of an ArazzoSources overlay (`ArazzoWorkflowDetail.examples`) and how a run of one is judged
+ * Recorded examples of an ArazzoExamples (`ArazzoWorkflowDetail.examples`) and how a run of one is judged
  * (`WorkflowResult.example`). Pure and client-safe.
  */
 
@@ -14,7 +14,7 @@ export interface BackendExample {
   stopsAt?: string | null;
 }
 
-/** An example the screens draw: its name is its id (the overlay has no description). */
+/** An example the screens draw: its name is its id (an ArazzoExamples has no description). */
 export function toWorkflowExample(e: BackendExample): WorkflowExample {
   return {
     id: e.name,

@@ -316,15 +316,15 @@ export async function setServiceLabels(id: string, labels: Record<string, string
   return services.get(id);
 }
 
-/** What an Arazzo document or ArazzoSources overlay import produced: `name` is the title (or overlay name). */
+/** What an Arazzo document, ArazzoMetadata or ArazzoExamples import produced: `name` is the title of the document. */
 export interface WorkflowImport {
-  kind: 'arazzo' | 'arazzo-sources';
+  kind: 'arazzo' | 'arazzo-metadata' | 'arazzo-examples';
   name: string;
   version: string;
 }
 
 /**
- * Imports an Arazzo document or ArazzoSources overlay once, uploaded or downloaded from its URL (importers of Arazzo
+ * Imports an Arazzo document, ArazzoMetadata or ArazzoExamples once, uploaded or downloaded from its URL (importers of Arazzo
  * documents come with a later story). The backend answers `<title>:<version>`.
  */
 async function importWorkflowArtifact(req: ImportRequest, kind: WorkflowImport['kind'], token?: string): Promise<{ workflows: WorkflowImport }> {

@@ -587,7 +587,7 @@ export interface BackendArazzoWorkflowDetail {
   steps: BackendArazzoStep[];
   outputs: Record<string, string>;
   dataPassings: { fromStepId: string; outputName: string; to: { stepId: string; place: string; target: string } }[];
-  /** The examples recorded for this workflow by the ArazzoSources overlay. */
+  /** The examples recorded for this workflow by the ArazzoExamples of its document. */
   examples?: BackendExample[] | null;
 }
 
@@ -643,7 +643,7 @@ export async function importArazzoDocument(
   return (await (await jsonCall('/api/arazzo/documents', token, 'POST', { content, fileName, links })).json()) as BackendArazzoDocumentSummary;
 }
 
-/** The same analysis for an imported document; `links` undefined = the links of its overlay. Undefined when unknown. */
+/** The same analysis for an imported document; `links` undefined = the links of its ArazzoMetadata. Undefined when unknown. */
 export async function analyseImportedArazzoDocument(docId: string, links: BackendLinks | undefined, token?: string): Promise<ImportAnalysis | undefined> {
   try {
     const res = await jsonCall(`/api/arazzo/documents/${encodeURIComponent(docId)}/analysis`, token, 'POST', { links: links ?? null });
@@ -654,8 +654,8 @@ export async function analyseImportedArazzoDocument(docId: string, links: Backen
   }
 }
 
-/** Links the sources of an imported document again (replaces the sources of its overlay). Undefined when unknown. */
-export async function relinkArazzoSources(docId: string, links: BackendLinks, token?: string): Promise<BackendArazzoDocumentSummary | undefined> {
+/** Links the sources of an imported document again (replaces the sources of its ArazzoMetadata). Undefined when unknown. */
+export async function relinkArazzoDocumentSources(docId: string, links: BackendLinks, token?: string): Promise<BackendArazzoDocumentSummary | undefined> {
   try {
     const res = await jsonCall(`/api/arazzo/documents/${encodeURIComponent(docId)}/sources`, token, 'PUT', { links });
     return (await res.json()) as BackendArazzoDocumentSummary;

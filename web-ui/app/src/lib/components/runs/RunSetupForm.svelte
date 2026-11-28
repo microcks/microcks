@@ -307,7 +307,7 @@
           class="wfr-field wfr-w-420"
           help={setup.examples.length === 0 && setup.demo === false
             ? 'No example is recorded for this workflow: enter the inputs.'
-            : `Recorded in ${document.overlay ?? document.file.replace(/\.arazzo\.yaml$/, '.arazzo-sources.yaml')}. Picking one fills the inputs; the run is then judged on it.`}
+            : `Recorded in the ArazzoExamples of ${document.title} ${document.version}. Picking one fills the inputs; the run is then judged on it.`}
         >
           {#snippet children(c)}
             <Select {...c} value={example} onchange={(e) => pickExample(e.currentTarget.value)}>

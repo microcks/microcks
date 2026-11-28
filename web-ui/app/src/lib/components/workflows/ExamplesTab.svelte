@@ -20,20 +20,20 @@
 
   let { workflow, document, runs, examples, serviceLabel }: Props = $props();
 
-  let showOverlay = $state(false);
-  let overlay = $state<string | null | undefined>();
-  let overlayError = $state(false);
+  let showFile = $state(false);
+  let file = $state<string | null | undefined>();
+  let fileError = $state(false);
 
   async function toggle() {
-    showOverlay = !showOverlay;
-    if (showOverlay && overlay === undefined) {
-      overlayError = false;
+    showFile = !showFile;
+    if (showFile && file === undefined) {
+      fileError = false;
       try {
-        const res = await fetch(`/api/workflows/documents/${encodeURIComponent(document.id)}/overlay`);
+        const res = await fetch(`/api/workflows/documents/${encodeURIComponent(document.id)}/examples`);
         if (!res.ok) throw new Error(String(res.status));
-        overlay = await res.text();
+        file = await res.text();
       } catch {
-        overlayError = true;
+        fileError = true;
       }
     }
   }
@@ -69,7 +69,7 @@
 {#if examples.length === 0}
   <section aria-labelledby="wf-ex-title" class="wf-ex-panel">
     <h2 id="wf-ex-title">No recorded example</h2>
-    <p class="wf-ex-lead">Examples come from an ArazzoSources overlay: they give the inputs of a run and what it must show. {document.overlay ? '' : `${document.file} has no overlay yet.`}</p>
+    <p class="wf-ex-lead">Examples come from an ArazzoExamples: they give the inputs of a run and what it must show. Import one for {document.title} {document.version} from Sources.</p>
   </section>
 {:else}
   <section aria-labelledby="wf-ex-title" class="wf-ex-panel">
@@ -77,7 +77,7 @@
       <div class="wf-ex-intro">
         <h2 id="wf-ex-title">{examples.length} recorded {examples.length === 1 ? 'example' : 'examples'}</h2>
         <p class="wf-ex-lead">
-          From the ArazzoSources overlay <span class="wf-ex-mono">{document.overlay}</span>, identified by {document.title} {document.version}. An example gives
+          From the ArazzoExamples of {document.title} {document.version}. An example gives
           inputs and what the run must show: step statuses, where it ends and its outputs. Running an example judges the run against it.
         </p>
       </div>
@@ -85,7 +85,7 @@
         {#if canPlayAll}
           <Button size="sm" variant="primary" icon="play" loading={playing} onclick={playAll}>Run every example</Button>
         {/if}
-        <Button size="sm" aria-expanded={showOverlay} aria-controls="wf-overlay" onclick={toggle}>{showOverlay ? 'Hide the overlay' : 'Show the overlay'}</Button>
+        <Button size="sm" aria-expanded={showFile} aria-controls="wf-examples-file" onclick={toggle}>{showFile ? 'Hide the ArazzoExamples' : 'Show the ArazzoExamples'}</Button>
       </div>
     </div>
     {#if playError}<p role="alert" class="wf-ex-lead">{playError}</p>{/if}
@@ -99,14 +99,14 @@
         {/each}
       </ul>
     {/if}
-    <div id="wf-overlay" hidden={!showOverlay}>
-      {#if showOverlay}
-        {#if overlayError}
-          <p role="alert" class="wf-ex-lead">The overlay could not be loaded.</p>
-        {:else if overlay}
-          <pre aria-label="ArazzoSources overlay" class="wf-ex-overlay">{overlay.replace(/\n$/, '')}</pre>
-        {:else if overlay === undefined}
-          <p class="wf-ex-lead" role="status">Loading the overlay…</p>
+    <div id="wf-examples-file" hidden={!showFile}>
+      {#if showFile}
+        {#if fileError}
+          <p role="alert" class="wf-ex-lead">The ArazzoExamples could not be loaded.</p>
+        {:else if file}
+          <pre aria-label="ArazzoExamples" class="wf-ex-yaml">{file.replace(/\n$/, '')}</pre>
+        {:else if file === undefined}
+          <p class="wf-ex-lead" role="status">Loading the ArazzoExamples…</p>
         {/if}
       {/if}
     </div>
@@ -172,9 +172,9 @@
         </article>
       {/each}
     </div>
-    {#if document.overlay}
+    {#if document.metadata}
       <p class="wf-ex-foot">
-        The overlay also links the source descriptions:
+        The ArazzoMetadata links the source descriptions:
         {#each document.sources as s, i (s.name)}{i > 0 ? ', ' : ''}<span class="wf-ex-mono">{s.name}</span>{s.link.status === 'linked' ? ` → ${serviceLabel(s.link.serviceId) ?? s.link.serviceId}` : ' (not linked)'}{/each}.
         {#if isAvailable('mock-url', document)}The Mock URL curl uses the inputs of the first example.{/if}
       </p>

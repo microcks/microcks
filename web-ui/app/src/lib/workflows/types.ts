@@ -51,8 +51,8 @@ export interface ArazzoDocument {
   origin: string;
   /** The importer (source job) that keeps the document in sync, when one does. */
   job?: { id: string; name: string };
-  /** Name of the ArazzoSources overlay file, when there is one. */
-  overlay?: string;
+  /** Name of the ArazzoMetadata file (`<name>.arazzo-metadata.yaml`), when there is one. */
+  metadata?: string;
   sources: SourceDescription[];
   workflowIds: string[];
   /** Features refused at import (empty for a clean document). */
@@ -136,7 +136,7 @@ export interface Workflow {
   runnability: Runnability;
 }
 
-/** A recorded example from the ArazzoSources overlay. */
+/** A recorded example from the ArazzoExamples of a document. */
 export interface WorkflowExample {
   id: string;
   workflowId: string;

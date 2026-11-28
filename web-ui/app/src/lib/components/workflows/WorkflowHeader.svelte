@@ -40,12 +40,12 @@
       label: 'Download Arazzo document',
       onselect: () => void fetchText(`/api/workflows/documents/${document.id}/source`).then((y) => y && download(document.file, y))
     },
-    ...(document.overlay
+    ...(document.metadata
       ? [
           {
-            id: 'overlay',
-            label: 'Download ArazzoSources overlay',
-            onselect: () => void fetchText(`/api/workflows/documents/${document.id}/overlay`).then((y) => y && download(document.overlay ?? 'overlay.yaml', y))
+            id: 'metadata',
+            label: 'Download ArazzoMetadata',
+            onselect: () => void fetchText(`/api/workflows/documents/${document.id}/metadata`).then((y) => y && download(document.metadata ?? 'metadata.arazzo-metadata.yaml', y))
           }
         ]
       : []),
@@ -80,7 +80,7 @@
     <div class="wf-facts">
       <span>workflowId <span class="wf-facts-strong">{workflow.workflowId}</span></span>
       <span class="wf-facts-mono">{document.file} · arazzo {document.arazzoVersion}</span>
-      {#if document.overlay}<span>overlay <span class="wf-facts-mono">{document.overlay}</span></span>{/if}
+      {#if document.metadata}<span>metadata <span class="wf-facts-mono">{document.metadata}</span></span>{/if}
       {#if synced}
         <span>{synced} by source job <a href={sourceJobHref}>{document.job?.name ?? document.title}</a></span>
       {:else}

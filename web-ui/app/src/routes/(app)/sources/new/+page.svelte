@@ -47,9 +47,9 @@
     service: Service;
     direct?: DirectKind;
   }
-  /** An Arazzo document or ArazzoSources overlay: imported as workflows, not as an API. */
+  /** An Arazzo document, ArazzoMetadata or ArazzoExamples: imported as workflows, not as an API. */
   interface WorkflowResult {
-    kind: 'arazzo' | 'arazzo-sources';
+    kind: 'arazzo' | 'arazzo-metadata' | 'arazzo-examples';
     name: string;
     version: string;
     /** Imported document: where to open its first workflow, and how many of its workflows can run. */
@@ -76,6 +76,7 @@
   let secret = $state('');
   let result = $state<Result>();
   let workflowResult = $state<WorkflowResult>();
+  const workflowKindLabel = { arazzo: 'Arazzo document', 'arazzo-metadata': 'ArazzoMetadata', 'arazzo-examples': 'ArazzoExamples' } as const;
   /** What Microcks says about the Arazzo document in the preview, with the links chosen for its sources. */
   let analysis = $state<ImportAnalysis>();
   let choices = $state<LinkChoices>({});
@@ -107,7 +108,10 @@
   const recent = $derived(data.sources.slice(0, 3));
 
   const secondaryOnly = $derived(preview?.artifact.role === 'SECONDARY');
-  const workflowArtifact = $derived(preview?.artifact.kind === 'arazzo' || preview?.artifact.kind === 'arazzo-sources');
+  const workflowArtifact = $derived(
+    preview?.artifact.kind === 'arazzo' || preview?.artifact.kind === 'arazzo-metadata' || preview?.artifact.kind === 'arazzo-examples'
+  );
+  const arazzoExamples = $derived(preview?.artifact.kind === 'arazzo-examples');
   const arazzoDocument = $derived(preview?.artifact.kind === 'arazzo');
   const stepCounts = $derived(Object.fromEntries((preview?.artifact.operations ?? []).map((o) => [o.name, o.resource ?? ''])));
   /** Microcks refuses the document: nothing to import. */
@@ -220,7 +224,7 @@
       if (res.workflows) {
         workflowResult = res.workflows;
         step = 'done';
-        announcement = res.workflows.kind === 'arazzo' ? 'Arazzo document imported.' : 'ArazzoSources overlay imported.';
+        announcement = `${workflowKindLabel[res.workflows.kind]} imported.`;
         await invalidate('app:workflows');
         return;
       }
@@ -501,11 +505,11 @@
                   <p class="source-help" role="status">Asking Microcks what it makes of this document…</p>
                 {/if}
               {:else if workflowArtifact}
-                <h3>{pluralize(p.artifact.operations.length, 'source description') + ' linked'}</h3>
+                <h3>{arazzoExamples ? `Examples of ${pluralize(p.artifact.operations.length, 'workflow')}` : pluralize(p.artifact.operations.length, 'source description') + ' linked'}</h3>
                 <ul class="boxed-list">
                   {#each p.artifact.operations as o (o.name)}
                     <li>
-                      <Icon name="link" size={14} />
+                      <Icon name={arazzoExamples ? 'list' : 'link'} size={14} />
                       <span class="boxed-list-path">{o.name}</span>
                       <span class="boxed-list-meta">{o.resource}</span>
                     </li>
@@ -535,7 +539,9 @@
               <Icon name="info" size={16} />
               <span>{p.artifact.kind === 'arazzo'
                 ? 'An Arazzo document describes workflows across APIs: it is imported once, without creating a Service. Documents outside the supported subset (goto actions, jsonpath criteria, workflowId steps) are refused. You can link the sources again later from the Workflows page.'
-                : 'An ArazzoSources overlay links the source descriptions of an imported Arazzo document (same title and version) to Microcks APIs.'}</span>
+                : p.artifact.kind === 'arazzo-examples'
+                  ? 'An ArazzoExamples records examples of the workflows of an Arazzo document (same title and version): import the document first, a run can then play and be judged on them. Importing it again replaces the examples of the document.'
+                  : 'An ArazzoMetadata links the source descriptions of an imported Arazzo document (same title and version) to Microcks APIs.'}</span>
             </div>
           {:else}
           <div class="step-section">
@@ -587,12 +593,14 @@
           <div role="status" class="step-head">
             <Icon name="check-circle" size={32} />
             <div class="step-head-text">
-              <h2>{w.kind === 'arazzo' ? 'Arazzo document imported' : 'ArazzoSources overlay imported'}</h2>
+              <h2>{workflowKindLabel[w.kind]} imported</h2>
               <p>{w.kind === 'arazzo'
                 ? w.runnable === w.total
                   ? `${w.name} ${w.version} is imported: ${pluralize(w.total ?? 0, 'workflow')} can run.`
                   : `${w.name} ${w.version} is imported: ${w.runnable} of ${pluralize(w.total ?? 0, 'workflow')} can run. The others wait for their source descriptions to be linked.`
-                : `The source descriptions of ${w.name} ${w.version} are linked to the APIs the overlay names.`}</p>
+                : w.kind === 'arazzo-examples'
+                  ? `The examples of ${w.name} ${w.version} are recorded: the Examples tab of its workflows lists them.`
+                  : `The source descriptions of ${w.name} ${w.version} are linked to the APIs the ArazzoMetadata names.`}</p>
             </div>
           </div>
           {#if w.kind === 'arazzo'}

@@ -4,7 +4,8 @@ import {
   DOCUMENTS,
   EXAMPLES,
   PASTRY_ARAZZO_YAML,
-  PASTRY_OVERLAY_YAML,
+  PASTRY_EXAMPLES_YAML,
+  PASTRY_METADATA_YAML,
   BEER_ARAZZO_YAML,
   WORKFLOWS,
   seedRuns,
@@ -14,10 +15,10 @@ import type { WorkflowsPayload } from '#lib/workflows/list.js';
 import { mockUrlOf } from '#lib/workflows/mock-url.js';
 import { dependsOnOf, messagingOf, runnabilityOf } from '#lib/workflows/step-mapping.js';
 import { toActions } from '#lib/workflows/attempts.js';
-import { toWorkflowExample } from '#lib/workflows/examples.js';
+import { toWorkflowExample, type BackendExample } from '#lib/workflows/examples.js';
 import { documentOrigin, jobOfDocument } from '#lib/workflows/source-job.js';
 import type { ImportAnalysis } from '#lib/workflows/import-analysis.js';
-import { parse as parseYaml } from 'yaml';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { formatRelative } from '#lib/format.js';
 import { MICROCKS_API_URL } from './auth.js';
 import {
@@ -29,7 +30,7 @@ import {
   fetchArazzoWorkflow,
   analyseImportedArazzoDocument,
   protocolOf,
-  relinkArazzoSources,
+  relinkArazzoDocumentSources,
   type BackendLinks,
   type BackendArazzoDocumentSummary,
   type BackendArazzoStep,
@@ -136,10 +137,16 @@ export function getSource(docId: string): string | undefined {
   return docId === 'pastry' ? PASTRY_ARAZZO_YAML : docId === 'beer' ? BEER_ARAZZO_YAML : '';
 }
 
-export function getOverlay(docId: string): string | null | undefined {
+export function getMetadata(docId: string): string | null | undefined {
   const doc = getDocument(docId);
   if (!doc) return undefined;
-  return doc.overlay && docId === 'pastry' ? PASTRY_OVERLAY_YAML : null;
+  return doc.metadata && docId === 'pastry' ? PASTRY_METADATA_YAML : null;
+}
+
+export function getExamplesFile(docId: string): string | null | undefined {
+  const doc = getDocument(docId);
+  if (!doc) return undefined;
+  return docId === 'pastry' ? PASTRY_EXAMPLES_YAML : null;
 }
 
 export function linkSource(docId: string, name: string, serviceId: string): ArazzoDocument | { error: string; status: number } {
@@ -221,16 +228,16 @@ function sourceDescriptionsOf(content: string | undefined): Map<string, { type: 
 
 const fileOf = (url: string) => url.split('/').pop() || url;
 
-/** Microcks keeps the links of an overlay, not its file: the overlay is named after the document it applies to. */
-const overlayFileOf = (summary: BackendArazzoDocumentSummary) =>
-  `${summary.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.arazzo-sources.yaml`;
+/** Microcks keeps the links of an ArazzoMetadata, not its file: the file is named after the document it applies to. */
+const metadataFileOf = (summary: BackendArazzoDocumentSummary) =>
+  `${summary.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.arazzo-metadata.yaml`;
 
-/** The ArazzoSources overlay giving these links, as Microcks imports it. */
-function overlayYaml(title: string, version: string, links: Map<string, readonly [string, string]>): string {
+/** The ArazzoMetadata giving these links, as Microcks imports it. */
+function metadataYaml(title: string, version: string, links: Map<string, readonly [string, string]>): string {
   const q = (v: string) => JSON.stringify(v);
   return [
     'apiVersion: mocks.microcks.io/v1alpha1',
-    'kind: ArazzoSources',
+    'kind: ArazzoMetadata',
     'metadata:',
     `  name: ${q(title)}`,
     `  version: ${q(version)}`,
@@ -244,13 +251,39 @@ const linksOf = (summary: BackendArazzoDocumentSummary) =>
     summary.sources.filter((s) => s.link.apiName).map((s) => [s.link.sourceName, [s.link.apiName!, s.link.apiVersion ?? ''] as const])
   );
 
-/** Overlay of a real document, rebuilt from the links Microcks holds; null when it has none. */
-export async function getDocumentOverlay(docId: string, token?: string): Promise<string | null | undefined> {
-  if (isPlaceholderDocument(docId)) return getOverlay(docId);
+/** ArazzoMetadata of a real document, rebuilt from the links Microcks holds; null when it has none. */
+export async function getDocumentMetadata(docId: string, token?: string): Promise<string | null | undefined> {
+  if (isPlaceholderDocument(docId)) return getMetadata(docId);
   const summary = (await fetchArazzoDocuments(token)).find((d) => d.id === docId);
   if (!summary) return undefined;
   const links = linksOf(summary);
-  return links.size ? overlayYaml(summary.title, summary.version, links) : null;
+  return links.size ? metadataYaml(summary.title, summary.version, links) : null;
+}
+
+/** The ArazzoExamples giving these examples, as Microcks imports it. */
+function examplesYaml(title: string, version: string, examples: BackendExample[]): string {
+  const workflows: Record<string, Record<string, unknown>> = {};
+  for (const e of examples) {
+    (workflows[e.workflowId] ??= {})[e.name] = {
+      ...(e.inputs && Object.keys(e.inputs).length ? { inputs: e.inputs } : {}),
+      ...(e.steps?.length
+        ? { steps: Object.fromEntries(e.steps.map((s) => [s.stepId, { status: s.status, ...(s.outputs && Object.keys(s.outputs).length ? { outputs: s.outputs } : {}) }])) }
+        : {}),
+      ...(e.stopsAt ? { stopsAt: e.stopsAt } : {}),
+      ...(e.outputs && Object.keys(e.outputs).length ? { outputs: e.outputs } : {})
+    };
+  }
+  return stringifyYaml({ apiVersion: 'mocks.microcks.io/v1alpha1', kind: 'ArazzoExamples', metadata: { name: title, version }, workflows });
+}
+
+/** ArazzoExamples of a real document, rebuilt from the examples Microcks holds; null when it has none. */
+export async function getDocumentExamples(docId: string, token?: string): Promise<string | null | undefined> {
+  if (isPlaceholderDocument(docId)) return getExamplesFile(docId);
+  const summary = (await fetchArazzoDocuments(token)).find((d) => d.id === docId);
+  if (!summary) return undefined;
+  const details = await Promise.all(summary.workflows.map((w) => fetchArazzoWorkflow(docId, w.status.workflowId, token)));
+  const examples = details.flatMap((d) => d?.examples ?? []);
+  return examples.length ? examplesYaml(summary.title, summary.version, examples) : null;
 }
 
 function toDocument(
@@ -292,7 +325,7 @@ function toDocument(
             }
       };
     }),
-    overlay: summary.sources.some((s) => s.link.apiName) ? overlayFileOf(summary) : undefined,
+    metadata: summary.sources.some((s) => s.link.apiName) ? metadataFileOf(summary) : undefined,
     workflowIds: summary.workflows.map((w) => w.status.workflowId),
     importIssues: []
   };
@@ -454,7 +487,7 @@ export async function analyseLink(docId: string, name: string, serviceId: string
   return (await analyseImportedArazzoDocument(docId, out.links, token)) ?? { error: `Document "${docId}" does not exist.`, status: 404 };
 }
 
-/** Links a source description of a real document to a Microcks API: the links replace those of its overlay. */
+/** Links a source description of a real document to a Microcks API: the links replace those of its ArazzoMetadata. */
 export async function linkRealSource(
   docId: string,
   name: string,
@@ -463,7 +496,7 @@ export async function linkRealSource(
 ): Promise<ArazzoDocument | { error: string; status: number }> {
   const out = await linksWith(docId, name, serviceId, token);
   if ('error' in out) return out;
-  if (!(await relinkArazzoSources(docId, out.links, token))) return { error: `Document "${docId}" does not exist.`, status: 404 };
+  if (!(await relinkArazzoDocumentSources(docId, out.links, token))) return { error: `Document "${docId}" does not exist.`, status: 404 };
   await fetchReal(token);
   return real.documents.get(docId) ?? { error: `Document "${docId}" does not exist.`, status: 404 };
 }

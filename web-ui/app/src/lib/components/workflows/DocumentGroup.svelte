@@ -89,16 +89,16 @@
       </span>
     </div>
 
-    <p class="wf-overlay">
-      {#if doc.overlay}
+    <p class="wf-metadata">
+      {#if doc.metadata}
         <Icon name="layers" size={15} />
-        <span>ArazzoSources overlay</span>
-        <code>{doc.overlay}</code>
+        <span>ArazzoMetadata</span>
+        <code>{doc.metadata}</code>
         <span class="wf-tag" data-tone="success">imported</span>
-        <span class="wf-muted-text">links the sources, carries the recorded examples</span>
+        <span class="wf-muted-text">links the sources</span>
       {:else}
         <Icon name="layers-missing" size={15} class="wf-muted-text" />
-        <span class="wf-muted-text">No ArazzoSources overlay · sources linked in the import dialog</span>
+        <span class="wf-muted-text">No ArazzoMetadata · sources linked in the import dialog</span>
       {/if}
       <span class="wf-linked-count" data-tone={unlinked.length ? 'warning' : 'success'}>
         <Icon name={unlinked.length ? 'warning' : 'check-circle'} size={15} />
