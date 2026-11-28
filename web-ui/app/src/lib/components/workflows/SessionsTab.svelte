@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Button, Callout, Choice, DataTable, Field, Icon, Input, MethodTag, Select, type DataTableColumn } from '@microcks/deep-ink';
   import { invalidate } from '$app/navigation';
+  import { onMount } from 'svelte';
   import { formatRelative, formatShortClock } from '#lib/format.js';
   import { isDemo } from '#lib/workflows/availability.js';
   import { runPath } from '#lib/workflows/paths.js';
@@ -29,6 +30,8 @@
     PatchPastry: [{ value: 'Eclair Cafe · out of stock', code: 409 }, { value: 'Eclair Chocolat · price', code: 200 }]
   };
   const SESSION_TTL_S = 3600;
+  /** How often the call count of an open session is read again, as the other screens read what is in progress. */
+  const POLL_MS = 2000;
   const isNumber = (t: string) => t === 'number' || t === 'integer';
 
   let { workflow, document, sessions, runs }: Props = $props();
@@ -115,9 +118,10 @@
   const serviceName = $derived(services.length === 1 && services[0] === 'apiPastry' ? 'API Pastry 2.0' : 'its API');
   const selectedRun = $derived(
     selected?.verification
-      ? runs.find((r) => r.origin.kind === 'session' && r.origin.sessionId === selected.id && r.number === selected.verification?.runNumber)
+      ? runs.find((r) => (selected.real?.verificationRunId ? r.id === selected.real.verificationRunId : r.origin.kind === 'session' && r.origin.sessionId === selected.id && r.number === selected.verification?.runNumber))
       : undefined
   );
+  const watching = $derived(real && sessions.some((s) => s.state === 'open'));
   const columns = $derived<DataTableColumn<SessionCall>[]>([
     { key: 'n', header: 'Call', mono: true },
     { key: 'req', header: 'Request' },
@@ -149,7 +153,8 @@
 
   function metaOf(s: Session) {
     if (s.state === 'open') {
-      const left = Math.max(0, Math.round((new Date(s.openedAt).getTime() + SESSION_TTL_S * 1000 - Date.now()) / 60_000));
+      const ends = s.real?.expiresAt ? new Date(s.real.expiresAt).getTime() : new Date(s.openedAt).getTime() + SESSION_TTL_S * 1000;
+      const left = Math.max(0, Math.round((ends - Date.now()) / 60_000));
       return `Opened ${formatRelative(s.openedAt)} · closes by itself in ${left} min`;
     }
     const secs = s.closedAt ? Math.round((new Date(s.closedAt).getTime() - new Date(s.openedAt).getTime()) / 1000) : undefined;
@@ -192,7 +197,18 @@
 
   /** The mock a real session can be called on: the first step whose API is a REST one served by Microcks. */
   const probe = $derived(workflow.steps.map((s) => ({ step: s, path: setup[s.stepId]?.mockPath })).find((p) => p.path));
-  const callsOf = (s: Session) => (s.verification ? `${s.calls.length} ${s.calls.length === 1 ? 'call' : 'calls'} received` : 'calls counted at verification');
+  const countOf = (n: number) => `${n} ${n === 1 ? 'call' : 'calls'} received`;
+  const callsOf = (s: Session) => countOf(s.real?.callCount ?? s.calls.length);
+  const emptyOf = (s: Session) =>
+    s.real && !s.verification && s.real.callCount > 0 ? `${countOf(s.real.callCount)}. Verify the session to see the step each one matches.` : 'No call received yet.';
+
+  // While a session is open, the mocks keep recording its calls: read the sessions again until none is open.
+  onMount(() => {
+    const timer = setInterval(() => {
+      if (watching && !busy && !globalThis.document.hidden) void invalidate('app:workflows');
+    }, POLL_MS);
+    return () => clearInterval(timer);
+  });
   const injectedOf = (s: Session) => s.real?.failures ?? (s.failureInjection ? { [s.failureInjection.stepId]: s.failureInjection.example } : {});
 
   async function copy(id: string, text: string) {
@@ -317,7 +333,7 @@
     <div class="wf-se-list">
       <h2 id="wf-recent-title">Recent sessions</h2>
       {#if sessions.length === 0}
-        <p class="wf-se-sub">{real ? 'No session opened from here for this workflow yet.' : 'No session yet for this workflow.'}</p>
+        <p class="wf-se-sub">No session yet for this workflow.</p>
       {:else}
         <ul>
           {#each sessions as s (s.id)}
@@ -330,7 +346,7 @@
                 </span>
                 <span class="wf-se-sub">{s.real ? (Object.keys(injectedOf(s)).length > 0 ? `${Object.keys(injectedOf(s)).join(', ')} set to fail` : 'no step set to fail') : s.app}</span>
                 <span class="wf-se-item-foot">
-                  <span class="wf-se-muted">{s.real ? callsOf(s) : `${s.calls.length} ${s.calls.length === 1 ? 'call' : 'calls'} received`}</span>
+                  <span class="wf-se-muted">{callsOf(s)}</span>
                   {@render mark(v.tone, v.text)}
                 </span>
               </button>
@@ -374,7 +390,7 @@
               {#if probe}<Button size="sm" onclick={() => copy('probe', sessionCurl(MICROCKS, probe.step.method, probe.path ?? '', selected.id))}>{copied === 'probe' ? 'Copied' : 'Copy curl'}</Button>{/if}
             </div>
             <span class="wf-se-note">
-              Microcks records the calls the mocks answer in the session, up to 1000{#if selected.real.droppedCallCount > 0} ({selected.real.droppedCallCount} dropped){/if}. It does not count them until you verify.
+              Microcks records the calls the mocks answer in the session, up to 1000{#if selected.real.droppedCallCount > 0} ({selected.real.droppedCallCount} dropped){/if}. The count follows the calls as they arrive.
             </span>
           </div>
         {/if}
@@ -396,7 +412,7 @@
             {columns}
             rows={selected.calls}
             rowKey={(c) => String(c.n)}
-            emptyText="No call received yet."
+            emptyText={emptyOf(selected)}
           >
             {#snippet cell(c, col)}
               {#if col.key === 'n'}
@@ -431,7 +447,7 @@
           {/if}
           <span class="wf-se-muted">
             {selected.real && !selected.verification
-              ? 'Not verified yet · Microcks counts the calls when it verifies them.'
+              ? `Not verified yet · ${selected.real.callCount} of 1000 calls recorded so far.`
               : selected.verification
               ? `Verified ${formatRelative(selectedRun?.startedAt ?? selected.closedAt ?? selected.openedAt)} against the Microcks mocks.`
               : `Not verified yet · ${selected.calls.length} of 1000 calls recorded.`}

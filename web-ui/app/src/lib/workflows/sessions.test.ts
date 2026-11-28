@@ -9,7 +9,9 @@ import {
   restMockPath,
   sessionCallsOf,
   sessionCurl,
-  verificationProblemsOf
+  sessionOf,
+  verificationProblemsOf,
+  withSessionLabels
 } from './sessions.ts';
 
 const calls = [
@@ -106,4 +108,52 @@ test('a failed step is told as the mockup does: data not taken from an earlier s
   );
   assert.equal(failureTextOf('cancelOrder', 'step `cancelOrder` missing'), 'no call received for this step');
   assert.equal(failureTextOf('x', '`x` expected before `y`'), '`x` expected before `y`');
+});
+
+const backendSession = {
+  id: 's-1',
+  documentId: 'd-1',
+  workflowId: 'placeOrderSaga',
+  state: 'open' as const,
+  openedDate: Date.parse('2026-11-28T10:00:00Z'),
+  expireAt: Date.parse('2026-11-28T11:00:00Z'),
+  callCount: 3,
+  droppedCallCount: 0,
+  inputs: { customerId: 'c-7' },
+  failures: { chargePayment: 'card refused' }
+};
+
+test('an open session shows the calls Microcks counted so far, before any verification', () => {
+  const session = sessionOf(backendSession);
+  assert.deepEqual([session.state, session.real?.callCount, session.verification, session.calls], ['open', 3, undefined, []]);
+  assert.deepEqual([session.openedAt, session.real?.expiresAt], ['2026-11-28T10:00:00.000Z', '2026-11-28T11:00:00.000Z']);
+  assert.deepEqual(session.failureInjection, { stepId: 'chargePayment', example: 'card refused' });
+});
+
+test('a closed session says when it was closed', () => {
+  const session = sessionOf({ ...backendSession, state: 'closed', closedDate: Date.parse('2026-11-28T10:05:00Z') });
+  assert.deepEqual([session.state, session.closedAt], ['closed', '2026-11-28T10:05:00.000Z']);
+});
+
+test('a verified session shows the verdict, the calls and the problems of its verification run', () => {
+  const session = sessionOf(
+    { ...backendSession, verificationRunId: 'r-9' },
+    { id: 'r-9', number: 4, status: 'FAILURE', message: null, steps, session: { sessionId: 's-1', calls } }
+  );
+  assert.deepEqual([session.verification?.result, session.verification?.runNumber], ['FAILURE', 4]);
+  assert.equal(session.calls.length, 3);
+  assert.ok(session.verification!.problems.length > 0);
+  assert.equal(session.real?.verificationRunId, 'r-9');
+});
+
+test('a run summary of a verification takes the label of its session, the other runs are left as they are', () => {
+  const run = (id: string, origin: { kind: string; sessionId?: string; app?: string }) => ({ id, origin }) as never;
+  const verified = sessionOf({ ...backendSession, verificationRunId: 'r-9' });
+  const [labelled, unlabelled, api] = withSessionLabels(
+    [run('r-9', { kind: 'session', sessionId: '', app: 'the application' }), run('r-8', { kind: 'session', sessionId: '', app: 'the application' }), run('r-7', { kind: 'api' })],
+    [verified]
+  );
+  assert.deepEqual((labelled as { origin: unknown }).origin, { kind: 'session', sessionId: 's-1', app: 'the application' });
+  assert.deepEqual((unlabelled as { origin: unknown }).origin, { kind: 'session', sessionId: '', app: 'the application' });
+  assert.deepEqual((api as { origin: unknown }).origin, { kind: 'api' });
 });

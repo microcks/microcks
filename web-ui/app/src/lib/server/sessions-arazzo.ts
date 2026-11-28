@@ -1,20 +1,23 @@
 import type { ArazzoDocument, Session, Workflow } from '#lib/workflows/types.js';
-import { BackendError, closeArazzoSession, fetchBackendServiceView, openArazzoSession, verifyArazzoSession, type BackendArazzoSession, type BackendServiceView } from './backend';
-import { failureChoicesOf, restMockPath, sessionCallsOf, verificationProblemsOf } from '#lib/workflows/sessions.js';
+import {
+  BackendError,
+  closeArazzoSession,
+  fetchArazzoRun,
+  fetchArazzoSession,
+  fetchBackendServiceView,
+  listArazzoSessions,
+  openArazzoSession,
+  verifyArazzoSession,
+  type BackendServiceView,
+  type BackendWorkflowResult
+} from './backend';
+import { failureChoicesOf, restMockPath, sessionOf } from '#lib/workflows/sessions.js';
 
 /*
- * Verification sessions of imported documents (S15, S16, S17). Microcks opens, closes and verifies a session but has no
- * way to list or read one, so the sessions this UI opened are kept here, in memory, with what Microcks said about them:
- * the call count and the calls are known once the session is verified. The verifications themselves are runs of Microcks
- * (origin SESSION) and last with its history.
+ * Verification sessions of imported documents (S15, S16, S17). Microcks keeps them: it lists the sessions of a workflow,
+ * reads one with the calls it recorded so far, and keeps the run of its latest verification, which holds the calls
+ * matched to the steps. Nothing is kept here.
  */
-
-const sessions = new Map<string, Session>();
-
-/** Sessions kept per workflow, the latest first: an open session that Microcks expired is forgotten with the oldest. */
-const KEPT = 20;
-
-const iso = (v: number | string | undefined | null) => new Date(v ?? Date.now()).toISOString();
 
 export interface SessionStepSetup {
   /** Where the mocks of the step's operation answer (REST only), to call with the `x-microcks-session` header. */
@@ -50,27 +53,13 @@ export async function sessionSetupOf(document: ArazzoDocument, workflow: Workflo
   return Object.fromEntries(entries);
 }
 
-function uiSessionOf(s: BackendArazzoSession): Session {
-  const failures = s.failures ?? {};
-  const [first] = Object.entries(failures);
-  return {
-    id: s.id,
-    app: '',
-    documentId: s.documentId,
-    workflowId: s.workflowId,
-    state: s.closedDate ? 'closed' : 'open',
-    openedAt: iso(s.openedDate),
-    ...(s.closedDate ? { closedAt: iso(s.closedDate) } : {}),
-    inputs: s.inputs ?? {},
-    ...(first ? { failureInjection: { stepId: first[0], example: first[1] } } : {}),
-    calls: [],
-    real: { failures, droppedCallCount: s.droppedCallCount ?? 0 }
-  };
+/** The sessions of a workflow Microcks keeps, latest first, each with its live call count and its verification. */
+export async function sessionsOf(documentId: string, workflowId: string, token?: string): Promise<Session[]> {
+  const backend = await listArazzoSessions(documentId, workflowId, token).catch(() => []);
+  return Promise.all(
+    backend.map(async (s) => sessionOf(s, s.verificationRunId ? await fetchArazzoRun(s.verificationRunId, token).catch(() => undefined) : undefined))
+  );
 }
-
-/** The sessions of a workflow this UI opened, latest first. */
-export const sessionsOf = (documentId: string, workflowId: string): Session[] =>
-  [...sessions.values()].filter((s) => s.documentId === documentId && s.workflowId === workflowId).reverse().slice(0, KEPT);
 
 export type OpenResult = { session: Session } | { status: 404 | 422; error: string };
 
@@ -80,42 +69,29 @@ export async function openRealSession(
   token?: string
 ): Promise<OpenResult> {
   try {
-    const opened = await openArazzoSession(input, token);
-    const session = uiSessionOf({ ...opened, documentId: input.documentId });
-    sessions.set(session.id, session);
-    return { session };
+    return { session: sessionOf(await openArazzoSession(input, token)) };
   } catch (e) {
     if (e instanceof BackendError && (e.status === 400 || e.status === 404)) return { status: e.status === 404 ? 404 : 422, error: e.message };
     throw e;
   }
 }
 
-/** Closes a session: it records no more calls. False when Microcks does not know it. */
+/** Closes a session: it records no more calls. Undefined when Microcks does not know it. */
 export async function closeRealSession(sessionId: string, token?: string): Promise<Session | undefined> {
   if (!(await closeArazzoSession(sessionId, token))) return undefined;
-  const known = sessions.get(sessionId);
-  if (known) {
-    known.state = 'closed';
-    known.closedAt = new Date().toISOString();
-  }
-  return known;
+  return readSession(sessionId, token);
 }
 
 /** Verifies the calls a session received: a run of origin SESSION. Undefined when Microcks does not know the session. */
 export async function verifyRealSession(sessionId: string, token?: string): Promise<Session | undefined> {
   const run = await verifyArazzoSession(sessionId, token);
   if (!run) return undefined;
-  const calls = sessionCallsOf(run.session?.calls ?? [], run.steps ?? []);
-  // A session opened before this server started is not known here: it is listed from now on.
-  const known =
-    sessions.get(sessionId) ??
-    uiSessionOf({ id: sessionId, documentId: run.documentId, workflowId: run.workflowId, openedDate: run.startedDate, callCount: calls.length, droppedCallCount: 0, inputs: run.inputs });
-  sessions.set(sessionId, known);
-  known.calls = calls;
-  known.verification = {
-    result: run.status === 'SUCCESS' ? 'SUCCESS' : 'FAILURE',
-    runNumber: run.number ?? 0,
-    problems: verificationProblemsOf(run.steps ?? [], calls, run.message)
-  };
-  return known;
+  return readSession(sessionId, token, run);
+}
+
+/** A session as Microcks keeps it now, with its verification run when it has one (the one just made, if given). */
+async function readSession(sessionId: string, token?: string, verification?: BackendWorkflowResult): Promise<Session | undefined> {
+  const backend = await fetchArazzoSession(sessionId, token);
+  if (!backend) return undefined;
+  return sessionOf(backend, verification ?? (backend.verificationRunId ? await fetchArazzoRun(backend.verificationRunId, token).catch(() => undefined) : undefined));
 }

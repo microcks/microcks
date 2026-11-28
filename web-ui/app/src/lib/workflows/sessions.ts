@@ -1,4 +1,4 @@
-import type { SessionCall } from './types.js';
+import type { Session, SessionCall, WorkflowRun } from './types.js';
 
 /*
  * Verification sessions of imported documents (stories S15, S16, S17): what Microcks records for a session and says in
@@ -109,4 +109,83 @@ export function failureChoicesOf(exchanges: readonly BackendExampleExchange[]): 
     .filter((e): e is BackendExampleExchange & { name: string } => typeof e.name === 'string' && e.name !== '')
     .map((e) => ({ value: e.name, code: Number(e.response?.status) || 200 }));
   return [...choices.filter((c) => c.code >= 400), ...choices.filter((c) => c.code < 400)];
+}
+
+/** A session as Microcks reads it back (`GET /api/arazzo/sessions`): the calls counted so far, not the calls themselves. */
+export interface BackendSession {
+  id: string;
+  documentId: string;
+  documentTitle?: string;
+  documentVersion?: string;
+  workflowId: string;
+  state?: 'open' | 'closed';
+  openedDate?: number | string;
+  closedDate?: number | string | null;
+  expireAt?: number | string | null;
+  callCount: number;
+  droppedCallCount: number;
+  inputs?: Record<string, unknown> | null;
+  /** The steps set to fail, by step id, with the name of the example each one answers with. */
+  failures?: Record<string, string> | null;
+  /** The run its latest verification created; absent while the session was not verified. */
+  verificationRunId?: string | null;
+}
+
+/** The part of a verification run (`origin` SESSION) a session shows. */
+export interface BackendVerification {
+  id: string;
+  number?: number | null;
+  status: string;
+  message?: string | null;
+  steps?: BackendSessionStep[];
+  session?: { sessionId: string; calls: BackendSessionCall[] } | null;
+}
+
+const iso = (v: number | string | undefined | null) => new Date(v ?? Date.now()).toISOString();
+
+/** A session of Microcks as the Sessions tab shows it; its verification run, when it has one, brings the calls. */
+export function sessionOf(s: BackendSession, verification?: BackendVerification): Session {
+  const failures = s.failures ?? {};
+  const [first] = Object.entries(failures);
+  const calls = verification ? sessionCallsOf(verification.session?.calls ?? [], verification.steps ?? []) : [];
+  return {
+    id: s.id,
+    app: '',
+    documentId: s.documentId,
+    workflowId: s.workflowId,
+    state: s.state === 'closed' || s.closedDate ? 'closed' : 'open',
+    openedAt: iso(s.openedDate),
+    ...(s.closedDate ? { closedAt: iso(s.closedDate) } : {}),
+    inputs: s.inputs ?? {},
+    ...(first ? { failureInjection: { stepId: first[0], example: first[1] } } : {}),
+    calls,
+    ...(verification
+      ? {
+          verification: {
+            result: verification.status === 'SUCCESS' ? ('SUCCESS' as const) : ('FAILURE' as const),
+            runNumber: verification.number ?? 0,
+            problems: verificationProblemsOf(verification.steps ?? [], calls, verification.message)
+          }
+        }
+      : {}),
+    real: {
+      failures,
+      droppedCallCount: s.droppedCallCount ?? 0,
+      callCount: s.callCount ?? 0,
+      ...(s.expireAt ? { expiresAt: iso(s.expireAt) } : {}),
+      ...(s.verificationRunId ? { verificationRunId: s.verificationRunId } : {})
+    }
+  };
+}
+
+/**
+ * The summary of a verification run does not name its session: it takes the session whose latest verification it is
+ * (the full runs already carry it).
+ */
+export function withSessionLabels(runs: readonly WorkflowRun[], sessions: readonly Session[]): WorkflowRun[] {
+  return runs.map((run) => {
+    if (run.origin.kind !== 'session' || run.origin.sessionId !== '') return run;
+    const session = sessions.find((s) => s.real?.verificationRunId === run.id);
+    return session ? { ...run, origin: { ...run.origin, sessionId: session.id } } : run;
+  });
 }

@@ -274,10 +274,11 @@ export interface Session {
   calls: SessionCall[];
   verification?: { result: 'SUCCESS' | 'FAILURE'; runNumber: number; problems: { lead: string; text: string }[] };
   /**
-   * Sessions Microcks holds (imported documents): the calls are known once verified, as Microcks has no way to read
-   * the calls of an open session; every step set to fail, by step id, with its example; the calls it dropped.
+   * Sessions Microcks holds (imported documents): the number of calls it recorded so far (live), the calls themselves
+   * once verified; every step set to fail, by step id, with its example; the calls it dropped; when it expires and the
+   * run of its latest verification.
    */
-  real?: { failures: Record<string, string>; droppedCallCount: number };
+  real?: { failures: Record<string, string>; droppedCallCount: number; callCount: number; expiresAt?: string; verificationRunId?: string };
 }
 
 /** Filter of the Workflows screen: "Any target / Mocks / Implementations / Mock URL / Session". */

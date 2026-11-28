@@ -684,7 +684,7 @@ export interface BackendWorkflowRunSummary {
 }
 
 import type { BackendMissingExample } from './runs-arazzo-schema';
-import type { BackendSessionCall } from '#lib/workflows/sessions.js';
+import type { BackendSession, BackendSessionCall } from '#lib/workflows/sessions.js';
 
 export interface BackendWorkflowStepResult {
   index: number;
@@ -789,20 +789,23 @@ export async function launchArazzoExampleRuns(
 
 /* ---- Arazzo verification sessions (`/api/arazzo/sessions`, stories S15, S16, S17) ---- */
 
-/** A session Microcks opened. The API gives no way to read it again: the calls come with its verification. */
-export interface BackendArazzoSession {
-  id: string;
-  documentId: string;
-  documentTitle?: string;
-  documentVersion?: string;
-  workflowId: string;
-  openedDate?: number | string;
-  closedDate?: number | string | null;
-  callCount: number;
-  droppedCallCount: number;
-  inputs?: Record<string, unknown> | null;
-  /** The steps set to fail, by step id, with the name of the example each one answers with. */
-  failures?: Record<string, string> | null;
+/** A session of Microcks, as `POST`, `GET /api/arazzo/sessions` and `GET /api/arazzo/sessions/{id}` give it. */
+export type BackendArazzoSession = BackendSession;
+
+/** The sessions of a workflow still kept by Microcks, the latest first. */
+export async function listArazzoSessions(documentId: string, workflowId: string, token?: string): Promise<BackendArazzoSession[]> {
+  const query = `documentId=${encodeURIComponent(documentId)}&workflowId=${encodeURIComponent(workflowId)}`;
+  return (await (await call(`/api/arazzo/sessions?${query}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession[];
+}
+
+/** A session read now, with the calls counted so far; undefined when Microcks does not know it (or it expired). */
+export async function fetchArazzoSession(sessionId: string, token?: string): Promise<BackendArazzoSession | undefined> {
+  try {
+    return (await (await call(`/api/arazzo/sessions/${encodeURIComponent(sessionId)}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
 }
 
 export async function openArazzoSession(
