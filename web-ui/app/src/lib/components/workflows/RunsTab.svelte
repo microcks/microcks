@@ -46,7 +46,7 @@
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   function originSub(run: WorkflowRun): string {
-    if (run.origin.kind === 'session') return `${run.origin.sessionId} · ${run.origin.app}`;
+    if (run.origin.kind === 'session') return run.origin.sessionId ? `${run.origin.sessionId} · ${run.origin.app}` : run.origin.app;
     if (run.origin.kind === 'mock-url') return 'POST on the Mock URL';
     if (run.target.kind === 'implementations') {
       const url = Object.values(run.target.baseUrls)[0] ?? '';
@@ -82,7 +82,7 @@
       if (run.origin.kind === 'session') {
         const sessionId = run.origin.sessionId;
         const session = sessions.find((x) => x.id === sessionId);
-        const unexpected = session?.calls.filter((c) => c.stepId === 'unexpected').length ?? 0;
+        const unexpected = (run.sessionCalls ?? session?.calls ?? []).filter((c) => c.stepId === 'unexpected').length;
         const parts = [
           s ? `${s.flow.title.charAt(0).toLowerCase()}${s.flow.title.slice(1)} on ${s.stepId}` : undefined,
           unexpected ? `${unexpected} unexpected ${unexpected === 1 ? 'call' : 'calls'}` : undefined

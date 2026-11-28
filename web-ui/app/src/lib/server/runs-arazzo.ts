@@ -19,6 +19,7 @@ import { attemptsOf, groupByStep } from '#lib/workflows/attempts.js';
 import { baggage, callsMocks } from '#lib/workflows/baggage.js';
 import { originOf } from '#lib/workflows/mock-url.js';
 import { exampleCheckOf, toWorkflowExample } from '#lib/workflows/examples.js';
+import { failureTextOf, sessionCallsOf } from '#lib/workflows/sessions.js';
 
 /*
  * Real runs of the workflows of imported Arazzo documents (feature/arazzo S5–S11): launched on the Microcks backend,
@@ -144,11 +145,58 @@ function stepResultOf(
   };
 }
 
+/**
+ * A step of a verification: the call the session received for it, with what Microcks says about the values it carried
+ * and its contract. A step no call matched is not run (the application never called it).
+ */
+function sessionStepResultOf(
+  step: Workflow['steps'][number],
+  result: BackendWorkflowStepResult | undefined,
+  callNumber: number | undefined,
+  startedAt: string,
+  message: BackendTestMessage | undefined
+): StepResult {
+  const called = callNumber !== undefined && result?.requestUrl !== undefined && result.requestUrl !== null;
+  const status: StepStatus = !called ? 'not-run' : result?.status === 'FAILED' ? 'failed' : 'passed';
+  const params: Record<string, string> = {};
+  for (const p of result?.parameters ?? []) params[p.name] = stringOf(p.value);
+  const issue = result?.message ? failureTextOf(step.stepId, result.message) : undefined;
+  return {
+    stepId: step.stepId,
+    status,
+    attempts: called ? [{ n: callNumber, httpStatus: result?.statusCode ?? 0, ms: 0, when: `call #${callNumber}` }] : [],
+    request: called ? { method: result?.operation?.method ?? step.method, url: result!.requestUrl!, params, body: message?.request?.content || undefined } : undefined,
+    response: called
+      ? { meta: [result?.statusCode ?? message?.response?.status, message?.response?.mediaType].filter(Boolean).join(' · '), lines: bodyLines(message?.response?.content) }
+      : undefined,
+    criteria: called
+      ? [
+          {
+            condition: 'The call matches the step and the contract',
+            kind: 'simple',
+            evaluation: `${result?.operation?.method ?? step.method} ${result?.operation?.path ?? step.path} → ${result?.statusCode ?? 0}`,
+            held: status === 'passed'
+          }
+        ]
+      : [],
+    schema: { state: 'off', ref: '', message: 'Contract checked per call in the session.' },
+    outputs: status === 'not-run' ? {} : (result?.outputs ?? {}),
+    flow:
+      status === 'failed'
+        ? { kind: 'stop', title: 'Data not taken from an earlier step', text: issue ?? 'The call breaks the workflow.' }
+        : status === 'passed'
+          ? { kind: 'next', title: 'Next step', text: 'The calls of this step follow the workflow.' }
+          : { kind: 'next', title: '', text: '' },
+    baggage: ''
+  };
+}
+
 /** A full run, as the run page shows it: every step of the workflow, with the exchanges Microcks recorded. */
 export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, token?: string, withExchanges = true): Promise<WorkflowRun> {
   const startedAt = iso(run.startedDate);
   const target = targetOf(run);
   const byStep = groupByStep(run.steps ?? []);
+  const sessionCalls = run.origin === 'SESSION' ? sessionCallsOf(run.session?.calls ?? [], run.steps ?? []) : undefined;
   const messages = await Promise.all(
     workflow.steps.map(async (st) => {
       const tc = byStep.get(st.stepId)?.at(-1)?.testCaseId;
@@ -158,19 +206,23 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
   );
   const steps = workflow.steps.map((st, i) => {
     const entries = byStep.get(st.stepId) ?? [];
+    if (sessionCalls) {
+      const callNumber = sessionCalls.find((c) => c.stepId === st.stepId)?.n;
+      return sessionStepResultOf(st, entries[0], callNumber, startedAt, messages[i]);
+    }
     const next = workflow.steps[i + 1];
     // A passed step followed by steps that never ran, in a run that succeeded, is an onSuccess end.
     const endedEarly = run.status === 'SUCCESS' && entries.at(-1)?.status === 'PASSED' && next !== undefined && !byStep.has(next.stepId);
     return stepResultOf(st, entries, i === workflow.steps.length - 1, endedEarly, startedAt, messages[i], run.validateSchema === true, { runId: run.id, workflowId: run.workflowId, target });
   });
   const running = run.status === 'IN_PROGRESS';
-  const current = running ? workflow.steps.find((st) => !byStep.has(st.stepId)) : undefined;
+  const current = running && !sessionCalls ? workflow.steps.find((st) => !byStep.has(st.stepId)) : undefined;
   return {
     id: run.id,
     number: run.number ?? 0,
     documentId: run.documentId,
     workflowId: run.workflowId,
-    origin: originOf(run.origin),
+    origin: originOf(run.origin, run.session?.sessionId),
     target,
     options: { example: run.example?.name, inputs: run.inputs ?? {}, secret: run.secretRef?.name, timeoutMs: run.timeout ?? 10_000, validateSchemas: run.validateSchema === true },
     status: STATUS[run.status],
@@ -179,6 +231,7 @@ export async function uiRunOf(run: BackendWorkflowResult, workflow: Workflow, to
     outputs: run.outputs ?? {},
     coherence: coherenceOf(run.missingExample),
     ...exampleCheckField(exampleCheckOf(run.example)),
+    ...(sessionCalls ? { sessionCalls } : {}),
     ...(current ? { current: { stepId: current.stepId, attempt: 1 } } : {})
   };
 }

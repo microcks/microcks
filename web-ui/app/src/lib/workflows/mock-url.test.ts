@@ -16,6 +16,11 @@ test('a run recorded with the origin MOCK_URL was called through the Mock URL, a
   assert.deepEqual(originOf(null), { kind: 'api' });
 });
 
+test('a run recorded with the origin SESSION verifies a session, whose id the run keeps', () => {
+  assert.deepEqual(originOf('SESSION', 's1'), { kind: 'session', sessionId: 's1', app: 'the application' });
+  assert.deepEqual(originOf('SESSION'), { kind: 'session', sessionId: '', app: 'the application' });
+});
+
 test('the sample body of the Mock URL curl keeps the example of an input and gives the others a value of their type', () => {
   const inputs = [
     { name: 'customer', type: 'string' as const, example: 'laurent' },

@@ -5,8 +5,12 @@ export function mockUrlOf(base: string, title: string, version: string, workflow
   return `${base}/arazzo/${encodeURIComponent(title).replace(/%20/g, '+')}/${encodeURIComponent(version)}/${encodeURIComponent(workflowId)}`;
 }
 
-/** Where a run came from: Microcks records MOCK_URL for the runs of an application posting to a Mock URL. */
-export function originOf(origin: string | null | undefined): RunOrigin {
+/**
+ * Where a run came from: Microcks records MOCK_URL for the runs of an application posting to a Mock URL, and SESSION
+ * for the verification of a session (Microcks does not know the name of the application that called the mocks).
+ */
+export function originOf(origin: string | null | undefined, sessionId?: string | null): RunOrigin {
+  if (origin === 'SESSION') return { kind: 'session', sessionId: sessionId ?? '', app: 'the application' };
   return origin === 'MOCK_URL' ? { kind: 'mock-url' } : { kind: 'api' };
 }
 

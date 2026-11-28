@@ -42,7 +42,7 @@ export function runSummary(run: WorkflowRun, workflow: Workflow, when: string, s
     const judged = run.options.example ? ` · example ${run.options.example}${run.status === 'SUCCESS' ? ' · Matches the example' : ''}` : '';
     text = `Microcks mocks${judged} · ${when}`;
   }
-  const unexpected = session?.calls.filter((c) => c.stepId === 'unexpected').length ?? 0;
+  const unexpected = (run.sessionCalls ?? session?.calls ?? []).filter((c) => c.stepId === 'unexpected').length;
   const end =
     run.status === 'RUNNING'
       ? 'Running'

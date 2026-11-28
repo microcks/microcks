@@ -679,11 +679,12 @@ export interface BackendWorkflowRunSummary {
   /** Name of the recorded example the run played, and the verdict once it ended. */
   example?: string | null;
   exampleVerdict?: 'MATCHES' | 'DOES_NOT_MATCH' | null;
-  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27). */
-  origin?: 'MOCK_URL' | null;
+  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27), `SESSION` for a verification (S15). */
+  origin?: 'MOCK_URL' | 'SESSION' | null;
 }
 
 import type { BackendMissingExample } from './runs-arazzo-schema';
+import type { BackendSessionCall } from '#lib/workflows/sessions.js';
 
 export interface BackendWorkflowStepResult {
   index: number;
@@ -716,8 +717,10 @@ export interface BackendWorkflowResult {
   steps?: BackendWorkflowStepResult[];
   message?: string | null;
   number?: number | null;
-  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27). */
-  origin?: 'MOCK_URL' | null;
+  /** `MOCK_URL` for a run called through the Mock URL of its workflow (S27), `SESSION` for a verification (S15). */
+  origin?: 'MOCK_URL' | 'SESSION' | null;
+  /** The session a verification checked, with the calls it received (S15). */
+  session?: { sessionId: string; calls: BackendSessionCall[] } | null;
   /** S9: each response was validated against the OpenAPI contract. */
   validateSchema?: boolean;
   /** S10: the mock example the failed step needed and did not find (run on the mocks). */
@@ -778,6 +781,52 @@ export async function launchArazzoExampleRuns(
   try {
     const path = `/api/arazzo/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/examples/runs`;
     return (await (await call(path, token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(launch) })).json()) as BackendExampleLaunch[];
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return undefined;
+    throw e;
+  }
+}
+
+/* ---- Arazzo verification sessions (`/api/arazzo/sessions`, stories S15, S16, S17) ---- */
+
+/** A session Microcks opened. The API gives no way to read it again: the calls come with its verification. */
+export interface BackendArazzoSession {
+  id: string;
+  documentId: string;
+  documentTitle?: string;
+  documentVersion?: string;
+  workflowId: string;
+  openedDate?: number | string;
+  closedDate?: number | string | null;
+  callCount: number;
+  droppedCallCount: number;
+  inputs?: Record<string, unknown> | null;
+  /** The steps set to fail, by step id, with the name of the example each one answers with. */
+  failures?: Record<string, string> | null;
+}
+
+export async function openArazzoSession(
+  request: { documentId: string; workflowId: string; inputs?: Record<string, unknown>; failures?: Record<string, string> },
+  token?: string
+): Promise<BackendArazzoSession> {
+  return (await (await jsonCall('/api/arazzo/sessions', token, 'POST', request)).json()) as BackendArazzoSession;
+}
+
+/** Closes a session; false when Microcks does not know it. */
+export async function closeArazzoSession(sessionId: string, token?: string): Promise<boolean> {
+  try {
+    await call(`/api/arazzo/sessions/${encodeURIComponent(sessionId)}`, token, { method: 'DELETE' });
+    return true;
+  } catch (e) {
+    if (e instanceof BackendError && e.status === 404) return false;
+    throw e;
+  }
+}
+
+/** The verification of a session: a run of origin `SESSION`; undefined when Microcks does not know the session. */
+export async function verifyArazzoSession(sessionId: string, token?: string): Promise<BackendWorkflowResult | undefined> {
+  try {
+    return (await (await call(`/api/arazzo/sessions/${encodeURIComponent(sessionId)}/verification`, token, { method: 'POST', headers: { accept: 'application/json' } })).json()) as BackendWorkflowResult;
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
     throw e;

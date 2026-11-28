@@ -239,6 +239,8 @@ export interface WorkflowRun {
   /** The backend verdict on the example the run played, once the run is over. */
   exampleCheck?: RunExampleCheck;
   relatedTestRunId?: string;
+  /** The calls a verification checked (runs of origin `session` of imported documents). */
+  sessionCalls?: SessionCall[];
   /** Only on the intermediate frames of a RUNNING run: the step being called and its attempt number. */
   current?: { stepId: string; attempt: number };
 }
@@ -250,8 +252,10 @@ export interface SessionCall {
   httpStatus: number;
   /** Matching step id, or `unexpected`. */
   stepId: string;
-  contract: { state: 'pass' | 'fail'; text: string };
+  contract: { state: 'pass' | 'fail' | 'off'; text: string };
   dataPassing: { state: 'pass' | 'fail' | 'off'; text: string };
+  /** Why Microcks counts the call unexpected (imported documents). */
+  failure?: string;
 }
 
 /** A verification session (`x-microcks-session` header). */
@@ -269,6 +273,11 @@ export interface Session {
   failureInjection?: { stepId: string; example: string };
   calls: SessionCall[];
   verification?: { result: 'SUCCESS' | 'FAILURE'; runNumber: number; problems: { lead: string; text: string }[] };
+  /**
+   * Sessions Microcks holds (imported documents): the calls are known once verified, as Microcks has no way to read
+   * the calls of an open session; every step set to fail, by step id, with its example; the calls it dropped.
+   */
+  real?: { failures: Record<string, string>; droppedCallCount: number };
 }
 
 /** Filter of the Workflows screen: "Any target / Mocks / Implementations / Mock URL / Session". */
