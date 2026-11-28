@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The minion as Microcks sees it: it accepts the run request of the contract on POST /api/runs, calls the mocks of
@@ -42,6 +44,31 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class RunResourceQuarkusTest {
 
    private static final ObjectMapper JSON = new ObjectMapper();
+
+   @BeforeEach
+   void forgetTheReportsOfEarlierRuns() {
+      StubMicrocks.REPORT_PATHS.clear();
+      StubMicrocks.REPORTS.clear();
+   }
+
+   @Test
+   void aRunThatBreaksUnexpectedlyIsReportedToMicrocksAsFailed() throws Exception {
+      ObjectNode runRequest = (ObjectNode) resource("contract/arazzo-minion-contract.json").get("runRequest");
+      runRequest.put("arazzoDocument", text("runner/workflow-runs.arazzo.yaml").split("\n---\n")[0]);
+      // A path that is not a valid URI makes the call of the first step break, whatever the HTTP side does.
+      ((ObjectNode) ((ObjectNode) runRequest.get("sources").get("pastryApi").get("operations"))
+            .get("GetPastryByName")).put("path", "/pastry with spaces/{name}");
+
+      given().contentType(ContentType.JSON).body(runRequest.toString()).when().post("/api/runs").then().statusCode(202);
+
+      awaitReports(1);
+      assertEquals(List.of("/api/arazzo/runs/6719f0c2a1b2c3d4e5f60718/outcome"), StubMicrocks.REPORT_PATHS);
+      JsonNode outcome = JSON.readTree(StubMicrocks.REPORTS.get(0));
+      assertEquals("FAILURE", outcome.get("status").asText());
+      assertTrue(
+            outcome.get("message").asText().startsWith("Unexpected error in the Arazzo minion: Illegal character"),
+            outcome.toString());
+   }
 
    @Test
    void aRunRequestedByMicrocksIsAcceptedThenReportedToIt() throws Exception {

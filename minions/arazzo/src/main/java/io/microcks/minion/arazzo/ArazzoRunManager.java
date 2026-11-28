@@ -18,7 +18,9 @@ package io.microcks.minion.arazzo;
 import io.microcks.minion.arazzo.client.MicrocksAPIConnector;
 import io.microcks.minion.arazzo.client.MicrocksRunReporter;
 import io.microcks.minion.arazzo.runner.JdkHttpTransport;
+import io.microcks.minion.arazzo.runner.RunOutcome;
 import io.microcks.minion.arazzo.runner.RunSpecification;
+import io.microcks.minion.arazzo.runner.RunStatus;
 import io.microcks.minion.arazzo.runner.WorkflowRunner;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -28,6 +30,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.Clock;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -54,12 +57,24 @@ public class ArazzoRunManager {
     */
    public void launch(RunSpecification specification) {
       executor.submit(() -> {
+         MicrocksRunReporter reporter = new MicrocksRunReporter(microcksAPIConnector, specification.runId());
          try {
-            runner.run(specification, new MicrocksRunReporter(microcksAPIConnector, specification.runId()));
+            runner.run(specification, reporter);
          } catch (RuntimeException re) {
-            logger.errorf(re, "Run %s of workflow %s could not be reported", specification.runId(),
-                  specification.workflowId());
+            logger.errorf(re, "Run %s of workflow %s broke", specification.runId(), specification.workflowId());
+            failed(reporter, specification, re);
          }
       });
+   }
+
+   /** A run that broke must not stay in progress in Microcks: it is reported as failed, if Microcks is reachable. */
+   private void failed(MicrocksRunReporter reporter, RunSpecification specification, RuntimeException re) {
+      try {
+         reporter.runEnded(new RunOutcome(RunStatus.FAILURE, Map.of(), 0,
+               "Unexpected error in the Arazzo minion: " + re.getMessage()));
+      } catch (RuntimeException unreported) {
+         logger.errorf(unreported, "Run %s of workflow %s could not be reported", specification.runId(),
+               specification.workflowId());
+      }
    }
 }
