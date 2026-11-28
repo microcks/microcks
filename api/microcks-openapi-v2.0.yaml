@@ -3,8 +3,13 @@ openapi: 3.0.2
 info:
   title: Microcks API v2.0
   version: 2.0.0
-  description: "API offered by Microcks, the Kubernetes native tool for API and microservices\
-    \ mocking and testing (microcks.io)"
+  description: "API offered by Microcks 2.0, the Kubernetes native tool for API and microservices\
+    \ mocking and testing (microcks.io). It describes every endpoint the Microcks\
+    \ application serves under /api, including the Arazzo workflows, the authentication\
+    \ (/auth), the groups, users and service accounts. The mocks themselves (/rest,\
+    \ /soap, /graphql, /grpc, /dynarest, /arazzo) are not part of it, as their paths\
+    \ follow the APIs they mock. Authentication replaces Keycloak with the built-in\
+    \ service (see /auth/config)."
   contact:
     name: Laurent Broudoux
     url: https://github.com/microcks
@@ -213,13 +218,16 @@ paths:
       parameters:
       - name: messages
         description: Whether to include details on services messages into result.
-          Default is false
+          Default is true
         schema:
           type: boolean
+          default: true
         in: query
       responses:
         "200":
           $ref: '#/components/responses/ServiceResponse'
+        "404":
+          description: No Service has this identifier, or this name and version
       security:
       - jwt-bearer:
         - user
@@ -231,6 +239,8 @@ paths:
       responses:
         "200":
           description: Service has been deleted
+        "403":
+          description: The Service is unknown or the caller cannot delete it
       security:
       - jwt-bearer:
         - admin
@@ -521,20 +531,6 @@ paths:
         type: string
       in: path
       required: true
-  /keycloak/config:
-    summary: Keycloak Authentification configuration
-    get:
-      tags:
-      - config
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KeycloakConfig'
-          description: Get current configuration
-      operationId: GetKeycloakConfig
-      summary: Get authentification configuration
   /services/{id}/operation:
     put:
       requestBody:
@@ -555,8 +551,8 @@ paths:
       responses:
         "200":
           description: Operation has been updated
-        "500":
-          description: Operation cannot be updated
+        "403":
+          description: Operation cannot be updated (unknown Service or not allowed)
       security:
       - jwt-bearer:
         - admin
@@ -583,8 +579,8 @@ paths:
       responses:
         "200":
           description: Service metadata has been updated
-        "500":
-          description: Update of metadata failed
+        "403":
+          description: Metadata cannot be updated (unknown Service or not allowed)
       security:
       - jwt-bearer:
         - admin
@@ -1574,6 +1570,1523 @@ paths:
         type: string
       in: path
       required: true
+  /services/map:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+              example:
+                REST: 12
+                EVENT: 3
+          description: Number of Services by type (keys are the Service types)
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetServicesMap
+      summary: Get the number of Services by type
+  /services/generic:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenericResourceServiceDTO'
+        required: true
+      tags:
+      - mock
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+          description: Created generic REST Service
+        "409":
+          description: A Service with same name and version already exists
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: CreateGenericResourceService
+      summary: Create a generic REST Service
+      description: Create a Service that manages a resource of its own, without any
+        API contract, from an optional reference payload
+  /services/generic/event:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenericResourceServiceDTO'
+        required: true
+      tags:
+      - mock
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+          description: Created generic event Service
+        "409":
+          description: A Service with same name and version already exists
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: CreateGenericEventService
+      summary: Create a generic event Service
+      description: Create a Service that publishes events about a resource of its
+        own, without any AsyncAPI contract, from an optional reference payload
+  /jobs/search:
+    get:
+      tags:
+      - job
+      parameters:
+      - name: queryMap
+        description: Map of criterion. Key can be simply 'name' with value as the
+          searched string. You can also search by label using keys like 'labels.x'
+          where 'x' is the label and value the label value
+        schema:
+          type: object
+          additionalProperties:
+            type: string
+        in: query
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportJob'
+          description: List of found Jobs (filtered according search criteria)
+      security:
+      - jwt-bearer:
+        - user
+      operationId: SearchImportJobs
+      summary: Search for Jobs
+  /resources/id/{id}:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+            application/yaml:
+              schema:
+                type: string
+            text/xml:
+              schema:
+                type: string
+          description: Raw content of the resource, typed after its file extension
+        "404":
+          description: No resource has this identifier
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetResourceById
+      summary: Get Resource content by identifier
+    parameters:
+    - name: id
+      description: Unique identifier of the Service or API resource
+      schema:
+        type: string
+      in: path
+      required: true
+  /resources/{serviceId}/{resourceType}:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            text/yaml:
+              schema:
+                type: string
+          description: OpenAPI or Swagger description of a generic REST Service
+        "400":
+          description: The Service is not a generic REST Service or the resource
+            type is unknown
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetGenericServiceResource
+      summary: Get the API description of a generic REST Service
+    parameters:
+    - name: serviceId
+      description: Unique identifier of the generic REST Service
+      schema:
+        type: string
+      in: path
+      required: true
+    - name: resourceType
+      description: Kind of description to produce
+      schema:
+        enum:
+        - swagger_20
+        - openapi_30
+        type: string
+      in: path
+      required: true
+  /genericresources/service/{serviceId}:
+    get:
+      tags:
+      - mock
+      parameters:
+      - name: page
+        description: Page of resources to retrieve (starts at and defaults to 0)
+        schema:
+          type: integer
+        in: query
+        required: false
+      - name: size
+        description: Size of a page. Maximum number of resources to include in a
+          response (defaults to 10)
+        schema:
+          type: integer
+        in: query
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenericResource'
+          description: Resources managed by a generic Service
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetGenericResourcesByService
+      summary: Get the resources of a generic Service
+    parameters:
+    - name: serviceId
+      description: Unique identifier of the generic Service
+      schema:
+        type: string
+      in: path
+      required: true
+  /genericresources/service/{serviceId}/count:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Counter'
+          description: Number of resources managed by a generic Service
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetGenericResourcesCounter
+      summary: Get the resources counter of a generic Service
+    parameters:
+    - name: serviceId
+      description: Unique identifier of the generic Service
+      schema:
+        type: string
+      in: path
+      required: true
+  /documentation/{name}/{resourceType}:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            text/html:
+              schema:
+                type: string
+          description: HTML page rendering the contract (ReDoc for OpenAPI and Swagger,
+            AsyncAPI viewer for AsyncAPI)
+        "400":
+          description: No main artifact of this name or unsupported resource type
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetDocumentationByResourceName
+      summary: Get the documentation page of a resource by name
+    parameters:
+    - name: name
+      description: Unique name/business identifier of the Service or API resource
+      schema:
+        type: string
+      in: path
+      required: true
+    - name: resourceType
+      description: Type of the resource, as the ResourceType values (OPEN_API_SPEC,
+        SWAGGER or ASYNC_API_SPEC)
+      schema:
+        type: string
+      in: path
+      required: true
+  /documentation/id/{id}/{resourceType}:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            text/html:
+              schema:
+                type: string
+          description: HTML page rendering the contract (ReDoc for OpenAPI and Swagger,
+            AsyncAPI viewer for AsyncAPI)
+        "400":
+          description: No resource of this identifier or unsupported resource type
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetDocumentationByResourceId
+      summary: Get the documentation page of a resource by identifier
+    parameters:
+    - name: id
+      description: Unique identifier of the Service or API resource
+      schema:
+        type: string
+      in: path
+      required: true
+    - name: resourceType
+      description: Type of the resource, as the ResourceType values (OPEN_API_SPEC,
+        SWAGGER or ASYNC_API_SPEC)
+      schema:
+        type: string
+      in: path
+      required: true
+  /health:
+    get:
+      tags:
+      - config
+      responses:
+        "200":
+          description: Microcks is up and its datastore is reachable
+        "503":
+          description: The datastore is not reachable
+      security: []
+      operationId: GetHealth
+      summary: Get health status
+  /version/info:
+    get:
+      tags:
+      - config
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionInfo'
+          description: Version of the running Microcks
+      security: []
+      operationId: GetVersionInfo
+      summary: Get version information
+  /auth/config:
+    summary: Authentication configuration
+    get:
+      tags:
+      - auth
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthInfo'
+              example:
+                enabled: true
+                oidcEnabled: true
+          description: Whether authentication is enabled, and whether an OpenID
+            Connect login is offered
+      security: []
+      operationId: GetAuthConfig
+      summary: Get authentication configuration
+      description: Replaces the Keycloak configuration of 1.x
+  /auth/me:
+    get:
+      tags:
+      - auth
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+          description: The current user, with its roles and groups
+        "401":
+          headers:
+            WWW-Authenticate:
+              schema:
+                type: string
+          description: No valid bearer token
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetCurrentUser
+      summary: Get the current user
+  /auth/token:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+              - grant_type
+              properties:
+                grant_type:
+                  description: Only client_credentials is supported
+                  enum:
+                  - client_credentials
+                  type: string
+                client_id:
+                  description: Client identifier of a Service Account
+                  type: string
+                client_secret:
+                  description: Secret of the Service Account. May be sent instead
+                    in a Basic Authorization header
+                  type: string
+        required: true
+      tags:
+      - auth
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+          description: Access token of the Service Account
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unsupported grant type
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unknown Service Account or wrong secret
+      security: []
+      operationId: GetAccessToken
+      summary: Get an access token for a Service Account
+      description: OAuth 2 client credentials flow, used by the CLI and CI/CD pipelines
+  /auth/login/oidc:
+    get:
+      tags:
+      - auth
+      parameters:
+      - name: redirect_uri
+        description: Where the browser is sent back, with the Microcks token, once
+          logged in. Must be an allowed redirect URI, or a CLI loopback address
+          when allowed
+        schema:
+          type: string
+        in: query
+        required: true
+      responses:
+        "303":
+          headers:
+            Location:
+              description: Authorization URL of the OpenID Connect provider
+              schema:
+                type: string
+          description: Redirects the browser to the identity provider
+        "400":
+          description: Invalid redirect_uri
+        "404":
+          description: OpenID Connect login is not enabled
+      security: []
+      operationId: LoginWithOidc
+      summary: Start an OpenID Connect login
+  /auth/callback/oidc:
+    get:
+      tags:
+      - auth
+      parameters:
+      - name: code
+        description: Authorization code returned by the identity provider
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: state
+        description: State issued at the start of the login
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: error
+        description: Error returned by the identity provider
+        schema:
+          type: string
+        in: query
+        required: false
+      responses:
+        "303":
+          headers:
+            Location:
+              description: The redirect_uri of the login, with the Microcks token
+                as a token query parameter
+              schema:
+                type: string
+          description: Login succeeded, redirects the browser back to the application
+        "401":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The login failed (error, expired state, invalid ID token
+            or refused by the guard claim)
+        "403":
+          description: This user has been disabled
+        "404":
+          description: OpenID Connect login is not enabled
+      security: []
+      operationId: CompleteOidcLogin
+      summary: Complete an OpenID Connect login
+      description: Callback registered at the identity provider. It is not meant
+        to be called by API clients.
+  /groups:
+    get:
+      tags:
+      - admin
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+          description: List of Groups
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetGroups
+      summary: Get Groups
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupRequest'
+        required: true
+      tags:
+      - admin
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+          description: Created Group
+        "400":
+          description: The name is missing or contains a slash or a space
+        "409":
+          description: A Group of this name already exists
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: CreateGroup
+      summary: Create a Group
+  /groups/{name}:
+    get:
+      tags:
+      - admin
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+          description: Found Group
+        "404":
+          description: No Group has this name
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetGroup
+      summary: Get a Group
+    delete:
+      tags:
+      - admin
+      responses:
+        "204":
+          description: Group and its memberships have been deleted
+        "404":
+          description: No Group has this name
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: DeleteGroup
+      summary: Delete a Group
+    parameters:
+    - name: name
+      description: Name of the Group
+      schema:
+        type: string
+      in: path
+      required: true
+  /groups/{name}/members:
+    get:
+      tags:
+      - admin
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Membership'
+          description: Memberships of the Group
+        "404":
+          description: No Group has this name
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetGroupMembers
+      summary: Get the members of a Group
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberRequest'
+        required: true
+      tags:
+      - admin
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+          description: Created Membership (the existing one if already present)
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Invalid role, or neither or both of subject and email given
+        "403":
+          description: The caller is neither admin nor manager of this Group
+        "404":
+          description: No Group has this name
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: AddGroupMember
+      summary: Add a member to a Group
+      description: Add a member by username (subject) or by email. A membership
+        by email is pending until the person logs in with this verified email.
+    parameters:
+    - name: name
+      description: Name of the Group
+      schema:
+        type: string
+      in: path
+      required: true
+  /groups/{name}/members/{id}:
+    delete:
+      tags:
+      - admin
+      responses:
+        "204":
+          description: Membership has been removed
+        "403":
+          description: The caller is neither admin nor manager of this Group
+        "404":
+          description: No such membership in this Group
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: RemoveGroupMember
+      summary: Remove a member from a Group
+    parameters:
+    - name: name
+      description: Name of the Group
+      schema:
+        type: string
+      in: path
+      required: true
+    - name: id
+      description: Unique identifier of the Membership
+      schema:
+        type: string
+      in: path
+      required: true
+  /users:
+    get:
+      tags:
+      - admin
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: Users who logged in, most recent login first
+      security:
+      - jwt-bearer:
+        - manager
+      operationId: GetUsers
+      summary: Get Users
+  /users/{id}:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+        required: true
+      tags:
+      - admin
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Updated User
+        "400":
+          description: The disabled flag is missing
+        "404":
+          description: No User has this identifier
+        "409":
+          description: A user cannot disable himself
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: UpdateUser
+      summary: Enable or disable a User
+    delete:
+      tags:
+      - admin
+      responses:
+        "204":
+          description: User has been removed
+        "404":
+          description: No User has this identifier
+        "409":
+          description: A user cannot remove himself
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: DeleteUser
+      summary: Remove a User
+    parameters:
+    - name: id
+      description: Unique identifier of the User
+      schema:
+        type: string
+      in: path
+      required: true
+  /service-accounts:
+    get:
+      tags:
+      - admin
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceAccount'
+          description: List of Service Accounts (their secrets are never returned)
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: GetServiceAccounts
+      summary: Get Service Accounts
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccountRequest'
+        required: true
+      tags:
+      - admin
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccountCreated'
+          description: Created Service Account, with its secret shown only once
+        "400":
+          description: Client identifier missing, or roles missing or unknown
+        "409":
+          description: A Service Account has this client identifier
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: CreateServiceAccount
+      summary: Create a Service Account
+  /service-accounts/{id}:
+    delete:
+      tags:
+      - admin
+      responses:
+        "204":
+          description: Service Account has been deleted
+        "404":
+          description: No Service Account has this identifier
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: DeleteServiceAccount
+      summary: Delete a Service Account
+    parameters:
+    - name: id
+      description: Unique identifier of the Service Account
+      schema:
+        type: string
+      in: path
+      required: true
+  /traces:
+    get:
+      tags:
+      - trace
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+          description: Identifiers of the stored traces
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetTraceIds
+      summary: Get trace identifiers
+    delete:
+      tags:
+      - trace
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: All traces and spans have been cleared
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ClearTraces
+      summary: Clear all traces
+  /traces/{traceId}/spans:
+    get:
+      tags:
+      - trace
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpanData'
+          description: Spans of the trace
+        "404":
+          description: No span for this trace
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetTraceSpans
+      summary: Get the spans of a trace
+    parameters:
+    - name: traceId
+      description: Identifier of the trace
+      schema:
+        type: string
+      in: path
+      required: true
+  /traces/operations:
+    get:
+      tags:
+      - trace
+      parameters:
+      - name: serviceName
+        description: Pattern of the Service name
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: operationName
+        description: Pattern of the operation name
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: clientAddress
+        description: Pattern of the client address (defaults to .*)
+        schema:
+          type: string
+        in: query
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SpanData'
+          description: Spans of each trace matching the Service, operation and
+            client
+        "404":
+          description: No trace matches
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetTracesForOperation
+      summary: Get the traces of a Service operation
+  /traces/operations/stream:
+    get:
+      tags:
+      - trace
+      parameters:
+      - name: serviceName
+        description: Pattern of the Service name
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: operationName
+        description: Pattern of the operation name
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: clientAddress
+        description: Pattern of the client address
+        schema:
+          type: string
+        in: query
+        required: false
+      responses:
+        "200":
+          content:
+            text/event-stream:
+              schema:
+                type: string
+          description: Server-sent events, one for each trace of the Service operation
+            as it is recorded
+      security:
+      - jwt-bearer:
+        - user
+      operationId: StreamTracesForOperation
+      summary: Stream the traces of a Service operation
+  /copilot/samples/{id}:
+    get:
+      tags:
+      - copilot
+      parameters:
+      - name: operation
+        description: Name of the operation to suggest samples for. When absent,
+          samples are generated asynchronously for the whole Service
+        schema:
+          type: string
+        in: query
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exchange'
+          description: Samples suggested for the operation
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationTask'
+          description: Generation of the samples of the whole Service has started
+        "400":
+          description: Unknown Service or operation
+        "500":
+          description: The AI Copilot failed to suggest samples
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetSamplesSuggestions
+      summary: Get samples suggested by the AI Copilot
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Exchange'
+        required: true
+      tags:
+      - copilot
+      parameters:
+      - name: operation
+        description: Name of the operation to add the samples to
+        schema:
+          type: string
+        in: query
+        required: true
+      responses:
+        "201":
+          description: Samples have been added to the operation
+        "403":
+          description: The samples cannot be added
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: AddSamplesSuggestions
+      summary: Add AI Copilot samples to an operation
+    parameters:
+    - name: id
+      description: "Unique identifier of the Service, or its name and version as\
+        \ {name}:{version}"
+      schema:
+        type: string
+      in: path
+      required: true
+  /copilot/samples/task/{id}/status:
+    get:
+      tags:
+      - copilot
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationTaskStatus'
+          description: The generation succeeded (status SUCCESS)
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationTaskStatus'
+          description: The generation is in progress (status PENDING)
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationTaskStatus'
+          description: Unknown task (status NOT_FOUND)
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationTaskStatus'
+          description: The generation failed (status FAILURE)
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetSamplesGenerationStatus
+      summary: Get the status of a samples generation task
+    parameters:
+    - name: id
+      description: Identifier of the generation task
+      schema:
+        type: string
+      in: path
+      required: true
+  /copilot/samples/{id}/cleanup:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExchangeSelection'
+        required: true
+      tags:
+      - copilot
+      responses:
+        "204":
+          description: The selected samples have been removed
+        "403":
+          description: The samples cannot be removed
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: RemoveSamples
+      summary: Remove AI Copilot samples from a Service
+    parameters:
+    - name: id
+      description: "Unique identifier of the Service, or its name and version as\
+        \ {name}:{version}"
+      schema:
+        type: string
+      in: path
+      required: true
+  /copilot/samples/{id}/export:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExchangeSelection'
+        required: true
+      tags:
+      - copilot
+      parameters:
+      - name: format
+        description: Format of the export, such as APIExamples
+        schema:
+          type: string
+        in: query
+        required: false
+      responses:
+        "200":
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              examples:
+                filename:
+                  value: attachment; filename=microcks-repository.json
+          content:
+            application/json:
+              schema:
+                format: binary
+                type: string
+          description: The selected samples, exported
+        "500":
+          description: The export failed
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ExportSamples
+      summary: Export selected samples of a Service
+    parameters:
+    - name: id
+      description: "Unique identifier of the Service, or its name and version as\
+        \ {name}:{version}"
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/documents:
+    get:
+      tags:
+      - workflow
+      parameters:
+      - name: api
+        description: Name of an API (or {name}:{version}) to keep only the documents
+          whose source descriptions are linked to it
+        schema:
+          type: string
+        in: query
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArazzoDocumentSummary'
+          description: Imported Arazzo documents, with their linked APIs and the
+            status of their workflows
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ListArazzoDocuments
+      summary: List Arazzo documents
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArazzoImportRequest'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoDocumentSummary'
+          description: Imported Arazzo document
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The document cannot be imported. The body tells why
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: ImportArazzoDocument
+      summary: Import an Arazzo document
+      description: Import an Arazzo document and link each of its source descriptions
+        to an API of Microcks
+  /arazzo/documents/analysis:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArazzoImportRequest'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoImportAnalysis'
+          description: What importing this document would give. A refused document
+            is described by the refusal of the analysis
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: AnalyseArazzoDocument
+      summary: Analyse an Arazzo document before importing it
+      description: Nothing is imported. The analysis tells which APIs match the
+        source descriptions and which workflows could run.
+  /arazzo/documents/{documentId}/analysis:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArazzoLinksRequest'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoImportAnalysis'
+          description: What linking the source descriptions this way would give
+        "404":
+          description: No Arazzo document has this identifier
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: AnalyseArazzoDocumentLinks
+      summary: Analyse the links of an imported Arazzo document
+    parameters:
+    - name: documentId
+      description: Unique identifier of the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/documents/{documentId}/sources:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArazzoLinksRequest'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoDocumentSummary'
+          description: The Arazzo document, with its source descriptions linked
+            as requested
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: The links are refused. The body tells why
+        "404":
+          description: No Arazzo document has this identifier
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: RelinkArazzoSources
+      summary: Link the source descriptions of an Arazzo document to APIs
+    parameters:
+    - name: documentId
+      description: Unique identifier of the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/documents/{documentId}/source:
+    get:
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/yaml:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+          description: Content of the Arazzo document, as it was imported
+        "404":
+          description: No Arazzo document has this identifier
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetArazzoDocumentSource
+      summary: Get the source of an Arazzo document
+    parameters:
+    - name: documentId
+      description: Unique identifier of the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/documents/{documentId}/workflows/{workflowId}:
+    get:
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoWorkflowDetail'
+          description: The workflow, with its inputs, steps, outputs and recorded
+            examples
+        "404":
+          description: No such document or workflow
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetArazzoWorkflow
+      summary: Get the detail of a workflow of an Arazzo document
+    parameters:
+    - name: documentId
+      description: Unique identifier of the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+    - name: workflowId
+      description: Identifier of the workflow in the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/documents/{documentId}/runs:
+    get:
+      tags:
+      - workflow
+      parameters:
+      - name: workflow
+        description: Keep only the runs of this workflow
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: target
+        description: Keep only the runs on this target
+        schema:
+          $ref: '#/components/schemas/WorkflowRunTarget'
+        in: query
+        required: false
+      - name: result
+        description: Keep only the runs with this status
+        schema:
+          $ref: '#/components/schemas/WorkflowRunStatus'
+        in: query
+        required: false
+      - name: page
+        description: Page of runs to retrieve (starts at and defaults to 0)
+        schema:
+          type: integer
+        in: query
+        required: false
+      - name: size
+        description: Size of a page (defaults to 20)
+        schema:
+          type: integer
+        in: query
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowRunSummary'
+          description: Runs of the document, most recent first
+        "400":
+          description: Unknown target or result
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ListWorkflowRuns
+      summary: List the runs of an Arazzo document
+    parameters:
+    - name: documentId
+      description: Unique identifier of the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/documents/{documentId}/runs/count:
+    get:
+      tags:
+      - workflow
+      parameters:
+      - name: workflow
+        description: Keep only the runs of this workflow
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: target
+        description: Keep only the runs on this target
+        schema:
+          $ref: '#/components/schemas/WorkflowRunTarget'
+        in: query
+        required: false
+      - name: result
+        description: Keep only the runs with this status
+        schema:
+          $ref: '#/components/schemas/WorkflowRunStatus'
+        in: query
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowRunCounts'
+          description: Number of runs of the document, and how many passed or failed
+        "400":
+          description: Unknown target or result
+      security:
+      - jwt-bearer:
+        - user
+      operationId: CountWorkflowRuns
+      summary: Count the runs of an Arazzo document
+    parameters:
+    - name: documentId
+      description: Unique identifier of the Arazzo document
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/services/{serviceId}/workflows:
+    get:
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoApiUsage'
+          description: The Arazzo documents and workflows that use the API
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetArazzoApiUsage
+      summary: Get the workflows using an API
+    parameters:
+    - name: serviceId
+      description: Unique identifier of the Service or API
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/runs/{runId}/steps:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArazzoStepReport'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "204":
+          description: The step has been recorded in the run
+        "404":
+          description: No WorkflowResult has this identifier
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ReportWorkflowStep
+      summary: Report a step of a workflow run
+      description: Used by the Arazzo minion to report each step it played.
+    parameters:
+    - name: runId
+      description: Unique identifier of the WorkflowResult
+      schema:
+        type: string
+      in: path
+      required: true
+  /arazzo/runs/{runId}/outcome:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArazzoRunOutcome'
+        required: true
+      tags:
+      - workflow
+      responses:
+        "204":
+          description: The outcome has been recorded in the run
+        "404":
+          description: No WorkflowResult has this identifier
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ReportWorkflowOutcome
+      summary: Report the outcome of a workflow run
+      description: Used by the Arazzo minion to close a run.
+    parameters:
+    - name: runId
+      description: Unique identifier of the WorkflowResult
+      schema:
+        type: string
+      in: path
+      required: true
 components:
   schemas:
     TestCaseResult:
@@ -1738,39 +3251,6 @@ components:
         eventMessageName:
           description: Name of event this test step is bound to
           type: string
-    KeycloakConfig:
-      description: Representation of Keycloak / SSO configuration used by Microcks
-        server
-      required:
-      - realm
-      - auth-server-url
-      - public-client
-      - ssl-required
-      - resource
-      - enabled
-      type: object
-      properties:
-        realm:
-          description: Authentication realm name
-          type: string
-        auth-server-url:
-          description: SSO Server authentication url
-          type: string
-        public-client:
-          description: Name of public-client that can be used for requesting OAuth
-            token
-          type: boolean
-        ssl-required:
-          description: SSL certificates requirements
-          enum:
-          - none
-          - external
-        resource:
-          description: Name of Keycloak resource/application used on client side
-          type: string
-        enabled:
-          description: Whether Keycloak authentification and usage is enabled
-          type: boolean
     RequestResponsePair:
       description: Request associated with corresponding Response
       type: object
@@ -2858,6 +4338,23 @@ components:
             plays. Its inputs replace the given ones, and the run is judged on what
             it expects
           type: string
+        target:
+          description: Set to run some source descriptions on the Microcks mocks
+            and the others on their implementations. Any other kind is refused
+          type: object
+          required:
+          - kind
+          properties:
+            kind:
+              enum:
+              - mixed
+              type: string
+            perSource:
+              description: "For each source description, mocks or implementations;\
+                \ the latter use the base URL given in implementations"
+              type: object
+              additionalProperties:
+                type: string
       example: |-
         {
             "inputs": {
@@ -2876,10 +4373,12 @@ components:
       - FAILURE
       type: string
     WorkflowRunTarget:
-      description: What a workflow run calls, the Microcks mocks or implementations
+      description: What a workflow run calls, the Microcks mocks, implementations, or mocks for some
+        source descriptions and implementations for the others (MIXED)
       enum:
       - MOCKS
       - IMPLEMENTATIONS
+      - MIXED
       type: string
     ArazzoSessionRequest:
       description: The workflow a verification session is opened on
@@ -3386,6 +4885,975 @@ components:
         refusal:
           description: Why the example could not run; absent when it runs
           type: string
+    ErrorResponse:
+      description: Error returned as a JSON object
+      type: object
+      properties:
+        error:
+          description: Code or message of the error
+          type: string
+      example: |-
+        {
+            "error": "Role must be user or manager"
+        }
+    VersionInfo:
+      description: Version of the running Microcks
+      type: object
+      properties:
+        versionId:
+          description: Version of Microcks
+          type: string
+        buildTimestamp:
+          description: When this version was built
+          type: string
+      example: |-
+        {
+            "versionId": "2.0.0",
+            "buildTimestamp": "2026-11-20T10:15:00Z"
+        }
+    AuthInfo:
+      description: Authentication configuration of Microcks
+      required:
+      - enabled
+      - oidcEnabled
+      type: object
+      properties:
+        enabled:
+          description: Whether authentication is enabled
+          type: boolean
+        oidcEnabled:
+          description: Whether an OpenID Connect login is offered
+          type: boolean
+    UserInfo:
+      description: The authenticated user
+      type: object
+      properties:
+        name:
+          description: Full name
+          type: string
+        username:
+          description: Login name
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        email:
+          type: string
+        roles:
+          description: "Roles of the user: user, manager or admin"
+          type: array
+          items:
+            type: string
+        groups:
+          description: Paths of the Groups the user belongs to
+          type: array
+          items:
+            type: string
+      example: |-
+        {
+            "name": "Jane Doe",
+            "username": "jane",
+            "email": "jane@example.com",
+            "roles": ["user"],
+            "groups": ["/microcks/manager/payments"]
+        }
+    AccessToken:
+      description: Access token of a Service Account
+      required:
+      - access_token
+      - token_type
+      - expires_in
+      type: object
+      properties:
+        access_token:
+          description: Signed JWT to send as a bearer token
+          type: string
+        token_type:
+          enum:
+          - Bearer
+          type: string
+        expires_in:
+          format: int64
+          description: Validity of the token, in seconds
+          type: integer
+    Group:
+      description: A Group of users, to restrict the Services its members manage
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          description: Unique identifier of the Group
+          type: string
+        name:
+          description: Unique name of the Group. It contains no slash or space
+          type: string
+        description:
+          type: string
+    GroupRequest:
+      description: Group to create
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          description: Unique name of the Group. It contains no slash or space
+          type: string
+        description:
+          type: string
+    Membership:
+      description: The membership of a user in a Group
+      type: object
+      properties:
+        id:
+          description: Unique identifier of the Membership
+          type: string
+        groupName:
+          type: string
+        role:
+          description: Role of the member in the Group
+          enum:
+          - user
+          - manager
+          type: string
+        subject:
+          description: Username of the member. Absent while the membership is pending
+          type: string
+        email:
+          description: Email the membership waits for. Absent once bound to a user
+          type: string
+        pending:
+          description: Whether the membership is not yet bound to a user
+          type: boolean
+    MemberRequest:
+      description: Member to add to a Group. Give either a subject or an email
+      required:
+      - role
+      type: object
+      properties:
+        role:
+          enum:
+          - user
+          - manager
+          type: string
+        subject:
+          description: Username of the member
+          type: string
+        email:
+          description: Email of a person who did not log in yet
+          type: string
+    User:
+      description: A user who logged in Microcks
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        idpSubject:
+          description: Subject of the user at the identity provider
+          type: string
+        name:
+          type: string
+        givenName:
+          type: string
+        familyName:
+          type: string
+        email:
+          type: string
+        emailVerified:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: string
+        createdAt:
+          format: date-time
+          type: string
+        lastLoginAt:
+          format: date-time
+          type: string
+        disabled:
+          description: Whether an admin disabled this user
+          type: boolean
+    UserUpdate:
+      description: Change to apply to a User
+      required:
+      - disabled
+      type: object
+      properties:
+        disabled:
+          type: boolean
+    ServiceAccount:
+      description: A Service Account, for the CLI and CI/CD pipelines
+      type: object
+      properties:
+        id:
+          type: string
+        clientId:
+          type: string
+        description:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+    ServiceAccountRequest:
+      description: Service Account to create
+      required:
+      - clientId
+      - roles
+      type: object
+      properties:
+        clientId:
+          type: string
+        description:
+          type: string
+        roles:
+          type: array
+          items:
+            enum:
+            - user
+            - manager
+            - admin
+            type: string
+    ServiceAccountCreated:
+      description: Created Service Account, with its generated secret
+      type: object
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          description: Generated secret. It cannot be read again
+          type: string
+    GenericResourceServiceDTO:
+      description: Generic Service to create
+      required:
+      - name
+      - version
+      - resource
+      type: object
+      properties:
+        name:
+          description: Name of the Service
+          type: string
+        version:
+          description: Version of the Service
+          type: string
+        resource:
+          description: Name of the resource the Service manages
+          type: string
+        referencePayload:
+          description: JSON payload used as the reference of the resource
+          type: string
+      example: |-
+        {
+            "name": "Pastry",
+            "version": "1.0",
+            "resource": "pastry",
+            "referencePayload": "{\"name\": \"Eclair\", \"price\": 2.5}"
+        }
+    GenericResource:
+      description: A resource managed by a generic Service
+      type: object
+      properties:
+        id:
+          type: string
+        serviceId:
+          type: string
+        payload:
+          description: JSON payload of the resource, with its id
+          type: object
+          additionalProperties: {}
+        reference:
+          description: Whether this payload is the reference of the Service
+          type: boolean
+    ExchangeSelection:
+      description: Exchanges selected in a Service, by operation
+      required:
+      - serviceId
+      - exchanges
+      type: object
+      properties:
+        serviceId:
+          type: string
+        exchanges:
+          description: Names of the selected exchanges, by operation name
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    GenerationTask:
+      description: Asynchronous generation of samples
+      type: object
+      properties:
+        taskId:
+          description: Identifier to give to the status endpoint
+          type: string
+    GenerationTaskStatus:
+      description: Status of an asynchronous generation of samples
+      type: object
+      properties:
+        status:
+          enum:
+          - PENDING
+          - SUCCESS
+          - FAILURE
+          - NOT_FOUND
+          type: string
+    SpanData:
+      description: A span of an OpenTelemetry trace, as recorded by Microcks
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        spanContext:
+          type: object
+          additionalProperties: {}
+        parentSpanContext:
+          type: object
+          additionalProperties: {}
+        status:
+          type: object
+          additionalProperties: {}
+        startEpochNanos:
+          format: int64
+          type: integer
+        endEpochNanos:
+          format: int64
+          type: integer
+        attributes:
+          type: object
+          additionalProperties: {}
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+    ArazzoImportRequest:
+      description: Arazzo document to analyse or import
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          description: Content of the Arazzo document, as YAML or JSON
+          type: string
+        fileName:
+          description: Name of the file the document comes from
+          type: string
+        links:
+          description: API each source description is linked to, by source name.
+            A source description left out is matched automatically when possible
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ServiceRef'
+    ArazzoLinksRequest:
+      description: APIs the source descriptions of an Arazzo document are linked to
+      type: object
+      properties:
+        links:
+          description: API each source description is linked to, by source name
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ServiceRef'
+    ArazzoSourceLink:
+      description: The API a source description of an Arazzo document is linked to
+      type: object
+      properties:
+        sourceName:
+          type: string
+        apiName:
+          type: string
+        apiVersion:
+          type: string
+        linked:
+          description: Whether the source description is linked to an API
+          type: boolean
+    ArazzoSourceInfo:
+      description: A source description of an imported Arazzo document
+      type: object
+      properties:
+        link:
+          $ref: '#/components/schemas/ArazzoSourceLink'
+        apiId:
+          description: Unique identifier of the linked Service or API
+          type: string
+        apiType:
+          enum:
+          - SOAP_HTTP
+          - REST
+          - GENERIC_REST
+          - EVENT
+          - GENERIC_EVENT
+          - GRPC
+          - GRAPHQL
+          type: string
+    ArazzoLastResult:
+      description: Outcome of the last run of a workflow
+      enum:
+      - NEVER_RUN
+      - IN_PROGRESS
+      - PASSED
+      - FAILED
+      type: string
+    ArazzoWorkflowSummary:
+      description: A workflow of an imported Arazzo document, in a list
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ArazzoWorkflowStatus'
+        description:
+          type: string
+        stepCount:
+          type: integer
+        lastResult:
+          $ref: '#/components/schemas/ArazzoLastResult'
+        lastRun:
+          $ref: '#/components/schemas/WorkflowRunSummary'
+    ArazzoWorkflowStatus:
+      description: Whether a workflow can run, and why not
+      type: object
+      properties:
+        workflowId:
+          type: string
+        runnable:
+          type: boolean
+        reasons:
+          description: Why the workflow cannot run
+          type: array
+          items:
+            type: string
+    ArazzoDocumentSummary:
+      description: An imported Arazzo document
+      type: object
+      properties:
+        id:
+          description: Unique identifier of the Arazzo document
+          type: string
+        title:
+          type: string
+        version:
+          type: string
+        arazzoVersion:
+          description: Version of the Arazzo specification of the document
+          type: string
+        fileName:
+          type: string
+        importDate:
+          format: date-time
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoSourceInfo'
+        workflows:
+          description: Summary of each workflow of the document
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoWorkflowSummary'
+    WorkflowRunSummary:
+      description: A workflow run, in a list
+      type: object
+      properties:
+        id:
+          description: Unique identifier of the WorkflowResult
+          type: string
+        number:
+          format: int64
+          description: Number of the run among the runs of the document
+          type: integer
+        workflowId:
+          type: string
+        target:
+          $ref: '#/components/schemas/WorkflowRunTarget'
+        status:
+          $ref: '#/components/schemas/WorkflowRunStatus'
+        failedStepId:
+          description: Identifier of the first step that failed
+          type: string
+        startedDate:
+          format: date-time
+          type: string
+        elapsedTime:
+          format: int64
+          description: Duration of the run, in milliseconds
+          type: integer
+        example:
+          description: Name of the recorded example the run plays
+          type: string
+        exampleVerdict:
+          $ref: '#/components/schemas/WorkflowExampleVerdict'
+        origin:
+          $ref: '#/components/schemas/WorkflowRunOrigin'
+    WorkflowRunCounts:
+      description: Number of runs of an Arazzo document
+      type: object
+      properties:
+        total:
+          format: int64
+          type: integer
+        passed:
+          format: int64
+          type: integer
+        failed:
+          format: int64
+          type: integer
+    ArazzoSourceMatch:
+      description: How a source description matches an API of Microcks
+      type: object
+      properties:
+        status:
+          enum:
+          - MATCHED
+          - NO_API
+          - UNREADABLE
+          type: string
+        contractTitle:
+          type: string
+        contractVersion:
+          type: string
+    ArazzoSourceAnalysis:
+      description: Analysis of a source description of an Arazzo document
+      type: object
+      properties:
+        sourceName:
+          type: string
+        declaredUrl:
+          description: URL of the contract, as the document declares it
+          type: string
+        match:
+          $ref: '#/components/schemas/ArazzoSourceMatch'
+        link:
+          $ref: '#/components/schemas/ArazzoSourceLink'
+        operationCount:
+          description: Number of operations of the contract
+          type: integer
+        foundOperationCount:
+          description: Number of operations the steps use that the API has
+          type: integer
+        unresolvedStepCount:
+          description: Number of steps whose operation cannot be found
+          type: integer
+    ArazzoWorkflowCheck:
+      description: Whether a workflow of an Arazzo document could run
+      type: object
+      properties:
+        workflowId:
+          type: string
+        runnable:
+          type: boolean
+        apiNames:
+          type: array
+          items:
+            type: string
+        unlinkedSources:
+          type: array
+          items:
+            type: string
+        reasons:
+          type: array
+          items:
+            type: string
+    ArazzoImportAnalysis:
+      description: What importing an Arazzo document would give
+      type: object
+      properties:
+        refusal:
+          description: Why the document is refused. Absent when it can be imported
+          type: string
+        arazzoVersion:
+          type: string
+        title:
+          type: string
+        version:
+          type: string
+        workflowIds:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoSourceAnalysis'
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoWorkflowCheck'
+        apis:
+          description: APIs of Microcks a source description can be linked to
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceRef'
+        warnings:
+          type: array
+          items:
+            type: string
+    ArazzoSourceDescription:
+      description: A source description of an Arazzo document, with its API
+      type: object
+      properties:
+        link:
+          $ref: '#/components/schemas/ArazzoSourceLink'
+        serviceId:
+          type: string
+        reason:
+          description: Why the source description cannot be used
+          type: string
+        operations:
+          description: Number of operations of the API
+          type: integer
+        usedOperations:
+          description: Number of operations the workflow uses
+          type: integer
+    ArazzoExpressionUse:
+      description: Where an expression is used in a workflow
+      type: object
+      properties:
+        stepId:
+          type: string
+        place:
+          description: Where in the step the expression is used
+          type: string
+        target:
+          type: string
+    ArazzoWorkflowInput:
+      description: An input of a workflow
+      type: object
+      properties:
+        name:
+          type: string
+        usedBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoExpressionUse'
+        type:
+          type: string
+        required:
+          type: boolean
+    ArazzoStepOperation:
+      description: The operation a step calls
+      type: object
+      properties:
+        sourceName:
+          type: string
+        operationId:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        reason:
+          description: Why the operation cannot be found
+          type: string
+        channel:
+          description: Channel of an event step
+          type: string
+    ArazzoStepParameter:
+      description: A parameter a step sends
+      type: object
+      properties:
+        name:
+          type: string
+        in:
+          type: string
+        value:
+          type: string
+    ArazzoStepRequestBody:
+      description: The request body of a step
+      type: object
+      properties:
+        contentType:
+          type: string
+        payload:
+          type: string
+        replacements:
+          type: object
+          additionalProperties:
+            type: string
+    ArazzoStepCriterion:
+      description: A criterion of a step
+      type: object
+      properties:
+        condition:
+          type: string
+        context:
+          type: string
+        type:
+          type: string
+    ArazzoStepAction:
+      description: What a step does on success or failure
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        retryAfter:
+          format: double
+          type: number
+        retryLimit:
+          type: integer
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoStepCriterion'
+    ArazzoStepMessaging:
+      description: Messaging settings of an event step
+      type: object
+      properties:
+        action:
+          type: string
+        correlationId:
+          type: string
+        timeout:
+          format: int64
+          type: integer
+    ArazzoStepDetail:
+      description: A step of a workflow
+      type: object
+      properties:
+        stepId:
+          type: string
+        description:
+          type: string
+        operation:
+          $ref: '#/components/schemas/ArazzoStepOperation'
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoStepParameter'
+        requestBody:
+          $ref: '#/components/schemas/ArazzoStepRequestBody'
+        successCriteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoStepCriterion'
+        outputs:
+          type: object
+          additionalProperties:
+            type: string
+        onSuccess:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoStepAction'
+        onFailure:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoStepAction'
+        messaging:
+          $ref: '#/components/schemas/ArazzoStepMessaging'
+        dependsOn:
+          type: array
+          items:
+            type: string
+        prerequisites:
+          type: array
+          items:
+            type: string
+    ArazzoDataPassing:
+      description: An output of a step that another step uses
+      type: object
+      properties:
+        fromStepId:
+          type: string
+        outputName:
+          type: string
+        to:
+          $ref: '#/components/schemas/ArazzoExpressionUse'
+    ArazzoWorkflowExample:
+      description: A recorded example of a workflow
+      type: object
+      properties:
+        workflowId:
+          type: string
+        name:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: {}
+        outputs:
+          type: object
+          additionalProperties: {}
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowStepExpectation'
+        stopsAt:
+          description: Identifier of the step the workflow is expected to stop at
+          type: string
+    ArazzoWorkflowDetail:
+      description: A workflow of an imported Arazzo document, with its document
+      type: object
+      properties:
+        documentId:
+          type: string
+        title:
+          type: string
+        version:
+          type: string
+        arazzoVersion:
+          type: string
+        fileName:
+          type: string
+        importDate:
+          format: date-time
+          type: string
+        workflowIds:
+          description: Identifiers of the workflows of the document
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoSourceDescription'
+        workflowId:
+          type: string
+        summary:
+          type: string
+        description:
+          type: string
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoWorkflowInput'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoStepDetail'
+        outputs:
+          type: object
+          additionalProperties:
+            type: string
+        dataPassings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoDataPassing'
+        status:
+          $ref: '#/components/schemas/ArazzoWorkflowStatus'
+        examples:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArazzoWorkflowExample'
+    ArazzoApiUsage:
+      description: The Arazzo workflows that use an API
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              version:
+                type: string
+              workflows:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    workflowId:
+                      type: string
+                    lastResult:
+                      $ref: '#/components/schemas/ArazzoLastResult'
+        operationWorkflowCounts:
+          description: Number of workflows that use each operation of the API
+          type: object
+          additionalProperties:
+            type: integer
+    ArazzoStepReport:
+      description: A step played by the Arazzo minion, reported to Microcks
+      required:
+      - index
+      - stepId
+      - operation
+      - status
+      - elapsedTime
+      - criteria
+      - parameters
+      type: object
+      properties:
+        index:
+          type: integer
+        stepId:
+          type: string
+        operation:
+          $ref: '#/components/schemas/WorkflowStepOperation'
+        status:
+          $ref: '#/components/schemas/WorkflowStepStatus'
+        statusCode:
+          type: integer
+        elapsedTime:
+          format: int64
+          type: integer
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowCriterionResult'
+        outputs:
+          type: object
+          additionalProperties: {}
+        request:
+          type: object
+          properties:
+            method:
+              type: string
+            url:
+              type: string
+            headers:
+              type: object
+              additionalProperties:
+                type: string
+            body:
+              type: string
+        response:
+          type: object
+          properties:
+            status:
+              type: integer
+            headers:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+            body:
+              type: string
+        message:
+          type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowParameterValue'
+        outputOrigins:
+          type: object
+          additionalProperties:
+            type: string
+    ArazzoRunOutcome:
+      description: The outcome of a run, reported by the Arazzo minion to Microcks
+      required:
+      - status
+      - elapsedTime
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/WorkflowRunStatus'
+        outputs:
+          type: object
+          additionalProperties: {}
+        elapsedTime:
+          format: int64
+          type: integer
+        message:
+          type: string
   responses:
     ServiceResponse:
       content:
@@ -3399,15 +5867,14 @@ components:
     jwt-bearer:
       flows:
         clientCredentials:
-          tokenUrl: https://keycloak.example.com/realms/microcks/protocol/openid-connect/token
-          refreshUrl: https://keycloak.example.com/realms/microcks/protocol/openid-connect/token
+          tokenUrl: http://microcks.example.com/api/auth/token
           scopes:
             user: Simple authenticated user
             manager: Services & APIs content manager
             admin: Administrator of the Microcks instance
       type: oauth2
-      description: JWT Bearer acquired using OAuth 2 Authentication flow or Direct
-        Access Grant
+      description: JWT Bearer acquired from /auth/token with the OAuth 2 client credentials
+        flow of a Service Account, or from the OpenID Connect login of the web application
 security:
 - jwt-bearer: []
 tags:
@@ -3424,4 +5891,12 @@ tags:
 - name: webhook
   description: Operations related to Webhook registrations for Service Operations
 - name: workflow
-  description: Operations related to Arazzo workflow runs
+  description: Operations related to Arazzo documents, workflows and runs
+- name: auth
+  description: Operations related to authentication
+- name: admin
+  description: Operations related to Groups, users and Service Accounts
+- name: copilot
+  description: Operations related to the AI Copilot samples
+- name: trace
+  description: Operations related to traces of mock invocations
