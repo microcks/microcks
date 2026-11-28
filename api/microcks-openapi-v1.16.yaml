@@ -1406,6 +1406,47 @@ paths:
       in: path
       required: true
   /arazzo/sessions:
+    get:
+      tags:
+      - workflow
+      parameters:
+      - name: documentId
+        description: "Unique identifier of the Arazzo document, or its title and\
+          \ version as {title}:{version}"
+        schema:
+          type: string
+        in: query
+        required: true
+      - name: workflowId
+        description: Identifier of the workflow in the Arazzo document
+        schema:
+          type: string
+        in: query
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArazzoSession'
+          description: The sessions opened on the workflow that are still kept,
+            the latest opened first. Empty when the document does not exist
+        "400":
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: documentId or workflowId is missing
+      security:
+      - jwt-bearer:
+        - user
+      operationId: ListArazzoSessions
+      summary: List the verification sessions of a workflow
+      description: "List the sessions opened on a workflow: the open ones, and the\
+        \ closed ones that are still kept for their retention delay. Each tells\
+        \ how many calls the mocks recorded so far."
     post:
       requestBody:
         content:
@@ -1459,6 +1500,26 @@ paths:
         \ only, the mocks answer the operation of each such step with the chosen\
         \ existing example, its status, headers and body."
   /arazzo/sessions/{sessionId}:
+    get:
+      tags:
+      - workflow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArazzoSession'
+          description: The ArazzoSession, with the number of calls it recorded
+            so far
+        "404":
+          description: No ArazzoSession has this identifier, or it expired
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetArazzoSession
+      summary: Read a verification session
+      description: Read a verification session, open or closed, without verifying
+        it. Its callCount is up to date with the calls the mocks recorded.
     delete:
       tags:
       - workflow
@@ -2857,10 +2918,22 @@ components:
       - documentId
       - workflowId
       - openedDate
+      - state
       properties:
         id:
           description: Unique identifier of the ArazzoSession, which the calls to
             the mocks name
+          type: string
+        state:
+          description: Whether the session still records the calls naming it, or
+            was closed
+          type: string
+          enum:
+          - open
+          - closed
+        verificationRunId:
+          description: Unique identifier of the WorkflowResult its latest verification
+            created; absent while the session was not verified
           type: string
         documentId:
           description: Unique identifier of the Arazzo document

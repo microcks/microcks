@@ -235,6 +235,28 @@ public class ArazzoSessionService {
    }
 
    /**
+    * Read a session, with the calls it received so far.
+    * @param sessionId The id of the session
+    * @return The session; empty if it does not exist, or expired
+    */
+   public Optional<ArazzoSession> getSession(String sessionId) {
+      return arazzoSessionRepository.findByIdOptional(sessionId)
+            .filter(session -> session.getExpireAt().after(new Date()));
+   }
+
+   /**
+    * List the sessions opened on a workflow that are still kept: open ones, and closed ones during their retention.
+    * @param documentId The id of the Arazzo document, or its title and version as {@code <title>:<version>}
+    * @param workflowId The id of the workflow in that document
+    * @return The sessions, the latest opened first; none when the document does not exist
+    */
+   public List<ArazzoSession> listSessions(String documentId, String workflowId) {
+      return arazzoDocumentService.getDocument(documentId)
+            .map(document -> arazzoSessionRepository.findLiveByWorkflow(document.getId(), workflowId, new Date()))
+            .orElse(List.of());
+   }
+
+   /**
     * Verify that the calls a session received follow the steps of its workflow.
     * @param sessionId The id of the session
     * @return The verification, kept with the runs of the workflow; empty if the session does not exist
@@ -289,7 +311,9 @@ public class ArazzoSessionService {
             .map(call -> new WorkflowSessionCall(call.getIndex(), call.getServiceName(), call.getServiceVersion(),
                   call.getMethod(), call.getPath(), stepOfCall.get(call.getIndex()), unexpected.get(call.getIndex())))
             .toList()));
-      return workflowResultRepository.save(saved);
+      WorkflowResult verified = workflowResultRepository.save(saved);
+      arazzoSessionRepository.setVerificationRunId(session.getId(), verified.getId());
+      return verified;
    }
 
    /** The steps of the workflow of the session, each with its operation in the API its source is linked to. */

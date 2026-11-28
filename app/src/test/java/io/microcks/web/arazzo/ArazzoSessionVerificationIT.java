@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,6 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -295,6 +297,105 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
       MICROCKS_API.assertResponseConforms("POST", SESSIONS, refused);
       assertEquals(400, refused.getStatusCode().value());
       assertEquals("Unknown workflow: cancelSaga", refused.getBody());
+   }
+
+   /*
+    * Feature: reading the sessions
+    * Scenario: the calls of an open session are counted as the mocks receive them
+    *   Given a session is open on placeOrderSaga
+    *   When the saga service places an order through the mocks naming the session
+    *   Then reading the session tells it is open with 1 call, and no verification yet
+    * Scenario: a verified session tells which run is its verification
+    * Scenario: the sessions of a workflow are listed, the latest first, open or closed
+    * Scenario: an unknown session is not found; the sessions of another workflow are not listed
+    */
+   @Test
+   void theCallsOfAnOpenSessionAreCountedBeforeItIsVerified() throws Exception {
+      String sessionId = openSession();
+      assertEquals(0, readSession(sessionId).get("callCount").asInt());
+
+      placeOrder(sessionId);
+      reserveStock(sessionId);
+
+      JsonNode session = readSession(sessionId);
+      assertEquals("open 2 placeOrderSaga", session.get("state").asText() + " " + session.get("callCount").asInt() + " "
+            + session.get("workflowId").asText());
+      assertTrue(session.get("openedDate").asLong() > 0 && session.get("expireAt").asLong() > 0);
+      assertFalse(session.has("verificationRunId"), session.toPrettyString());
+   }
+
+   @Test
+   void aVerifiedSessionTellsWhichRunIsItsVerification() throws Exception {
+      String sessionId = openSession();
+      placeOrder(sessionId);
+
+      JsonNode verification = verify(sessionId);
+
+      assertEquals(verification.get("id").asText(), readSession(sessionId).get("verificationRunId").asText());
+   }
+
+   @Test
+   void aClosedSessionIsReadAsClosedWithItsCalls() throws Exception {
+      String sessionId = openSession();
+      placeOrder(sessionId);
+      restTemplate.exchange("/api" + SESSION.replace("{sessionId}", sessionId), HttpMethod.DELETE,
+            new HttpEntity<>(jsonHeaders()), String.class);
+
+      JsonNode session = readSession(sessionId);
+
+      assertEquals("closed 1", session.get("state").asText() + " " + session.get("callCount").asInt());
+      assertTrue(session.get("closedDate").asLong() > 0);
+   }
+
+   @Test
+   void anUnknownSessionIsNotFound() {
+      ResponseEntity<String> read = restTemplate.exchange(
+            "/api" + SESSION.replace("{sessionId}", "5f0000000000000000000000"), HttpMethod.GET,
+            new HttpEntity<>(jsonHeaders()), String.class);
+
+      assertEquals(404, read.getStatusCode().value());
+   }
+
+   @Test
+   void theSessionsOfAWorkflowAreListedTheLatestFirstWhetherOpenOrClosed() throws Exception {
+      String first = openSession();
+      placeOrder(first);
+      restTemplate.exchange("/api" + SESSION.replace("{sessionId}", first), HttpMethod.DELETE,
+            new HttpEntity<>(jsonHeaders()), String.class);
+      String second = openSession();
+
+      JsonNode listed = listSessions("Order saga:1.0.0", "placeOrderSaga");
+
+      assertEquals(List.of(second + " open 0", first + " closed 1"), describedSessions(listed));
+      assertEquals(List.of(), describedSessions(listSessions("Order saga:1.0.0", "cancelSaga")));
+      assertEquals(List.of(), describedSessions(listSessions("unknown", "placeOrderSaga")));
+   }
+
+   private static List<String> describedSessions(JsonNode sessions) {
+      List<String> described = new ArrayList<>();
+      sessions.forEach(session -> described.add(session.get("id").asText() + " " + session.get("state").asText() + " "
+            + session.get("callCount").asInt()));
+      return described;
+   }
+
+   /** Read a session as a test does, checking the response against the published API. */
+   private JsonNode readSession(String sessionId) throws Exception {
+      ResponseEntity<String> read = restTemplate.exchange("/api" + SESSION.replace("{sessionId}", sessionId),
+            HttpMethod.GET, new HttpEntity<>(jsonHeaders()), String.class);
+      MICROCKS_API.assertResponseConforms("GET", SESSION, read);
+      assertEquals(200, read.getStatusCode().value(), read.getBody());
+      return JSON.readTree(read.getBody());
+   }
+
+   /** List the sessions of a workflow as a test does, checking the response against the published API. */
+   private JsonNode listSessions(String documentId, String workflowId) throws Exception {
+      ResponseEntity<String> listed = restTemplate.exchange(
+            "/api" + SESSIONS + "?documentId=" + URLEncoder.encode(documentId, StandardCharsets.UTF_8) + "&workflowId="
+                  + URLEncoder.encode(workflowId, StandardCharsets.UTF_8),
+            HttpMethod.GET, new HttpEntity<>(jsonHeaders()), String.class);
+      MICROCKS_API.assertResponseConforms("GET", SESSIONS, listed);
+      assertEquals(200, listed.getStatusCode().value(), listed.getBody());
+      return JSON.readTree(listed.getBody());
    }
 
    private void placeOrder(String sessionId) {

@@ -27,9 +27,11 @@ import com.mongodb.client.model.Updates;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -86,6 +88,26 @@ public class ArazzoSessionRepository implements ObjectIdRepository<ArazzoSession
    public boolean closeOpen(String sessionId, Date closedDate, Date expireAt) {
       return mongoCollection().findOneAndUpdate(Filters.and(idFilter(sessionId), Filters.eq(CLOSED_DATE, null)),
             Updates.combine(Updates.set(CLOSED_DATE, closedDate), Updates.set(EXPIRE_AT, expireAt))) != null;
+   }
+
+   /**
+    * Keep which run is the latest verification of a session.
+    * @param sessionId The id of a session
+    * @param runId     The id of the run that verified it
+    */
+   public void setVerificationRunId(String sessionId, String runId) {
+      mongoCollection().updateOne(idFilter(sessionId), Updates.set("verificationRunId", runId));
+   }
+
+   /**
+    * @param documentId The id of an Arazzo document
+    * @param workflowId The id of one of its workflows
+    * @param now        The current date: the sessions that expired are not returned, even if not yet purged
+    * @return The sessions opened on that workflow, open or closed, the latest opened first
+    */
+   public List<ArazzoSession> findLiveByWorkflow(String documentId, String workflowId, Date now) {
+      return find(new Document("documentId", documentId).append("workflowId", workflowId).append(EXPIRE_AT,
+            new Document("$gt", now)), new Document("openedDate", -1).append(ID, -1)).list();
    }
 
    private static Bson idFilter(String sessionId) {

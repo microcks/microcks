@@ -24,9 +24,11 @@ import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -87,6 +89,24 @@ public class ArazzoSessionController {
          return Response.status(Response.Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN).entity(arre.getMessage())
                .build();
       }
+   }
+
+   @GET
+   @Path("/sessions")
+   public Response listSessions(@QueryParam("documentId") String documentId,
+         @QueryParam("workflowId") String workflowId) {
+      if (documentId == null || documentId.isBlank() || workflowId == null || workflowId.isBlank()) {
+         return Response.status(Response.Status.BAD_REQUEST).type(MediaType.TEXT_PLAIN)
+               .entity("documentId and workflowId are required").build();
+      }
+      return Response.ok(arazzoSessionService.listSessions(documentId, workflowId)).build();
+   }
+
+   @GET
+   @Path("/sessions/{sessionId}")
+   public Response getSession(@PathParam("sessionId") String sessionId) {
+      return arazzoSessionService.getSession(sessionId).map(session -> Response.ok(session).build())
+            .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
    }
 
    @DELETE

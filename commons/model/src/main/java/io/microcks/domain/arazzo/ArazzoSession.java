@@ -16,9 +16,11 @@
 package io.microcks.domain.arazzo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import org.bson.BsonType;
 import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
 import org.bson.codecs.pojo.annotations.BsonRepresentation;
 
 import java.util.ArrayList;
@@ -50,6 +52,7 @@ public class ArazzoSession {
    private Map<String, Object> inputs;
    private long callCount;
    private Date expireAt;
+   private String verificationRunId;
    private Map<String, String> failures = new LinkedHashMap<>();
    private List<ArazzoInjectedFailure> injectedFailures = new ArrayList<>();
 
@@ -117,6 +120,22 @@ public class ArazzoSession {
 
    public void setCallCount(long callCount) {
       this.callCount = callCount;
+   }
+
+   /** Whether the session still records the calls naming it ({@code open}) or not ({@code closed}). */
+   @BsonIgnore
+   @JsonProperty(value = "state", access = JsonProperty.Access.READ_ONLY)
+   public String getState() {
+      return closedDate == null ? "open" : "closed";
+   }
+
+   /** The id of the run its latest verification created; null while the session was not verified. */
+   public String getVerificationRunId() {
+      return verificationRunId;
+   }
+
+   public void setVerificationRunId(String verificationRunId) {
+      this.verificationRunId = verificationRunId;
    }
 
    public Date getExpireAt() {
