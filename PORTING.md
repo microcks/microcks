@@ -241,7 +241,9 @@ New or different in 2.0:
 - **Other endpoints.** `GET /api/arazzo/documents/{id}/source` (the document as uploaded); a document is named by id
   or `<title>:<version>`.
 - **API description.** The 1.x POC's `microcks-openapi-v1.16.yaml` became `api/microcks-openapi-v2.0.yaml`; the
-  `v1.*` descriptions are untouched.
+  `v1.*` descriptions are untouched. It describes the whole 2.0 API (`/keycloak/config` became `/auth/config`, token
+  at `/auth/token`, OIDC login at `/auth/login/oidc` and `/auth/callback/oidc`); `MicrocksApiDescriptionCoverageTest`
+  fails when an endpoint under `/api` is missing from it, or described but gone.
 
 Web UI:
 - `lib/server/workflows.ts`, `runs-arazzo.ts` and `sessions-arazzo.ts` map `/api/arazzo` to the Deep Ink types;
