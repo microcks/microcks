@@ -309,7 +309,7 @@ public class WorkflowRunner {
       ArazzoRequestBody requestBody = step.requestBody();
       if (requestBody != null) {
          body = body(requestBody, context);
-         headers.put("Content-Type", requestBody.contentType());
+         headers.put("Content-Type", contentTypeOf(requestBody, operation, specification));
       }
       SourceTarget source = specification.sources().get(operation.sourceName());
       if (source.mocks()) {
@@ -318,6 +318,25 @@ public class WorkflowRunner {
       }
       URI baseUrl = source.baseUrl();
       return new HttpCall(operation.method(), URI.create(baseUrl + path + query), headers, body);
+   }
+
+   /**
+    * The contentType a step declares; when it omits it, Arazzo refers to the operation: the one media type it accepts
+    * for its request body. Several or none leave the choice open, which is not ours to make.
+    */
+   private static String contentTypeOf(ArazzoRequestBody requestBody, StepOperation operation,
+         RunSpecification specification) {
+      if (requestBody.contentType() != null) {
+         return requestBody.contentType();
+      }
+      List<String> accepted = specification.sources().get(operation.sourceName()).operations()
+            .get(operation.operationId()).requestMediaTypes();
+      if (accepted.size() == 1) {
+         return accepted.get(0);
+      }
+      String prefix = "No contentType for the request body, and " + operation.operationId();
+      throw new ArazzoRunException(accepted.isEmpty() ? prefix + " declares none"
+            : prefix + " accepts several: " + String.join(", ", accepted));
    }
 
    /** A JSON payload gets its replacements; any other payload is sent as is. */

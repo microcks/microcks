@@ -216,6 +216,33 @@ class WorkflowRunnerTest {
    }
 
    @Test
+   void aBodyWithoutContentTypeIsSentWithTheOneTypeItsOperationAccepts() throws IOException {
+      runner.run(RunFixtures.runOf("omitted-content-type", "repriceWithoutContentType",
+            new OperationTarget("PATCH", "/pastry/{name}", List.of("application/json"))), reporter);
+
+      assertEquals(Map.of("Content-Type", "application/json"), mocks.calls().get(0).headers());
+      assertEquals(RunStatus.SUCCESS, reporter.outcome().status());
+   }
+
+   @ParameterizedTest
+   @CsvSource(delimiter = '|', value = {
+         "application/json,application/xml | No contentType for the request body, and PatchPastry accepts several: "
+               + "application/json, application/xml",
+         " | No contentType for the request body, and PatchPastry declares none" })
+   void aBodyWithoutContentTypeFailsTheStepWithoutCallWhenItsOperationDoesNotTellWhichToUse(String mediaTypes,
+         String reason) throws IOException {
+      List<String> declared = mediaTypes == null ? List.of() : List.of(mediaTypes.split(","));
+
+      runner.run(RunFixtures.runOf("omitted-content-type", "repriceWithoutContentType",
+            new OperationTarget("PATCH", "/pastry/{name}", declared)), reporter);
+
+      assertEquals(0, mocks.calls().size());
+      assertEquals(StepStatus.FAILED, reporter.step("reprice").status());
+      assertEquals(reason, reporter.step("reprice").message());
+      assertEquals(RunStatus.FAILURE, reporter.outcome().status());
+   }
+
+   @Test
    void aStepWithoutResponseFailsWithTheReason() throws IOException {
       mocks.failWith(new ConnectException("Connection refused"));
 

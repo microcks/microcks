@@ -83,7 +83,7 @@ class ArazzoMinionContractTest {
                         SourceTarget.onMocks(URI.create(MOCKS),
                               Map.of("GetPastries", new OperationTarget("GET", "/pastry"), "GetPastryByName",
                                     new OperationTarget("GET", "/pastry/{name}"), "PatchPastry",
-                                    new OperationTarget("PATCH", "/pastry/{name}")),
+                                    new OperationTarget("PATCH", "/pastry/{name}", List.of("application/json"))),
                               "openapi: 3.0.2", "http://microcks:8080/api/resources/")),
                   Duration.ofSeconds(10), true),
             request.toSpecification("http://microcks:8080"));
@@ -102,6 +102,19 @@ class ArazzoMinionContractTest {
       assertEquals(false, specification.validateSchema());
       assertNull(specification.sources().get("pastryApi").openApiContract());
       assertNull(specification.sources().get("pastryApi").openApiContractBaseUrl());
+   }
+
+   @Test
+   void anOperationWithoutRequestMediaTypesDeclaresNone() throws IOException {
+      ObjectNode runRequest = (ObjectNode) contract().get("runRequest");
+      ((ObjectNode) runRequest.get("sources").get("pastryApi").get("operations").get("PatchPastry"))
+            .remove("requestMediaTypes");
+
+      RunSpecification specification = JSON.treeToValue(runRequest, RunRequestDTO.class)
+            .toSpecification("http://microcks:8080");
+
+      assertEquals(List.of(),
+            specification.sources().get("pastryApi").operations().get("PatchPastry").requestMediaTypes());
    }
 
    @Test
@@ -126,7 +139,8 @@ class ArazzoMinionContractTest {
                   Map.of("pastryApi",
                         new SourceTarget(URI.create("http://localhost:8080"),
                               Map.of("GetPastryByName", new OperationTarget("GET", "/pastry/{name}"), "PatchPastry",
-                                    new OperationTarget("PATCH", "/pastry/{name}")))),
+                                    new OperationTarget("PATCH", "/pastry/{name}",
+                                          List.of("application/json", "application/xml"))))),
                   Duration.ofSeconds(10), new RunSecret(null, null, "s3cr3t-t0k3n", "X-Pastry-Token")),
             request.toSpecification("http://microcks:8080"));
    }

@@ -43,6 +43,11 @@ import io.microcks.artifact.arazzo.ArazzoDataFlow;
 import io.microcks.artifact.arazzo.ArazzoWorkflow;
 import io.microcks.artifact.arazzo.ArazzoWorkflowReader;
 
+import io.microcks.util.ObjectMapperFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -478,18 +483,29 @@ public class ArazzoRunService {
          boolean validateSchema) {
       Map<String, ArazzoRunRequest.Source> targets = new LinkedHashMap<>();
       for (ResolvedSource source : linked) {
+         String contract = openApiContractOf(source);
+         JsonNode parsed = contract == null ? null : parseContract(contract);
          Map<String, ArazzoRunRequest.Operation> operations = new LinkedHashMap<>();
          for (ArazzoStepOperation operation : source.operations().values()) {
-            operations.put(operation.operationId(),
-                  new ArazzoRunRequest.Operation(operation.method(), operation.path()));
+            operations.put(operation.operationId(), new ArazzoRunRequest.Operation(operation.method(),
+                  operation.path(), ArazzoRequestMediaTypes.of(parsed, operation.method(), operation.path())));
          }
          // The contract is sent only when the minion validates the responses against it, with the URL its relative
          // references resolve against.
-         String contract = validateSchema ? openApiContractOf(source) : null;
+         String validated = validateSchema ? contract : null;
          targets.put(source.link().sourceName(), new ArazzoRunRequest.Source(baseUrls.get(source.link().sourceName()),
-               operations, contract, contract == null ? null : validationResourceUrl));
+               operations, validated, validated == null ? null : validationResourceUrl));
       }
       return targets;
+   }
+
+   /** The contract as a tree; null when it cannot be read, which leaves the media types of its operations unknown. */
+   private static JsonNode parseContract(String contract) {
+      try {
+         return ObjectMapperFactory.getYamlObjectMapper().readTree(contract);
+      } catch (JsonProcessingException jpe) {
+         return null;
+      }
    }
 
    /**

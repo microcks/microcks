@@ -78,7 +78,8 @@ class ArazzoMinionContractTest {
                   new ArazzoRunRequest.Source("/rest/API+Pastry+-+2.0/2.0.0",
                         Map.of("GetPastries", new ArazzoRunRequest.Operation("GET", "/pastry"), "GetPastryByName",
                               new ArazzoRunRequest.Operation("GET", "/pastry/{name}"), "PatchPastry",
-                              new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}")),
+                              new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}",
+                                    List.of("application/json"))),
                         "openapi: 3.0.2", "http://microcks:8080/api/resources/")),
             10000, true));
 
@@ -191,7 +192,8 @@ class ArazzoMinionContractTest {
             Map.of("pastryApi",
                   new ArazzoRunRequest.Source("http://localhost:8080",
                         Map.of("GetPastryByName", new ArazzoRunRequest.Operation("GET", "/pastry/{name}"),
-                              "PatchPastry", new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}")))),
+                              "PatchPastry", new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}",
+                                    List.of("application/json", "application/xml"))))),
             10000, new ArazzoRunRequest.Secret("pastry-staging-token", null, null, "s3cr3t-t0k3n", "X-Pastry-Token")));
 
       assertEquals(List.of(contract().get("implementationRunRequest")),

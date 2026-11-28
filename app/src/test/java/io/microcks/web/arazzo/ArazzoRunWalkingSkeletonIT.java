@@ -93,6 +93,43 @@ class ArazzoRunWalkingSkeletonIT extends AbstractBaseIT {
       assertEquals(JSON.readTree("{\"before\": 2.5, \"after\": 2.6}"), run.get("outputs"));
    }
 
+   /** The reprice does not say its contentType: the operation of the contract accepts JSON only. */
+   @Test
+   void readThenRepriceWithoutContentTypePassesWhenTheContractDeclaresOneMediaType() throws Exception {
+      JsonNode run = runRepriceWithoutContentTypeOn("api-pastry-2.0-json-only.openapi.yaml");
+
+      assertEquals("SUCCESS", run.get("status").asText(), run.toPrettyString());
+      assertEquals(JSON.readTree("{\"before\": 2.5, \"after\": 2.6}"), run.get("outputs"));
+   }
+
+   /** API Pastry - 2.0 accepts JSON and XML: the run does not choose, and ends instead of staying in progress. */
+   @Test
+   void readThenRepriceWithoutContentTypeFailsWhenTheContractDeclaresSeveralMediaTypes() throws Exception {
+      JsonNode run = runRepriceWithoutContentTypeOn("api-pastry-2.0.openapi.yaml");
+
+      assertEquals("FAILURE", run.get("status").asText(), run.toPrettyString());
+      assertEquals("No contentType for the request body, and PatchPastry accepts several: application/json, text/xml",
+            run.get("steps").get(1).get("message").asText(), run.toPrettyString());
+   }
+
+   private JsonNode runRepriceWithoutContentTypeOn(String contract) throws Exception {
+      uploadArtifactFile(FIXTURES + contract, true);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
+      uploadArtifactFile(FIXTURES + "pastry.arazzo-sources.yaml", false);
+      String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
+      String documentId = JSON.readTree(documents).get(0).get("id").asText();
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      ResponseEntity<String> launched = restTemplate.postForEntity(
+            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            new HttpEntity<>("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, \"timeout\": 10000}",
+                  headers),
+            String.class);
+      assertEquals(201, launched.getStatusCode().value(), launched.getBody());
+      return awaitFinalRun(JSON.readTree(launched.getBody()).get("id").asText());
+   }
+
    @Test
    void listThenReadFirstFailsOnTheExampleTheMocksOfApiPastryLack() throws Exception {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);

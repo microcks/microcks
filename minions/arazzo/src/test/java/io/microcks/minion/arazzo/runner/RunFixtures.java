@@ -48,6 +48,19 @@ final class RunFixtures {
             Map.of("pastryApi", new SourceTarget(PastryMocks.BASE_URL, PASTRY_OPERATIONS)), TIMEOUT);
    }
 
+   /**
+    * @param example    The name of an example of the fixture
+    * @param workflowId The workflow of that example to run
+    * @param patch      The operation PatchPastry of the source, as its contract declares it
+    * @return The run of that workflow against the mocks of API Pastry - 2.0
+    */
+   static RunSpecification runOf(String example, String workflowId, OperationTarget patch) throws IOException {
+      Map<String, OperationTarget> operations = new java.util.HashMap<>(PASTRY_OPERATIONS);
+      operations.put("PatchPastry", patch);
+      return new RunSpecification("run-1", workflowId, exampleOf(example), Map.of(),
+            Map.of("pastryApi", new SourceTarget(PastryMocks.BASE_URL, operations)), TIMEOUT);
+   }
+
    static String exampleOf(String example) throws IOException {
       try (InputStream stream = RunFixtures.class
             .getResourceAsStream("/io/microcks/minion/arazzo/runner/workflow-runs.arazzo.yaml")) {

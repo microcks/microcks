@@ -118,6 +118,20 @@ class ArazzoRunSchemaValidationTest {
             workflowResultRepository.findByIdOptional(run.getId()).orElseThrow().isValidateSchema());
    }
 
+   @ParameterizedTest
+   @CsvSource({ "true", "false" })
+   void theMinionGetsTheMediaTypesTheContractDeclaresForTheRequestBodyOfEachOperation(boolean validateSchema)
+         throws Exception {
+      ArazzoDocument document = pastryScenariosAreImportedAndLinked();
+
+      arazzoRunService.launchRun(document.getId(), "readThenReprice", INPUTS, 10000L, validateSchema).orElseThrow();
+
+      Map<String, ArazzoRunRequest.Operation> operations = minion.requests().get(0).sources().get("pastryApi")
+            .operations();
+      assertEquals(List.of("application/json", "text/xml"), operations.get("PatchPastry").requestMediaTypes());
+      assertEquals(List.of(), operations.get("GetPastryByName").requestMediaTypes());
+   }
+
    @Test
    void aRunLaunchedWithoutTheOptionDoesNotValidateTheResponses() throws Exception {
       ArazzoDocument document = pastryScenariosAreImportedAndLinked();

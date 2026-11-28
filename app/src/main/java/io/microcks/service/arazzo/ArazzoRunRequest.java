@@ -17,6 +17,7 @@ package io.microcks.service.arazzo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -116,9 +117,17 @@ public record ArazzoRunRequest(String runId, String workflowId, String arazzoDoc
    }
 
    /**
-    * @param method The HTTP method of an operation
-    * @param path   Its path template
+    * @param method            The HTTP method of an operation
+    * @param path              Its path template
+    * @param requestMediaTypes The media types the linked API accepts for the request body of the operation, as its
+    *                          contract declares them; empty when it declares none or when the API has no contract. The
+    *                          minion refers to them when a step does not give the contentType of its request body.
     */
-   public record Operation(String method, String path) {
+   public record Operation(String method, String path, List<String> requestMediaTypes) {
+
+      /** An operation whose contract declares no media type for its request body. */
+      public Operation(String method, String path) {
+         this(method, path, List.of());
+      }
    }
 }

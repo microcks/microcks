@@ -23,6 +23,7 @@ import io.microcks.minion.arazzo.runner.SourceTarget;
 import java.net.URI;
 import java.time.Duration;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,7 +50,8 @@ public record RunRequestDTO(String runId, String workflowId, String arazzoDocume
       sources.forEach((name, source) -> {
          Map<String, OperationTarget> operations = new LinkedHashMap<>();
          source.operations().forEach((operationId, operation) -> operations.put(operationId,
-               new OperationTarget(operation.method(), operation.path())));
+               new OperationTarget(operation.method(), operation.path(),
+                     operation.requestMediaTypes() == null ? List.of() : operation.requestMediaTypes())));
          // A base URL relative to Microcks is the path of the mocks of the source.
          boolean mocks = source.baseUrl().startsWith("/");
          String baseUrl = mocks ? microcksUrl + source.baseUrl() : source.baseUrl();

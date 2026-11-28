@@ -15,11 +15,24 @@
  */
 package io.microcks.minion.arazzo.runner;
 
+import java.util.List;
+
 /**
  * The HTTP method and path template of an operation, such as GET /pastry/{name}.
- * @param method The HTTP method
- * @param path   The path template, relative to the base URL of its source
+ * @param method            The HTTP method
+ * @param path              The path template, relative to the base URL of its source
+ * @param requestMediaTypes The media types the operation accepts for its request body, as its contract declares them;
+ *                          empty when it declares none
  * @author SebastienDegodez
  */
-public record OperationTarget(String method, String path) {
+public record OperationTarget(String method, String path, List<String> requestMediaTypes) {
+
+   /**
+    * An operation whose contract declares no media type for its request body.
+    * @param method The HTTP method
+    * @param path   The path template, relative to the base URL of its source
+    */
+   public OperationTarget(String method, String path) {
+      this(method, path, List.of());
+   }
 }

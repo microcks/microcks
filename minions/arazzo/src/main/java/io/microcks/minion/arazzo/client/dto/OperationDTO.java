@@ -15,11 +15,24 @@
  */
 package io.microcks.minion.arazzo.client.dto;
 
+import java.util.List;
+
 /**
  * The method and path of an operation, as Microcks sends them in a run request.
- * @param method The HTTP method
- * @param path   The path template
+ * @param method            The HTTP method
+ * @param path              The path template
+ * @param requestMediaTypes The media types the operation accepts for its request body, as the contract of its API
+ *                          declares them; absent or empty when it declares none
  * @author SebastienDegodez
  */
-public record OperationDTO(String method, String path) {
+public record OperationDTO(String method, String path, List<String> requestMediaTypes) {
+
+   /**
+    * An operation whose contract declares no media type for its request body.
+    * @param method The HTTP method
+    * @param path   The path template
+    */
+   public OperationDTO(String method, String path) {
+      this(method, path, List.of());
+   }
 }

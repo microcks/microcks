@@ -104,7 +104,8 @@ class ArazzoImplementationRunTest {
                               new ArazzoRunRequest.Operation("GET", "/customers/{id}"))),
                   "orderApi",
                   new ArazzoRunRequest.Source(ORDERS,
-                        Map.of("CreateOrder", new ArazzoRunRequest.Operation("POST", "/orders")))),
+                        Map.of("CreateOrder", new ArazzoRunRequest.Operation("POST", "/orders",
+                              List.of("application/json"))))),
             minion.requests().get(0).sources());
       assertNull(minion.requests().get(0).secret());
       assertEquals(WorkflowRunTarget.IMPLEMENTATIONS, run.getTarget());

@@ -114,7 +114,8 @@ class ArazzoRunTest {
                         new ArazzoRunRequest.Source(MOCKS,
                               Map.of("GetPastries", new ArazzoRunRequest.Operation("GET", "/pastry"), "GetPastryByName",
                                     new ArazzoRunRequest.Operation("GET", "/pastry/{name}"), "PatchPastry",
-                                    new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}")))),
+                                    new ArazzoRunRequest.Operation("PATCH", "/pastry/{name}",
+                                          List.of("application/json", "text/xml"))))),
                   5000L)),
             minion.requests());
       WorkflowResult stored = workflowResultRepository.findByIdOptional(run.getId()).orElseThrow();
