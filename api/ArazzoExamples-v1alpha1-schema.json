@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://microcks.io/schemas/ArazzoExamples-v1alpha1-schema.json",
+  "title": "The ArazzoExamples JSON schema",
+  "description": "ArazzoExamples is a specification for defining examples of the workflows of an Arazzo document. By convention, such a file is named <name>.arazzo-examples.yaml: Microcks detects it by its kind, not by its extension.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "workflows"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of ArazzoExamples",
+      "description": "The version of ArazzoExamples description.",
+      "const": "mocks.microcks.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The ArazzoExamples kind schema",
+      "description": "Kind marker for ArazzoExamples",
+      "const": "ArazzoExamples"
+    },
+    "metadata": {
+      "$id": "#/properties/metadata",
+      "type": "object",
+      "title": "The metadata of ArazzoExamples",
+      "description": "Holds reference information about the Arazzo document these examples relate to. The document must be imported before its examples.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/metadata/properties/name",
+          "type": "string",
+          "title": "The name of the Arazzo document these examples relate to.",
+          "description": "The info.title of the Arazzo document."
+        },
+        "version": {
+          "$id": "#/properties/metadata/properties/version",
+          "type": "string",
+          "title": "The version of the Arazzo document these examples relate to.",
+          "description": "The info.version of the Arazzo document."
+        }
+      }
+    },
+    "workflows": {
+      "$id": "#/properties/workflows",
+      "type": "object",
+      "title": "The workflows of the Arazzo document",
+      "description": "The examples are organized using the workflowId of the Arazzo document.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/workflowItem"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "workflowItem": {
+      "$id": "#/definitions/workflowItem",
+      "type": "object",
+      "title": "One workflow examples",
+      "description": "Examples of a workflow, by example name.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/exampleItem"
+        }
+      }
+    },
+    "exampleItem": {
+      "$id": "#/definitions/exampleItem",
+      "type": "object",
+      "title": "One workflow example",
+      "description": "The inputs to run a workflow with and what is expected of the run.",
+      "properties": {
+        "inputs": {
+          "$id": "#/definitions/exampleItem/properties/inputs",
+          "type": "object",
+          "title": "The inputs of the example",
+          "description": "The values of the inputs the workflow declares, by input name.",
+          "additionalProperties": true
+        },
+        "steps": {
+          "$id": "#/definitions/exampleItem/properties/steps",
+          "type": "object",
+          "title": "The expected steps",
+          "description": "What each listed step is expected to show, by stepId.",
+          "patternProperties": {
+            "^.": {
+              "$ref": "#/definitions/stepExpectation"
+            }
+          }
+        },
+        "outputs": {
+          "$id": "#/definitions/exampleItem/properties/outputs",
+          "type": "object",
+          "title": "The expected outputs of the workflow",
+          "description": "The values the workflow outputs are expected to have, by output name.",
+          "additionalProperties": true
+        },
+        "stopsAt": {
+          "$id": "#/definitions/exampleItem/properties/stopsAt",
+          "type": "string",
+          "title": "The step the workflow stops at",
+          "description": "The stepId of the step the workflow is expected to stop at."
+        }
+      },
+      "additionalProperties": false
+    },
+    "stepExpectation": {
+      "$id": "#/definitions/stepExpectation",
+      "type": "object",
+      "title": "What a step is expected to show",
+      "description": "The expected status and outputs of a step.",
+      "properties": {
+        "status": {
+          "$id": "#/definitions/stepExpectation/properties/status",
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599,
+          "title": "The expected status of the step",
+          "description": "An exact HTTP status code: no range, no default."
+        },
+        "outputs": {
+          "$id": "#/definitions/stepExpectation/properties/outputs",
+          "type": "object",
+          "title": "The expected outputs of the step",
+          "description": "The values the step outputs are expected to have, by output name.",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

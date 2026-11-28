@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://microcks.io/schemas/ArazzoMetadata-v1alpha1-schema.json",
+  "title": "The ArazzoMetadata JSON schema",
+  "description": "ArazzoMetadata is a specification for linking the source descriptions of an Arazzo document to the APIs known by Microcks. By convention, such a file is named <name>.arazzo-metadata.yaml: Microcks detects it by its kind, not by its extension.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "sources"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of ArazzoMetadata",
+      "description": "The version of ArazzoMetadata description.",
+      "const": "mocks.microcks.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The ArazzoMetadata kind schema",
+      "description": "Kind marker for ArazzoMetadata",
+      "const": "ArazzoMetadata"
+    },
+    "metadata": {
+      "$id": "#/properties/metadata",
+      "type": "object",
+      "title": "The metadata of ArazzoMetadata",
+      "description": "Holds reference information about the Arazzo document these metadata relate to.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/metadata/properties/name",
+          "type": "string",
+          "title": "The name of the Arazzo document these metadata relate to.",
+          "description": "The info.title of the Arazzo document."
+        },
+        "version": {
+          "$id": "#/properties/metadata/properties/version",
+          "type": "string",
+          "title": "The version of the Arazzo document these metadata relate to.",
+          "description": "The info.version of the Arazzo document."
+        }
+      }
+    },
+    "sources": {
+      "$id": "#/properties/sources",
+      "type": "object",
+      "title": "The source descriptions of the Arazzo document",
+      "description": "The API each source description of the Arazzo document is linked to, by source description name.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/sourceItem"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "sourceItem": {
+      "$id": "#/definitions/sourceItem",
+      "type": "object",
+      "title": "One source description link",
+      "description": "The API a source description is linked to.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/definitions/sourceItem/properties/name",
+          "type": "string",
+          "title": "The name of the API",
+          "description": "The name of the API in Microcks."
+        },
+        "version": {
+          "$id": "#/definitions/sourceItem/properties/version",
+          "type": "string",
+          "title": "The version of the API",
+          "description": "The version of the API in Microcks."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
