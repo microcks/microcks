@@ -15,7 +15,6 @@
  */
 package io.microcks.artifact.arazzo;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -45,12 +44,6 @@ class ArazzoExpressionEvaluatorTest {
          "application/json | application/json" })
    void eachSupportedExpressionHasAValue(String expression, String value) {
       assertEquals(value, String.valueOf(evaluator.resolve(expression, CONTEXT)));
-   }
-
-   @Test
-   void theBodyIsWhatTheContextReadsOfTheResponse() {
-      assertEquals("<pastry/>",
-            evaluator.evaluate("$response.body", new Context(Map.of(), Map.of(), 200, Map.of(), "<pastry/>")));
    }
 
    @ParameterizedTest

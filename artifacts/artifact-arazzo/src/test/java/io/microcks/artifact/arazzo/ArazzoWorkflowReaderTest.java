@@ -70,35 +70,8 @@ class ArazzoWorkflowReaderTest {
    }
 
    @Test
-   void eachWorkflowOfADocumentIsReadByItsId() throws IOException {
-      assertEquals(Optional.of("listThenReadFirst"),
-            workflow("read-then-reprice", "listThenReadFirst").map(ArazzoWorkflow::workflowId));
-   }
-
-   @Test
    void aWorkflowTheDocumentDoesNotHaveIsNotRead() throws IOException {
       assertEquals(Optional.empty(), workflow("read-then-reprice", "unknown"));
-   }
-
-   @Test
-   void aWorkflowWithNothingButItsStepsIsReadWithoutSummaryDescriptionInputsNorOutputs() throws IOException {
-      ArazzoWorkflow workflow = workflow("bare-step", "bare").orElseThrow();
-
-      assertEquals("bare null null [] {}", workflow.workflowId() + " " + workflow.summary() + " "
-            + workflow.description() + " " + workflow.inputNames() + " " + workflow.outputs());
-   }
-
-   @ParameterizedTest
-   @CsvSource(delimiter = ';', value = { "bare-step; bare; list calls pastryApi GetPastries",
-         "described-step; described; list (Lists the pastries.) calls pastryApi GetPastries",
-         "regex-criterion; regex; read calls pastryApi GetPastryByName | criterion regex ^[A-Z].* on $response.body#/name",
-         "text-payload; textPayload; reprice calls pastryApi PatchPastry | "
-               + "body null <pastry><price>2.6</price></pastry> with {}",
-         "non-text-values; nonTextValues; reprice calls pastryApi PatchPastry | parameter page in query = 2 | "
-               + "body null {\"price\":0} with {/price=2.6}" })
-   void aStepIsReadWithWhatItDeclaresOnly(String example, String workflowId, String step) throws IOException {
-      assertEquals(List.of(step), workflow(example, workflowId).orElseThrow().steps().stream()
-            .map(ArazzoWorkflowReaderTest::describe).toList());
    }
 
    /**

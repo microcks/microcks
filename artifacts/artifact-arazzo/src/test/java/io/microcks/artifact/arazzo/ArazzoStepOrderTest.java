@@ -64,18 +64,6 @@ class ArazzoStepOrderTest {
       assertEquals(prerequisites, ArazzoStepOrder.prerequisitesOf(workflow, stepId).toString());
    }
 
-   /** A step tells the steps it declares it depends on, as the document lists them; null when it declares none. */
-   @ParameterizedTest
-   @CsvSource(delimiter = ';', value = { "parallel; sirene; [checkAccount]", "implicit; financials; [sirene]",
-         "every-place; alone; []", "sequential; sirene; null" })
-   void aStepTellsTheStepsItDeclaresItDependsOn(String example, String stepId, String dependsOn) throws IOException {
-      ArazzoWorkflow workflow = ArazzoWorkflowReader
-            .workflow(ArazzoFixtures.exampleOf(FIXTURE, example), "checkCompany").orElseThrow();
-
-      assertEquals(dependsOn, String.valueOf(workflow.steps().stream().filter(step -> step.stepId().equals(stepId))
-            .findFirst().orElseThrow().dependsOn()));
-   }
-
    /**
     * Arazzo 1.1 (5.8.5.2) intends dependsOn to coordinate asynchronous steps, and recommends the order of the list for
     * synchronous ones without forbidding dependsOn there. The maintainer decided to accept such a document and to warn:

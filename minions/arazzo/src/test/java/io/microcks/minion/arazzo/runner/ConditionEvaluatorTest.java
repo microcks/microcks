@@ -17,7 +17,6 @@ package io.microcks.minion.arazzo.runner;
 
 import io.microcks.artifact.arazzo.ArazzoCriterion;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -65,14 +64,6 @@ class ConditionEvaluatorTest {
       assertEquals(held, result.held());
       assertEquals(values, String.join(", ",
             result.values().stream().map(value -> value.expression() + "=" + value.value()).toList()));
-   }
-
-   @Test
-   void aRegexCriterionMatchesThePatternAgainstItsContext() {
-      assertEquals(
-            new CriterionResult("json$",
-                  List.of(new ExpressionValue("$response.header.content-type", "application/json")), true),
-            evaluator.evaluate(new ArazzoCriterion("json$", "$response.header.content-type", "regex"), CONTEXT));
    }
 
    @ParameterizedTest

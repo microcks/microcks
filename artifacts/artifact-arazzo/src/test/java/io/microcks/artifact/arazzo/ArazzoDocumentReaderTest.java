@@ -59,11 +59,6 @@ class ArazzoDocumentReaderTest {
    }
 
    @Test
-   void theSourceDescriptionsOfADocumentAreReadByName() throws IOException {
-      assertEquals(List.of("pastryApi"), ArazzoDocumentReader.sourceDescriptionNames(document("pastry.arazzo.yaml")));
-   }
-
-   @Test
    void theUrlEachSourceDescriptionDeclaresIsReadInTheOrderOfTheDocument() throws IOException {
       assertEquals("{customerApi=./customer-api.openapi.yaml, orderApi=./order-api.openapi.yaml}", ArazzoDocumentReader
             .sourceDescriptionUrls(exampleOf("called-sources.arazzo.yaml", "named-source")).toString());
@@ -84,11 +79,6 @@ class ArazzoDocumentReaderTest {
          throws IOException {
       assertEquals(Map.of("callOne", List.of(new ArazzoOperationCall(sourceName, operationId))),
             ArazzoDocumentReader.workflowCalls(exampleOf("called-sources.arazzo.yaml", example)));
-   }
-
-   @Test
-   void anUnsupportedVersionIsRefusedWithItsReason() throws IOException {
-      assertRefused(document("unsupported-version.arazzo.yaml"), "Unsupported Arazzo version: 2.0.0");
    }
 
    @ParameterizedTest
@@ -219,7 +209,7 @@ class ArazzoDocumentReaderTest {
     * yet. Arazzo requires an operationId to name its source description when there are several, and a named source
     * description to be declared by the document; otherwise the step cannot be linked to an API. Arazzo also requires an
     * info with a title and a version, which identify the document in Microcks. Arazzo only retries a failing step, and
-    * only defines the end, goto and retry action types.
+    * only defines the end, goto and retry action types. Microcks reads Arazzo 1.0 and 1.1 only.
     */
    @ParameterizedTest
    @CsvSource({ "lone-operation-id, Ambiguous operationId CreateOrder: the document has several source descriptions",
@@ -228,7 +218,8 @@ class ArazzoDocumentReaderTest {
          "no-info-title, Invalid Arazzo document: info.title is required",
          "no-info-version, Invalid Arazzo document: info.version is required",
          "success-retry, Invalid Arazzo document: a success action cannot retry",
-         "unknown-action-type, Unsupported action type: abort" })
+         "unknown-action-type, Unsupported action type: abort",
+         "arazzo-2, Unsupported Arazzo version: 2.0.0" })
    void aDocumentArazzoForbidsIsRefusedWithItsReason(String example, String reason) throws IOException {
       assertRefused(example("invalid", example), reason);
    }

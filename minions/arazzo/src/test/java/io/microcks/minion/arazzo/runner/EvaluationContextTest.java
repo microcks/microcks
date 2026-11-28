@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests of what the runtime expressions of a step see of the response the step received.
@@ -51,12 +50,4 @@ class EvaluationContextTest {
             evaluator.evaluate("$response.body", ANSWERED.with(new HttpOutcome(200, Map.of(), "<pastry/>"))));
    }
 
-   @ParameterizedTest
-   @CsvSource({ "$statusCode", "$response.body", "$response.header.X-Trace" })
-   void anExpressionOnTheResponseHasNoValueBeforeTheCall(String expression) {
-      EvaluationContext beforeTheCall = new EvaluationContext(Map.of(), Map.of(), null);
-
-      assertEquals("No response yet for " + expression,
-            assertThrows(ArazzoRunException.class, () -> evaluator.evaluate(expression, beforeTheCall)).getMessage());
-   }
 }

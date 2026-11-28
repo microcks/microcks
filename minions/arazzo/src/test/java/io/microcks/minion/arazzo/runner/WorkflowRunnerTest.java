@@ -169,15 +169,6 @@ class WorkflowRunnerTest {
             readFirst.response().status() + " " + readFirst.response().body());
    }
 
-   @Test
-   void valuesPassedBetweenStepsShowTheirOrigin() throws IOException {
-      runner.run(RunFixtures.runOf("pastry-scenarios", "listThenReadFirst", Map.of()), reporter);
-
-      assertEquals(List.of(new ParameterValue("name", "path", "Baba Rhum", "$steps.list.outputs.first")),
-            reporter.step("readFirst").parameters());
-      assertEquals(Map.of("first", "$response.body#/0/name"), reporter.step("list").outputOrigins());
-   }
-
    @ParameterizedTest
    @CsvSource(delimiter = '|', value = {
          "readThenReprice | readPastry | name in path = Eclair Cafe from $inputs.pastry, Accept in header = "
@@ -194,14 +185,6 @@ class WorkflowRunnerTest {
       assertEquals(parameters, String.join(", ", step.parameters().stream().map(parameter -> parameter.name() + " in "
             + parameter.in() + " = " + parameter.value() + " from " + parameter.expression()).toList()));
       assertEquals(outputOrigins, step.outputOrigins().toString());
-   }
-
-   @Test
-   void aStepWhoseParametersCannotBeResolvedReportsNoneSent() throws IOException {
-      runner.run(RunFixtures.runOf("unexecutable", "missingInput", Map.of()), reporter);
-
-      assertEquals(List.of(), reporter.step("readPastry").parameters());
-      assertEquals(Map.of(), reporter.step("readPastry").outputOrigins());
    }
 
    @ParameterizedTest

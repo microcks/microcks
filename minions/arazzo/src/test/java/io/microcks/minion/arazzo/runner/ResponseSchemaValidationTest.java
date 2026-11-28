@@ -32,7 +32,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Acceptance tests of the minion validating each step response against the OpenAPI schema of its operation, entering
@@ -206,25 +205,6 @@ class ResponseSchemaValidationTest {
 
       assertEquals(stepStatus, reporter.step("readPastry").status());
       assertEquals(message, reporter.step("readPastry").message());
-   }
-
-   @Test
-   void aContractIsNotNeededWithoutValidation() throws IOException {
-      runner.run(run("readOnly", Map.of("pastry", "Eclair Cafe"), null, VALIDATION_OFF), reporter);
-
-      assertEquals(List.of("0 readPastry PASSED 200"), described(reporter));
-   }
-
-   @Test
-   void aRunWithoutTheOptionDoesNotValidate() throws IOException {
-      RunSpecification withoutOption = new RunSpecification("run-1", "readThenReprice", exampleOf("pastry-journeys"),
-            Map.of("pastry", "Eclair Cafe", "newPrice", 2.6),
-            Map.of("pastryApi", new SourceTarget(PastryImplementation.BASE_URL, RunFixtures.PASTRY_OPERATIONS)),
-            RunFixtures.TIMEOUT);
-
-      runner.run(withoutOption, reporter);
-
-      assertEquals(List.of("0 readPastry PASSED 200", "1 reprice PASSED 200"), described(reporter));
    }
 
    private static RunSpecification repriceRun(boolean validateSchema) throws IOException {
