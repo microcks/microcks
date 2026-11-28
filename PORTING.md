@@ -208,128 +208,64 @@ mock-controller classes are refactored. Moved unit tests keep their fixtures und
 
 ## Arazzo (fork `SebastienDegodez/microcks`, branch `v2/arazzo`)
 
-Port of the Arazzo POC of `feature/arazzo` (1.x, Spring Boot + Angular), story by story. `feature/arazzo` is kept
-untouched as the 1.x reference. The Angular screens are not ported: the SvelteKit Workflows screens (Deep Ink) are
-wired to the API instead.
-
-Web UI: the features not ported yet on imported documents (AI Copilot generation, document edit, Mock URL S27,
-Sessions S15) are disabled, not hidden, through `lib/workflows/availability.ts` (`isAvailable(feature, document)`;
-flip `PORTED[feature]` when the story lands). The demo data keeps them. Schema validation is off by default for real
-runs, and a failed step whose criteria were not evaluated says so.
-
-Web UI of S14, S19, S21 and the recorded examples: the import page analyses an Arazzo document before importing it
-(`/api/workflows/analysis`, then `POST /api/workflows/documents`) and says up front what Microcks will refuse; the relink
-dialog shows the effect of the chosen API (`/api/workflows/documents/{id}/analysis`, `PUT .../sources`); an importer
-that brings an Arazzo document links to it both ways; examples feed the Examples tab, a run can play one example or
-all of them (`/api/runs/workflow-examples/{doc}/{wf}`) and shows Microcks's verdict; retries appear as attempts of the
-same step; the API snippet names the document `title:version`. The Source tab's Validate replays the analysis.
-
-Web UI of S27, S28, S29, S30: `PORTED['mock-url']` is on; `mockUrlOf` writes the title with `+`; runs with origin
-`MOCK_URL` show as Mock URL runs (history, run view, filters). AsyncAPI steps show their messaging and channel, and a
-workflow with async steps has its Run button disabled with the backend reason. The loom draws parallel branches from
-the closest `prerequisites`. A run step shows the baggage and `arazzo.*` span attributes of its mock calls; the link to
-Live traces stays on demo data, because the Live traces page does not read Microcks traces yet. A step without a
-response says "no response" instead of HTTP 0.
-
-In 2.0 the Arazzo code of the app sits in its own subpackages, tests included: `io.microcks.domain.arazzo`,
-`io.microcks.repository.arazzo`, `io.microcks.service.arazzo`, `io.microcks.web.arazzo` and `io.microcks.web.arazzo.dto`
-(1.x keeps them flat in `domain`, `repository`, `service`, `web`). The move is a pure-rename commit, so
-`git log --follow` keeps each file's history.
+Port of the Arazzo POC of `feature/arazzo` (1.x, Spring Boot + Angular, kept untouched as the reference), story by
+story. The Angular screens are not ported: the SvelteKit Workflows screens of the Deep Ink mockup are wired to the API.
+Architecture: see the Arazzo section of `ARCHITECTURE.md` and `minions/arazzo/README.md`.
 
 | 1.x (`feature/arazzo`) | 2.0 |
 |---|---|
-| `commons/util` `io.github.microcks.util.arazzo` (reader, shared kernel) | `artifacts/artifact-arazzo` (`io.microcks.artifact.arazzo`), depends on Jackson only (ArchUnit test) |
-| `commons/model` `Arazzo*`, `Workflow*` | `commons/model` `io.microcks.domain.arazzo`; `ArazzoDocument` and `ArazzoSources` are `@MongoEntity` (collections `arazzoDocument`, `arazzoSources`, same as Spring Data) |
-| `ArazzoDocumentRepository`, `ArazzoSourcesRepository` (Spring Data) | Panache `ObjectIdRepository`; `findAll(Sort)` → `findAllSorted()` |
-| `ArazzoDocumentService`, `ArazzoWorkflowService` | CDI `@ApplicationScoped`, `save` → `persistOrUpdate` |
-| `ArazzoDocumentController`, `ArazzoWorkflowController` (Spring MVC) | JAX-RS, `@RunOnVirtualThread`, same paths under `/api/arazzo` |
-| `UploadArtifactController` Arazzo branch | same branch in the Quarkus controller (upload and download) |
-| Tests (`@SpringJUnitConfig`, `@DirtiesContext`) | `@QuarkusTest` (database emptied by `MongoCleanupCallback`); multipart and download calls through RestAssured (download takes query parameters in 2.0) |
+| `commons/util` `io.github.microcks.util.arazzo` (reader, expressions) | `artifacts/artifact-arazzo` (`io.microcks.artifact.arazzo`), Jackson only (ArchUnit test); the minion's expression evaluator and JSON Pointer moved there too |
+| Flat `domain`, `repository`, `service`, `web` | `io.microcks.{domain,repository,service,web}.arazzo` (+ `web.arazzo.dto`), tests mirrored; moved by a pure-rename commit |
+| Spring Data entities and `Custom*Repository` + `MongoTemplate` | `@MongoEntity` + Panache `ObjectIdRepository` (same collection names); `ObjectIdRepository.save` added; `Object` values need `config.AnyValueCodecProvider`; TTL and unique indexes created at startup by the repositories (no `MongoConfiguration`) |
+| `@Service`, `@Value`, Spring MVC controllers | CDI `@ApplicationScoped`, `@ConfigProperty`, JAX-RS `@RunOnVirtualThread` under the same paths; an unknown enum filter still answers 400 |
+| `SecurityConfiguration` matchers | `AccessRule`s of `security.AuthenticationFilter` (MANAGER to import and relink documents) |
+| `HttpArazzoMinionClient` (`RestClient`) | JDK `HttpClient` produced as `ArazzoMinionClient` (`ArazzoMinionClientProducer`), swapped with `QuarkusMock` in tests |
+| `minions/arazzo` (standalone BOM, `io.github.microcks`) | parent `microcks-parent`, `io.microcks.minion.arazzo`, depends on `microcks-artifact-arazzo` and `microcks-artifact-openapi` |
+| `commons/util` `JsonSchemaValidator` pointers, OpenAPI response validation | `artifacts/artifact-jsonschema` (`JsonSchemaViolation`), `artifacts/artifact-openapi` (`OpenAPIResponseValidator`, used by `OpenAPITestRunner` too) |
+| `ServiceStateStore.put` read-then-save | `ServiceStateRepository.upsert` + unique `(serviceId, key)` index (race fix) |
+| `kind: ArazzoSources` overlay (links + examples) | two kinds, like `APIMetadata` / `APIExamples`: `ArazzoMetadata` (links) and `ArazzoExamples` (`workflows.<id>.<example>`), schemas in `api/` |
+| Tests `@SpringJUnitConfig`, Mockito on controllers | `@QuarkusTest` (database emptied by `MongoCleanupCallback`), RestAssured; the app's Arazzo ITs start the packaged minion |
 
-Runs (S5–S11):
+New or different in 2.0:
+- **Mixed runs (S31).** `target: {kind: "mixed", perSource: {<source>: "mock" | "implementation"}}` with
+  `implementations` for the sources sent to an implementation; recorded as `MIXED`. The secret goes to
+  implementations only.
+- **Import.** The import analysis warns about a `dependsOn` between synchronous steps (Arazzo 1.1 §5.8.5.2) and imports
+  the document anyway. `ArazzoExamples` are refused until their document is imported.
+- **Request content type.** A request body without `contentType` takes the single request media type of its
+  operation (the app sends `requestMediaTypes` per operation to the minion); with several or none the step fails
+  without a call, the specification being silent.
+- **Robustness.** An unexpected minion error ends the run as `FAILURE` ("Unexpected error in the Arazzo minion: …").
+- **Sessions.** `GET /api/arazzo/sessions?documentId=&workflowId=` and `GET /api/arazzo/sessions/{id}` (live call
+  count, `state`, `verificationRunId`) were added for the Sessions tab.
+- **Other endpoints.** `GET /api/arazzo/documents/{id}/source` (the document as uploaded); a document is named by id
+  or `<title>:<version>`.
+- **API description.** The 1.x POC's `microcks-openapi-v1.16.yaml` became `api/microcks-openapi-v2.0.yaml`; the
+  `v1.*` descriptions are untouched.
 
-| 1.x | 2.0 |
-|---|---|
-| `minions/arazzo` (Quarkus 3.33, `io.github.microcks`, standalone BOM) | `minions/arazzo` (`io.microcks.minion.arazzo`, parent `microcks-parent`, depends on `microcks-artifact-arazzo`) |
-| `WorkflowResult` (Spring Data) | `@MongoEntity(collection = "workflowResult")`; the `Object` values (inputs, outputs, criteria, parameters) need `config.AnyValueCodecProvider` |
-| `WorkflowResultRepository` + `CustomWorkflowResultRepository` + `MongoTemplate` impl | one Panache `WorkflowResultRepository` (filters as a BSON `Document`, page with `Page.of`) |
-| `HttpArazzoMinionClient` (`RestClient`, `@Component`) | JDK `HttpClient`, produced as `ArazzoMinionClient` by `ArazzoMinionClientProducer` (so tests swap it with `QuarkusMock`) |
-| `ArazzoRunController`, `ArazzoRunHistoryController` | JAX-RS; an unknown `target`/`result` filter still answers 400 (JAX-RS would answer 404) |
-| `arazzo-minion.url` | same property (`ARAZZO_MINION_URL`, default `http://localhost:8082`) |
+Web UI:
+- `lib/server/workflows.ts`, `runs-arazzo.ts` and `sessions-arazzo.ts` map `/api/arazzo` to the Deep Ink types;
+  placeholder (demo) data is used only when the backend is unreachable.
+- Features not served are disabled, not hidden, through `lib/workflows/availability.ts` (today: AI Copilot generation
+  and document edit).
+- BFF routes `/api/workflows/documents/{id}/metadata` and `/examples` give the ArazzoMetadata and ArazzoExamples files.
+- Import analyses the document first (refusals and warnings before import); relink shows the effect of the chosen API;
+  examples, retries, Mock URL, AsyncAPI steps, `dependsOn` branches, Live Traces attributes and sessions are wired.
 
-S9/S10: `commons/util` `JsonSchemaValidator.validateJsonWithPointers` and `JsonSchemaViolation` →
-`artifacts/artifact-jsonschema`; `OpenAPIResponseValidator` and the `*WithPointers` methods of `OpenAPISchemaValidator` /
-`SwaggerSchemaValidator` → `artifacts/artifact-openapi`, where `OpenAPITestRunner` now validates through
-`OpenAPIResponseValidator` (its v1 webapp test moved there, with hand-written fakes instead of Mockito). The launch takes
-`validateSchema`; the app sends the main OpenAPI/Swagger contract of each linked API to the minion (relative references
-from `validation.resourceUrl`); the minion (now depending on `microcks-artifact-openapi`, no code copied) validates JSON
-responses as contract tests do and a non-conformant response fails the step with its reason. The run keeps
-`validateSchema` and `missingExample` (`WorkflowMissingExample`, set for a failed step of a run on the mocks when no
-example matches its dispatch values; `ArazzoMockCoherenceService` is CDI).
-
-S14/S19/S21: `ArazzoImportService` and `ArazzoSourceMatcher` are CDI; `JobService` imports Arazzo documents and
-overlays found by importers (`ImportJob.arazzoDocumentRef`); the v1 `SecurityConfiguration` matchers of
-`/api/arazzo/documents*` (MANAGER) are `AccessRule`s of `security.AuthenticationFilter`. `ArazzoRunLaunchDTO` is
-`(inputs, timeout, implementations, secretName, target, validateSchema, example)`. A run can name its document by id
-or `<title>:<version>`; `POST …/workflows/{wf}/examples/runs` plays every recorded example. `api/microcks-openapi-v1.16.yaml`
-comes from `feature/arazzo` (the API integration tests check the Arazzo endpoints against it).
-
-`ObjectIdRepository.save(entity)` was added (Spring Data `save` equivalent: `persistOrUpdate` then return the entity).
-S31, mixed runs: the launch takes the mockup's `target: {kind: "mixed", perSource: {<source>: "mock" | "implementation"}}`
-with `implementations` holding the base URL of each source sent to its implementation; a source `perSource` does not
-name goes to its mocks. A `target` of another kind is refused (400). A run launched as mixed is recorded with the `MIXED`
-target even when every source ends up on the same side, as the mockup keeps the target as launched; the secret is
-resolved and kept only when some source goes to its implementation. Runs are recorded with the `MIXED` target (`WorkflowRunTarget`) and the history filters them
-(`?target=MIXED`); the UI keeps the mockup's filters (mixed runs under "Any target" only). The minion sends the run
-secret to implementations only: a source whose base URL is relative to Microcks is played on its mocks
-(`SourceTarget.mocks`). The mockup's own HTTP adapter forgets `implementations` for a mixed run and its API snippet
-uses a partial `implementations` instead of `perSource`: to align in microcks-deep-ink.
-
-Known gap: when authentication is enabled, the minion reports to `/api/arazzo/runs/**` without a token (the async
-minion's `MicrocksTokenProvider` is not wired in the Arazzo minion yet).
-
-New in 2.0: `GET /api/arazzo/documents/{id}/source` returns the document as uploaded (Source tab).
-
-Web UI: `lib/server/workflows.ts` reads `/api/arazzo` and maps it to the Deep Ink types (`lib/workflows/types.ts`);
-the placeholder is used only when the backend is unreachable (then flagged "demo data"). *Add a source* recognises
-Arazzo documents and ArazzoSources overlays and imports them once (upload or URL). Linking a source in the dialog
-imports an ArazzoSources overlay holding the current links plus the new one. Editing a real workflow from the Loom is
-refused (Microcks keeps the document as imported).
-Runs of imported workflows go through `/api/arazzo` (launch, run, history) and are executed by the Arazzo minion; the run
-page reads the step exchanges from `/api/tests/{runId}/messages/{testCaseId}` and polls while the run is in progress.
-Runs of the placeholder documents stay simulated. Runs launched from the UI send `validateSchema`; the run page shows
-"Schema validation" on/off and each step's schema state from the step `message` (pass; fail on "does not match the …
-schema" or "is not described in the OpenAPI contract"; n/a when the source has no OpenAPI contract or the step failed
-first). `missingExample` becomes the "mocks do not form a coherent scenario" note
-(`an example of <operationId> for <name>=<value>`) with the Copilot link. Not covered yet by the backend: recorded examples (S16/S20), retries
-and early ends (S17/S21).
+Known gaps:
+- AsyncAPI steps are read and shown, not runnable (launch refused).
+- The minion plays steps in list order; `dependsOn` only relaxes the order checked by session verification.
+- Live Traces does not filter by Arazzo run yet (attributes are shown on the run step).
+- With authentication enabled, the minion reports without a token.
+- The minion is not in `install/` (docker-compose, Kubernetes) yet.
 
 | Story | Status |
 |---|---|
-| S1 import (upload, download, refusal of unsupported documents) | ported |
-| S2 link source descriptions through an ArazzoSources overlay | ported |
-| S3 browse, S4 read the steps and the diagram, S12 workflows using an API | ported |
-| S5 run on the mocks, S8 refuse missing inputs, S6 why a step failed, S11 runs history, S7 run on implementations | ported |
-| S31 mixed run (new in 2.0, "Proposed · beyond POC" in the mockup): some sources on their mocks, the others on their implementation | done |
-| S10 missing mock examples (coherence), S9 schema validation of step responses | ported |
-| S14 import dialog and relink, S19 importers, S21 retries and early ends, S14 run through the API, recorded examples judged (S16/S20 part) | ported |
-| S20 recorded examples in the API description, S28 AsyncAPI steps (shown, not runnable yet), S29 Live Traces of a run's mock calls, S27 Mock URL, S30 step `dependsOn` | ported |
-| Session verification, sessions S15/S16/S17, race fix | to do |
-
-BE3 notes (S20, S28, S29, S27, S30):
-- S28: `ArazzoStepCall` is `(sourceName, operationId, channel)`; `ArazzoStepDetail` gains `messaging`
-  (`ArazzoStepMessaging`), `dependsOn` and `prerequisites`. A workflow with async steps is not runnable (status reason
-  "Async steps cannot be run yet", 400 on launch) until the minion plays them.
-- S29: the minion sends a W3C `baggage` header (`microcks-arazzo-run`, `-workflow`, `-step`, `-attempt`) on calls to
-  mocks; `MockControllerCommons.getArazzoAttributes` and `util.tracing.ArazzoTraceAttributes` put the `arazzo.*`
-  attributes on the spans and `invocation_received` events of `RestController`. `RestControllerLiveTracesTest` is a
-  `@QuarkusTest` (RestAssured + `SpanStorageService`) instead of the 1.x Mockito test.
-- S27: JAX-RS `ArazzoMockUrlController` at `POST /arazzo/{title}/{version}/{workflowId}` (title with `+`), outside
-  `/api` and without authentication as in 1.x (outside the `AuthenticationFilter` rules; CORS is global in Quarkus, so
-  1.x `SecurityConfiguration`/`WebConfiguration` changes and `WebConfigurationTest` are not ported).
-  `ArazzoMockUrlService` waits at most `arazzo.mock-url.timeout` (30000 ms); runs carry `origin` `MOCK_URL`
-  (`WorkflowRunOrigin`); header `X-Microcks-Arazzo-Run-Id`.
-- S30: `ArazzoStepOrder` in artifact-arazzo; the minion still plays the steps in list order.
+| S1–S12: import, links, browse, steps and diagram, runs on mocks and implementations, missing inputs, failures, history, coherence, schema validation | ported |
+| S14 import dialog and relink, S19 importers, S21 retries and early ends, run through the API, recorded examples (S16/S20) | ported |
+| S27 Mock URL, S28 AsyncAPI steps (shown), S29 Live Traces, S30 `dependsOn` | ported |
+| Session verification, S15, S16, S17 (saga compensation), race fix | ported |
+| S31 mixed run (new in 2.0) | done |
 
 ## Known divergences and TODO
 
