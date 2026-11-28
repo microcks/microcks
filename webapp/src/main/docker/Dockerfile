@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1785906621
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.9-1794467051
 
 # Some version information
 LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
@@ -12,7 +12,6 @@ LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
 # Install Java runtime
 RUN microdnf install java-25-openjdk-headless openssl curl-minimal ca-certificates -y \
  && microdnf clean all \
- && rm /var/lib/rpm/rpmdb.sqlite \
  && mkdir -p /deployments
 
 # JAVA_APP_DIR is used by run-java.sh for finding the binaries
@@ -30,8 +29,9 @@ RUN chown 1001 /deployments \
     && chmod "g+rwX" /deployments \
     && chown 1001:root /deployments \
     && chmod g+rw /etc/passwd \
-    && curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/1.3.8/run-java-sh-1.3.8-sh.sh \
+    && curl -fsSL https://repo1.maven.org/maven2/io/fabric8/run-java-sh/1.3.8/run-java-sh-1.3.8-sh.sh \
             -o /deployments/run-java.sh \
+    && echo "f1ce21f4e37f1bc77f926b75dfb268afa4c612ac2b7d9ce39d5380ec0e2ff423  /deployments/run-java.sh" | sha256sum -c - \
     && mkdir -p /deployments/data \
     && chown 1001 /deployments/run-java.sh \
     && chmod 550 /deployments/run-java.sh \

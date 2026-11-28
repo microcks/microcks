@@ -16,8 +16,11 @@
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
     <java.version>25</java.version>
-    <bouncycastle.version>1.84</bouncycastle.version>
+    <bouncycastle.version>1.86</bouncycastle.version>
     <snakeyaml.version>2.5</snakeyaml.version>
+    <snappy-java.version>1.1.10.9</snappy-java.version>
+    <lz4-java.version>1.11.4</lz4-java.version>
+    <guava.version>33.7.2-android</guava.version>
     <mongo-java-server.version>1.47.0</mongo-java-server.version>
     <apache-httpclient.version>5.6.3</apache-httpclient.version>
     <apache-httpcore.version>5.4.3</apache-httpcore.version>
@@ -47,8 +50,25 @@
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
       </dependency>
+      <!-- Force snappy-java and lz4-java here as kafka-clients still pulls versions with CVEs -->
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>${snappy-java.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>at.yawk.lz4</groupId>
+        <artifactId>lz4-java</artifactId>
+        <version>${lz4-java.version}</version>
+      </dependency>
+      <!-- Force Guava here as grpc still pulls a version with CVEs -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
 
-      <!-- Pin OpenTelemetry 1.62.0-alpha. Spring Boot 4.1.1 BOM manages OpenTelemetry 1.62.0, but
+      <!-- Pin OpenTelemetry 1.62.0-alpha. Spring Boot 4.1.2 BOM manages OpenTelemetry 1.62.0, but
            we also need OpenTelemetry Instrumentation which requires the same version of the OpenTelemetry
            API and SDK dependencies. -->
       <dependency>
