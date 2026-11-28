@@ -360,13 +360,16 @@ export function originText(run: WorkflowRun): string {
   return 'Mock URL';
 }
 
-/** "apiPastry · /rest/API+Pastry/2.0": the mock endpoint of each source a mocks run calls. */
-export function mockSources(run: WorkflowRun): string {
-  return [...new Set(run.steps.flatMap((s) => (s.request ? [s.request.url] : [])))]
-    .map((u) => u.match(/^https?:\/\/[^/]+(\/rest\/[^/]+\/[^/]+)/)?.[1])
-    .filter((x, i, all): x is string => !!x && all.indexOf(x) === i)
-    .map((p) => `apiPastry · ${p}`)
-    .join(' · ');
+/**
+ * "quoteApi · /rest/Insurance+Quote+API/1.0.0": the mock endpoint each source of a mocks run calls, named by the source
+ * of the step that called it (`sourceOf`), in the order of the calls.
+ */
+export function mockSources(run: WorkflowRun, sourceOf: (stepId: string) => string | undefined): string {
+  const lines = run.steps.flatMap((s) => {
+    const path = s.request?.url.match(/^https?:\/\/[^/]+(\/rest\/[^/]+\/[^/]+)/)?.[1];
+    return path ? [`${sourceOf(s.stepId) ?? 'source'} · ${path}`] : [];
+  });
+  return [...new Set(lines)].join(' · ');
 }
 
 /** JSON-ish value as the prototype prints it. */

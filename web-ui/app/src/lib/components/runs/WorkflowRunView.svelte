@@ -217,7 +217,7 @@
   </div>
 
   <aside aria-label="Run side panels" class="wfr-aside">
-    <RunProperties {run} {documentLabel} {example} />
+    <RunProperties {run} {documentLabel} {example} sourceOf={(stepId) => workflow?.steps.find((s) => s.stepId === stepId)?.sourceName} />
     {#if document && workflow}
       <RunApiPanel
         hint={`Launches the same run as run #${run.number}.`}

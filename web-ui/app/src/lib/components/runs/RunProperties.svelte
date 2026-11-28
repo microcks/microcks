@@ -10,9 +10,11 @@
     run: WorkflowRun;
     documentLabel?: string;
     example?: WorkflowExample;
+    /** The source description each step calls, by step id; the steps of the workflow. */
+    sourceOf?: (stepId: string) => string | undefined;
   }
 
-  let { run, documentLabel, example }: Props = $props();
+  let { run, documentLabel, example, sourceOf = () => undefined }: Props = $props();
 
   const onMocks = $derived(run.target.kind === 'mocks');
   const firstBaggage = $derived(run.steps.find((s) => s.status !== 'not-run')?.baggage);
@@ -40,7 +42,7 @@
         <span class="wfr-target">
           <strong>{run.target.kind === 'mocks' ? 'Microcks mocks' : run.target.kind === 'implementations' ? 'Implementations' : 'Mixed'}</strong>
           {#if run.target.kind === 'implementations'}<span class="wfr-target-url">{implementationsText(run.target.baseUrls)}</span>{/if}
-          {#if run.target.kind === 'mocks'}<span class="wfr-target-url">{mockSources(run)}</span>{/if}
+          {#if run.target.kind === 'mocks'}<span class="wfr-target-url">{mockSources(run, sourceOf)}</span>{/if}
           {#if run.target.kind === 'mixed' && !run.target.proposed}<span class="wfr-target-url">{mixedText(run.target.perSource, run.target.baseUrls ?? {})}</span>{/if}
           {#if run.target.kind === 'mixed' && run.target.proposed}<Chip size="sm" variant="dashed" tone="warning" class="wfr-proposed">Proposed · beyond POC</Chip>{/if}
         </span>
