@@ -20,9 +20,7 @@ import io.microcks.service.ServiceService;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
-import io.microcks.service.arazzo.view.ArazzoSourceInfo;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
-import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.ServiceRepository;
 
@@ -170,7 +168,7 @@ class ArazzoDocumentSummaryTest {
       return document.sources().stream().map(ArazzoDocumentSummaryTest::describe).toList();
    }
 
-   private static String describe(ArazzoSourceInfo source) {
+   private static String describe(ArazzoDocumentSummary.Source source) {
       ArazzoSourceLink link = source.link();
       String type = source.apiType() == null ? "" : source.apiType() + " ";
       String api = link.apiName() == null ? "" : " -> " + type + link.apiName() + " " + link.apiVersion();
@@ -181,7 +179,7 @@ class ArazzoDocumentSummaryTest {
       return document.workflows().stream().map(ArazzoDocumentSummaryTest::describe).toList();
    }
 
-   private static String describe(ArazzoWorkflowSummary workflow) {
+   private static String describe(ArazzoDocumentSummary.Workflow workflow) {
       ArazzoWorkflowStatus status = workflow.status();
       return status.workflowId() + ": '" + workflow.description() + "' " + workflow.stepCount() + " steps, "
             + (status.runnable() ? "runnable" : "not runnable " + status.reasons()) + ", " + workflow.lastResult();

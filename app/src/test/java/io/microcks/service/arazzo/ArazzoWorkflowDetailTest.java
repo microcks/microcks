@@ -19,9 +19,7 @@ import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.service.arazzo.view.ArazzoSourceDescription;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
-import io.microcks.service.arazzo.view.ArazzoStepDetail;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.ServiceRepository;
@@ -286,7 +284,7 @@ class ArazzoWorkflowDetailTest {
       return arazzoDocumentService.importArazzoDocument(fixture("pastry-scenarios.arazzo.yaml"));
    }
 
-   private static List<String> describe(ArazzoStepDetail step) {
+   private static List<String> describe(ArazzoWorkflowDetail.Step step) {
       List<String> lines = new ArrayList<>();
       lines.add(step.stepId() + " calls " + describe(step.operation()));
       step.parameters().forEach(parameter -> lines
@@ -301,7 +299,7 @@ class ArazzoWorkflowDetailTest {
       return lines;
    }
 
-   private static String describe(ArazzoSourceDescription source) {
+   private static String describe(ArazzoWorkflowDetail.Source source) {
       ArazzoSourceLink link = source.link();
       String api = link.apiName() == null ? "" : " -> " + link.apiName() + " " + link.apiVersion();
       if (source.reason() != null) {

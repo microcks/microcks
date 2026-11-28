@@ -22,11 +22,7 @@ import jakarta.inject.Inject;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
-import io.microcks.service.arazzo.view.ArazzoSourceAnalysis;
-import io.microcks.service.arazzo.view.ArazzoSourceMatch;
 import io.microcks.domain.arazzo.ArazzoMetadata;
-import io.microcks.service.arazzo.view.ArazzoWorkflowCheck;
-import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoMetadataRepository;
@@ -299,8 +295,8 @@ class ArazzoImportDialogTest {
       return analysis.sources().stream().map(ArazzoImportDialogTest::describe).toList();
    }
 
-   private static String describe(ArazzoSourceAnalysis source) {
-      ArazzoSourceMatch match = source.match();
+   private static String describe(ArazzoImportAnalysis.Source source) {
+      ArazzoImportAnalysis.Match match = source.match();
       String matched = switch (match.status()) {
          case MATCHED -> "matched " + match.contractTitle() + " " + match.contractVersion();
          case NO_API -> "no API titled " + match.contractTitle() + " " + match.contractVersion();
@@ -312,7 +308,7 @@ class ArazzoImportDialogTest {
       return source.sourceName() + " -> " + linkOf(source) + " [" + matched + "]: " + operations;
    }
 
-   private static String linkOf(ArazzoSourceAnalysis source) {
+   private static String linkOf(ArazzoImportAnalysis.Source source) {
       return source.link().linked() ? source.link().apiName() + " " + source.link().apiVersion() : "not linked";
    }
 
@@ -320,7 +316,7 @@ class ArazzoImportDialogTest {
       return analysis.checks().stream().map(ArazzoImportDialogTest::describe).toList();
    }
 
-   private static String describe(ArazzoWorkflowCheck check) {
+   private static String describe(ArazzoImportAnalysis.WorkflowCheck check) {
       if (check.runnable()) {
          return check.workflowId() + ": ready to run, all its operations are in " + check.apiNames();
       }
@@ -339,7 +335,7 @@ class ArazzoImportDialogTest {
 
    private List<String> workflowsOnTheWorkflowsPage() {
       return arazzoDocumentService.getDocumentSummaries(null).get(0).workflows().stream()
-            .map(ArazzoWorkflowSummary::status).map(status -> status.workflowId() + ": "
+            .map(ArazzoDocumentSummary.Workflow::status).map(status -> status.workflowId() + ": "
                   + (status.runnable() ? "runnable" : "not runnable " + status.reasons()))
             .toList();
    }

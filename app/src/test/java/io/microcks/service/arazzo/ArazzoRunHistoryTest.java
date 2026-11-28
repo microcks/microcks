@@ -15,6 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import jakarta.inject.Inject;
@@ -23,7 +24,6 @@ import io.microcks.service.arazzo.ArazzoMinionClient;
 import org.junit.jupiter.api.BeforeEach;
 import io.quarkus.test.junit.QuarkusMock;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
 import io.microcks.domain.TestResult;
 import io.microcks.domain.arazzo.WorkflowResult;
 import io.microcks.service.arazzo.view.WorkflowRunCounts;
@@ -222,7 +222,8 @@ class ArazzoRunHistoryTest {
       ArazzoDocument document = pastryScenariosAreImportedAndLinked();
       runsOfPastryScenariosAre(document.getId());
 
-      List<ArazzoWorkflowSummary> workflows = arazzoDocumentService.getDocumentSummaries(null).get(0).workflows();
+      List<ArazzoDocumentSummary.Workflow> workflows = arazzoDocumentService.getDocumentSummaries(null).get(0)
+            .workflows();
 
       assertEquals(
             List.of("readThenReprice FAILED: #2 readThenReprice IMPLEMENTATIONS FAILURE at reprice 58 ms",
@@ -242,7 +243,8 @@ class ArazzoRunHistoryTest {
       run.setStatus(status);
       workflowResultRepository.save(run);
 
-      List<ArazzoWorkflowSummary> workflows = arazzoDocumentService.getDocumentSummaries(null).get(0).workflows();
+      List<ArazzoDocumentSummary.Workflow> workflows = arazzoDocumentService.getDocumentSummaries(null).get(0)
+            .workflows();
 
       assertEquals(List.of("readThenReprice NEVER_RUN null", "listThenReadFirst " + lastResult + " 1"),
             workflows.stream().map(workflow -> workflow.status().workflowId() + " " + workflow.lastResult() + " "

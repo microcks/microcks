@@ -26,5 +26,25 @@ import java.util.Map;
  *                                operation no workflow calls is absent
  * @author SebastienDegodez
  */
-public record ArazzoApiUsage(List<ArazzoUsingDocument> documents, Map<String, Integer> operationWorkflowCounts) {
+public record ArazzoApiUsage(List<Document> documents, Map<String, Integer> operationWorkflowCounts) {
+
+   /**
+    * An Arazzo document with workflows using an API, as the page of this API shows it.
+    * @param id        The id of the document
+    * @param title     The title of the document
+    * @param version   The version of the document
+    * @param workflows The workflows of the document using the API, in the order of the document
+    * @author SebastienDegodez
+    */
+   public record Document(String id, String title, String version, List<Workflow> workflows) {
+   }
+
+   /**
+    * A workflow using an API, as the page of this API shows it.
+    * @param workflowId The id of the workflow in its Arazzo document
+    * @param lastResult How the last run of the workflow went
+    * @author SebastienDegodez
+    */
+   public record Workflow(String workflowId, ArazzoLastResult lastResult) {
+   }
 }

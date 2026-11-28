@@ -15,7 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.service.arazzo.view.ArazzoSourceMatch;
+import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import io.microcks.repository.ServiceRepository;
 import io.microcks.util.HTTPDownloader;
 import io.microcks.util.ObjectMapperFactory;
@@ -80,7 +80,7 @@ public class ArazzoSourceMatcher {
     *                    be read: a relative one, of an uploaded document, cannot.
     * @return What the declared contract says of the Microcks API to link the source to
     */
-   public ArazzoSourceMatch match(String declaredUrl) {
+   public ArazzoImportAnalysis.Match match(String declaredUrl) {
       return matchContract(readContract(declaredUrl));
    }
 
@@ -92,7 +92,7 @@ public class ArazzoSourceMatcher {
     * @param repository  The repository the document was imported from
     * @return What the declared contract says of the Microcks API to link the source to
     */
-   public ArazzoSourceMatch match(String declaredUrl, ReferenceResolver repository) {
+   public ArazzoImportAnalysis.Match match(String declaredUrl, ReferenceResolver repository) {
       if (!isRelative(declaredUrl)) {
          return match(declaredUrl);
       }
@@ -113,18 +113,18 @@ public class ArazzoSourceMatcher {
       return isRelative(declaredUrl) ? repository.getReferenceURL(declaredUrl) : declaredUrl;
    }
 
-   private ArazzoSourceMatch matchContract(JsonNode contract) {
+   private ArazzoImportAnalysis.Match matchContract(JsonNode contract) {
       JsonNode info = contract.path("info");
       // Read as OpenAPIImporter names the API it imports, so that an unquoted YAML version matches the same way.
       String title = info.path("title").asText();
       String version = info.path("version").asText();
       if (title.isBlank() || version.isBlank()) {
-         return new ArazzoSourceMatch(ArazzoSourceMatch.Status.UNREADABLE, null, null);
+         return new ArazzoImportAnalysis.Match(ArazzoImportAnalysis.Match.Status.UNREADABLE, null, null);
       }
-      ArazzoSourceMatch.Status status = serviceRepository.findByNameAndVersion(title, version) == null
-            ? ArazzoSourceMatch.Status.NO_API
-            : ArazzoSourceMatch.Status.MATCHED;
-      return new ArazzoSourceMatch(status, title, version);
+      ArazzoImportAnalysis.Match.Status status = serviceRepository.findByNameAndVersion(title, version) == null
+            ? ArazzoImportAnalysis.Match.Status.NO_API
+            : ArazzoImportAnalysis.Match.Status.MATCHED;
+      return new ArazzoImportAnalysis.Match(status, title, version);
    }
 
    /** A contract that cannot be read is missing. */

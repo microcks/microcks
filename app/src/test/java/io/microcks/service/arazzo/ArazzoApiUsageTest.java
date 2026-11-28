@@ -19,7 +19,6 @@ import io.microcks.service.ArtifactInfo;
 import io.microcks.service.ServiceService;
 import io.microcks.service.arazzo.view.ArazzoApiUsage;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.service.arazzo.view.ArazzoUsingDocument;
 import io.microcks.repository.ServiceRepository;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -140,7 +139,7 @@ class ArazzoApiUsageTest {
       return serviceRepository.findByNameAndVersion(apiName, apiVersion).getId();
    }
 
-   private static String describe(ArazzoUsingDocument document) {
+   private static String describe(ArazzoApiUsage.Document document) {
       return document.title() + " " + document.version() + ": " + String.join(", ", document.workflows().stream()
             .map(workflow -> workflow.workflowId() + " " + workflow.lastResult()).toList());
    }

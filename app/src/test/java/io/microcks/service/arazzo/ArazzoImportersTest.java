@@ -24,11 +24,8 @@ import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoDocumentRef;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
-import io.microcks.service.arazzo.view.ArazzoSourceAnalysis;
-import io.microcks.service.arazzo.view.ArazzoSourceMatch;
 import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.arazzo.ArazzoWorkflowExample;
-import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
 import io.microcks.domain.ImportJob;
 import io.microcks.domain.Secret;
 import io.microcks.domain.SecretRef;
@@ -561,8 +558,8 @@ class ArazzoImportersTest {
       return analysis.sources().stream().map(ArazzoImportersTest::describe).toList();
    }
 
-   private static String describe(ArazzoSourceAnalysis source) {
-      ArazzoSourceMatch match = source.match();
+   private static String describe(ArazzoImportAnalysis.Source source) {
+      ArazzoImportAnalysis.Match match = source.match();
       String matched = switch (match.status()) {
          case MATCHED -> "matched " + match.contractTitle() + " " + match.contractVersion();
          case NO_API -> "no API titled " + match.contractTitle() + " " + match.contractVersion();
@@ -584,7 +581,7 @@ class ArazzoImportersTest {
 
    private List<String> workflowsOnTheWorkflowsPage() {
       return arazzoDocumentService.getDocumentSummaries(null).get(0).workflows().stream()
-            .map(ArazzoWorkflowSummary::status).map(status -> status.workflowId() + ": "
+            .map(ArazzoDocumentSummary.Workflow::status).map(status -> status.workflowId() + ": "
                   + (status.runnable() ? "runnable" : "not runnable " + status.reasons()))
             .toList();
    }

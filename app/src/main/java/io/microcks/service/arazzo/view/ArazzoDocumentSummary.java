@@ -15,6 +15,7 @@
  */
 package io.microcks.service.arazzo.view;
 
+import io.microcks.domain.ServiceType;
 import java.util.Date;
 import java.util.List;
 
@@ -32,5 +33,28 @@ import java.util.List;
  * @author SebastienDegodez
  */
 public record ArazzoDocumentSummary(String id, String title, String version, String arazzoVersion, String fileName,
-      Date importDate, List<ArazzoSourceInfo> sources, List<ArazzoWorkflowSummary> workflows) {
+      Date importDate, List<Source> sources, List<Workflow> workflows) {
+
+   /**
+    * What the Workflows page shows of a workflow of an Arazzo document.
+    * @param status      Whether the workflow can run against the APIs of Microcks, and why not
+    * @param description The summary of the workflow, or else its description; null when it has none
+    * @param stepCount   The number of steps of the workflow
+    * @param lastResult  How the last run of the workflow went
+    * @param lastRun     The last run of the workflow; null when it never ran
+    * @author SebastienDegodez
+    */
+   public record Workflow(ArazzoWorkflowStatus status, String description, int stepCount,
+         ArazzoLastResult lastResult, WorkflowRunSummary lastRun) {
+   }
+
+   /**
+    * A source description of an Arazzo document, with the Microcks API it is linked to.
+    * @param link    The link of the source description to a Microcks API
+    * @param apiId   The id of the linked API; null when the source is not linked
+    * @param apiType The type of the linked API; null when the source is not linked
+    * @author SebastienDegodez
+    */
+   public record Source(ArazzoSourceLink link, String apiId, ServiceType apiType) {
+   }
 }

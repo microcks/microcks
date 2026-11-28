@@ -20,12 +20,9 @@ import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.domain.arazzo.ArazzoDocumentRef;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
-import io.microcks.service.arazzo.view.ArazzoSourceAnalysis;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
-import io.microcks.service.arazzo.view.ArazzoSourceMatch;
 import io.microcks.domain.arazzo.ArazzoExamples;
 import io.microcks.domain.arazzo.ArazzoMetadata;
-import io.microcks.service.arazzo.view.ArazzoWorkflowCheck;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.ArazzoMetadataRepository;
@@ -102,7 +99,7 @@ public class ArazzoImportService {
       } catch (MockRepositoryImportException mrie) {
          return ArazzoImportAnalysis.refused(mrie.getMessage(), apis());
       }
-      Map<String, ArazzoSourceMatch> matches = new LinkedHashMap<>();
+      Map<String, ArazzoImportAnalysis.Match> matches = new LinkedHashMap<>();
       candidate.declaredUrls().forEach((sourceName, url) -> matches.put(sourceName, arazzoSourceMatcher.match(url)));
       return analyse(candidate, matches, links == null ? matchedLinks(matches) : links);
    }
@@ -126,7 +123,7 @@ public class ArazzoImportService {
             ArazzoDocumentReader.sourceDescriptionUrls(ArazzoDocumentService.parse(document.getContent())));
       Map<String, String> sourceUrls = document.getSourceUrls() == null ? candidate.declaredUrls()
             : document.getSourceUrls();
-      Map<String, ArazzoSourceMatch> matches = new LinkedHashMap<>();
+      Map<String, ArazzoImportAnalysis.Match> matches = new LinkedHashMap<>();
       sourceUrls.forEach((sourceName, url) -> matches.put(sourceName, arazzoSourceMatcher.match(url)));
       Map<String, ServiceRef> chosenLinks = links;
       if (chosenLinks == null) {
@@ -170,7 +167,7 @@ public class ArazzoImportService {
       Candidate candidate = read(content);
       ArazzoDocument document = candidate.document();
       Map<String, String> sourceUrls = new LinkedHashMap<>();
-      Map<String, ArazzoSourceMatch> matches = new LinkedHashMap<>();
+      Map<String, ArazzoImportAnalysis.Match> matches = new LinkedHashMap<>();
       try {
          candidate.declaredUrls().forEach((sourceName, url) -> {
             sourceUrls.put(sourceName, ArazzoSourceMatcher.resolve(url, repository));
@@ -234,17 +231,17 @@ public class ArazzoImportService {
             .map(api -> new ServiceRef(api.getId(), api.getName(), api.getVersion())).toList();
    }
 
-   private ArazzoImportAnalysis analyse(Candidate candidate, Map<String, ArazzoSourceMatch> matches,
+   private ArazzoImportAnalysis analyse(Candidate candidate, Map<String, ArazzoImportAnalysis.Match> matches,
          Map<String, ServiceRef> links) {
       ArazzoDocument document = candidate.document();
       Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document.getSourceNames(), links);
       List<WorkflowStepOperation> calls = document.getWorkflowIds().stream()
             .flatMap(workflowId -> document.getWorkflowCalls().get(workflowId).stream()).toList();
-      List<ArazzoSourceAnalysis> sourceAnalyses = document.getSourceNames().stream()
+      List<ArazzoImportAnalysis.Source> sourceAnalyses = document.getSourceNames().stream()
             .map(sourceName -> analyse(sources.get(sourceName), candidate.declaredUrls().get(sourceName),
                   matches.get(sourceName), calls, sources))
             .toList();
-      List<ArazzoWorkflowCheck> checks = document.getWorkflowIds().stream()
+      List<ArazzoImportAnalysis.WorkflowCheck> checks = document.getWorkflowIds().stream()
             .map(workflowId -> check(workflowId, document.getWorkflowCalls().get(workflowId), sources)).toList();
       return new ArazzoImportAnalysis(null, document.getArazzoVersion(), document.getTitle(), document.getVersion(),
             document.getWorkflowIds(), sourceAnalyses, checks, apis(), warnings(document));
@@ -323,10 +320,10 @@ public class ArazzoImportService {
    }
 
    /** Each source matched to a Microcks API is linked to it. */
-   private static Map<String, ServiceRef> matchedLinks(Map<String, ArazzoSourceMatch> matches) {
+   private static Map<String, ServiceRef> matchedLinks(Map<String, ArazzoImportAnalysis.Match> matches) {
       Map<String, ServiceRef> links = new HashMap<>();
       matches.forEach((sourceName, match) -> {
-         if (match.status() == ArazzoSourceMatch.Status.MATCHED) {
+         if (match.status() == ArazzoImportAnalysis.Match.Status.MATCHED) {
             links.put(sourceName, new ServiceRef(null, match.contractTitle(), match.contractVersion()));
          }
       });
@@ -337,8 +334,8 @@ public class ArazzoImportService {
     * The distinct operations or channels the steps call on a source, how many of them the linked API defines, and how
     * many steps call an operation or a channel of this source that is not found.
     */
-   private static ArazzoSourceAnalysis analyse(ResolvedSource source, String declaredUrl, ArazzoSourceMatch match,
-         List<WorkflowStepOperation> calls, Map<String, ResolvedSource> sources) {
+   private static ArazzoImportAnalysis.Source analyse(ResolvedSource source, String declaredUrl,
+         ArazzoImportAnalysis.Match match, List<WorkflowStepOperation> calls, Map<String, ResolvedSource> sources) {
       String sourceName = source.link().sourceName();
       Set<String> operations = new LinkedHashSet<>();
       Set<String> foundOperations = new LinkedHashSet<>();
@@ -354,7 +351,7 @@ public class ArazzoImportService {
             }
          }
       }
-      return new ArazzoSourceAnalysis(sourceName, declaredUrl, match, source.link(), operations.size(),
+      return new ArazzoImportAnalysis.Source(sourceName, declaredUrl, match, source.link(), operations.size(),
             foundOperations.size(), unresolvedSteps);
    }
 
@@ -362,7 +359,7 @@ public class ArazzoImportService {
     * A workflow is ready to run when each of its steps calls an operation found in a linked API; else it waits for the
     * sources its steps call to be linked, or for the operations not found in the linked APIs.
     */
-   private static ArazzoWorkflowCheck check(String workflowId, List<WorkflowStepOperation> calls,
+   private static ArazzoImportAnalysis.WorkflowCheck check(String workflowId, List<WorkflowStepOperation> calls,
          Map<String, ResolvedSource> sources) {
       Set<String> apiNames = new LinkedHashSet<>();
       Set<String> unlinkedSources = new LinkedHashSet<>();
@@ -379,7 +376,7 @@ public class ArazzoImportService {
             }
          }
       }
-      return new ArazzoWorkflowCheck(workflowId, unlinkedSources.isEmpty() && reasons.isEmpty(), List.copyOf(apiNames),
-            List.copyOf(unlinkedSources), List.copyOf(reasons));
+      return new ArazzoImportAnalysis.WorkflowCheck(workflowId, unlinkedSources.isEmpty() && reasons.isEmpty(),
+            List.copyOf(apiNames), List.copyOf(unlinkedSources), List.copyOf(reasons));
    }
 }

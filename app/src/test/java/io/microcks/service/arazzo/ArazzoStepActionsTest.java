@@ -23,8 +23,6 @@ import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.service.arazzo.view.ArazzoStepAction;
-import io.microcks.service.arazzo.view.ArazzoStepDetail;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.domain.Request;
 import io.microcks.domain.RequestResponsePair;
@@ -211,7 +209,7 @@ class ArazzoStepActionsTest {
       return response;
    }
 
-   private static String actions(ArazzoStepDetail step) {
+   private static String actions(ArazzoWorkflowDetail.Step step) {
       List<String> parts = new ArrayList<>();
       parts.add(step.stepId());
       step.onSuccess().forEach(action -> parts.add("onSuccess " + describe(action)));
@@ -219,7 +217,7 @@ class ArazzoStepActionsTest {
       return String.join(" | ", parts);
    }
 
-   private static String describe(ArazzoStepAction action) {
+   private static String describe(ArazzoWorkflowDetail.Action action) {
       String retry = action.retryAfter() == null ? ""
             : " after " + action.retryAfter() + " s up to " + action.retryLimit() + " times";
       String criteria = String.join(", ", action.criteria().stream().map(criterion -> criterion.condition()).toList());

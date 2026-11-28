@@ -17,21 +17,9 @@ package io.microcks.service.arazzo;
 
 import io.microcks.domain.arazzo.WorkflowStepOperation;
 import io.microcks.service.arazzo.view.ArazzoApiUsage;
-import io.microcks.service.arazzo.view.ArazzoDataPassing;
 import io.microcks.domain.arazzo.ArazzoDocument;
-import io.microcks.service.arazzo.view.ArazzoExpressionUse;
-import io.microcks.service.arazzo.view.ArazzoSourceDescription;
 import io.microcks.service.arazzo.view.ArazzoLastResult;
-import io.microcks.service.arazzo.view.ArazzoStepAction;
-import io.microcks.service.arazzo.view.ArazzoStepCriterion;
-import io.microcks.service.arazzo.view.ArazzoStepDetail;
-import io.microcks.service.arazzo.view.ArazzoStepMessaging;
-import io.microcks.service.arazzo.view.ArazzoStepParameter;
-import io.microcks.service.arazzo.view.ArazzoStepRequestBody;
-import io.microcks.service.arazzo.view.ArazzoUsingDocument;
-import io.microcks.service.arazzo.view.ArazzoUsingWorkflow;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
-import io.microcks.service.arazzo.view.ArazzoWorkflowInput;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.service.arazzo.ArazzoDocumentService.ResolvedSource;
 import io.microcks.util.ObjectMapperFactory;
@@ -101,23 +89,23 @@ public class ArazzoWorkflowService {
     * @return The workflows using the API, by document, with the number of workflows calling each of its operations
     */
    public ArazzoApiUsage getApiUsage(String serviceId) {
-      List<ArazzoUsingDocument> documents = new ArrayList<>();
+      List<ArazzoApiUsage.Document> documents = new ArrayList<>();
       Map<String, Integer> operationWorkflowCounts = new HashMap<>();
       for (ArazzoDocument document : arazzoDocumentRepository.findAllSorted()) {
          Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
-         List<ArazzoUsingWorkflow> workflows = new ArrayList<>();
+         List<ArazzoApiUsage.Workflow> workflows = new ArrayList<>();
          for (String workflowId : document.getWorkflowIds()) {
             List<WorkflowStepOperation> apiCalls = document.getWorkflowCalls().get(workflowId).stream()
                   .filter(call -> serviceId.equals(sources.get(call.sourceName()).serviceId())).toList();
             if (!apiCalls.isEmpty()) {
-               workflows.add(new ArazzoUsingWorkflow(workflowId, ArazzoLastResult.NEVER_RUN));
+               workflows.add(new ArazzoApiUsage.Workflow(workflowId, ArazzoLastResult.NEVER_RUN));
                calledOperationNames(apiCalls, sources)
                      .forEach(operationName -> operationWorkflowCounts.merge(operationName, 1, Integer::sum));
             }
          }
          if (!workflows.isEmpty()) {
             documents.add(
-                  new ArazzoUsingDocument(document.getId(), document.getTitle(), document.getVersion(), workflows));
+                  new ArazzoApiUsage.Document(document.getId(), document.getTitle(), document.getVersion(), workflows));
          }
       }
       return new ArazzoApiUsage(documents, operationWorkflowCounts);
@@ -148,7 +136,7 @@ public class ArazzoWorkflowService {
             workflow.workflowId(), workflow.summary(), workflow.description(), inputs(workflow),
             workflow.steps().stream().map(step -> step(step, workflow, sources)).toList(), workflow.outputs(),
             ArazzoDataFlow.stepOutputPassings(workflow).stream()
-                  .map(passing -> new ArazzoDataPassing(passing.fromStepId(), passing.outputName(),
+                  .map(passing -> new ArazzoWorkflowDetail.DataPassing(passing.fromStepId(), passing.outputName(),
                         expressionUse(passing.use())))
                   .toList(),
             ArazzoDocumentService.withAsyncSteps(
@@ -159,32 +147,32 @@ public class ArazzoWorkflowService {
    }
 
    /** The inputs steps use or the workflow declares, then those only its outputs use or its schema requires. */
-   private static List<ArazzoWorkflowInput> inputs(ArazzoWorkflow workflow) {
+   private static List<ArazzoWorkflowDetail.Input> inputs(ArazzoWorkflow workflow) {
       List<String> neededInputs = ArazzoDataFlow.neededInputs(workflow);
       Map<String, List<ArazzoUse>> inputUses = new LinkedHashMap<>(ArazzoDataFlow.inputUses(workflow));
       neededInputs.forEach(inputName -> inputUses.putIfAbsent(inputName, List.of()));
       return inputUses.entrySet().stream()
-            .map(input -> new ArazzoWorkflowInput(input.getKey(),
+            .map(input -> new ArazzoWorkflowDetail.Input(input.getKey(),
                   input.getValue().stream().map(ArazzoWorkflowService::expressionUse).toList(),
                   workflow.inputTypes().get(input.getKey()), neededInputs.contains(input.getKey())))
             .toList();
    }
 
-   private static ArazzoExpressionUse expressionUse(ArazzoUse use) {
-      return new ArazzoExpressionUse(use.stepId(), use.place(), use.target());
+   private static ArazzoWorkflowDetail.ExpressionUse expressionUse(ArazzoUse use) {
+      return new ArazzoWorkflowDetail.ExpressionUse(use.stepId(), use.place(), use.target());
    }
 
    /**
     * A linked source tells how many operations its API defines, and how many of them the steps of the document call.
     */
-   private static ArazzoSourceDescription sourceDescription(ResolvedSource source, ArazzoDocument document) {
+   private static ArazzoWorkflowDetail.Source sourceDescription(ResolvedSource source, ArazzoDocument document) {
       Set<String> usedOperationIds = new HashSet<>();
       document.getWorkflowCalls().values()
             .forEach(calls -> calls.stream()
                   .filter(call -> call.sourceName().equals(source.link().sourceName()) && call.operationId() != null
                         && source.operations().containsKey(call.operationId()))
                   .forEach(call -> usedOperationIds.add(call.operationId())));
-      return new ArazzoSourceDescription(source.link(), source.serviceId(),
+      return new ArazzoWorkflowDetail.Source(source.link(), source.serviceId(),
             ArazzoDocumentService.unlinkedReason(source.link()), source.operations().size(), usedOperationIds.size());
    }
 
@@ -192,11 +180,13 @@ public class ArazzoWorkflowService {
     * A step tells the steps it declares it depends on, and the steps it must come after, under the rule of
     * {@link ArazzoStepOrder}.
     */
-   private static ArazzoStepDetail step(ArazzoStep step, ArazzoWorkflow workflow, Map<String, ResolvedSource> sources) {
-      return new ArazzoStepDetail(step.stepId(), step.description(), ArazzoDocumentService.operationOf(
+   private static ArazzoWorkflowDetail.Step step(ArazzoStep step, ArazzoWorkflow workflow,
+         Map<String, ResolvedSource> sources) {
+      return new ArazzoWorkflowDetail.Step(step.stepId(), step.description(), ArazzoDocumentService.operationOf(
             ArazzoDocumentService.declaredOf(step.call()), sources),
             step.parameters().stream()
-                  .map(parameter -> new ArazzoStepParameter(parameter.name(), parameter.in(), parameter.value()))
+                  .map(parameter -> new ArazzoWorkflowDetail.Parameter(parameter.name(), parameter.in(),
+                        parameter.value()))
                   .toList(),
             requestBody(step.requestBody()), criteria(step.successCriteria()), step.outputs(),
             actions(step.onSuccess()), actions(step.onFailure()), messaging(step.messaging()),
@@ -204,29 +194,31 @@ public class ArazzoWorkflowService {
             List.copyOf(ArazzoStepOrder.prerequisitesOf(workflow, step.stepId())));
    }
 
-   private static ArazzoStepMessaging messaging(ArazzoMessaging messaging) {
+   private static ArazzoWorkflowDetail.Messaging messaging(ArazzoMessaging messaging) {
       if (messaging == null) {
          return null;
       }
-      return new ArazzoStepMessaging(messaging.action(), messaging.correlationId(), messaging.timeout());
+      return new ArazzoWorkflowDetail.Messaging(messaging.action(), messaging.correlationId(), messaging.timeout());
    }
 
-   private static List<ArazzoStepCriterion> criteria(List<ArazzoCriterion> criteria) {
+   private static List<ArazzoWorkflowDetail.Criterion> criteria(List<ArazzoCriterion> criteria) {
       return criteria.stream()
-            .map(criterion -> new ArazzoStepCriterion(criterion.condition(), criterion.context(), criterion.type()))
+            .map(criterion -> new ArazzoWorkflowDetail.Criterion(criterion.condition(), criterion.context(),
+                  criterion.type()))
             .toList();
    }
 
-   private static List<ArazzoStepAction> actions(List<ArazzoAction> actions) {
-      return actions.stream().map(action -> new ArazzoStepAction(action.name(), action.type(), action.retryAfter(),
-            action.retryLimit(), criteria(action.criteria()))).toList();
+   private static List<ArazzoWorkflowDetail.Action> actions(List<ArazzoAction> actions) {
+      return actions.stream().map(action -> new ArazzoWorkflowDetail.Action(action.name(), action.type(),
+            action.retryAfter(), action.retryLimit(), criteria(action.criteria()))).toList();
    }
 
-   private static ArazzoStepRequestBody requestBody(ArazzoRequestBody requestBody) {
+   private static ArazzoWorkflowDetail.RequestBody requestBody(ArazzoRequestBody requestBody) {
       if (requestBody == null) {
          return null;
       }
-      return new ArazzoStepRequestBody(requestBody.contentType(), requestBody.payload(), requestBody.replacements());
+      return new ArazzoWorkflowDetail.RequestBody(requestBody.contentType(), requestBody.payload(),
+            requestBody.replacements());
    }
 
    /**

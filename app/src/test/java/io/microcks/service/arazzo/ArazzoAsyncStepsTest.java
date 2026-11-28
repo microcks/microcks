@@ -21,12 +21,8 @@ import io.microcks.service.ServiceService;
 import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
-import io.microcks.service.arazzo.view.ArazzoSourceAnalysis;
-import io.microcks.service.arazzo.view.ArazzoStepDetail;
-import io.microcks.service.arazzo.view.ArazzoStepMessaging;
 import io.microcks.service.arazzo.view.ArazzoWorkflowDetail;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
-import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
 import io.microcks.domain.ServiceRef;
 import io.microcks.repository.arazzo.ArazzoDocumentRepository;
 import io.microcks.repository.arazzo.WorkflowResultRepository;
@@ -228,7 +224,7 @@ class ArazzoAsyncStepsTest {
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), workflowId)
             .orElseThrow();
       ArazzoWorkflowStatus listed = arazzoDocumentService.getDocumentSummaries(null).get(0).workflows().stream()
-            .map(ArazzoWorkflowSummary::status).filter(candidate -> candidate.workflowId().equals(workflowId))
+            .map(ArazzoDocumentSummary.Workflow::status).filter(candidate -> candidate.workflowId().equals(workflowId))
             .findFirst().orElseThrow();
 
       assertEquals(status,
@@ -262,15 +258,15 @@ class ArazzoAsyncStepsTest {
       return links;
    }
 
-   private static String describe(ArazzoSourceAnalysis source) {
+   private static String describe(ArazzoImportAnalysis.Source source) {
       return source.sourceName() + ": " + source.match().status() + " " + source.match().contractTitle() + " "
             + source.match().contractVersion() + ", " + source.foundOperationCount() + " of " + source.operationCount()
             + " called found";
    }
 
-   private static String describe(ArazzoStepDetail step) {
+   private static String describe(ArazzoWorkflowDetail.Step step) {
       WorkflowStepOperation operation = step.operation();
-      ArazzoStepMessaging messaging = step.messaging();
+      ArazzoWorkflowDetail.Messaging messaging = step.messaging();
       if (messaging == null) {
          return step.stepId() + " calls " + operation.method() + " " + operation.path() + " (" + operation.operationId()
                + ")";

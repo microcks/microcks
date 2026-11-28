@@ -20,11 +20,9 @@ import io.microcks.domain.arazzo.ArazzoDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
 import io.microcks.service.arazzo.view.ArazzoSourceLink;
 import io.microcks.domain.arazzo.ArazzoExamples;
-import io.microcks.service.arazzo.view.ArazzoSourceInfo;
 import io.microcks.domain.arazzo.ArazzoMetadata;
 import io.microcks.domain.arazzo.ArazzoWorkflowExample;
 import io.microcks.service.arazzo.view.ArazzoWorkflowStatus;
-import io.microcks.service.arazzo.view.ArazzoWorkflowSummary;
 import io.microcks.domain.Resource;
 import io.microcks.domain.ResourceType;
 import io.microcks.domain.Service;
@@ -255,10 +253,11 @@ public class ArazzoDocumentService {
    }
 
    private ArazzoDocumentSummary summary(ArazzoDocument document, Map<String, ResolvedSource> sources) {
-      List<ArazzoSourceInfo> sourceSummaries = sources.values().stream().map(ResolvedSource::summary).toList();
-      List<ArazzoWorkflowSummary> workflowSummaries = statuses(document, sources).stream().map(status -> {
+      List<ArazzoDocumentSummary.Source> sourceSummaries = sources.values().stream().map(ResolvedSource::summary)
+            .toList();
+      List<ArazzoDocumentSummary.Workflow> workflowSummaries = statuses(document, sources).stream().map(status -> {
          WorkflowRunSummary lastRun = arazzoRunHistoryService.getLastRun(document.getId(), status.workflowId());
-         return new ArazzoWorkflowSummary(status, description(document, status.workflowId()),
+         return new ArazzoDocumentSummary.Workflow(status, description(document, status.workflowId()),
                document.getWorkflowCalls().get(status.workflowId()).size(), ArazzoRunHistoryService.lastResult(lastRun),
                lastRun);
       }).toList();
@@ -622,9 +621,9 @@ public class ArazzoDocumentService {
          return api == null ? null : api.getId();
       }
 
-      ArazzoSourceInfo summary() {
-         return api == null ? new ArazzoSourceInfo(link, null, null)
-               : new ArazzoSourceInfo(link, api.getId(), api.getType());
+      ArazzoDocumentSummary.Source summary() {
+         return api == null ? new ArazzoDocumentSummary.Source(link, null, null)
+               : new ArazzoDocumentSummary.Source(link, api.getId(), api.getType());
       }
    }
 

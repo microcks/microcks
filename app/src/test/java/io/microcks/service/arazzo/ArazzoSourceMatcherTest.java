@@ -15,8 +15,8 @@
  */
 package io.microcks.service.arazzo;
 
-import io.microcks.service.arazzo.view.ArazzoSourceMatch;
 
+import io.microcks.service.arazzo.view.ArazzoImportAnalysis;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -41,9 +41,9 @@ class ArazzoSourceMatcherTest {
       Path contract = Files.writeString(downloads.resolve("contract.download"), "openapi: 3.0.2\n");
       ArazzoSourceMatcher matcher = new ArazzoSourceMatcher(null, url -> contract.toFile());
 
-      ArazzoSourceMatch match = matcher.match("https://contracts.example.com/customer-api.openapi.yaml");
+      ArazzoImportAnalysis.Match match = matcher.match("https://contracts.example.com/customer-api.openapi.yaml");
 
-      assertEquals(ArazzoSourceMatch.Status.UNREADABLE, match.status());
+      assertEquals(ArazzoImportAnalysis.Match.Status.UNREADABLE, match.status());
       assertFalse(Files.exists(contract));
    }
 }
