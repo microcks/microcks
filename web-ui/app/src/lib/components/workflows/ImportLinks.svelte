@@ -31,8 +31,8 @@
           <span class="boxed-list-title">{c.workflowId}</span>
           <span class="boxed-list-sub">{v.runnable ? `calls ${c.apiNames.join(', ')}` : v.note}</span>
         </span>
-        <Chip variant="outline" tone={v.runnable ? 'success' : 'warning'}>
-          {#if !v.runnable}<Icon name="warning" size={12} /> {/if}{v.runnable ? 'Ready to run' : 'Cannot run yet'}
+        <Chip variant="outline" tone={v.runnable ? 'success' : 'warning'} class="import-wf-chip">
+          {#if !v.runnable}<Icon name="warning" size={12} />{/if}{v.runnable ? 'Ready to run' : 'Cannot run yet'}
         </Chip>
         {#if stepCounts[c.workflowId]}<span class="boxed-list-end">{stepCounts[c.workflowId]}</span>{/if}
       </li>

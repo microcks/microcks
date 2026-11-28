@@ -90,7 +90,7 @@
   </div>
   <div class="dialog-body">
     <p class="dialog-description" id="wf-link-desc">
-      {document.file} declares {source.name} as {source.url}. The API for {file} may not be in Microcks yet: import it first, or pick the API to link here.
+      {document.file} declares {source.name}{source.url ? ` as ${source.url}` : ''}. The API for {file} may not be in Microcks yet: import it first, or pick the API to link here.
     </p>
     <fieldset class="wf-link-choices">
       <legend>Microcks API</legend>

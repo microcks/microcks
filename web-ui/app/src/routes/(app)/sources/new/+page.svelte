@@ -595,8 +595,14 @@
                 : `The source descriptions of ${w.name} ${w.version} are linked to the APIs the overlay names.`}</p>
             </div>
           </div>
+          {#if w.kind === 'arazzo'}
+            <div class="done-badges">
+              <ApiBadge arazzo name={w.name} version={w.version} />
+              <ApiBadge label="workflows" value={String(w.total ?? 0)} status="success" />
+            </div>
+          {/if}
           <div class="step-actions">
-            <Button variant="primary" icon="arrow-right" href={w.open ? `/workflows/${w.open.docId}/${w.open.workflowId}` : '/workflows'}>{w.open ? `Open ${w.open.workflowId}` : 'Open workflows'}</Button>
+            <Button variant="primary" href={w.open ? `/workflows/${w.open.docId}/${w.open.workflowId}` : '/workflows'}>{w.open ? `Open ${w.open.workflowId}` : 'Open workflows'}<Icon name="arrow-right" size={16} /></Button>
             {#if w.open}<Button variant="secondary" href="/workflows">All workflows</Button>{/if}
             <Button variant="secondary" href="/sources">Back to Sources</Button>
             <Button variant="ghost" onclick={reset}>Add another source</Button>
