@@ -65,7 +65,7 @@ class ArazzoRunHistoryControllerIT extends AbstractBaseIT {
 
    @Test
    void runsAreListedNewestFirstWithTheirOutcome() throws Exception {
-      JsonNode runs = get("/api/arazzo/documents/API Pastry scenarios/runs");
+      JsonNode runs = get("/api/workflows/documents/API Pastry scenarios/runs");
 
       assertEquals(List.of("#3 listThenReadFirst MOCKS FAILURE readFirst 15 2026-10-21T10:00:00Z",
             "#2 readThenReprice IMPLEMENTATIONS FAILURE reprice 58 2026-10-21T09:00:00Z",
@@ -74,28 +74,29 @@ class ArazzoRunHistoryControllerIT extends AbstractBaseIT {
 
    @Test
    void runsAreFilteredByWorkflowTargetAndResultThenPaged() throws Exception {
-      assertEquals(List.of("#3", "#2"), numbers(get("/api/arazzo/documents/API Pastry scenarios/runs?result=FAILURE")));
+      assertEquals(List.of("#3", "#2"), numbers(get(
+            "/api/workflows/documents/API Pastry scenarios/runs?result=FAILURE")));
       assertEquals(List.of("#2"), numbers(
-            get("/api/arazzo/documents/API Pastry scenarios/runs?workflow=readThenReprice&target=IMPLEMENTATIONS")));
-      assertEquals(List.of("#1"), numbers(get("/api/arazzo/documents/API Pastry scenarios/runs?page=1&size=2")));
+            get("/api/workflows/documents/API Pastry scenarios/runs?workflow=readThenReprice&target=IMPLEMENTATIONS")));
+      assertEquals(List.of("#1"), numbers(get("/api/workflows/documents/API Pastry scenarios/runs?page=1&size=2")));
    }
 
    @Test
    void runsAreCountedWithThoseThatPassedAndFailed() throws Exception {
       assertEquals("{\"total\":3,\"passed\":1,\"failed\":2}",
-            get("/api/arazzo/documents/API Pastry scenarios/runs/count").toString());
+            get("/api/workflows/documents/API Pastry scenarios/runs/count").toString());
       assertEquals("{\"total\":2,\"passed\":1,\"failed\":1}",
-            get("/api/arazzo/documents/API Pastry scenarios/runs/count?workflow=readThenReprice").toString());
+            get("/api/workflows/documents/API Pastry scenarios/runs/count?workflow=readThenReprice").toString());
    }
 
    @Test
    void anUnknownTargetOrResultIsABadRequest() {
       assertEquals(400,
-            restTemplate.getForEntity("/api/arazzo/documents/API Pastry scenarios/runs?target=STAGING", String.class)
+            restTemplate.getForEntity("/api/workflows/documents/API Pastry scenarios/runs?target=STAGING", String.class)
                   .getStatusCode().value());
       assertEquals(400,
             restTemplate
-                  .getForEntity("/api/arazzo/documents/API Pastry scenarios/runs/count?result=SKIPPED", String.class)
+                  .getForEntity("/api/workflows/documents/API Pastry scenarios/runs/count?result=SKIPPED", String.class)
                   .getStatusCode().value());
    }
 

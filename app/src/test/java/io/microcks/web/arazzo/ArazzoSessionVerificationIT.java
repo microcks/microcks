@@ -62,9 +62,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ArazzoSessionVerificationIT extends AbstractBaseIT {
 
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
-   private static final String SESSIONS = "/arazzo/sessions";
-   private static final String SESSION = "/arazzo/sessions/{sessionId}";
-   private static final String VERIFICATION = "/arazzo/sessions/{sessionId}/verification";
+   private static final String SESSIONS = "/workflows/sessions";
+   private static final String SESSION = "/workflows/sessions/{sessionId}";
+   private static final String VERIFICATION = "/workflows/sessions/{sessionId}/verification";
    private static final String SESSION_HEADER = "x-microcks-session";
    private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("2.0");
    private static final ObjectMapper JSON = new ObjectMapper();
@@ -439,7 +439,7 @@ class ArazzoSessionVerificationIT extends AbstractBaseIT {
       MICROCKS_API.assertResponseConforms("POST", SESSIONS, opened);
       assertEquals(201, opened.getStatusCode().value(), opened.getBody());
       String sessionId = JSON.readTree(opened.getBody()).get("id").asText();
-      assertTrue(opened.getHeaders().getFirst("Location").endsWith("/api/arazzo/sessions/" + sessionId));
+      assertTrue(opened.getHeaders().getFirst("Location").endsWith("/api/workflows/sessions/" + sessionId));
       return sessionId;
    }
 

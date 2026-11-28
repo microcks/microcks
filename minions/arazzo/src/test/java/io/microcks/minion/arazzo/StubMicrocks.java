@@ -63,7 +63,7 @@ public class StubMicrocks implements QuarkusTestResourceLifecycleManager {
    private static void handle(HttpExchange exchange) throws IOException {
       String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
       String path = exchange.getRequestURI().getRawPath();
-      if (path.startsWith("/api/arazzo/runs/")) {
+      if (path.startsWith("/api/workflows/runs/")) {
          REPORT_PATHS.add(path);
          REPORTS.add(body);
          exchange.sendResponseHeaders(204, -1);

@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import { BackendError } from '#lib/server/backend.js';
 import { startWorkflowRun } from '#lib/server/runs-workflow.js';
 
-// Launches a run: on Microcks (POST /api/arazzo/documents/{id}/workflows/{wf}/runs) for an imported document, simulated
+// Launches a run: on Microcks (POST /api/workflows/documents/{id}/workflows/{wf}/runs) for an imported document, simulated
 // for the placeholder documents.
 export const POST = async ({ request, locals }) => {
   const body = await request.json().catch(() => null);

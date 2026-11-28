@@ -3,7 +3,7 @@ import { BackendError } from '#lib/server/backend.js';
 import { openRealSession } from '#lib/server/sessions-arazzo.js';
 import { isPlaceholderDocument } from '#lib/server/workflows.js';
 
-// Opens a verification session on Microcks (POST /api/arazzo/sessions) for a workflow of an imported document.
+// Opens a verification session on Microcks (POST /api/workflows/sessions) for a workflow of an imported document.
 export const POST = async ({ params, request, locals }) => {
   if (isPlaceholderDocument(params.docId)) error(405, 'Sessions of the demo documents are not opened on Microcks.');
   const body = await request.json().catch(() => null);

@@ -30,7 +30,7 @@ import jakarta.ws.rs.core.MediaType;
  * REST client of the Microcks APIs the minion reports runs to.
  * @author SebastienDegodez
  */
-@Path("/api/arazzo/runs")
+@Path("/api/workflows/runs")
 @RegisterRestClient(configKey = "microcks-api")
 public interface MicrocksAPIConnector {
 

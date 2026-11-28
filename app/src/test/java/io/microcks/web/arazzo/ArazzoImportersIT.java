@@ -109,7 +109,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
 
       assertEquals("Order fulfilment 1.0.0 [\"orderApi\"]", job.at("/arazzoDocumentRef/title").asText() + " "
             + job.at("/arazzoDocumentRef/version").asText() + " " + job.at("/arazzoDocumentRef/unlinkedSources"));
-      JsonNode documents = get("/api/arazzo/documents");
+      JsonNode documents = get("/api/workflows/documents");
       assertEquals("place-order.arazzo.yaml Customer API",
             documents.at("/0/fileName").asText() + " " + documents.at("/0/sources/0/link/apiName").asText());
       assertEquals(documents.at("/0/id").asText(), job.at("/arazzoDocumentRef/documentId").asText());
@@ -136,7 +136,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       apiIsImported("journeys/order-api.openapi.yaml");
 
       ResponseEntity<String> response = restTemplate
-            .postForEntity("/api/arazzo/documents/" + documentId() + "/analysis", Map.of(), String.class);
+            .postForEntity("/api/workflows/documents/" + documentId() + "/analysis", Map.of(), String.class);
 
       assertEquals(200, response.getStatusCode().value());
       JsonNode analysis = new ObjectMapper().readTree(response.getBody());
@@ -153,7 +153,8 @@ class ArazzoImportersIT extends AbstractBaseIT {
       links.put("customerApi", null);
 
       ResponseEntity<String> response = restTemplate
-            .postForEntity("/api/arazzo/documents/" + documentId() + "/analysis", Map.of("links", links), String.class);
+            .postForEntity("/api/workflows/documents/" + documentId() + "/analysis", Map.of("links", links),
+            String.class);
 
       JsonNode analysis = new ObjectMapper().readTree(response.getBody());
       assertEquals("searchThenRead [\"customerApi\"]",
@@ -169,7 +170,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       links.put("customerApi", null);
       links.put("orderApi", Map.of("name", "Order API", "version", "1.0.0"));
 
-      ResponseEntity<String> response = put("/api/arazzo/documents/" + documentId() + "/sources",
+      ResponseEntity<String> response = put("/api/workflows/documents/" + documentId() + "/sources",
             Map.of("links", links));
 
       assertEquals(200, response.getStatusCode().value());
@@ -185,7 +186,7 @@ class ArazzoImportersIT extends AbstractBaseIT {
       apiIsImported("contracts/customers.yaml");
       startJob(createJob("Order fulfilment journeys", DOCUMENT, true));
 
-      ResponseEntity<String> response = put("/api/arazzo/documents/" + documentId() + "/sources",
+      ResponseEntity<String> response = put("/api/workflows/documents/" + documentId() + "/sources",
             Map.of("links", Map.of("paymentApi", Map.of("name", "Payment API", "version", "1.0.0"))));
 
       assertEquals(400, response.getStatusCode().value());
@@ -196,10 +197,10 @@ class ArazzoImportersIT extends AbstractBaseIT {
 
    @Test
    void anUnknownDocumentIsNotFound() {
-      assertEquals(404, restTemplate.postForEntity("/api/arazzo/documents/unknown/analysis", Map.of(), String.class)
+      assertEquals(404, restTemplate.postForEntity("/api/workflows/documents/unknown/analysis", Map.of(), String.class)
             .getStatusCode().value());
       assertEquals(404,
-            put("/api/arazzo/documents/unknown/sources", Map.of("links", Map.of())).getStatusCode().value());
+            put("/api/workflows/documents/unknown/sources", Map.of("links", Map.of())).getStatusCode().value());
    }
 
    private String createJob(String name, String path, boolean mainArtifact) throws IOException {

@@ -26,7 +26,7 @@ called together, and reuses the APIs it already mocks to run, mock and verify th
  Arazzo document ───▶ │ import ─▶ workflowDocument        runs ─▶ workflowResult│
  ArazzoMetadata  ───▶ │ links  ─▶ workflowMetadata (source → API)             │
  ArazzoExamples  ───▶ │ examples ▶ workflowExamples                           │
-                      │  /api/arazzo/**   Mock URL /arazzo/**   sessions      │
+                      │  /api/workflows/**   Mock URL /workflow/**   sessions │
                       └───────┬──────────────────────▲────────────────────────┘
                      run request│                      │ step reports, outcome
                               ▼                      │
@@ -45,14 +45,14 @@ called together, and reuses the APIs it already mocks to run, mock and verify th
 - **App.** The stored model is generic, in `io.microcks.domain.workflow` (`WorkflowDocument` carries its `format`,
   `ARAZZO` today); the Arazzo code lives in `io.microcks.{service,web}.arazzo`, the views of the API in
   `io.microcks.service.arazzo.view`. It exposes the REST API under
-  `/api/arazzo` (documents, workflows, runs, history, examples, sessions), described in
+  `/api/workflows` (documents, workflows, runs, history, examples, sessions), described in
   `api/microcks-openapi-v2.0.yaml`, the Mock URL
-  `POST /arazzo/{title}/{version}/{workflowId}` that plays a workflow on the mocks and answers its outputs, and
+  `POST /workflow/{title}/{version}/{workflowId}` that plays a workflow on the mocks and answers its outputs, and
   verification sessions: calls to the ordinary mocks carrying `x-microcks-session` (or the `microcks-session` baggage)
   are recorded, answered consistently along the workflow, can fail on purpose, then are verified.
 - **Minion.** `minions/arazzo` is a separate Quarkus service that plays runs and reports each step back
   (see its README). The app sends it, per source, a base URL (relative for the mocks), the request media types of
   each operation and, when asked, the OpenAPI contract for schema validation.
-- **Web UI.** The Workflows screens of the SvelteKit app read `/api/arazzo` through the BFF (`lib/server/workflows.ts`,
+- **Web UI.** The Workflows screens of the SvelteKit app read `/api/workflows` through the BFF (`lib/server/workflows.ts`,
   `runs-arazzo.ts`, `sessions-arazzo.ts`). Features not served yet are disabled through one rule,
   `lib/workflows/availability.ts`.

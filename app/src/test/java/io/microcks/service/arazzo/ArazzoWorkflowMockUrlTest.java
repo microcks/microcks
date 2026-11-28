@@ -68,12 +68,12 @@ class ArazzoWorkflowMockUrlTest {
    private static final WorkflowStepOperation PATCH_PASTRY = new WorkflowStepOperation("pastryApi", "PatchPastry",
          "PATCH", "/pastry/{name}");
 
-   /** How long a call waits for the run to end, as configured with arazzo.mock-url.timeout. */
+   /** How long a call waits for the run to end, as configured with workflow.mock-url.timeout. */
    public static class WaitingAtMost600Ms implements QuarkusTestProfile {
 
       @Override
       public Map<String, String> getConfigOverrides() {
-         return Map.of("arazzo.mock-url.timeout", "600");
+         return Map.of("workflow.mock-url.timeout", "600");
       }
    }
 

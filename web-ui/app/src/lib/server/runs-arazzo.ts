@@ -23,7 +23,7 @@ import { failureTextOf, sessionCallsOf } from '#lib/workflows/sessions.js';
 
 /*
  * Real runs of the workflows of imported Arazzo documents (feature/arazzo S5–S11): launched on the Microcks backend,
- * executed by the Arazzo minion, read back from `/api/arazzo/runs` and mapped to the run model of the Deep Ink mockup.
+ * executed by the Arazzo minion, read back from `/api/workflows/runs` and mapped to the run model of the Deep Ink mockup.
  * Response schema validation (S9) and missing mock examples (S10) are read from the run. Recorded examples (S16/S20) and the retries
  * and early ends of the step actions (S17/S21) are read from the run.
  */

@@ -45,7 +45,9 @@ export interface ArazzoDocument {
   apiId: string;
   file: string;
   title: string;
-  arazzoVersion: string;
+  /** The format of the document, as the backend names it (`ARAZZO`). */
+  format: string;
+  formatVersion: string;
   version: string;
   /** Where the document comes from, e.g. "Synced 12 min ago from GitHub". */
   origin: string;
@@ -283,3 +285,8 @@ export interface Session {
 
 /** Filter of the Workflows screen: "Any target / Mocks / Implementations / Mock URL / Session". */
 export type RunKindFilter = 'any' | 'mocks' | 'implementations' | 'mock-url' | 'session';
+
+/** How a document format reads in the interface: `ARAZZO` is Arazzo. */
+export function formatName(format: string): string {
+  return format.charAt(0).toUpperCase() + format.slice(1).toLowerCase();
+}

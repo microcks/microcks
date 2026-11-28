@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ArazzoWorkflowMockUrlIT extends AbstractBaseIT {
 
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
-   private static final String PASTRY_SCENARIOS = "/arazzo/API+Pastry+scenarios/1.0.0/";
+   private static final String PASTRY_SCENARIOS = "/workflow/API+Pastry+scenarios/1.0.0/";
    private static final ArazzoMinionProcess MINION = new ArazzoMinionProcess();
    private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -102,11 +102,12 @@ class ArazzoWorkflowMockUrlIT extends AbstractBaseIT {
       assertEquals(MediaType.APPLICATION_JSON_VALUE,
             answer.getHeaders().getFirst("Content-Type").replace(";charset=UTF-8", ""));
       assertEquals(JSON.readTree("{\"before\": 2.5, \"after\": 2.6}"), JSON.readTree(answer.getBody()));
-      String runId = answer.getHeaders().getFirst("X-Microcks-Arazzo-Run-Id");
-      JsonNode run = JSON.readTree(restTemplate.getForEntity("/api/arazzo/runs/" + runId, String.class).getBody());
+      String runId = answer.getHeaders().getFirst("X-Microcks-Workflow-Run-Id");
+      JsonNode run = JSON.readTree(restTemplate.getForEntity("/api/workflows/runs/" + runId, String.class).getBody());
       assertEquals("SUCCESS MOCKS MOCK_URL",
             run.get("status").asText() + " " + run.get("target").asText() + " " + run.get("origin").asText());
-      JsonNode history = JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents/" + run.get("documentId").asText() + "/runs", String.class).getBody());
+      JsonNode history = JSON.readTree(restTemplate.getForEntity("/api/workflows/documents/" + run.get("documentId")
+            .asText() + "/runs", String.class).getBody());
       assertEquals(runId + " MOCK_URL",
             history.get(0).get("id").asText() + " " + history.get(0).get("origin").asText());
    }
@@ -128,9 +129,10 @@ class ArazzoWorkflowMockUrlIT extends AbstractBaseIT {
       JsonNode failure = JSON.readTree(answer.getBody());
       assertEquals(status + " " + failedStep + " " + reason, answer.getStatusCode().value() + " "
             + failure.path("failedStep").asText() + " " + failure.path("reason").asText(), answer.getBody());
-      assertEquals(answer.getHeaders().getFirst("X-Microcks-Arazzo-Run-Id"), failure.path("runId").asText());
+      assertEquals(answer.getHeaders().getFirst("X-Microcks-Workflow-Run-Id"), failure.path("runId").asText());
       assertEquals("FAILURE",
-            JSON.readTree(restTemplate.getForEntity("/api/arazzo/runs/" + failure.path("runId").asText(), String.class).getBody())
+            JSON.readTree(restTemplate.getForEntity("/api/workflows/runs/" + failure.path("runId").asText(),
+            String.class).getBody())
                   .get("status").asText());
    }
 
@@ -140,11 +142,11 @@ class ArazzoWorkflowMockUrlIT extends AbstractBaseIT {
     */
    @ParameterizedTest
    @CsvSource(delimiter = ';', value = {
-         "/arazzo/API+Pastry+scenarios/1.0.0/readThenReprice; {\"pastry\": \"Eclair Cafe\"}; 400; Missing input: "
+         "/workflow/API+Pastry+scenarios/1.0.0/readThenReprice; {\"pastry\": \"Eclair Cafe\"}; 400; Missing input: "
                + "newPrice",
-         "/arazzo/API+Pastry+scenarios/1.0.0/readThenReprice; [1, 2]; 400; The inputs must be a JSON object",
-         "/arazzo/API+Pastry+scenarios/1.0.0/deleteAll; {}; 404; Unknown workflow: deleteAll",
-         "/arazzo/API%20Pastry%20scenarios/9.9.9/readThenReprice; {}; 404; Unknown Arazzo document: API Pastry "
+         "/workflow/API+Pastry+scenarios/1.0.0/readThenReprice; [1, 2]; 400; The inputs must be a JSON object",
+         "/workflow/API+Pastry+scenarios/1.0.0/deleteAll; {}; 404; Unknown workflow: deleteAll",
+         "/workflow/API%20Pastry%20scenarios/9.9.9/readThenReprice; {}; 404; Unknown Arazzo document: API Pastry "
                + "scenarios 9.9.9" })
    void aRefusedCallAnswersTheReasonAndNothingRuns(String path, String inputs, int status, String reason)
          throws Exception {

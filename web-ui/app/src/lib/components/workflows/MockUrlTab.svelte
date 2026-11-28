@@ -44,14 +44,14 @@
   const body = $derived(examples[0]?.inputs ?? sampleInputs(workflow.inputs));
   const curl = $derived(`curl -X POST '${workflow.mockUrl}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body)}'`);
   const answers = $derived<Answer[]>([
-    { code: '200', tone: 'success', title: 'The workflow outputs', when: 'The workflow passed on the mocks: the body is exactly its outputs.', head: `200 OK · X-Microcks-Arazzo-Run-Id: ${RUN_ID}`, body: sample },
+    { code: '200', tone: 'success', title: 'The workflow outputs', when: 'The workflow passed on the mocks: the body is exactly its outputs.', head: `200 OK · X-Microcks-Workflow-Run-Id: ${RUN_ID}`, body: sample },
     { code: '400', tone: 'warning', title: 'Refused', when: 'The body is not a JSON object of inputs. No run is created.', head: '400 Bad Request', body: { reason: 'The inputs must be a JSON object' } },
     {
       code: '504',
       tone: 'danger',
       title: 'Timeout',
       when: 'The run did not end within 30000 ms. It goes on; open it to see how it ends.',
-      head: `504 Gateway Timeout · X-Microcks-Arazzo-Run-Id: ${RUN_ID}`,
+      head: `504 Gateway Timeout · X-Microcks-Workflow-Run-Id: ${RUN_ID}`,
       body: { runId: RUN_ID, reason: `Run #${(runs[0]?.number ?? 0) + 1} did not end within 30000 ms` }
     },
     {
@@ -59,7 +59,7 @@
       tone: 'danger',
       title: 'A step failed',
       when: 'The status the mock of the failed step answered, else 502, naming the failed step.',
-      head: `409 Conflict · X-Microcks-Arazzo-Run-Id: ${RUN_ID}`,
+      head: `409 Conflict · X-Microcks-Workflow-Run-Id: ${RUN_ID}`,
       body: { runId: RUN_ID, failedStep, reason: `Step ${failedStep} failed: unmet success criteria $statusCode == 200` }
     }
   ]);
@@ -98,7 +98,7 @@
             {copied === 'url' ? 'Copied' : 'Copy'}
           </Button>
         </div>
-        <span class="wf-mu-help"><span class="wf-mu-mono">/arazzo/&#123;title&#125;/&#123;version&#125;/&#123;workflowId&#125;</span>, encoded like the Mock URLs of APIs.</span>
+        <span class="wf-mu-help"><span class="wf-mu-mono">/workflow/&#123;title&#125;/&#123;version&#125;/&#123;workflowId&#125;</span>, encoded like the Mock URLs of APIs.</span>
       </div>
 
       <div class="wf-mu-boxes">
@@ -145,7 +145,7 @@
         <div class="wf-mu-box-head" data-kind="mono">{chosen.head}</div>
         <pre class="wf-mu-pre">{JSON.stringify(chosen.body, null, 2)}</pre>
       </div>
-      <span class="wf-mu-note">Every answer but a refusal carries the header <span class="wf-mu-mono">X-Microcks-Arazzo-Run-Id</span>, so the caller can open the run.</span>
+      <span class="wf-mu-note">Every answer but a refusal carries the header <span class="wf-mu-mono">X-Microcks-Workflow-Run-Id</span>, so the caller can open the run.</span>
     </section>
   </div>
 {/if}

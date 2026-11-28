@@ -7,7 +7,7 @@ info:
     \ mocking and testing (microcks.io). It describes every endpoint the Microcks\
     \ application serves under /api, including the Arazzo workflows, the authentication\
     \ (/auth), the groups, users and service accounts. The mocks themselves (/rest,\
-    \ /soap, /graphql, /grpc, /dynarest, /arazzo) are not part of it, as their paths\
+    \ /soap, /graphql, /grpc, /dynarest, /workflow) are not part of it, as their paths\
     \ follow the APIs they mock. Authentication replaces Keycloak with the built-in\
     \ service (see /auth/config)."
   contact:
@@ -1257,7 +1257,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents/{documentId}/workflows/{workflowId}/runs:
+  /workflows/documents/{documentId}/workflows/{workflowId}/runs:
     post:
       requestBody:
         content:
@@ -1318,7 +1318,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents/{documentId}/workflows/{workflowId}/examples/runs:
+  /workflows/documents/{documentId}/workflows/{workflowId}/examples/runs:
     post:
       requestBody:
         content:
@@ -1374,7 +1374,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/runs/{runId}:
+  /workflows/runs/{runId}:
     get:
       tags:
       - workflow
@@ -1401,7 +1401,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/sessions:
+  /workflows/sessions:
     get:
       tags:
       - workflow
@@ -1495,7 +1495,7 @@ paths:
         \ compensates a refusal, set steps to fail with failures: in this session\
         \ only, the mocks answer the operation of each such step with the chosen\
         \ existing example, its status, headers and body."
-  /arazzo/sessions/{sessionId}:
+  /workflows/sessions/{sessionId}:
     get:
       tags:
       - workflow
@@ -1539,7 +1539,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/sessions/{sessionId}/verification:
+  /workflows/sessions/{sessionId}/verification:
     post:
       tags:
       - workflow
@@ -2692,7 +2692,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents:
+  /workflows/documents:
     get:
       tags:
       - workflow
@@ -2749,7 +2749,7 @@ paths:
       summary: Import an Arazzo document
       description: Import an Arazzo document and link each of its source descriptions
         to an API of Microcks
-  /arazzo/documents/analysis:
+  /workflows/documents/analysis:
     post:
       requestBody:
         content:
@@ -2775,7 +2775,7 @@ paths:
       summary: Analyse an Arazzo document before importing it
       description: Nothing is imported. The analysis tells which APIs match the
         source descriptions and which workflows could run.
-  /arazzo/documents/{documentId}/analysis:
+  /workflows/documents/{documentId}/analysis:
     post:
       requestBody:
         content:
@@ -2807,7 +2807,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents/{documentId}/sources:
+  /workflows/documents/{documentId}/sources:
     put:
       requestBody:
         content:
@@ -2846,7 +2846,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents/{documentId}/source:
+  /workflows/documents/{documentId}/source:
     get:
       tags:
       - workflow
@@ -2874,7 +2874,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents/{documentId}/workflows/{workflowId}:
+  /workflows/documents/{documentId}/workflows/{workflowId}:
     get:
       tags:
       - workflow
@@ -2906,7 +2906,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents/{documentId}/runs:
+  /workflows/documents/{documentId}/runs:
     get:
       tags:
       - workflow
@@ -2964,7 +2964,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/documents/{documentId}/runs/count:
+  /workflows/documents/{documentId}/runs/count:
     get:
       tags:
       - workflow
@@ -3008,7 +3008,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/services/{serviceId}/workflows:
+  /workflows/services/{serviceId}/workflows:
     get:
       tags:
       - workflow
@@ -3031,7 +3031,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/runs/{runId}/steps:
+  /workflows/runs/{runId}/steps:
     post:
       requestBody:
         content:
@@ -3059,7 +3059,7 @@ paths:
         type: string
       in: path
       required: true
-  /arazzo/runs/{runId}/outcome:
+  /workflows/runs/{runId}/outcome:
     post:
       requestBody:
         content:
@@ -5339,8 +5339,13 @@ components:
           type: string
         version:
           type: string
-        arazzoVersion:
-          description: Version of the Arazzo specification of the document
+        format:
+          description: Format of the document, which tells how to read it
+          enum:
+          - ARAZZO
+          type: string
+        formatVersion:
+          description: Version of the format the document uses, such as 1.0.1 for Arazzo
           type: string
         fileName:
           type: string
@@ -5466,7 +5471,13 @@ components:
         refusal:
           description: Why the document is refused. Absent when it can be imported
           type: string
-        arazzoVersion:
+        format:
+          description: Format of the document, which tells how to read it
+          enum:
+          - ARAZZO
+          type: string
+        formatVersion:
+          description: Version of the format the document uses, such as 1.0.1 for Arazzo
           type: string
         title:
           type: string
@@ -5696,7 +5707,13 @@ components:
           type: string
         version:
           type: string
-        arazzoVersion:
+        format:
+          description: Format of the document, which tells how to read it
+          enum:
+          - ARAZZO
+          type: string
+        formatVersion:
+          description: Version of the format the document uses, such as 1.0.1 for Arazzo
           type: string
         fileName:
           type: string

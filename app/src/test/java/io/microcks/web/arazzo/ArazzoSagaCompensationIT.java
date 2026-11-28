@@ -57,8 +57,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ArazzoSagaCompensationIT extends AbstractBaseIT {
 
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
-   private static final String SESSIONS = "/arazzo/sessions";
-   private static final String VERIFICATION = "/arazzo/sessions/{sessionId}/verification";
+   private static final String SESSIONS = "/workflows/sessions";
+   private static final String VERIFICATION = "/workflows/sessions/{sessionId}/verification";
    private static final String CARD_REFUSED = "{\"chargePayment\": \"card refused\"}";
    private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("2.0");
    private static final ObjectMapper JSON = new ObjectMapper();
@@ -162,9 +162,9 @@ class ArazzoSagaCompensationIT extends AbstractBaseIT {
       String sessionId = openSession(CARD_REFUSED);
       assertEquals(402, chargePayment(sessionId).getStatusCode().value());
 
-      ResponseEntity<String> closed = restTemplate.exchange("/api/arazzo/sessions/" + sessionId, HttpMethod.DELETE,
+      ResponseEntity<String> closed = restTemplate.exchange("/api/workflows/sessions/" + sessionId, HttpMethod.DELETE,
             new HttpEntity<>(jsonHeaders()), String.class);
-      MICROCKS_API.assertResponseConforms("DELETE", "/arazzo/sessions/{sessionId}", closed);
+      MICROCKS_API.assertResponseConforms("DELETE", "/workflows/sessions/{sessionId}", closed);
       assertEquals(204, closed.getStatusCode().value());
 
       assertEquals(201, chargePayment(sessionId).getStatusCode().value());

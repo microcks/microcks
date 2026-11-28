@@ -11,7 +11,7 @@ const linked = (name: string, serviceId: string): SourceDescription => ({
 });
 const unlinked = (name: string): SourceDescription => ({ name, type: 'openapi', url: '', link: { status: 'not-linked', expectedFile: name } });
 const document = (id: string, sources: SourceDescription[]): ArazzoDocument => ({
-  id, apiId: id, file: `${id}.yaml`, title: id, arazzoVersion: '1.0.1', version: '1', origin: '', sources, workflowIds: ['wf'], importIssues: []
+  id, apiId: id, file: `${id}.yaml`, title: id, format: 'ARAZZO', formatVersion: '1.0.1', version: '1', origin: '', sources, workflowIds: ['wf'], importIssues: []
 });
 const workflow = (documentId: string, sourceName: string): Workflow => ({
   workflowId: 'wf', documentId, summary: '', inputs: [], outputs: [], mockUrl: '', runnability: { runnable: true },

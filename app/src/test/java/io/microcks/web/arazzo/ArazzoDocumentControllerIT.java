@@ -61,13 +61,14 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
 
-      JsonNode documents = get("/api/arazzo/documents");
+      JsonNode documents = get("/api/workflows/documents");
 
       assertEquals(1, documents.size());
       JsonNode document = documents.get(0);
-      assertEquals("API Pastry scenarios 1.0.0 (pastry.arazzo.yaml, Arazzo 1.0.1)",
+      assertEquals("API Pastry scenarios 1.0.0 (pastry.arazzo.yaml, ARAZZO 1.0.1)",
             document.path("title").asText() + " " + document.path("version").asText() + " ("
-                  + document.path("fileName").asText() + ", Arazzo " + document.path("arazzoVersion").asText() + ")");
+                  + document.path("fileName").asText() + ", " + document.path("format").asText() + " "
+                  + document.path("formatVersion").asText() + ")");
       assertEquals(
             workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getImportDate().getTime(),
             document.path("importDate").asLong());
@@ -99,7 +100,7 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
 
-      JsonNode documents = get("/api/arazzo/documents?api=API Pastry - 2.0");
+      JsonNode documents = get("/api/workflows/documents?api=API Pastry - 2.0");
 
       List<String> titles = new ArrayList<>();
       documents.forEach(document -> titles.add(document.path("title").asText()));
@@ -111,7 +112,7 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "pastry.arazzo.yaml", true);
       String id = workflowDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0").getId();
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/api/arazzo/documents/" + id + "/source",
+      ResponseEntity<String> response = restTemplate.getForEntity("/api/workflows/documents/" + id + "/source",
             String.class);
 
       assertEquals(200, response.getStatusCode().value());
@@ -120,7 +121,8 @@ class ArazzoDocumentControllerIT extends AbstractBaseIT {
 
    @Test
    void theSourceOfAnUnknownDocumentIsNotFound() {
-      ResponseEntity<String> response = restTemplate.getForEntity("/api/arazzo/documents/unknown/source", String.class);
+      ResponseEntity<String> response = restTemplate.getForEntity("/api/workflows/documents/unknown/source",
+            String.class);
 
       assertEquals(404, response.getStatusCode().value());
    }

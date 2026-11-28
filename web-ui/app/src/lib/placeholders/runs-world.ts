@@ -2,7 +2,7 @@
  * PLACEHOLDER: the simulated world the workflow runner calls (Microcks mocks of API Pastry and its staging
  * implementation). Microcks has no Arazzo engine, so a run is played by lib/server/runs-sim.ts against this
  * deterministic data, copied from the Deep Ink prototype. To replace with: the Arazzo execution API of Microcks
- * (proposed `POST /api/arazzo/documents/{id}/workflows/{wf}/runs`, `GET /api/arazzo/runs/{id}`), which would call the
+ * (proposed `POST /api/workflows/documents/{id}/workflows/{wf}/runs`, `GET /api/workflows/runs/{id}`), which would call the
  * real mocks (/rest/API+Pastry/2.0/…) or the implementation base URLs.
  *
  * Mocks answer from recorded examples only. The implementation knows more pastries, but its PATCH has the bug of the

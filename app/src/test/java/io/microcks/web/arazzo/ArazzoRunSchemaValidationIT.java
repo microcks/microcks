@@ -107,7 +107,7 @@ class ArazzoRunSchemaValidationIT extends AbstractBaseIT {
       upload("pastry-journeys", true);
       upload("pastry-journeys-metadata", false);
       String documentId = null;
-      String documents = restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody();
+      String documents = restTemplate.getForEntity("/api/workflows/documents", String.class).getBody();
       for (JsonNode document : JSON.readTree(documents)) {
          if ("API Pastry journeys".equals(document.get("title").asText())) {
             documentId = document.get("id").asText();
@@ -117,7 +117,7 @@ class ArazzoRunSchemaValidationIT extends AbstractBaseIT {
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
       ResponseEntity<String> launched = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            "/api/workflows/documents/" + documentId + "/workflows/readThenReprice/runs",
             new HttpEntity<>("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, \"timeout\": 10000, "
                   + "\"validateSchema\": " + validateSchema + "}", headers),
             String.class);
@@ -147,7 +147,7 @@ class ArazzoRunSchemaValidationIT extends AbstractBaseIT {
    private JsonNode awaitFinalRun(String runId) throws Exception {
       JsonNode run = null;
       for (int attempt = 0; attempt < 100; attempt++) {
-         run = JSON.readTree(restTemplate.getForEntity("/api/arazzo/runs/" + runId, String.class).getBody());
+         run = JSON.readTree(restTemplate.getForEntity("/api/workflows/runs/" + runId, String.class).getBody());
          if (!"IN_PROGRESS".equals(run.get("status").asText())) {
             return run;
          }

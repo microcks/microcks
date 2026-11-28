@@ -54,7 +54,7 @@ class ArazzoSessionControllerTest {
             .openSession(new ArazzoSessionRequest("Order saga:1.0.0", "placeOrderSaga", Map.of("customerId", "c-7")));
 
       assertEquals(201, opened.getStatus());
-      assertEquals(URI.create("/api/arazzo/sessions/s-1"), opened.getLocation());
+      assertEquals(URI.create("/api/workflows/sessions/s-1"), opened.getLocation());
       assertSame(session, opened.getEntity());
    }
 

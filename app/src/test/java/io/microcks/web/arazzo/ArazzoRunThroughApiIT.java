@@ -52,8 +52,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ArazzoRunThroughApiIT extends AbstractBaseIT {
 
    private static final String FIXTURES = "target/test-classes/io/microcks/service/arazzo/";
-   private static final String LAUNCH = "/arazzo/documents/{documentId}/workflows/{workflowId}/runs";
-   private static final String RUN = "/arazzo/runs/{runId}";
+   private static final String LAUNCH = "/workflows/documents/{documentId}/workflows/{workflowId}/runs";
+   private static final String RUN = "/workflows/runs/{runId}";
    private static final String PASTRY_SCENARIOS = "API Pastry scenarios:1.0.0";
    private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("2.0");
    private static final ArazzoMinionProcess MINION = new ArazzoMinionProcess();
@@ -106,7 +106,8 @@ class ArazzoRunThroughApiIT extends AbstractBaseIT {
 
       assertEquals(201, launched.getStatusCode().value(), launched.getBody());
       String runId = JSON.readTree(launched.getBody()).get("id").asText();
-      assertEquals("/api/arazzo/runs/" + runId, java.net.URI.create(launched.getHeaders().getFirst("Location")).getPath());
+      assertEquals("/api/workflows/runs/" + runId, java.net.URI.create(launched.getHeaders().getFirst("Location"))
+            .getPath());
       JsonNode run = awaitFinalRun(runId);
       assertEquals("SUCCESS", run.get("status").asText(), run.toPrettyString());
       assertEquals(JSON.readTree("{\"before\": 2.5, \"after\": 2.6}"), run.get("outputs"));
@@ -161,7 +162,8 @@ class ArazzoRunThroughApiIT extends AbstractBaseIT {
    private ResponseEntity<String> launch(String workflowId, String body) throws Exception {
       MICROCKS_API.assertRequestConforms("POST", LAUNCH, body);
       ResponseEntity<String> response = restTemplate.exchange(
-            "/api" + LAUNCH.replace("{documentId}", java.net.URLEncoder.encode(PASTRY_SCENARIOS, java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20")).replace("{workflowId}", workflowId),
+            "/api" + LAUNCH.replace("{documentId}", java.net.URLEncoder.encode(PASTRY_SCENARIOS,
+            java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20")).replace("{workflowId}", workflowId),
             HttpMethod.POST, new HttpEntity<>(body, jsonHeaders()), String.class);
       MICROCKS_API.assertResponseConforms("POST", LAUNCH, response);
       return response;

@@ -7,8 +7,8 @@ calls the APIs step by step and reports each step back. Microcks itself never ca
 ```
 Microcks app ── POST /api/runs ──────────────▶ Arazzo minion
      ▲                                              │ one call per step
-     │  POST /api/arazzo/runs/{id}/steps            ├──▶ Microcks mocks  /rest/<API>/<version>/…
-     └─ POST /api/arazzo/runs/{id}/outcome ◀────────┤    (W3C baggage microcks-arazzo-*)
+     │  POST /api/workflows/runs/{id}/steps            ├──▶ Microcks mocks  /rest/<API>/<version>/…
+     └─ POST /api/workflows/runs/{id}/outcome ◀────────┤    (W3C baggage microcks-arazzo-*)
                                                     └──▶ implementations (base URL + secret)
 ```
 

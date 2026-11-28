@@ -62,7 +62,7 @@ class RunResourceQuarkusTest {
       given().contentType(ContentType.JSON).body(runRequest.toString()).when().post("/api/runs").then().statusCode(202);
 
       awaitReports(1);
-      assertEquals(List.of("/api/arazzo/runs/6719f0c2a1b2c3d4e5f60718/outcome"), StubMicrocks.REPORT_PATHS);
+      assertEquals(List.of("/api/workflows/runs/6719f0c2a1b2c3d4e5f60718/outcome"), StubMicrocks.REPORT_PATHS);
       JsonNode outcome = JSON.readTree(StubMicrocks.REPORTS.get(0));
       assertEquals("FAILURE", outcome.get("status").asText());
       assertTrue(
@@ -81,7 +81,7 @@ class RunResourceQuarkusTest {
       given().contentType(ContentType.JSON).body(runRequest.toString()).when().post("/api/runs").then().statusCode(202);
 
       awaitReports(3);
-      String run = "/api/arazzo/runs/6719f0c2a1b2c3d4e5f60718";
+      String run = "/api/workflows/runs/6719f0c2a1b2c3d4e5f60718";
       assertEquals(List.of(run + "/steps", run + "/steps", run + "/outcome"), StubMicrocks.REPORT_PATHS);
       ObjectNode readPastry = normalized(JSON.readTree(StubMicrocks.REPORTS.get(0)));
       assertEquals(contract.get("passedStep"), readPastry);

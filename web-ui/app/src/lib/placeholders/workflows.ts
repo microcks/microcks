@@ -137,8 +137,8 @@ export const CHECK_MENU_STEPS: Step[] = [
 
 const mockUrl = (doc: 'pastry' | 'beer', workflowId: string) =>
   doc === 'pastry'
-    ? `${MICROCKS_BASE}/arazzo/Pastry%20workflows/1.2.0/${workflowId}`
-    : `${MICROCKS_BASE}/arazzo/Beer%20checkout/0.3.0/${workflowId}`;
+    ? `${MICROCKS_BASE}/workflow/Pastry%20workflows/1.2.0/${workflowId}`
+    : `${MICROCKS_BASE}/workflow/Beer%20checkout/0.3.0/${workflowId}`;
 
 const RUNNABLE = { runnable: true } as const;
 
@@ -206,7 +206,7 @@ export const WORKFLOWS: Workflow[] = [
 
 export const DOCUMENTS: ArazzoDocument[] = [
   {
-    id: 'pastry', apiId: '6728f1c2a4e1b93d5c0e7a14', file: 'pastry-workflows.arazzo.yaml', arazzoVersion: '1.1.0', version: '1.2.0',
+    id: 'pastry', apiId: '6728f1c2a4e1b93d5c0e7a14', file: 'pastry-workflows.arazzo.yaml', format: 'ARAZZO', formatVersion: '1.1.0', version: '1.2.0',
     metadata: 'pastry-workflows.arazzo-metadata.yaml',
     title: 'Pastry workflows',
     origin: 'Synced 12 min ago from GitHub',
@@ -219,7 +219,7 @@ export const DOCUMENTS: ArazzoDocument[] = [
     importIssues: []
   },
   {
-    id: 'beer', apiId: '6728f1c2a4e1b93d5c0e7a15', file: 'beer-checkout.arazzo.yaml', arazzoVersion: '1.0.1', version: '0.3.0',
+    id: 'beer', apiId: '6728f1c2a4e1b93d5c0e7a15', file: 'beer-checkout.arazzo.yaml', format: 'ARAZZO', formatVersion: '1.0.1', version: '0.3.0',
     title: 'Beer checkout',
     origin: 'Uploaded from a file 6 d ago by MA',
     sources: [

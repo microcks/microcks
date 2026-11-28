@@ -111,7 +111,7 @@
     inputs,
     ...(fail && example ? { failures: { [failStep]: example } } : {})
   });
-  const curl = $derived(`curl -X POST '${MICROCKS}/api/arazzo/sessions' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body)}'`);
+  const curl = $derived(`curl -X POST '${MICROCKS}/api/workflows/sessions' \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body)}'`);
   const selected = $derived(sessions.find((s) => s.id === selectedId) ?? sessions[0]);
   const sessionId = $derived(real ? (selected?.id ?? '{sessionId}') : (sessions[0]?.id ?? 's-7f3a2c91'));
   const services = $derived([...new Set(workflow.steps.map((s) => s.sourceName))]);
@@ -130,7 +130,7 @@
     { key: 'data', header: 'Data passing' }
   ]);
   const API_STEPS = $derived([
-    { title: 'Open a session', method: 'POST', path: '/api/arazzo/sessions', text: 'Your test sends the workflow, its inputs and the steps to fail. Microcks answers 201 with the session id.' },
+    { title: 'Open a session', method: 'POST', path: '/api/workflows/sessions', text: 'Your test sends the workflow, its inputs and the steps to fail. Microcks answers 201 with the session id.' },
     {
       title: 'The application calls the mocks',
       method: undefined,
@@ -140,10 +140,10 @@
     {
       title: 'Verify the calls',
       method: 'POST',
-      path: '/api/arazzo/sessions/{id}/verification',
+      path: '/api/workflows/sessions/{id}/verification',
       text: 'Checks each call against the steps: order (relaxed by dependsOn), data passing, inputs, the contract of its API, and unexpected calls. Creates a run with the origin Session.'
     },
-    { title: 'Close the session', method: 'DELETE', path: '/api/arazzo/sessions/{id}', text: '204 No Content. The calls stay with the verification run.' }
+    { title: 'Close the session', method: 'DELETE', path: '/api/workflows/sessions/{id}', text: '204 No Content. The calls stay with the verification run.' }
   ]);
 
   const verdictOf = (s: Session): { tone: Tone; text: string } =>
@@ -309,7 +309,7 @@
 
       <section aria-labelledby="wf-req-title" class="wf-se-panel" data-size="half" data-gap="tight">
         <div class="wf-se-req-head">
-          <h2 id="wf-req-title"><MethodTag size="xs" method="POST" /><span class="wf-se-mono wf-se-req-path">/api/arazzo/sessions</span></h2>
+          <h2 id="wf-req-title"><MethodTag size="xs" method="POST" /><span class="wf-se-mono wf-se-req-path">/api/workflows/sessions</span></h2>
           <div class="wf-se-req-actions">
             <Button size="sm" disabled={!valid} onclick={() => copy('body', JSON.stringify(body, null, 2))}>{copied === 'body' ? 'Copied' : 'Copy body'}</Button>
             <Button size="sm" disabled={!valid} onclick={() => copy('curl', curl)}>{copied === 'curl' ? 'Copied' : 'Copy curl'}</Button>
@@ -318,7 +318,7 @@
         </div>
         <pre aria-label="Request body" aria-live="polite" class="wf-se-pre">{JSON.stringify(body, null, 2)}</pre>
         <div class="wf-se-answer">
-          <span class="wf-se-answer-line"><span class="wf-se-code">201</span><span class="wf-se-mono wf-se-sub">Location: /api/arazzo/sessions/{sessionId}</span></span>
+          <span class="wf-se-answer-line"><span class="wf-se-code">201</span><span class="wf-se-mono wf-se-sub">Location: /api/workflows/sessions/{sessionId}</span></span>
           <span class="wf-se-note">400 with the reason in plain text when Microcks refuses the session, for an unknown step or example.</span>
         </div>
       </section>
@@ -443,7 +443,7 @@
             </Button>
             {#if selected.state === 'open'}<Button size="sm" disabled={busy !== undefined} onclick={() => closeSession(selected.id)}>{busy === 'close' ? 'Closing…' : 'Close session'}</Button>{/if}
           {:else if selected.state === 'open'}
-            <span class="wf-se-mono wf-se-sub">POST /api/arazzo/sessions/{selected.id}/verification</span>
+            <span class="wf-se-mono wf-se-sub">POST /api/workflows/sessions/{selected.id}/verification</span>
           {/if}
           <span class="wf-se-muted">
             {selected.real && !selected.verification

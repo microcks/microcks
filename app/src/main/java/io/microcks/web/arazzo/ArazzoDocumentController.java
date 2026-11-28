@@ -42,7 +42,7 @@ import java.util.Map;
  * A Rest controller for the Arazzo documents imported into Microcks.
  * @author SebastienDegodez
  */
-@Path("/api/arazzo")
+@Path("/api/workflows")
 @Produces(MediaType.APPLICATION_JSON)
 @RunOnVirtualThread
 public class ArazzoDocumentController {

@@ -66,7 +66,7 @@ class ArazzoStepDependenciesIT extends AbstractBaseIT {
       String documentId = workflowDocumentRepository.findByTitleAndVersion("Pastry tasting", "1.0.0").getId();
 
       ResponseEntity<String> response = restTemplate
-            .getForEntity("/api/arazzo/documents/" + documentId + "/workflows/tasteThenReprice", String.class);
+            .getForEntity("/api/workflows/documents/" + documentId + "/workflows/tasteThenReprice", String.class);
       JsonNode workflow = new ObjectMapper().readTree(response.getBody());
 
       assertEquals(200, response.getStatusCode().value());

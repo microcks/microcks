@@ -2,7 +2,7 @@ import type { Session, SessionCall, WorkflowRun } from './types.js';
 
 /*
  * Verification sessions of imported documents (stories S15, S16, S17): what Microcks records for a session and says in
- * its verification (`POST /api/arazzo/sessions/{id}/verification`), mapped to the rows of the Sessions tab and the run page.
+ * its verification (`POST /api/workflows/sessions/{id}/verification`), mapped to the rows of the Sessions tab and the run page.
  */
 
 /** A call of the `session` of a verification result, in its order of receipt. */
@@ -111,7 +111,7 @@ export function failureChoicesOf(exchanges: readonly BackendExampleExchange[]): 
   return [...choices.filter((c) => c.code >= 400), ...choices.filter((c) => c.code < 400)];
 }
 
-/** A session as Microcks reads it back (`GET /api/arazzo/sessions`): the calls counted so far, not the calls themselves. */
+/** A session as Microcks reads it back (`GET /api/workflows/sessions`): the calls counted so far, not the calls themselves. */
 export interface BackendSession {
   id: string;
   documentId: string;

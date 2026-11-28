@@ -31,7 +31,7 @@ import jakarta.ws.rs.core.Response;
  * A Rest controller for the workflows of the Arazzo documents imported into Microcks.
  * @author SebastienDegodez
  */
-@Path("/api/arazzo")
+@Path("/api/workflows")
 @Produces(MediaType.APPLICATION_JSON)
 @RunOnVirtualThread
 public class ArazzoWorkflowController {

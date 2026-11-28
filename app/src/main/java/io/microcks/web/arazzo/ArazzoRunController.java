@@ -45,7 +45,7 @@ import java.util.Optional;
  * Arazzo minion executing it.
  * @author SebastienDegodez
  */
-@Path("/api/arazzo")
+@Path("/api/workflows")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RunOnVirtualThread
@@ -77,7 +77,7 @@ public class ArazzoRunController {
                      implementationsOf(launch), validateSchema)
                : arazzoRunService.launchExampleRun(documentId, workflowId, launch.example(), launch.timeout(),
                      implementationsOf(launch), validateSchema);
-         return run.map(launched -> Response.created(URI.create("/api/arazzo/runs/" + launched.getId()))
+         return run.map(launched -> Response.created(URI.create("/api/workflows/runs/" + launched.getId()))
                .entity(launched).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
       } catch (ArazzoRunRefusedException arre) {
          return refused(arre);

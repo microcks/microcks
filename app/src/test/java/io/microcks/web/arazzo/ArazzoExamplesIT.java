@@ -53,9 +53,10 @@ class ArazzoExamplesIT extends AbstractBaseIT {
    private static final ArazzoMinionProcess MINION = new ArazzoMinionProcess();
    private static final ObjectMapper JSON = new ObjectMapper();
    private static final MicrocksApiDescription MICROCKS_API = MicrocksApiDescription.version("2.0");
-   private static final String LAUNCH = "/arazzo/documents/{documentId}/workflows/{workflowId}/runs";
-   private static final String LAUNCH_EXAMPLES = "/arazzo/documents/{documentId}/workflows/{workflowId}/examples/runs";
-   private static final String RUN = "/arazzo/runs/{runId}";
+   private static final String LAUNCH = "/workflows/documents/{documentId}/workflows/{workflowId}/runs";
+   private static final String LAUNCH_EXAMPLES = "/workflows/documents/{documentId}/workflows/{workflowId}"
+         + "/examples/runs";
+   private static final String RUN = "/workflows/runs/{runId}";
 
    /** The runs are handed to the minion at its URL, as configured with arazzo-minion.url. */
    @BeforeEach
@@ -94,7 +95,8 @@ class ArazzoExamplesIT extends AbstractBaseIT {
                   + "\"Output price: expected 3.2 but was absent\"]"),
             verdicts);
       List<String> history = new ArrayList<>();
-      JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents/" + documentId + "/runs", String.class).getBody())
+      JSON.readTree(restTemplate.getForEntity("/api/workflows/documents/" + documentId + "/runs", String.class)
+            .getBody())
             .forEach(run -> history.add(run.get("example").asText() + " " + run.get("exampleVerdict").asText()));
       assertEquals(List.of("first-pastry-read DOES_NOT_MATCH", "unknown-first-pastry MATCHES"), history);
    }
@@ -103,7 +105,7 @@ class ArazzoExamplesIT extends AbstractBaseIT {
    void aRunNamingAnExamplePlaysItAndTheExamplesAreKeptWhenTheSourcesAreLinkedAgain() throws Exception {
       String documentId = pastryExamplesAreImported();
 
-      ResponseEntity<String> relinked = restTemplate.postForEntity("/api/arazzo/documents",
+      ResponseEntity<String> relinked = restTemplate.postForEntity("/api/workflows/documents",
             Map.of("content",
                   Files.readString(Path.of(FIXTURES + "recorded-examples.arazzo.yaml"), StandardCharsets.UTF_8),
                   "fileName", "recorded-examples.arazzo.yaml", "links",
@@ -124,7 +126,8 @@ class ArazzoExamplesIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "recorded-examples.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "recorded-examples.arazzo-metadata.yaml", false);
       uploadArtifactFile(FIXTURES + "recorded-examples.arazzo-examples.yaml", false);
-      return JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody()).get(0).get("id").asText();
+      return JSON.readTree(restTemplate.getForEntity("/api/workflows/documents", String.class).getBody()).get(0).get(
+            "id").asText();
    }
 
    /** Launch runs as a CI pipeline does, checking the request and the response against the published API. */

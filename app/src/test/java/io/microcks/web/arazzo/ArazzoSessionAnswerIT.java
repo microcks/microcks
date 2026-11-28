@@ -149,7 +149,7 @@ class ArazzoSessionAnswerIT extends AbstractBaseIT {
       }
       assertEquals(List.of("201 o-42", "201 o-42", "201 o-42", "200 o-42"), orders);
       ResponseEntity<String> verified = restTemplate.exchange(
-            "/api/arazzo/sessions/" + sessionId + "/verification", HttpMethod.POST,
+            "/api/workflows/sessions/" + sessionId + "/verification", HttpMethod.POST,
             new HttpEntity<>(jsonHeaders()), String.class);
       JsonNode verification = JSON.readTree(verified.getBody());
       assertEquals("SUCCESS", verification.get("status").asText(), verification.toPrettyString());
@@ -170,7 +170,7 @@ class ArazzoSessionAnswerIT extends AbstractBaseIT {
 
       assertEquals(JSON.readTree("{\"id\": \"r-9\", \"orderId\": \"o-7\"}"), JSON.readTree(reserved.getBody()));
       ResponseEntity<String> verified = restTemplate.exchange(
-            "/api/arazzo/sessions/" + sessionId + "/verification", HttpMethod.POST,
+            "/api/workflows/sessions/" + sessionId + "/verification", HttpMethod.POST,
             new HttpEntity<>(jsonHeaders()), String.class);
       assertEquals("`reserveStock` body `/orderId` should come from `$steps.createOrder.outputs.id` (o-42), got o-7",
             JSON.readTree(verified.getBody()).get("steps").get(1).get("message").asText());
@@ -197,8 +197,10 @@ class ArazzoSessionAnswerIT extends AbstractBaseIT {
    }
 
    private String openSession() throws Exception {
-      ResponseEntity<String> opened = restTemplate.exchange("/api/arazzo/sessions", HttpMethod.POST, new HttpEntity<>(
-            "{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\"}", jsonHeaders()), String.class);
+      ResponseEntity<String> opened = restTemplate.exchange("/api/workflows/sessions", HttpMethod.POST,
+            new HttpEntity<>("{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\"}",
+                  jsonHeaders()),
+            String.class);
       assertEquals(201, opened.getStatusCode().value(), opened.getBody());
       return JSON.readTree(opened.getBody()).get("id").asText();
    }

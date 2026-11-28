@@ -219,7 +219,7 @@ class ArazzoSagaConcurrentSessionsIT extends AbstractBaseIT {
    private String openSession(String workflowId, String failures) throws Exception {
       String body = "{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"" + workflowId + "\""
             + (failures == null ? "" : ", \"failures\": " + failures) + "}";
-      ResponseEntity<String> opened = restTemplate.exchange("/api/arazzo/sessions", HttpMethod.POST,
+      ResponseEntity<String> opened = restTemplate.exchange("/api/workflows/sessions", HttpMethod.POST,
             new HttpEntity<>(body, jsonHeaders()), String.class);
       assertEquals(201, opened.getStatusCode().value(), opened.getBody());
       return JSON.readTree(opened.getBody()).get("id").asText();
@@ -227,7 +227,7 @@ class ArazzoSagaConcurrentSessionsIT extends AbstractBaseIT {
 
    private JsonNode verify(String sessionId) throws Exception {
       ResponseEntity<String> verified = restTemplate.exchange(
-            "/api/arazzo/sessions/" + sessionId + "/verification", HttpMethod.POST,
+            "/api/workflows/sessions/" + sessionId + "/verification", HttpMethod.POST,
             new HttpEntity<>(jsonHeaders()), String.class);
       assertEquals(200, verified.getStatusCode().value(), verified.getBody());
       return JSON.readTree(verified.getBody());

@@ -37,12 +37,12 @@ import java.util.Map;
  * {@code /api}, with no authentication.
  * @author SebastienDegodez
  */
-@Path("/arazzo")
+@Path("/workflow")
 @RunOnVirtualThread
 public class ArazzoMockUrlController {
 
    /** The header giving the id of the run that played the workflow, to read it in the Microcks API. */
-   public static final String RUN_ID_HEADER = "X-Microcks-Arazzo-Run-Id";
+   public static final String RUN_ID_HEADER = "X-Microcks-Workflow-Run-Id";
 
    private final ArazzoMockUrlService arazzoMockUrlService;
 

@@ -100,7 +100,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
    void analysingADocumentAnswersItsValidationSourcesAndChecksAndStoresNothing() throws Exception {
       apiIsImported("customer-api");
 
-      ResponseEntity<String> response = restTemplate.postForEntity("/api/arazzo/documents/analysis",
+      ResponseEntity<String> response = restTemplate.postForEntity("/api/workflows/documents/analysis",
             Map.of("content", document("place-order")), String.class);
 
       assertEquals(200, response.getStatusCode().value());
@@ -122,7 +122,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
       Map<String, Object> links = new HashMap<>();
       links.put("customerApi", null);
 
-      ResponseEntity<String> response = restTemplate.postForEntity("/api/arazzo/documents/analysis",
+      ResponseEntity<String> response = restTemplate.postForEntity("/api/workflows/documents/analysis",
             Map.of("content", document("place-order"), "links", links), String.class);
 
       JsonNode analysis = new ObjectMapper().readTree(response.getBody());
@@ -134,7 +134,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
    void importingADocumentWithItsLinksStoresBoth() throws Exception {
       apiIsImported("customer-api");
 
-      ResponseEntity<String> response = restTemplate.postForEntity("/api/arazzo/documents",
+      ResponseEntity<String> response = restTemplate.postForEntity("/api/workflows/documents",
             Map.of("content", document("place-order"), "fileName", "place-order.arazzo.yaml", "links",
                   Map.of("customerApi", Map.of("name", "Customer API", "version", "1.0.0"))),
             String.class);
@@ -148,7 +148,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
 
    @Test
    void importingADocumentWithoutLinksLinksNoSource() throws Exception {
-      ResponseEntity<String> response = restTemplate.postForEntity("/api/arazzo/documents",
+      ResponseEntity<String> response = restTemplate.postForEntity("/api/workflows/documents",
             Map.of("content", document("place-order")), String.class);
 
       assertEquals(201, response.getStatusCode().value());
@@ -158,7 +158,7 @@ class ArazzoImportDialogIT extends AbstractBaseIT {
 
    @Test
    void aRefusedImportAnswersItsReasonAndStoresNothing() throws Exception {
-      ResponseEntity<String> response = restTemplate.postForEntity("/api/arazzo/documents", Map.of("content",
+      ResponseEntity<String> response = restTemplate.postForEntity("/api/workflows/documents", Map.of("content",
             document("place-order"), "links", Map.of("paymentApi", Map.of("name", "Payment API", "version", "1.0.0"))),
             String.class);
 

@@ -5,7 +5,7 @@
   import { isAvailable, unavailableReason } from '#lib/workflows/availability.js';
   import { download, runHow, syncedText, WEEK_MS } from '#lib/workflows/header.js';
   import { runPath, runSetupPath } from '#lib/workflows/paths.js';
-  import type { ArazzoDocument, Workflow, WorkflowRun } from '#lib/workflows/types.js';
+  import { formatName, type ArazzoDocument, type Workflow, type WorkflowRun } from '#lib/workflows/types.js';
 
   interface Props {
     document: ArazzoDocument;
@@ -79,7 +79,7 @@
   {#snippet children()}
     <div class="wf-facts">
       <span>workflowId <span class="wf-facts-strong">{workflow.workflowId}</span></span>
-      <span class="wf-facts-mono">{document.file} · arazzo {document.arazzoVersion}</span>
+      <span class="wf-facts-mono">{document.file} · {formatName(document.format).toLowerCase()} {document.formatVersion}</span>
       {#if document.metadata}<span>metadata <span class="wf-facts-mono">{document.metadata}</span></span>{/if}
       {#if synced}
         <span>{synced} by source job <a href={sourceJobHref}>{document.job?.name ?? document.title}</a></span>

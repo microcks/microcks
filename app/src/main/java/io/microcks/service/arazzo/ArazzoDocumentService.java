@@ -264,8 +264,8 @@ public class ArazzoDocumentService {
                lastRun);
       }).toList();
       return new ArazzoDocumentSummary(document.getId(), document.getTitle(), document.getVersion(),
-            document.getFormatVersion(), document.getFileName(), document.getImportDate(), sourceSummaries,
-            workflowSummaries);
+            document.getFormat(), document.getFormatVersion(), document.getFileName(), document.getImportDate(),
+            sourceSummaries, workflowSummaries);
    }
 
    /**

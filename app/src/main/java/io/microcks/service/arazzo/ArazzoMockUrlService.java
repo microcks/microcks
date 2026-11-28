@@ -50,7 +50,7 @@ public class ArazzoMockUrlService {
    private final ArazzoRunService arazzoRunService;
 
    /** How long a call waits for the run to end before answering 504, in milliseconds. */
-   @ConfigProperty(name = "arazzo.mock-url.timeout", defaultValue = "30000")
+   @ConfigProperty(name = "workflow.mock-url.timeout", defaultValue = "30000")
    long timeout;
 
    /**

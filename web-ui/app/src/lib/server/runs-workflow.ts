@@ -22,7 +22,7 @@ import { getRealRunPayload, startRealRun } from './runs-arazzo';
 /*
  * Workflow runs BFF. PLACEHOLDER: Microcks has no Arazzo engine or API, so a run is simulated by ./runs-sim against the
  * demo world of lib/placeholders/runs-world.ts and kept in the workflows store. Real counterparts (proposed, not in
- * Microcks): POST /api/arazzo/documents/{id}/workflows/{wf}/runs and GET /api/arazzo/runs/{id}.
+ * Microcks): POST /api/workflows/documents/{id}/workflows/{wf}/runs and GET /api/workflows/runs/{id}.
  */
 
 export async function getRunSetup(docId: string, workflowId: string, scenario: string | null, token?: string): Promise<RunSetupPayload | undefined> {

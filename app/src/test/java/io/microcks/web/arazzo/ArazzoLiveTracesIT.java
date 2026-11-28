@@ -82,13 +82,13 @@ class ArazzoLiveTracesIT extends AbstractBaseIT {
    void eachCallOfARunAgainstTheMocksIsStoredWithItsRunWorkflowStepAndAttempt() throws Exception {
       uploadArtifactFile(FIXTURES + "pastry-scenarios.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
-      String documentId = JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody())
+      String documentId = JSON.readTree(restTemplate.getForEntity("/api/workflows/documents", String.class).getBody())
             .get(0).get("id").asText();
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
 
       ResponseEntity<String> launched = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            "/api/workflows/documents/" + documentId + "/workflows/readThenReprice/runs",
             new HttpEntity<>("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, \"timeout\": 10000}",
                   headers),
             String.class);
@@ -153,7 +153,7 @@ class ArazzoLiveTracesIT extends AbstractBaseIT {
    private JsonNode awaitFinalRun(String runId) throws Exception {
       JsonNode run = null;
       for (int attempt = 0; attempt < 100; attempt++) {
-         run = JSON.readTree(restTemplate.getForEntity("/api/arazzo/runs/" + runId, String.class).getBody());
+         run = JSON.readTree(restTemplate.getForEntity("/api/workflows/runs/" + runId, String.class).getBody());
          if (!"IN_PROGRESS".equals(run.get("status").asText())) {
             return run;
          }

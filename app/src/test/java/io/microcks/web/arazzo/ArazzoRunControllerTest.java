@@ -83,7 +83,7 @@ class ArazzoRunControllerTest {
 
       WorkflowResult run = (WorkflowResult) launched.getEntity();
       assertEquals(201, launched.getStatus());
-      assertEquals(URI.create("/api/arazzo/runs/" + run.getId()), URI.create(launched.getLocation().getPath()));
+      assertEquals(URI.create("/api/workflows/runs/" + run.getId()), URI.create(launched.getLocation().getPath()));
       assertEquals(204, controller.reportStep(run.getId(), contract("passedStep", ArazzoStepReportDTO.class))
             .getStatus());
       assertEquals(204, controller.reportOutcome(run.getId(), contract("runOutcome", ArazzoRunOutcomeDTO.class))

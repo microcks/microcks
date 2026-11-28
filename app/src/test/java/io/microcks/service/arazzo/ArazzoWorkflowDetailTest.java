@@ -224,7 +224,7 @@ class ArazzoWorkflowDetailTest {
             .orElseThrow();
 
       assertEquals("ARAZZO 1.0.1 from pastry.arazzo.yaml",
-            "ARAZZO " + workflow.arazzoVersion() + " from " + workflow.fileName());
+            workflow.format() + " " + workflow.formatVersion() + " from " + workflow.fileName());
       assertTrue(!workflow.importDate().before(before) && !workflow.importDate().after(after),
             () -> workflow.importDate() + " is not between " + before + " and " + after);
    }

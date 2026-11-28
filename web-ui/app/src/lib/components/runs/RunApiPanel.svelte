@@ -37,7 +37,7 @@
   <CodeBlock class="wfr-pre" variant="plain" copy={false} language="bash" caption="curl command that launches the run" code={curl} />
   <div class="wfr-api-foot">
     <p class="wfr-note">
-      Answers 201 with the run; read it at <span class="wfr-mono">GET /api/arazzo/runs/{'{id}'}</span>.
+      Answers 201 with the run; read it at <span class="wfr-mono">GET /api/workflows/runs/{'{id}'}</span>.
       {#if proposed}{documentApiId.slice(0, 8)}… is the documentId of {documentLabel}.{:else}The document is named by its title and version; its id {documentApiId.slice(0, 8)}… works too.{/if}
     </p>
     <CopyButton value={curlOne} label="Copy command" variant="outline" class="wfr-copy" />

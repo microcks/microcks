@@ -243,8 +243,9 @@ public class ArazzoImportService {
             .toList();
       List<ArazzoImportAnalysis.WorkflowCheck> checks = document.getWorkflowIds().stream()
             .map(workflowId -> check(workflowId, document.getWorkflowCalls().get(workflowId), sources)).toList();
-      return new ArazzoImportAnalysis(null, document.getFormatVersion(), document.getTitle(), document.getVersion(),
-            document.getWorkflowIds(), sourceAnalyses, checks, apis(), warnings(document));
+      return new ArazzoImportAnalysis(null, document.getFormat(), document.getFormatVersion(),
+            document.getTitle(), document.getVersion(), document.getWorkflowIds(), sourceAnalyses, checks, apis(),
+            warnings(document));
    }
 
    /**

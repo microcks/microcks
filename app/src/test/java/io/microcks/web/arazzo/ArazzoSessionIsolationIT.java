@@ -367,7 +367,7 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
    }
 
    private String openSession(String customerId) throws Exception {
-      ResponseEntity<String> opened = restTemplate.exchange("/api/arazzo/sessions", HttpMethod.POST,
+      ResponseEntity<String> opened = restTemplate.exchange("/api/workflows/sessions", HttpMethod.POST,
             new HttpEntity<>("{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\", "
                   + "\"inputs\": {\"customerId\": \"" + customerId + "\"}}", jsonHeaders()),
             String.class);
@@ -377,7 +377,7 @@ class ArazzoSessionIsolationIT extends AbstractBaseIT {
 
    private JsonNode verify(String sessionId) throws Exception {
       ResponseEntity<String> verified = restTemplate.exchange(
-            "/api/arazzo/sessions/" + sessionId + "/verification", HttpMethod.POST,
+            "/api/workflows/sessions/" + sessionId + "/verification", HttpMethod.POST,
             new HttpEntity<>(jsonHeaders()), String.class);
       assertEquals(200, verified.getStatusCode().value(), verified.getBody());
       return JSON.readTree(verified.getBody());

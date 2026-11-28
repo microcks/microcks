@@ -36,6 +36,9 @@ Microcks is a Java/Spring Boot backend with an Angular frontend.
 - **Follow the Arazzo specification.** Arazzo 1.0.1 and 1.1.0 are the reference. When the specification is ambiguous or
   silent, do not pick a behaviour: ask the maintainers. Anything outside the supported subset is refused at import with
   its reason, never ignored.
+- **URLs say workflow, not Arazzo.** The REST API is `/api/workflows/**`, the Mock URL
+  `POST /workflow/{title}/{version}/{workflowId}` (header `X-Microcks-Workflow-Run-Id`, property `workflow.mock-url.timeout`). The views of the API tell the format with
+  `format` and `formatVersion`, never `arazzoVersion`. No `arazzo` in a URL.
 - **App ↔ minion contract.** A change to the run request or to the reports changes `arazzo-minion-contract.json` and
   `ArazzoMinionContractTest` on both sides, in the same commit.
 - **Artifacts.** `ArazzoMetadata` (source links) and `ArazzoExamples` (expected runs) are Microcks kinds detected by

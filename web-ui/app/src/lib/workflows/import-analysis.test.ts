@@ -7,7 +7,8 @@ const apis = [
   { serviceId: 's-order', name: 'Order API', version: '1.0.0' }
 ];
 const analysis: ImportAnalysis = {
-  arazzoVersion: '1.0.1',
+  format: 'ARAZZO',
+  formatVersion: '1.0.1',
   title: 'Order fulfilment',
   version: '1.0.0',
   workflowIds: ['searchThenRead', 'placeOrder'],

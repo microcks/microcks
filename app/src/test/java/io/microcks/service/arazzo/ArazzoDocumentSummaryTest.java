@@ -72,7 +72,7 @@ class ArazzoDocumentSummaryTest {
 
       List<ArazzoDocumentSummary> documents = arazzoDocumentService.getDocumentSummaries(null);
 
-      assertEquals(List.of("API Pastry scenarios 1.0.0 (pastry.arazzo.yaml, Arazzo 1.0.1)"),
+      assertEquals(List.of("API Pastry scenarios 1.0.0 (pastry.arazzo.yaml, ARAZZO 1.0.1)"),
             documents.stream().map(ArazzoDocumentSummaryTest::describe).toList());
       assertEquals(List.of("pastryApi -> REST API Pastry - 2.0 2.0.0: linked"), sources(documents.get(0)));
       assertEquals(serviceRepository.findByNameAndVersion("API Pastry - 2.0", "2.0.0").getId(),
@@ -95,7 +95,7 @@ class ArazzoDocumentSummaryTest {
 
       List<ArazzoDocumentSummary> documents = arazzoDocumentService.getDocumentSummaries(null);
 
-      assertEquals(List.of("Order fulfilment 1.0.0 (place-order.arazzo.yaml, Arazzo 1.0.1)"),
+      assertEquals(List.of("Order fulfilment 1.0.0 (place-order.arazzo.yaml, ARAZZO 1.0.1)"),
             documents.stream().map(ArazzoDocumentSummaryTest::describe).toList());
       assertEquals(List.of("customerApi -> REST Customer API 1.0.0: linked", "orderApi -> Order API 1.0.0: not linked"),
             sources(documents.get(0)));
@@ -127,7 +127,7 @@ class ArazzoDocumentSummaryTest {
 
       List<ArazzoDocumentSummary> documents = arazzoDocumentService.getDocumentSummaries(null);
 
-      assertEquals(List.of("API Pastry scenarios 1.0.0 (null, Arazzo null)"),
+      assertEquals(List.of("API Pastry scenarios 1.0.0 (null, ARAZZO null)"),
             documents.stream().map(ArazzoDocumentSummaryTest::describe).toList());
       assertNull(documents.get(0).importDate());
       assertEquals(List.of(
@@ -160,8 +160,8 @@ class ArazzoDocumentSummaryTest {
    }
 
    private static String describe(ArazzoDocumentSummary document) {
-      return document.title() + " " + document.version() + " (" + document.fileName() + ", Arazzo "
-            + document.arazzoVersion() + ")";
+      return document.title() + " " + document.version() + " (" + document.fileName() + ", " + document.format() + " "
+            + document.formatVersion() + ")";
    }
 
    private static List<String> sources(ArazzoDocumentSummary document) {

@@ -95,7 +95,8 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
 
       assertEquals(201, launched.getStatusCode().value(), launched.getBody());
       String runId = JSON.readTree(launched.getBody()).get("id").asText();
-      assertEquals("/api/arazzo/runs/" + runId, java.net.URI.create(launched.getHeaders().getFirst("Location")).getPath());
+      assertEquals("/api/workflows/runs/" + runId, java.net.URI.create(launched.getHeaders().getFirst("Location"))
+            .getPath());
       ObjectNode runRequest = (ObjectNode) JSON.readTree(MINION.runRequests().get(0));
       assertEquals(List.of(runId, "listThenReadFirst", "/rest/API+Pastry+-+2.0/2.0.0"),
             List.of(runRequest.get("runId").asText(), runRequest.get("workflowId").asText(),
@@ -140,7 +141,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       String documentId = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       ResponseEntity<String> refused = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            "/api/workflows/documents/" + documentId + "/workflows/readThenReprice/runs",
             json("{\"inputs\": {\"pastry\": \"Eclair Cafe\"}, \"timeout\": 10000}"), String.class);
 
       assertEquals(400, refused.getStatusCode().value());
@@ -156,7 +157,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       assertEquals(404, launch("unknown", "readThenReprice").getStatusCode().value());
       ResponseEntity<String> refused = launch(documentId, "unknown");
       assertEquals("400 Unknown workflow: unknown", refused.getStatusCode().value() + " " + refused.getBody());
-      assertEquals(404, restTemplate.getForEntity("/api/arazzo/runs/unknown", String.class).getStatusCode().value());
+      assertEquals(404, restTemplate.getForEntity("/api/workflows/runs/unknown", String.class).getStatusCode().value());
       assertEquals(404, report("unknown", "steps", ArazzoMinionContractTest.contract().get("passedStep")));
       assertEquals(404, report("unknown", "outcome", ArazzoMinionContractTest.contract().get("runOutcome")));
    }
@@ -172,7 +173,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
 
       try {
          ResponseEntity<String> launched = restTemplate.postForEntity(
-               "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+               "/api/workflows/documents/" + documentId + "/workflows/readThenReprice/runs",
                json("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, \"timeout\": 10000, "
                      + "\"implementations\": {\"pastryApi\": \"http://localhost:8080\"}, "
                      + "\"secretName\": \"pastry-staging-token\"}"),
@@ -198,11 +199,11 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "order-api.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo.yaml", true);
       uploadArtifactFile(FIXTURES + "order-fulfilment.arazzo-metadata.yaml", false);
-      String documentId = JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody())
+      String documentId = JSON.readTree(restTemplate.getForEntity("/api/workflows/documents", String.class).getBody())
             .get(0).get("id").asText();
 
       ResponseEntity<String> launched = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/placeOrder/runs",
+            "/api/workflows/documents/" + documentId + "/workflows/placeOrder/runs",
             json("{\"inputs\": {\"customerId\": \"c-42\"}, \"timeout\": 10000, "
                   + "\"implementations\": {\"customerApi\": \"https://customers.staging.example\"}, "
                   + "\"target\": {\"kind\": \"mixed\", "
@@ -212,11 +213,12 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       assertEquals(201, launched.getStatusCode().value(), launched.getBody());
       JsonNode sources = JSON.readTree(MINION.runRequests().get(0)).get("sources");
       assertEquals(List.of("https://customers.staging.example", "/rest/Order+API/1.0.0"),
-            List.of(sources.get("customerApi").get("baseUrl").asText(), sources.get("orderApi").get("baseUrl").asText()));
+            List.of(sources.get("customerApi").get("baseUrl").asText(), sources.get("orderApi").get("baseUrl").asText(
+            )));
       String runId = JSON.readTree(launched.getBody()).get("id").asText();
       assertEquals("MIXED", run(runId).get("target").asText());
       JsonNode mixedRuns = JSON.readTree(restTemplate
-            .getForEntity("/api/arazzo/documents/" + documentId + "/runs?target=MIXED", String.class).getBody());
+            .getForEntity("/api/workflows/documents/" + documentId + "/runs?target=MIXED", String.class).getBody());
       assertEquals(List.of(runId), List.of(mixedRuns.get(0).get("id").asText()));
    }
 
@@ -225,7 +227,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       String documentId = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       ResponseEntity<String> refused = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            "/api/workflows/documents/" + documentId + "/workflows/readThenReprice/runs",
             json("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, "
                   + "\"target\": {\"kind\": \"mixed\", \"perSource\": {\"pastryApi\": \"staging\"}}}"),
             String.class);
@@ -242,7 +244,7 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       String documentId = pastryScenariosAreImported("pastry-scenarios.arazzo.yaml");
 
       ResponseEntity<String> refused = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/readThenReprice/runs",
+            "/api/workflows/documents/" + documentId + "/workflows/readThenReprice/runs",
             json("{\"inputs\": {\"pastry\": \"Eclair Cafe\", \"newPrice\": 2.6}, \"target\": {\"kind\": \"" + kind
                   + "\", \"perSource\": {\"pastryApi\": \"mock\"}}}"),
             String.class);
@@ -257,21 +259,23 @@ class ArazzoRunControllerIT extends AbstractBaseIT {
       uploadArtifactFile(FIXTURES + "api-pastry-2.0.openapi.yaml", true);
       uploadArtifactFile(FIXTURES + fixture, true);
       uploadArtifactFile(FIXTURES + "pastry.arazzo-metadata.yaml", false);
-      return JSON.readTree(restTemplate.getForEntity("/api/arazzo/documents", String.class).getBody()).get(0).get("id").asText();
+      return JSON.readTree(restTemplate.getForEntity("/api/workflows/documents", String.class).getBody()).get(0).get(
+            "id").asText();
    }
 
    private ResponseEntity<String> launch(String documentId, String workflowId) {
-      return restTemplate.postForEntity("/api/arazzo/documents/" + documentId + "/workflows/" + workflowId + "/runs",
+      return restTemplate.postForEntity("/api/workflows/documents/" + documentId + "/workflows/" + workflowId + "/runs",
             json("{\"inputs\": {}, \"timeout\": 10000}"), String.class);
    }
 
    private int report(String runId, String kind, JsonNode report) {
-      return restTemplate.postForEntity("/api/arazzo/runs/" + runId + "/" + kind, json(report.toString()), String.class)
+      return restTemplate.postForEntity("/api/workflows/runs/" + runId + "/" + kind, json(report.toString()),
+            String.class)
             .getStatusCode().value();
    }
 
    private JsonNode run(String runId) throws Exception {
-      return JSON.readTree(restTemplate.getForEntity("/api/arazzo/runs/" + runId, String.class).getBody());
+      return JSON.readTree(restTemplate.getForEntity("/api/workflows/runs/" + runId, String.class).getBody());
    }
 
    private static String describe(JsonNode step) {

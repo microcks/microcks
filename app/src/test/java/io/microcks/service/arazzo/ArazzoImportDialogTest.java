@@ -111,7 +111,7 @@ class ArazzoImportDialogTest {
    void theDroppedDocumentIsValidatedBeforeImport() throws Exception {
       ArazzoImportAnalysis analysis = arazzoImportService.analyseArazzoDocument(document("place-order"), null);
 
-      assertEquals("Valid Arazzo 1.0.1 · title \"Order fulfilment\" 1.0.0 · 2 workflows · 2 source descriptions",
+      assertEquals("Valid ARAZZO 1.0.1 · title \"Order fulfilment\" 1.0.0 · 2 workflows · 2 source descriptions",
             validation(analysis));
       assertEquals(0, workflowDocumentRepository.count());
    }
@@ -286,7 +286,8 @@ class ArazzoImportDialogTest {
       if (analysis.refusal() != null) {
          return "Refused: " + analysis.refusal();
       }
-      return "Valid Arazzo " + analysis.arazzoVersion() + " · title \"" + analysis.title() + "\" " + analysis.version()
+      return "Valid " + analysis.format() + " " + analysis.formatVersion() + " · title \"" + analysis.title() + "\" "
+            + analysis.version()
             + " · " + analysis.workflowIds().size() + " workflows · " + analysis.sources().size()
             + " source descriptions";
    }

@@ -41,7 +41,7 @@ import java.util.Map;
  * tests calls the mocks naming the session, then the test asks for the verification of the session.
  * @author SebastienDegodez
  */
-@Path("/api/arazzo")
+@Path("/api/workflows")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RunOnVirtualThread
@@ -81,8 +81,8 @@ public class ArazzoSessionController {
       try {
          return arazzoSessionService.openSession(request.documentId(), request.workflowId(), request.inputs(),
                      request.failures() == null ? Map.of() : request.failures())
-               .map(session -> Response.created(URI.create("/api/arazzo/sessions/" + session.getId())).entity(session)
-                     .build())
+               .map(session -> Response.created(URI.create("/api/workflows/sessions/" + session.getId()))
+                     .entity(session).build())
                .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
       } catch (ArazzoRunRefusedException arre) {
          // The reason is plain text, whatever the client accepts, as the Microcks API describes it.

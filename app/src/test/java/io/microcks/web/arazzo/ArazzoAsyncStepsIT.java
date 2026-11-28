@@ -75,7 +75,7 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
       String documentId = orderEventsAreUploadedAndLinked();
 
       ResponseEntity<String> response = restTemplate
-            .getForEntity("/api/arazzo/documents/" + documentId + "/workflows/placeThenConfirm", String.class);
+            .getForEntity("/api/workflows/documents/" + documentId + "/workflows/placeThenConfirm", String.class);
       JsonNode steps = new ObjectMapper().readTree(response.getBody()).path("steps");
 
       assertEquals(200, response.getStatusCode().value());
@@ -96,7 +96,7 @@ class ArazzoAsyncStepsIT extends AbstractBaseIT {
       headers.setContentType(MediaType.APPLICATION_JSON);
 
       ResponseEntity<String> refused = restTemplate.postForEntity(
-            "/api/arazzo/documents/" + documentId + "/workflows/placeThenConfirm/runs",
+            "/api/workflows/documents/" + documentId + "/workflows/placeThenConfirm/runs",
             new HttpEntity<>("{\"inputs\": {\"customer\": \"laurent\"}, \"timeout\": 10000}", headers), String.class);
 
       assertEquals(400, refused.getStatusCode().value());

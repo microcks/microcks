@@ -41,7 +41,7 @@ import java.util.List;
  * and result.
  * @author SebastienDegodez
  */
-@Path("/api/arazzo")
+@Path("/api/workflows")
 @Produces(MediaType.APPLICATION_JSON)
 @RunOnVirtualThread
 public class ArazzoRunHistoryController {

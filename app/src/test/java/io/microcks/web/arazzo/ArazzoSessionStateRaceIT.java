@@ -238,7 +238,7 @@ class ArazzoSessionStateRaceIT extends AbstractBaseIT {
    }
 
    private String openSession() throws Exception {
-      ResponseEntity<String> opened = restTemplate.exchange("/api/arazzo/sessions", HttpMethod.POST,
+      ResponseEntity<String> opened = restTemplate.exchange("/api/workflows/sessions", HttpMethod.POST,
             new HttpEntity<>("{\"documentId\": \"Order saga:1.0.0\", \"workflowId\": \"placeOrderSaga\", "
                   + "\"inputs\": {\"customerId\": \"c-7\"}}", jsonHeaders()),
             String.class);

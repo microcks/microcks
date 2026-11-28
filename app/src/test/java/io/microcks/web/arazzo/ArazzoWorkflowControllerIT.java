@@ -63,14 +63,15 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
       String documentId = pastryScenariosAreUploadedAndLinked();
 
       ResponseEntity<String> response = restTemplate
-            .getForEntity("/api/arazzo/documents/" + documentId + "/workflows/readThenReprice", String.class);
+            .getForEntity("/api/workflows/documents/" + documentId + "/workflows/readThenReprice", String.class);
 
       assertEquals(200, response.getStatusCode().value());
       JsonNode workflow = new ObjectMapper().readTree(response.getBody());
       assertEquals("readThenReprice [\"readThenReprice\",\"listThenReadFirst\"]",
             workflow.path("workflowId").asText() + " " + workflow.path("workflowIds"));
       assertEquals("ARAZZO 1.0.1 from pastry-scenarios.arazzo.yaml, imported",
-            "ARAZZO " + workflow.path("arazzoVersion").asText() + " from " + workflow.path("fileName").asText()
+            workflow.path("format").asText() + " " + workflow.path("formatVersion").asText() + " from "
+                  + workflow.path("fileName").asText()
                   + (workflow.path("importDate").isMissingNode() ? "" : ", imported"));
       assertEquals("API Pastry - 2.0 2.0.0: 3 operations, 3 used by steps",
             workflow.path("sources").path(0).path("link").path("apiName").asText() + " "
@@ -95,7 +96,7 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
       String documentId = pastryScenariosAreUploadedAndLinked();
 
       ResponseEntity<String> response = restTemplate
-            .getForEntity("/api/arazzo/documents/" + documentId + "/workflows/unknown", String.class);
+            .getForEntity("/api/workflows/documents/" + documentId + "/workflows/unknown", String.class);
 
       assertEquals(404, response.getStatusCode().value());
    }
@@ -105,7 +106,7 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
       String documentId = pastryScenariosAreUploadedAndLinked();
 
       ResponseEntity<String> response = restTemplate.getForEntity(
-            "/api/arazzo/services/" + serviceId("API Pastry - 2.0", "2.0.0") + "/workflows", String.class);
+            "/api/workflows/services/" + serviceId("API Pastry - 2.0", "2.0.0") + "/workflows", String.class);
 
       assertEquals(200, response.getStatusCode().value());
       JsonNode usage = new ObjectMapper().readTree(response.getBody());
@@ -126,7 +127,7 @@ class ArazzoWorkflowControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/microcks/artifact/soapui/HelloAPI-soapui-project.xml", true);
 
       ResponseEntity<String> response = restTemplate
-            .getForEntity("/api/arazzo/services/" + serviceId("Hello API Mock", "0.8") + "/workflows", String.class);
+            .getForEntity("/api/workflows/services/" + serviceId("Hello API Mock", "0.8") + "/workflows", String.class);
 
       assertEquals(200, response.getStatusCode().value());
       assertEquals("{\"documents\":[],\"operationWorkflowCounts\":{}}", response.getBody());

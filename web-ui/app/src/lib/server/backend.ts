@@ -521,7 +521,7 @@ export async function secretHeaders(secretName: string, token?: string): Promise
   return headers;
 }
 
-/* ---- Arazzo (`/api/arazzo`, ported from feature/arazzo S1–S4) ---- */
+/* ---- Arazzo (`/api/workflows`, ported from feature/arazzo S1–S4) ---- */
 
 export interface BackendArazzoSourceLink {
   sourceName: string;
@@ -534,7 +534,8 @@ export interface BackendArazzoDocumentSummary {
   id: string;
   title: string;
   version: string;
-  arazzoVersion: string;
+  format: string;
+  formatVersion: string;
   fileName?: string | null;
   importDate?: number | string;
   sources: { link: BackendArazzoSourceLink; apiId?: string | null; apiType?: string | null }[];
@@ -575,7 +576,8 @@ export interface BackendArazzoWorkflowDetail {
   documentId: string;
   title: string;
   version: string;
-  arazzoVersion: string;
+  format: string;
+  formatVersion: string;
   fileName?: string | null;
   importDate?: number | string;
   workflowIds: string[];
@@ -592,13 +594,13 @@ export interface BackendArazzoWorkflowDetail {
 }
 
 export async function fetchArazzoDocuments(token?: string): Promise<BackendArazzoDocumentSummary[]> {
-  const res = await call('/api/arazzo/documents', token, { headers: { accept: 'application/json' } });
+  const res = await call('/api/workflows/documents', token, { headers: { accept: 'application/json' } });
   return (await res.json()) as BackendArazzoDocumentSummary[];
 }
 
 export async function fetchArazzoWorkflow(docId: string, workflowId: string, token?: string): Promise<BackendArazzoWorkflowDetail | undefined> {
   try {
-    const path = `/api/arazzo/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}`;
+    const path = `/api/workflows/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}`;
     const res = await call(path, token, { headers: { accept: 'application/json' } });
     return (await res.json()) as BackendArazzoWorkflowDetail;
   } catch (e) {
@@ -609,7 +611,7 @@ export async function fetchArazzoWorkflow(docId: string, workflowId: string, tok
 
 export async function fetchArazzoSource(docId: string, token?: string): Promise<string | undefined> {
   try {
-    const res = await call(`/api/arazzo/documents/${encodeURIComponent(docId)}/source`, token);
+    const res = await call(`/api/workflows/documents/${encodeURIComponent(docId)}/source`, token);
     return await res.text();
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
@@ -617,7 +619,7 @@ export async function fetchArazzoSource(docId: string, token?: string): Promise<
   }
 }
 
-/* ---- Arazzo import dialog and relink (`/api/arazzo/documents/analysis`, stories S14 and S19) ---- */
+/* ---- Arazzo import dialog and relink (`/api/workflows/documents/analysis`, stories S14 and S19) ---- */
 
 import type { ApiRef, ImportAnalysis } from '#lib/workflows/import-analysis.js';
 import type { BackendExample } from '#lib/workflows/examples.js';
@@ -630,7 +632,7 @@ const jsonCall = (path: string, token: string | undefined, method: string, body:
 
 /** What Microcks says about a document before importing it; nothing is stored. */
 export async function analyseArazzoDocument(content: string, links: BackendLinks | undefined, token?: string): Promise<ImportAnalysis> {
-  return (await (await jsonCall('/api/arazzo/documents/analysis', token, 'POST', { content, links: links ?? null })).json()) as ImportAnalysis;
+  return (await (await jsonCall('/api/workflows/documents/analysis', token, 'POST', { content, links: links ?? null })).json()) as ImportAnalysis;
 }
 
 /** Imports a document with the links chosen for its sources, all or nothing; answers its summary. */
@@ -640,13 +642,13 @@ export async function importArazzoDocument(
   links: BackendLinks,
   token?: string
 ): Promise<BackendArazzoDocumentSummary> {
-  return (await (await jsonCall('/api/arazzo/documents', token, 'POST', { content, fileName, links })).json()) as BackendArazzoDocumentSummary;
+  return (await (await jsonCall('/api/workflows/documents', token, 'POST', { content, fileName, links })).json()) as BackendArazzoDocumentSummary;
 }
 
 /** The same analysis for an imported document; `links` undefined = the links of its ArazzoMetadata. Undefined when unknown. */
 export async function analyseImportedArazzoDocument(docId: string, links: BackendLinks | undefined, token?: string): Promise<ImportAnalysis | undefined> {
   try {
-    const res = await jsonCall(`/api/arazzo/documents/${encodeURIComponent(docId)}/analysis`, token, 'POST', { links: links ?? null });
+    const res = await jsonCall(`/api/workflows/documents/${encodeURIComponent(docId)}/analysis`, token, 'POST', { links: links ?? null });
     return (await res.json()) as ImportAnalysis;
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
@@ -657,7 +659,7 @@ export async function analyseImportedArazzoDocument(docId: string, links: Backen
 /** Links the sources of an imported document again (replaces the sources of its ArazzoMetadata). Undefined when unknown. */
 export async function relinkArazzoDocumentSources(docId: string, links: BackendLinks, token?: string): Promise<BackendArazzoDocumentSummary | undefined> {
   try {
-    const res = await jsonCall(`/api/arazzo/documents/${encodeURIComponent(docId)}/sources`, token, 'PUT', { links });
+    const res = await jsonCall(`/api/workflows/documents/${encodeURIComponent(docId)}/sources`, token, 'PUT', { links });
     return (await res.json()) as BackendArazzoDocumentSummary;
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
@@ -665,7 +667,7 @@ export async function relinkArazzoDocumentSources(docId: string, links: BackendL
   }
 }
 
-/* ---- Arazzo runs (`/api/arazzo`, ported from feature/arazzo S5–S11) ---- */
+/* ---- Arazzo runs (`/api/workflows`, ported from feature/arazzo S5–S11) ---- */
 
 export interface BackendWorkflowRunSummary {
   id: string;
@@ -743,14 +745,14 @@ export interface BackendArazzoRunLaunch {
 }
 
 export async function launchArazzoRun(docId: string, workflowId: string, launch: BackendArazzoRunLaunch, token?: string): Promise<BackendWorkflowResult> {
-  const path = `/api/arazzo/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/runs`;
+  const path = `/api/workflows/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/runs`;
   const res = await call(path, token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(launch) });
   return (await res.json()) as BackendWorkflowResult;
 }
 
 export async function fetchArazzoRun(runId: string, token?: string): Promise<BackendWorkflowResult | undefined> {
   try {
-    const res = await call(`/api/arazzo/runs/${encodeURIComponent(runId)}`, token, { headers: { accept: 'application/json' } });
+    const res = await call(`/api/workflows/runs/${encodeURIComponent(runId)}`, token, { headers: { accept: 'application/json' } });
     return (await res.json()) as BackendWorkflowResult;
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
@@ -759,7 +761,7 @@ export async function fetchArazzoRun(runId: string, token?: string): Promise<Bac
 }
 
 export async function fetchArazzoRuns(docId: string, size: number, token?: string): Promise<BackendWorkflowRunSummary[]> {
-  const res = await call(`/api/arazzo/documents/${encodeURIComponent(docId)}/runs?page=0&size=${size}`, token, { headers: { accept: 'application/json' } });
+  const res = await call(`/api/workflows/documents/${encodeURIComponent(docId)}/runs?page=0&size=${size}`, token, { headers: { accept: 'application/json' } });
   return (await res.json()) as BackendWorkflowRunSummary[];
 }
 
@@ -779,7 +781,7 @@ export async function launchArazzoExampleRuns(
   token?: string
 ): Promise<BackendExampleLaunch[] | undefined> {
   try {
-    const path = `/api/arazzo/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/examples/runs`;
+    const path = `/api/workflows/documents/${encodeURIComponent(docId)}/workflows/${encodeURIComponent(workflowId)}/examples/runs`;
     return (await (await call(path, token, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(launch) })).json()) as BackendExampleLaunch[];
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
@@ -787,21 +789,21 @@ export async function launchArazzoExampleRuns(
   }
 }
 
-/* ---- Arazzo verification sessions (`/api/arazzo/sessions`, stories S15, S16, S17) ---- */
+/* ---- Arazzo verification sessions (`/api/workflows/sessions`, stories S15, S16, S17) ---- */
 
-/** A session of Microcks, as `POST`, `GET /api/arazzo/sessions` and `GET /api/arazzo/sessions/{id}` give it. */
+/** A session of Microcks, as `POST`, `GET /api/workflows/sessions` and `GET /api/workflows/sessions/{id}` give it. */
 export type BackendArazzoSession = BackendSession;
 
 /** The sessions of a workflow still kept by Microcks, the latest first. */
 export async function listArazzoSessions(documentId: string, workflowId: string, token?: string): Promise<BackendArazzoSession[]> {
   const query = `documentId=${encodeURIComponent(documentId)}&workflowId=${encodeURIComponent(workflowId)}`;
-  return (await (await call(`/api/arazzo/sessions?${query}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession[];
+  return (await (await call(`/api/workflows/sessions?${query}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession[];
 }
 
 /** A session read now, with the calls counted so far; undefined when Microcks does not know it (or it expired). */
 export async function fetchArazzoSession(sessionId: string, token?: string): Promise<BackendArazzoSession | undefined> {
   try {
-    return (await (await call(`/api/arazzo/sessions/${encodeURIComponent(sessionId)}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession;
+    return (await (await call(`/api/workflows/sessions/${encodeURIComponent(sessionId)}`, token, { headers: { accept: 'application/json' } })).json()) as BackendArazzoSession;
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
     throw e;
@@ -812,13 +814,13 @@ export async function openArazzoSession(
   request: { documentId: string; workflowId: string; inputs?: Record<string, unknown>; failures?: Record<string, string> },
   token?: string
 ): Promise<BackendArazzoSession> {
-  return (await (await jsonCall('/api/arazzo/sessions', token, 'POST', request)).json()) as BackendArazzoSession;
+  return (await (await jsonCall('/api/workflows/sessions', token, 'POST', request)).json()) as BackendArazzoSession;
 }
 
 /** Closes a session; false when Microcks does not know it. */
 export async function closeArazzoSession(sessionId: string, token?: string): Promise<boolean> {
   try {
-    await call(`/api/arazzo/sessions/${encodeURIComponent(sessionId)}`, token, { method: 'DELETE' });
+    await call(`/api/workflows/sessions/${encodeURIComponent(sessionId)}`, token, { method: 'DELETE' });
     return true;
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return false;
@@ -829,7 +831,7 @@ export async function closeArazzoSession(sessionId: string, token?: string): Pro
 /** The verification of a session: a run of origin `SESSION`; undefined when Microcks does not know the session. */
 export async function verifyArazzoSession(sessionId: string, token?: string): Promise<BackendWorkflowResult | undefined> {
   try {
-    return (await (await call(`/api/arazzo/sessions/${encodeURIComponent(sessionId)}/verification`, token, { method: 'POST', headers: { accept: 'application/json' } })).json()) as BackendWorkflowResult;
+    return (await (await call(`/api/workflows/sessions/${encodeURIComponent(sessionId)}/verification`, token, { method: 'POST', headers: { accept: 'application/json' } })).json()) as BackendWorkflowResult;
   } catch (e) {
     if (e instanceof BackendError && e.status === 404) return undefined;
     throw e;

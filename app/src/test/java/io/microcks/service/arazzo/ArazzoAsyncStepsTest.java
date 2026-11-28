@@ -127,8 +127,8 @@ class ArazzoAsyncStepsTest {
       ArazzoDocumentSummary imported = arazzoImportService.importArazzoDocument(content, "order-events.arazzo.yaml",
             linksOf(analysis));
 
-      assertEquals("Arazzo 1.1.0, refused: null",
-            "Arazzo " + analysis.arazzoVersion() + ", refused: " + analysis.refusal());
+      assertEquals("ARAZZO 1.1.0, refused: null",
+            analysis.format() + " " + analysis.formatVersion() + ", refused: " + analysis.refusal());
       assertEquals(
             List.of("orderApi: MATCHED Order API 1.0.0, 1 of 1 called found",
                   "orderEvents: MATCHED Order events 1.0.0, 4 of 5 called found"),

@@ -2,7 +2,7 @@ import type { RunOrigin, WorkflowInput } from './types.ts';
 
 /** The Mock URL of a workflow (story S27): the title writes its spaces as `+`, like the Mock URLs of APIs. */
 export function mockUrlOf(base: string, title: string, version: string, workflowId: string): string {
-  return `${base}/arazzo/${encodeURIComponent(title).replace(/%20/g, '+')}/${encodeURIComponent(version)}/${encodeURIComponent(workflowId)}`;
+  return `${base}/workflow/${encodeURIComponent(title).replace(/%20/g, '+')}/${encodeURIComponent(version)}/${encodeURIComponent(workflowId)}`;
 }
 
 /**

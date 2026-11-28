@@ -16,6 +16,7 @@
 package io.microcks.service.arazzo.view;
 
 import io.microcks.domain.ServiceType;
+import io.microcks.domain.workflow.WorkflowFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -25,15 +26,16 @@ import java.util.List;
  * @param id            The id of the imported document
  * @param title         The title of the info object of the document
  * @param version       The version of the info object of the document
- * @param arazzoVersion The version of the Arazzo specification the document uses
+ * @param format        The format of the document: the Arazzo specification it follows
+ * @param formatVersion The version of that format the document uses
  * @param fileName      The name of the file the document was uploaded from; null when it is not known
  * @param importDate    When the document was last imported
  * @param sources       The source descriptions of the document and their APIs, in the order of the document
  * @param workflows     The workflows of the document, in the order of the document
  * @author SebastienDegodez
  */
-public record ArazzoDocumentSummary(String id, String title, String version, String arazzoVersion, String fileName,
-      Date importDate, List<Source> sources, List<Workflow> workflows) {
+public record ArazzoDocumentSummary(String id, String title, String version, WorkflowFormat format,
+      String formatVersion, String fileName, Date importDate, List<Source> sources, List<Workflow> workflows) {
 
    /**
     * What the Workflows page shows of a workflow of an Arazzo document.

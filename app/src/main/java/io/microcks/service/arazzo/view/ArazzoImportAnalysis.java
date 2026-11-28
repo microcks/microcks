@@ -16,12 +16,14 @@
 package io.microcks.service.arazzo.view;
 
 import io.microcks.domain.ServiceRef;
+import io.microcks.domain.workflow.WorkflowFormat;
 import java.util.List;
 
 /**
  * What an Arazzo document would become if it were imported with the links of its sources. Nothing is stored.
  * @param refusal       Why the document cannot be imported; null when it can
- * @param arazzoVersion The version of Arazzo the document uses; null when it is refused
+ * @param format        The format of the document; null when it is refused
+ * @param formatVersion The version of that format the document uses; null when it is refused
  * @param title         The title of the document; null when it is refused
  * @param version       The version of the document; null when it is refused
  * @param workflowIds   The ids of its workflows, in the order of the document; empty when it is refused
@@ -33,8 +35,8 @@ import java.util.List;
  *                      there is nothing to say or when it is refused
  * @author SebastienDegodez
  */
-public record ArazzoImportAnalysis(String refusal, String arazzoVersion, String title, String version,
-      List<String> workflowIds, List<Source> sources, List<WorkflowCheck> checks,
+public record ArazzoImportAnalysis(String refusal, WorkflowFormat format, String formatVersion,
+      String title, String version, List<String> workflowIds, List<Source> sources, List<WorkflowCheck> checks,
       List<ServiceRef> apis, List<String> warnings) {
 
    /**
@@ -43,7 +45,8 @@ public record ArazzoImportAnalysis(String refusal, String arazzoVersion, String 
     * @return The analysis of a refused document
     */
    public static ArazzoImportAnalysis refused(String refusal, List<ServiceRef> apis) {
-      return new ArazzoImportAnalysis(refusal, null, null, null, List.of(), List.of(), List.of(), apis, List.of());
+      return new ArazzoImportAnalysis(refusal, null, null, null, null, List.of(), List.of(), List.of(), apis,
+            List.of());
    }
 
    /**

@@ -93,7 +93,7 @@ class ArazzoStepActionsIT extends AbstractBaseIT {
 
    private JsonNode workflow(String documentId, String workflowId) throws Exception {
       ResponseEntity<String> response = restTemplate
-            .getForEntity("/api/arazzo/documents/" + documentId + "/workflows/" + workflowId, String.class);
+            .getForEntity("/api/workflows/documents/" + documentId + "/workflows/" + workflowId, String.class);
       assertEquals(200, response.getStatusCode().value());
       return new ObjectMapper().readTree(response.getBody());
    }

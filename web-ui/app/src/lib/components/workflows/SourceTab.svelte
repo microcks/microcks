@@ -5,7 +5,7 @@
   import { analysisIssues, type ImportAnalysis } from '#lib/workflows/import-analysis.js';
   import { isAvailable, isDemo, unavailableReason } from '#lib/workflows/availability.js';
   import { syncedText } from '#lib/workflows/header.js';
-  import type { ArazzoDocument, ImportIssue, Workflow } from '#lib/workflows/types.js';
+  import { formatName, type ArazzoDocument, type ImportIssue, type Workflow } from '#lib/workflows/types.js';
 
   interface Props {
     workflow: Workflow;
@@ -127,7 +127,7 @@
     <section aria-label="Arazzo source" class="wf-src">
       <div class="wf-src-toolbar">
         <div class="wf-src-caption">
-          <ApiBadge arazzo name={document.arazzoVersion} size="sm" />
+          <ApiBadge arazzo name={document.formatVersion} size="sm" />
           <span class="wf-src-where">
             workflow {workflow.workflowId}{wfBlock && last ? ` · lines ${wfBlock.from + 1}–${last.to + 1}` : ''}{selected ? ` · selected ${selected.label}` : ''}
           </span>
@@ -145,12 +145,12 @@
 
       <div role="status" aria-live="polite" class="wf-src-band">
         {#if validating}
-          <span>{isDemo(document) ? `Validating against Arazzo ${document.arazzoVersion}…` : 'Microcks is analysing the document…'}</span>
+          <span>{isDemo(document) ? `Validating against ${formatName(document.format)} ${document.formatVersion}…` : 'Microcks is analysing the document…'}</span>
         {:else if validateError}
           <span class="wf-src-invalid"><Icon name="x-circle" size={15} />{validateError}</span>
         {:else if issues.length === 0}
           <span class="wf-src-band-line">
-            <span class="wf-src-valid"><Icon name="check-circle" size={15} />Valid Arazzo {document.arazzoVersion}</span>
+            <span class="wf-src-valid"><Icon name="check-circle" size={15} />Valid {formatName(document.format)} {document.formatVersion}</span>
             <span>· inside the subset Microcks runs · {workflow.steps.length} steps · {ops.length} operations found in {linkedTo.map((l) => l.label ?? l.name).join(', ')}</span>
             <span class="wf-src-muted">· validated {when}</span>
           </span>

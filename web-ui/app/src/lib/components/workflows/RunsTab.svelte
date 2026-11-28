@@ -42,7 +42,7 @@
   const label = $derived(FILTERS.find((f) => f.id === filter)?.label ?? '');
   const total = $derived(runs[0]?.number ?? runs.length);
   const n = $derived(workflow.steps.length);
-  const api = $derived(`/api/arazzo/documents/{documentId}/workflows/${workflow.workflowId}/runs`);
+  const api = $derived(`/api/workflows/documents/{documentId}/workflows/${workflow.workflowId}/runs`);
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   function originSub(run: WorkflowRun): string {

@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import { BackendError } from '#lib/server/backend.js';
 import { verifyRealSession } from '#lib/server/sessions-arazzo.js';
 
-// Verifies the calls a session received (POST /api/arazzo/sessions/{id}/verification): a run of origin Session.
+// Verifies the calls a session received (POST /api/workflows/sessions/{id}/verification): a run of origin Session.
 export const POST = async ({ params, locals }) => {
   try {
     const session = await verifyRealSession(params.id, locals.token);

@@ -7,7 +7,7 @@
   import type { WorkflowListItem } from '#lib/workflows/list.js';
   import { runPath, runSetupPath, workflowPath } from '#lib/workflows/paths.js';
   import { sourceColor } from '#lib/workflows/source-color.js';
-  import type { ArazzoDocument, RunKindFilter, SourceDescription, WorkflowRun } from '#lib/workflows/types.js';
+  import { formatName, type ArazzoDocument, type RunKindFilter, type SourceDescription, type WorkflowRun } from '#lib/workflows/types.js';
   import LoomThumb from './LoomThumb.svelte';
 
   interface Props {
@@ -75,7 +75,7 @@
         <Icon name="file-text" size={18} class="wf-text2" />
         <h2>{doc.file}</h2>
         <span class="wf-doc-name">{doc.title}</span>
-        <span class="wf-tag">arazzo {doc.arazzoVersion}</span>
+        <span class="wf-tag">{formatName(doc.format).toLowerCase()} {doc.formatVersion}</span>
         <span class="wf-tag">version {doc.version}</span>
       </div>
       <span class="wf-doc-origin">

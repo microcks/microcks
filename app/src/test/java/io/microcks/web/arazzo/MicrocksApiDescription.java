@@ -64,7 +64,7 @@ final class MicrocksApiDescription {
    /**
     * Check that a JSON request body is the one the description gives for an operation.
     * @param verb The verb of the operation, such as POST
-    * @param path The path of the operation under /api, as the description writes it, such as /arazzo/runs/{runId}
+    * @param path The path of the operation under /api, as the description writes it, such as /workflows/runs/{runId}
     * @param body The JSON body of the request
     */
    void assertRequestConforms(String verb, String path, String body) throws IOException {
@@ -78,7 +78,8 @@ final class MicrocksApiDescription {
     * Check that a response is one the description gives for an operation: its status is described, a JSON body conforms
     * to the schema of its status and content type, and any other body has its content type described.
     * @param verb     The verb of the operation, such as GET
-    * @param path     The path of the operation under /api, as the description writes it, such as /arazzo/runs/{runId}
+    * @param path     The path of the operation under /api, as the description writes it, such as
+    *                 /workflows/runs/{runId}
     * @param response The response received
     */
    void assertResponseConforms(String verb, String path, ResponseEntity<String> response) throws IOException {

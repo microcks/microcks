@@ -16,6 +16,7 @@
 package io.microcks.service.arazzo.view;
 
 import io.microcks.domain.workflow.WorkflowExample;
+import io.microcks.domain.workflow.WorkflowFormat;
 import io.microcks.domain.workflow.WorkflowStepOperation;
 import java.util.Date;
 import java.util.List;
@@ -27,7 +28,8 @@ import java.util.Map;
  * @param documentId    The id of the Arazzo document the workflow belongs to
  * @param title         The title of the Arazzo document
  * @param version       The version of the Arazzo document
- * @param arazzoVersion The version of Arazzo the document uses
+ * @param format        The format of the document: the Arazzo specification it follows
+ * @param formatVersion The version of that format the document uses
  * @param fileName      The name of the file the document was imported from, null if unknown
  * @param importDate    When the document was last imported
  * @param workflowIds   The ids of all the workflows of the document, in the order of the document
@@ -43,8 +45,8 @@ import java.util.Map;
  * @param examples      The recorded examples of the workflow, in the order of its ArazzoExamples
  * @author SebastienDegodez
  */
-public record ArazzoWorkflowDetail(String documentId, String title, String version, String arazzoVersion,
-      String fileName, Date importDate, List<String> workflowIds, List<Source> sources,
+public record ArazzoWorkflowDetail(String documentId, String title, String version, WorkflowFormat format,
+      String formatVersion, String fileName, Date importDate, List<String> workflowIds, List<Source> sources,
       String workflowId, String summary, String description, List<Input> inputs,
       List<Step> steps, Map<String, String> outputs, List<DataPassing> dataPassings,
       ArazzoWorkflowStatus status, List<WorkflowExample> examples) {

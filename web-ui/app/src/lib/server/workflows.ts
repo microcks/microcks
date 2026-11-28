@@ -43,7 +43,7 @@ import { sessionsOf } from './sessions-arazzo';
 import { getService, listServices, refreshServices } from './store';
 
 /*
- * Arazzo documents and workflows come from the Microcks backend (`/api/arazzo`, stories S1–S4 of feature/arazzo).
+ * Arazzo documents and workflows come from the Microcks backend (`/api/workflows`, stories S1–S4 of feature/arazzo).
  * When the backend is unreachable, the placeholder below is shown instead, flagged as demo data.
  * Runs, sessions and examples (S5 and later) are not served by the backend yet: real workflows get none, and runs
  * launched from the UI are simulated in memory.
@@ -202,7 +202,7 @@ export const nextRunNumber = (docId: string, workflowId: string): number =>
   state.runs.filter((r) => r.documentId === docId && r.workflowId === workflowId).reduce((max, r) => Math.max(max, r.number), 0) + 1;
 
 /* ---------------------------------------------------------------------------------------------------------------
- * Backend mode: documents and workflows read from `/api/arazzo`, mapped to the UI types of the Deep Ink mockup.
+ * Backend mode: documents and workflows read from `/api/workflows`, mapped to the UI types of the Deep Ink mockup.
  * ------------------------------------------------------------------------------------------------------------- */
 
 /** Real documents and workflows, cached for the synchronous accessors used by the (simulated) run pages. */
@@ -300,7 +300,8 @@ function toDocument(
     apiId: summary.id,
     file: summary.fileName ?? `${summary.title}.arazzo.yaml`,
     title: summary.title,
-    arazzoVersion: summary.arazzoVersion,
+    format: summary.format,
+    formatVersion: summary.formatVersion,
     version: summary.version,
     origin: documentOrigin(job, summary.importDate === undefined ? undefined : Number(new Date(summary.importDate)), ago),
     ...(job ? { job: { id: job.id, name: job.name } } : {}),

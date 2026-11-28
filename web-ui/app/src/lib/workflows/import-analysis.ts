@@ -1,6 +1,6 @@
 /*
  * What Microcks says about an Arazzo document before it is imported, or about an imported one before its sources are
- * linked again (`POST /api/arazzo/documents/analysis`, `POST /api/arazzo/documents/{id}/analysis`). Pure and
+ * linked again (`POST /api/workflows/documents/analysis`, `POST /api/workflows/documents/{id}/analysis`). Pure and
  * client-safe: the screens only word it.
  */
 
@@ -32,7 +32,8 @@ export interface WorkflowCheck {
 export interface ImportAnalysis {
   /** Why Microcks refuses the document (outside the subset it runs, unreadable...); absent when it can be imported. */
   refusal?: string | null;
-  arazzoVersion?: string | null;
+  format?: string | null;
+  formatVersion?: string | null;
   title?: string | null;
   version?: string | null;
   workflowIds: string[];
