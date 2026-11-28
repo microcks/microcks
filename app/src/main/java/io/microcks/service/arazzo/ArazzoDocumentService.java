@@ -15,6 +15,7 @@
  */
 package io.microcks.service.arazzo;
 
+import io.microcks.domain.workflow.WorkflowFormat;
 import io.microcks.domain.workflow.WorkflowStepOperation;
 import io.microcks.domain.workflow.WorkflowDocument;
 import io.microcks.service.arazzo.view.ArazzoDocumentSummary;
@@ -176,7 +177,8 @@ public class ArazzoDocumentService {
       document.setWorkflowIds(description.workflowIds());
       document.setSourceNames(ArazzoDocumentReader.sourceDescriptionNames(parsed));
       document.setWorkflowCalls(stepCalls(ArazzoDocumentReader.workflowCalls(parsed)));
-      document.setArazzoVersion(ArazzoDocumentReader.arazzoVersion(parsed));
+      document.setFormat(WorkflowFormat.ARAZZO);
+      document.setFormatVersion(ArazzoDocumentReader.arazzoVersion(parsed));
       document.setWorkflowDescriptions(ArazzoDocumentReader.workflowDescriptions(parsed));
       document.setContent(content);
       return document;
@@ -262,7 +264,7 @@ public class ArazzoDocumentService {
                lastRun);
       }).toList();
       return new ArazzoDocumentSummary(document.getId(), document.getTitle(), document.getVersion(),
-            document.getArazzoVersion(), document.getFileName(), document.getImportDate(), sourceSummaries,
+            document.getFormatVersion(), document.getFileName(), document.getImportDate(), sourceSummaries,
             workflowSummaries);
    }
 

@@ -131,7 +131,7 @@ public class ArazzoWorkflowService {
    private ArazzoWorkflowDetail detail(WorkflowDocument document, ArazzoWorkflow workflow) {
       Map<String, ResolvedSource> sources = arazzoDocumentService.resolveSources(document);
       return new ArazzoWorkflowDetail(document.getId(), document.getTitle(), document.getVersion(),
-            document.getArazzoVersion(), document.getFileName(), document.getImportDate(), document.getWorkflowIds(),
+            document.getFormatVersion(), document.getFileName(), document.getImportDate(), document.getWorkflowIds(),
             sources.values().stream().map(source -> sourceDescription(source, document)).toList(),
             workflow.workflowId(), workflow.summary(), workflow.description(), inputs(workflow),
             workflow.steps().stream().map(step -> step(step, workflow, sources)).toList(), workflow.outputs(),

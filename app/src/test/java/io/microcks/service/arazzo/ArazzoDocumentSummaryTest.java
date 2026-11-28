@@ -119,7 +119,7 @@ class ArazzoDocumentSummaryTest {
    void aDocumentStoredBeforeTheWorkflowsPageIsListedWithoutWhatWasNotStored() throws Exception {
       arazzoDocumentService.importArazzoDocument(fixture("pastry.arazzo.yaml"), "pastry.arazzo.yaml");
       WorkflowDocument storedBefore = arazzoDocumentRepository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
-      storedBefore.setArazzoVersion(null);
+      storedBefore.setFormatVersion(null);
       storedBefore.setFileName(null);
       storedBefore.setImportDate(null);
       storedBefore.setWorkflowDescriptions(null);

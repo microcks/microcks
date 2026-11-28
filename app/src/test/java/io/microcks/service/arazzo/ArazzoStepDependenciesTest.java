@@ -105,7 +105,7 @@ class ArazzoStepDependenciesTest {
       ArazzoWorkflowDetail workflow = arazzoWorkflowService.getWorkflowDetail(document.getId(), WORKFLOW).orElseThrow();
 
       assertEquals("Pastry tasting 1.0.0 1.1.0 [tasteThenReprice]", document.getTitle() + " " + document.getVersion()
-            + " " + document.getArazzoVersion() + " " + document.getWorkflowIds());
+            + " " + document.getFormatVersion() + " " + document.getWorkflowIds());
       assertTrue(workflow.status().runnable(), workflow.status().reasons().toString());
    }
 

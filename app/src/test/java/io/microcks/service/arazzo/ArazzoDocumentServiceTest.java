@@ -56,6 +56,15 @@ class ArazzoDocumentServiceTest {
       assertEquals(List.of("readThenReprice", "listThenReadFirst"), imported.getWorkflowIds());
    }
 
+   /** The stored model does not assume a workflow is Arazzo: it says which format, in which version. */
+   @Test
+   void anImportedDocumentTellsItsFormatAndTheVersionOfIt() throws Exception {
+      service.importArazzoDocument(fixture("pastry.arazzo.yaml"));
+
+      WorkflowDocument imported = repository.findByTitleAndVersion("API Pastry scenarios", "1.0.0");
+      assertEquals("ARAZZO 1.0.1", imported.getFormat() + " " + imported.getFormatVersion());
+   }
+
    @Test
    void anImportedDocumentIsKeptAsUploaded() throws Exception {
       String content = fixture("pastry.arazzo.yaml");

@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An Arazzo document imported into Microcks, identified by the title and version of its info object.
+ * A workflow document imported into Microcks, identified by its title and version; its format tells how to read it.
  * @author SebastienDegodez
  */
 @MongoEntity(collection = "workflowDocument")
@@ -36,7 +36,8 @@ public class WorkflowDocument {
    private String id;
    private String title;
    private String version;
-   private String arazzoVersion;
+   private WorkflowFormat format;
+   private String formatVersion;
    private String fileName;
    private Date importDate;
    private Map<String, String> workflowDescriptions;
@@ -70,12 +71,20 @@ public class WorkflowDocument {
       this.version = version;
    }
 
-   public String getArazzoVersion() {
-      return arazzoVersion;
+   public WorkflowFormat getFormat() {
+      return format;
    }
 
-   public void setArazzoVersion(String arazzoVersion) {
-      this.arazzoVersion = arazzoVersion;
+   public void setFormat(WorkflowFormat format) {
+      this.format = format;
+   }
+
+   public String getFormatVersion() {
+      return formatVersion;
+   }
+
+   public void setFormatVersion(String formatVersion) {
+      this.formatVersion = formatVersion;
    }
 
    public String getFileName() {
