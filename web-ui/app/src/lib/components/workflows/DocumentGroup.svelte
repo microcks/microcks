@@ -185,7 +185,7 @@
         <div role="row" class="wf-wrow">
           <div role="cell" class="wf-cell wf-cell-workflow">
             <a href={workflowPath(doc.id, workflow.workflowId)} class="wf-badge-link wf-name-link">
-              <ApiBadge arazzo name={workflow.summary} version={doc.version} class="wf-name-badge" />
+              <ApiBadge arazzo name={workflow.summary} version={doc.version} class="wf-name-badge" title={workflow.summary} />
             </a>
             <div class="wf-cell-line">
               <code class="wf-id">{workflow.workflowId}</code>

@@ -29,7 +29,7 @@
 .wf-runs-origin { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
 .wf-runs-sub { font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
 .wf-runs-inputs { font: 400 12px/1.4 var(--font-mono); color: var(--text-secondary); }
-.wf-runs-band { display: flex; gap: 4px; }
+.wf-runs-band { display: flex; flex-wrap: wrap; gap: 4px; }
 .wf-runs-cell {
   display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 22px; box-sizing: border-box;
   border: 1px solid var(--border-strong); border-radius: 4px; background: transparent; color: var(--text-muted);
